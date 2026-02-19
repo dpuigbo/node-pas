@@ -1,9 +1,36 @@
 // Entry point for Phusion Passenger (Hostinger)
-// Load .env with absolute path so it works regardless of cwd
 const path = require('path');
 const fs = require('fs');
+const { execSync } = require('child_process');
+
+// Load .env with absolute path so it works regardless of cwd
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
+// Fix permissions on every startup — Hostinger loses them after npm install
+try {
+  execSync('chmod +x node_modules/@esbuild/*/bin/esbuild node_modules/.bin/* 2>/dev/null', {
+    cwd: __dirname,
+    stdio: 'ignore',
+  });
+} catch (_) {
+  // Ignore — may fail on Windows dev machines
+}
+
+// Generate Prisma client if not present
+try {
+  require('@prisma/client');
+} catch (_) {
+  try {
+    execSync('node node_modules/prisma/build/index.js generate', {
+      cwd: __dirname,
+      stdio: 'inherit',
+    });
+  } catch (e) {
+    console.error('[PAS] Failed to generate Prisma client:', e.message);
+  }
+}
+
+// Start the app
 try {
   require('tsx/cjs');
   require('./src/index.ts');
