@@ -4,7 +4,13 @@ const fs = require('fs');
 const { execSync } = require('child_process');
 
 // Load .env with absolute path so it works regardless of cwd
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+const envPath = path.join(__dirname, '.env');
+const envExists = fs.existsSync(envPath);
+const dotenvResult = require('dotenv').config({ path: envPath });
+if (!envExists || dotenvResult.error) {
+  console.error(`[PAS] .env file ${envExists ? 'exists but failed to load' : 'NOT FOUND'} at: ${envPath}`);
+}
+console.log(`[PAS] DATABASE_URL ${process.env.DATABASE_URL ? 'loaded (' + process.env.DATABASE_URL.substring(0, 20) + '...)' : 'MISSING'}`);
 
 // Fix permissions on every startup — Hostinger loses them after npm install
 try {
@@ -16,11 +22,12 @@ try {
   // Ignore — may fail on Windows dev machines
 }
 
-// Generate Prisma client if not present
+// Generate Prisma client if needed
 try {
-  require('@prisma/client');
+  require.resolve('@prisma/client');
 } catch (_) {
   try {
+    console.log('[PAS] Prisma client not found, generating...');
     execSync('node node_modules/prisma/build/index.js generate', {
       cwd: __dirname,
       stdio: 'inherit',
