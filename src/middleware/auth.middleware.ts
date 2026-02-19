@@ -10,14 +10,6 @@ export interface AuthUser {
   rol: string;
 }
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: AuthUser;
-    }
-  }
-}
-
 export async function authMiddleware(req: Request, res: Response, next: NextFunction) {
   const token = req.cookies?.token;
 
@@ -38,9 +30,13 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
       return;
     }
 
-    req.user = user as AuthUser;
+    (req as any).authUser = user;
     next();
   } catch {
     res.status(401).json({ error: 'Token invalido' });
   }
+}
+
+export function getAuthUser(req: Request): AuthUser {
+  return (req as any).authUser;
 }

@@ -1,5 +1,5 @@
 import passport from 'passport';
-import { OIDCStrategy } from 'passport-microsoft';
+import { Strategy as MicrosoftStrategy } from 'passport-microsoft';
 import { prisma } from './database';
 import { env } from './env';
 
@@ -10,7 +10,7 @@ export function configureAuth() {
   }
 
   passport.use(
-    new OIDCStrategy(
+    new MicrosoftStrategy(
       {
         clientID: env.MICROSOFT_CLIENT_ID,
         clientSecret: env.MICROSOFT_CLIENT_SECRET,
@@ -18,16 +18,16 @@ export function configureAuth() {
         tenant: 'common',
         scope: ['user.read', 'profile', 'email', 'openid'],
       },
-      async (_iss: string, _sub: string, profile: any, _accessToken: string, _refreshToken: string, done: Function) => {
+      async (_accessToken: string, _refreshToken: string, profile: any, done: Function) => {
         try {
-          const email = profile._json?.email || profile.emails?.[0]?.value || profile.upn;
+          const email = profile._json?.email || profile.emails?.[0]?.value || profile.upn || profile._json?.preferred_username;
           if (!email) {
             return done(new Error('No se encontro email en el perfil de Microsoft'));
           }
 
           const microsoftId = profile.oid || profile.id;
           const nombre = profile.displayName || email.split('@')[0];
-          const avatar = null; // Microsoft Graph API needed for photos
+          const avatar = null;
 
           const user = await prisma.user.upsert({
             where: { microsoftId },

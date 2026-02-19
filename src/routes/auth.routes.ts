@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
-import { authMiddleware } from '../middleware/auth.middleware';
+import { authMiddleware, getAuthUser } from '../middleware/auth.middleware';
 
 const router = Router();
 
@@ -34,7 +34,7 @@ router.post(
 
 // Get current user
 router.get('/me', authMiddleware, (req: Request, res: Response) => {
-  res.json({ user: req.user });
+  res.json({ user: getAuthUser(req) });
 });
 
 // Logout
