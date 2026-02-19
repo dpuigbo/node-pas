@@ -1,4 +1,5 @@
 // Entry point for Phusion Passenger (Hostinger)
-// Uses tsx to run TypeScript directly — no compilation step needed
+// Load .env first, then use tsx to run TypeScript directly
+require('dotenv').config();
 require('tsx/cjs');
 require('./src/index.ts');

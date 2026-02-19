@@ -7,7 +7,7 @@
     "dev:server": "tsx watch src/index.ts",
     "dev:client": "npm run dev --prefix client",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "build:client": "npm install --prefix client && npm run build --prefix client",
+    "build:client": "npm install --prefix client && chmod +x client/node_modules/.bin/* client/node_modules/@esbuild/*/bin/esbuild 2>/dev/null; npm run build --prefix client",
     "build": "npm run build:client && node node_modules/prisma/build/index.js generate",
     "start": "node -r tsx/cjs src/index.ts",
     "db:migrate": "npx prisma migrate deploy",
@@ -44,6 +44,7 @@
     "prisma": "^6.4.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
+    "dotenv": "^16.4.7",
     "zod": "^3.24.2"
   }
 }
