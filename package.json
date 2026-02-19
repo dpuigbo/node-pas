@@ -1,0 +1,19 @@
+{
+  "name": "pas-robotics-manage",
+  "version": "1.0.0",
+  "description": "Gestión de mantenimiento preventivo y correctivo para robots industriales",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && node --watch src/index.js",
+    "dev:client": "cd client && npx vite",
+    "build": "cd client && npm install && npx vite build",
+    "start": "cd server && node src/index.js",
+    "migrate": "cd server && npx knex migrate:latest --knexfile src/db/knexfile.js",
+    "seed": "cd server && npx knex seed:run --knexfile src/db/knexfile.js",
+    "setup": "npm install && cd server && npm install && cd ../client && npm install && cd .. && npm run migrate && npm run seed && npm run build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
