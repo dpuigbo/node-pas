@@ -1,11 +1,15 @@
+import { useNavigate } from 'react-router-dom';
 import {
   Wrench,
   FileText,
   Users,
-  AlertTriangle,
-  CheckCircle,
+  Cpu,
   Clock,
+  CheckCircle,
+  Loader2,
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { useDashboard } from '@/hooks/useDashboard';
 
 interface StatCardProps {
   title: string;
@@ -32,7 +36,34 @@ function StatCard({ title, value, description, icon: Icon, color }: StatCardProp
   );
 }
 
+const ESTADO_LABELS: Record<string, string> = {
+  borrador: 'Borrador',
+  en_curso: 'En curso',
+  completada: 'Completada',
+  facturada: 'Facturada',
+};
+
+const ESTADO_COLORS: Record<string, 'secondary' | 'warning' | 'success' | 'default'> = {
+  borrador: 'secondary',
+  en_curso: 'warning',
+  completada: 'success',
+  facturada: 'default',
+};
+
 export default function Dashboard() {
+  const { data, isLoading } = useDashboard();
+  const navigate = useNavigate();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  const stats = data?.stats;
+
   return (
     <div className="space-y-6">
       <div>
@@ -42,57 +73,64 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Intervenciones Activas"
-          value={0}
+          value={stats?.intervencionesActivas ?? 0}
           description="En curso actualmente"
           icon={Wrench}
           color="bg-blue-600"
         />
         <StatCard
           title="Informes Pendientes"
-          value={0}
+          value={stats?.informesPendientes ?? 0}
           description="Por completar"
           icon={FileText}
           color="bg-amber-500"
         />
         <StatCard
           title="Clientes"
-          value={0}
-          description="Clientes registrados"
+          value={stats?.totalClientes ?? 0}
+          description="Clientes activos"
           icon={Users}
           color="bg-emerald-500"
         />
         <StatCard
-          title="Alertas"
-          value={0}
-          description="Requieren atencion"
-          icon={AlertTriangle}
-          color="bg-red-500"
+          title="Sistemas"
+          value={stats?.totalSistemas ?? 0}
+          description="Sistemas registrados"
+          icon={Cpu}
+          color="bg-purple-500"
         />
       </div>
 
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <h3 className="mb-4 text-lg font-semibold">Intervenciones Recientes</h3>
+      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <h3 className="mb-4 text-lg font-semibold">Ultimas Intervenciones</h3>
+        {data?.ultimasIntervenciones?.length ? (
+          <div className="space-y-3">
+            {data.ultimasIntervenciones.map((i: any) => (
+              <div
+                key={i.id}
+                onClick={() => navigate(`/intervenciones/${i.id}`)}
+                className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50 cursor-pointer"
+              >
+                <div>
+                  <p className="font-medium">{i.titulo}</p>
+                  <p className="text-sm text-muted-foreground">{i.cliente?.nombre} - {new Date(i.createdAt).toLocaleDateString('es-ES')}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={ESTADO_COLORS[i.estado]}>{ESTADO_LABELS[i.estado]}</Badge>
+                  <Badge variant="outline">{i._count?.sistemas ?? 0} sist.</Badge>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
           <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
             <Clock className="mb-2 h-8 w-8" />
             <p className="text-sm">No hay intervenciones registradas</p>
-            <p className="text-xs">Las intervenciones apareceran aqui</p>
           </div>
-        </div>
-
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <h3 className="mb-4 text-lg font-semibold">Informes Completados</h3>
-          <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-            <CheckCircle className="mb-2 h-8 w-8" />
-            <p className="text-sm">No hay informes completados</p>
-            <p className="text-xs">Los informes finalizados apareceran aqui</p>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

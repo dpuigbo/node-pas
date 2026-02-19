@@ -1,20 +1,26 @@
 import { Router } from 'express';
 import authRoutes from './auth.routes';
+import { authMiddleware } from '../middleware/auth.middleware';
+import dashboardRoutes from './dashboard.routes';
+import fabricantesRoutes from './fabricantes.routes';
+import clientesRoutes from './clientes.routes';
+import modelosRoutes from './modelos.routes';
+import sistemasRoutes from './sistemas.routes';
+import intervencionesRoutes from './intervenciones.routes';
+import catalogosRoutes from './catalogos.routes';
 
 const router = Router();
 
-// Auth routes (no prefix - /api/auth/*)
+// Auth routes (public - no auth required)
 router.use('/auth', authRoutes);
 
-// API v1 routes (will be added as we build CRUD endpoints)
-// router.use('/v1/clientes', authMiddleware, clientesRoutes);
-// router.use('/v1/fabricantes', authMiddleware, fabricantesRoutes);
-// router.use('/v1/modelos', authMiddleware, modelosRoutes);
-// etc.
-
-// Placeholder v1 route
-router.get('/v1', (_req, res) => {
-  res.json({ message: 'PAS Robotics Manage API v1', version: '1.0.0' });
-});
+// All v1 routes require authentication
+router.use('/v1/dashboard', authMiddleware, dashboardRoutes);
+router.use('/v1/fabricantes', authMiddleware, fabricantesRoutes);
+router.use('/v1/clientes', authMiddleware, clientesRoutes);
+router.use('/v1/modelos', authMiddleware, modelosRoutes);
+router.use('/v1/sistemas', authMiddleware, sistemasRoutes);
+router.use('/v1/intervenciones', authMiddleware, intervencionesRoutes);
+router.use('/v1/catalogos', authMiddleware, catalogosRoutes);
 
 export default router;
