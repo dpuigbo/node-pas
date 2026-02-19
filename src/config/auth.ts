@@ -1,41 +1,46 @@
 import passport from 'passport';
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import { OIDCStrategy } from 'passport-microsoft';
 import { prisma } from './database';
 import { env } from './env';
 
 export function configureAuth() {
-  // Only configure if Google OAuth credentials are available
-  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
-    console.warn('[Auth] Google OAuth credentials not configured. Auth disabled.');
+  if (!env.MICROSOFT_CLIENT_ID || !env.MICROSOFT_CLIENT_SECRET) {
+    console.warn('[Auth] Microsoft OAuth credentials not configured. Auth disabled.');
     return;
   }
 
   passport.use(
-    new GoogleStrategy(
+    new OIDCStrategy(
       {
-        clientID: env.GOOGLE_CLIENT_ID,
-        clientSecret: env.GOOGLE_CLIENT_SECRET,
-        callbackURL: env.GOOGLE_CALLBACK_URL,
+        clientID: env.MICROSOFT_CLIENT_ID,
+        clientSecret: env.MICROSOFT_CLIENT_SECRET,
+        callbackURL: env.MICROSOFT_CALLBACK_URL,
+        tenant: 'common',
+        scope: ['user.read', 'profile', 'email', 'openid'],
       },
-      async (_accessToken, _refreshToken, profile, done) => {
+      async (_iss: string, _sub: string, profile: any, _accessToken: string, _refreshToken: string, done: Function) => {
         try {
-          const email = profile.emails?.[0]?.value;
+          const email = profile._json?.email || profile.emails?.[0]?.value || profile.upn;
           if (!email) {
-            return done(new Error('No email found in Google profile'));
+            return done(new Error('No se encontro email en el perfil de Microsoft'));
           }
 
+          const microsoftId = profile.oid || profile.id;
+          const nombre = profile.displayName || email.split('@')[0];
+          const avatar = null; // Microsoft Graph API needed for photos
+
           const user = await prisma.user.upsert({
-            where: { googleId: profile.id },
+            where: { microsoftId },
             update: {
-              nombre: profile.displayName,
-              avatar: profile.photos?.[0]?.value,
+              nombre,
+              avatar,
             },
             create: {
-              googleId: profile.id,
+              microsoftId,
               email,
-              nombre: profile.displayName,
-              avatar: profile.photos?.[0]?.value,
-              rol: 'tecnico', // Default role, admin must be set manually
+              nombre,
+              avatar,
+              rol: 'tecnico',
             },
           });
 

@@ -5,9 +5,9 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
   DATABASE_URL: z.string().min(1),
   JWT_SECRET: z.string().min(16),
-  GOOGLE_CLIENT_ID: z.string().min(1),
-  GOOGLE_CLIENT_SECRET: z.string().min(1),
-  GOOGLE_CALLBACK_URL: z.string().url(),
+  MICROSOFT_CLIENT_ID: z.string().min(1),
+  MICROSOFT_CLIENT_SECRET: z.string().min(1),
+  MICROSOFT_CALLBACK_URL: z.string().url(),
   APP_URL: z.string().url().default('http://localhost:5173'),
 });
 
@@ -23,9 +23,9 @@ function loadEnv() {
         PORT: Number(process.env.PORT) || 3000,
         DATABASE_URL: process.env.DATABASE_URL || '',
         JWT_SECRET: process.env.JWT_SECRET || 'dev-secret-change-in-production',
-        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
-        GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || '',
-        GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3000/api/auth/google/callback',
+        MICROSOFT_CLIENT_ID: process.env.MICROSOFT_CLIENT_ID || '',
+        MICROSOFT_CLIENT_SECRET: process.env.MICROSOFT_CLIENT_SECRET || '',
+        MICROSOFT_CALLBACK_URL: process.env.MICROSOFT_CALLBACK_URL || 'http://localhost:3000/api/auth/microsoft/callback',
         APP_URL: process.env.APP_URL || 'http://localhost:5173',
       } as z.infer<typeof envSchema>;
     }

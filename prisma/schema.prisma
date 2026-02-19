@@ -11,7 +11,7 @@ datasource db {
 
 model User {
   id        Int      @id @default(autoincrement())
-  googleId  String   @unique @map("google_id")
+  microsoftId String @unique @map("microsoft_id")
   email     String   @unique
   nombre    String
   avatar    String?

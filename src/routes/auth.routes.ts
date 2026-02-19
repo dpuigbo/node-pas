@@ -6,16 +6,16 @@ import { authMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// Initiate Google OAuth
+// Initiate Microsoft OAuth
 router.get(
-  '/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] }),
+  '/microsoft',
+  passport.authenticate('microsoft', { session: false }),
 );
 
-// Google OAuth callback
-router.get(
-  '/google/callback',
-  passport.authenticate('google', { session: false, failureRedirect: '/login' }),
+// Microsoft OAuth callback
+router.post(
+  '/microsoft/callback',
+  passport.authenticate('microsoft', { session: false, failureRedirect: '/login' }),
   (req: Request, res: Response) => {
     const user = req.user as any;
     const token = jwt.sign({ userId: user.id }, env.JWT_SECRET, { expiresIn: '7d' });
