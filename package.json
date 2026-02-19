@@ -8,9 +8,8 @@
     "dev:client": "npm run dev --prefix client",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "build:client": "npm install --prefix client && npm run build --prefix client",
-    "build:server": "node node_modules/typescript/bin/tsc -p tsconfig.json",
-    "build": "chmod +x node_modules/.bin/* 2>/dev/null; npm run build:client && npm run build:server && node node_modules/.bin/prisma generate",
-    "start": "node dist/server/src/index.js",
+    "build": "npm run build:client && node node_modules/prisma/build/index.js generate",
+    "start": "node -r tsx/cjs src/index.ts",
     "db:migrate": "npx prisma migrate deploy",
     "db:seed": "npx prisma db seed",
     "postinstall": "node node_modules/prisma/build/index.js generate"
