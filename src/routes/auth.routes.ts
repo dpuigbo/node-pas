@@ -44,7 +44,8 @@ router.post('/logout', (_req: Request, res: Response) => {
 });
 
 // DEV: Auto-login as admin (creates user if not exists, sets JWT cookie)
-// Access /api/auth/dev-login in browser to get authenticated
+// Step 1: /api/auth/dev-login -> creates user + sets cookie + shows debug
+// Step 2: navigate to / to see the app
 router.get('/dev-login', async (_req: Request, res: Response) => {
   try {
     const { prisma } = await import('../config/database');
@@ -61,11 +62,16 @@ router.get('/dev-login', async (_req: Request, res: Response) => {
     const token = jwt.sign({ userId: user.id }, env.JWT_SECRET, { expiresIn: '7d' });
     res.cookie('token', token, {
       httpOnly: true,
-      secure: env.NODE_ENV === 'production',
+      secure: true,
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-    res.redirect('/');
+    res.json({
+      message: 'Login OK. Cookie seteada. Navega a / para ver la app.',
+      user: { id: user.id, email: user.email, nombre: user.nombre, rol: user.rol },
+      env_node_env: env.NODE_ENV,
+      jwt_secret_length: env.JWT_SECRET?.length,
+    });
   } catch (error) {
     res.status(500).json({ error: 'Error en dev-login', details: String(error) });
   }
