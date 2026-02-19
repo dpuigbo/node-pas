@@ -1,0 +1,326 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== AUTH =====
+
+model User {
+  id        Int      @id @default(autoincrement())
+  googleId  String   @unique @map("google_id")
+  email     String   @unique
+  nombre    String
+  avatar    String?
+  rol       Rol      @default(tecnico)
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  informesCreados Informe[]
+
+  @@map("usuarios")
+}
+
+enum Rol {
+  admin
+  tecnico
+}
+
+// ===== JERARQUIA DOMINIO =====
+
+model Cliente {
+  id                  Int       @id @default(autoincrement())
+  nombre              String
+  sede                String?
+  tarifaHoraTrabajo   Decimal?  @map("tarifa_hora_trabajo") @db.Decimal(10, 2)
+  tarifaHoraViaje     Decimal?  @map("tarifa_hora_viaje") @db.Decimal(10, 2)
+  dietas              Decimal?  @db.Decimal(10, 2)
+  peajes              Decimal?  @db.Decimal(10, 2)
+  km                  Decimal?  @db.Decimal(10, 2)
+  activo              Boolean   @default(true)
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  plantas        Planta[]
+  maquinas       Maquina[]
+  sistemas       Sistema[]
+  intervenciones Intervencion[]
+
+  @@map("clientes")
+}
+
+model Planta {
+  id        Int      @id @default(autoincrement())
+  clienteId Int      @map("cliente_id")
+  nombre    String
+  direccion String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  cliente  Cliente   @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  maquinas Maquina[]
+  sistemas Sistema[]
+
+  @@unique([clienteId, nombre])
+  @@map("plantas")
+}
+
+model Maquina {
+  id          Int      @id @default(autoincrement())
+  clienteId   Int      @map("cliente_id")
+  plantaId    Int      @map("planta_id")
+  nombre      String
+  descripcion String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  cliente  Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  planta   Planta   @relation(fields: [plantaId], references: [id], onDelete: Cascade)
+  sistemas Sistema[]
+
+  @@unique([clienteId, plantaId, nombre])
+  @@map("maquinas")
+}
+
+// ===== CATALOGOS =====
+
+model Fabricante {
+  id        Int      @id @default(autoincrement())
+  nombre    String   @unique
+  activo    Boolean  @default(true)
+  orden     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  modelos  ModeloComponente[]
+  sistemas Sistema[]
+
+  @@map("fabricantes")
+}
+
+model ModeloComponente {
+  id            Int            @id @default(autoincrement())
+  fabricanteId  Int            @map("fabricante_id")
+  tipo          TipoComponente
+  nombre        String
+  notas         String?        @db.Text
+  aceitesConfig Json?          @map("aceites_config")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  fabricante  Fabricante        @relation(fields: [fabricanteId], references: [id], onDelete: Cascade)
+  versiones   VersionTemplate[]
+  componentes ComponenteSistema[]
+
+  @@unique([fabricanteId, tipo, nombre])
+  @@map("modelos_componente")
+}
+
+enum TipoComponente {
+  controller
+  mechanical_unit
+  drive_unit
+}
+
+model VersionTemplate {
+  id                 Int            @id @default(autoincrement())
+  modeloComponenteId Int            @map("modelo_componente_id")
+  version            Int
+  estado             EstadoTemplate @default(borrador)
+  schema             Json
+  notas              String?        @db.Text
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+
+  modeloComponente   ModeloComponente  @relation(fields: [modeloComponenteId], references: [id], onDelete: Cascade)
+  componentesInforme ComponenteInforme[]
+
+  @@unique([modeloComponenteId, version])
+  @@map("versiones_template")
+}
+
+enum EstadoTemplate {
+  borrador
+  activo
+  obsoleto
+}
+
+// ===== SISTEMAS =====
+
+model Sistema {
+  id           Int      @id @default(autoincrement())
+  clienteId    Int      @map("cliente_id")
+  plantaId     Int      @map("planta_id")
+  maquinaId    Int      @map("maquina_id")
+  fabricanteId Int      @map("fabricante_id")
+  nombre       String
+  descripcion  String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  cliente       Cliente              @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  planta        Planta               @relation(fields: [plantaId], references: [id], onDelete: Cascade)
+  maquina       Maquina              @relation(fields: [maquinaId], references: [id], onDelete: Cascade)
+  fabricante    Fabricante           @relation(fields: [fabricanteId], references: [id], onDelete: Cascade)
+  componentes   ComponenteSistema[]
+  intervenciones IntervencionSistema[]
+  informes      Informe[]
+
+  @@unique([clienteId, fabricanteId, nombre])
+  @@map("sistemas")
+}
+
+model ComponenteSistema {
+  id                 Int            @id @default(autoincrement())
+  sistemaId          Int            @map("sistema_id")
+  modeloComponenteId Int            @map("modelo_componente_id")
+  tipo               TipoComponente
+  etiqueta           String
+  numeroSerie        String?        @map("numero_serie")
+  numEjes            Int?           @map("num_ejes")
+  metadata           Json?
+  orden              Int            @default(0)
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+
+  sistema            Sistema          @relation(fields: [sistemaId], references: [id], onDelete: Cascade)
+  modeloComponente   ModeloComponente @relation(fields: [modeloComponenteId], references: [id])
+  componentesInforme ComponenteInforme[]
+
+  @@map("componentes_sistema")
+}
+
+// ===== INTERVENCIONES E INFORMES =====
+
+model Intervencion {
+  id          Int                @id @default(autoincrement())
+  clienteId   Int                @map("cliente_id")
+  tipo        TipoIntervencion
+  estado      EstadoIntervencion @default(borrador)
+  referencia  String?
+  titulo      String
+  fechaInicio DateTime?          @map("fecha_inicio")
+  fechaFin    DateTime?          @map("fecha_fin")
+  notas       String?            @db.Text
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+
+  cliente  Cliente              @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  sistemas IntervencionSistema[]
+  informes Informe[]
+
+  @@map("intervenciones")
+}
+
+enum TipoIntervencion {
+  preventiva
+  correctiva
+}
+
+enum EstadoIntervencion {
+  borrador
+  en_curso
+  completada
+  facturada
+}
+
+model IntervencionSistema {
+  intervencionId Int @map("intervencion_id")
+  sistemaId      Int @map("sistema_id")
+
+  intervencion Intervencion @relation(fields: [intervencionId], references: [id], onDelete: Cascade)
+  sistema      Sistema      @relation(fields: [sistemaId], references: [id], onDelete: Cascade)
+
+  @@id([intervencionId, sistemaId])
+  @@map("intervencion_sistema")
+}
+
+model Informe {
+  id               Int           @id @default(autoincrement())
+  intervencionId   Int           @map("intervencion_id")
+  sistemaId        Int           @map("sistema_id")
+  estado           EstadoInforme @default(borrador)
+  fechaRealizacion DateTime?     @map("fecha_realizacion")
+  notas            String?       @db.Text
+  creadoPorId      Int?          @map("creado_por_id")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  intervencion Intervencion      @relation(fields: [intervencionId], references: [id], onDelete: Cascade)
+  sistema      Sistema           @relation(fields: [sistemaId], references: [id], onDelete: Cascade)
+  creadoPor    User?             @relation(fields: [creadoPorId], references: [id])
+  componentes  ComponenteInforme[]
+
+  @@unique([intervencionId, sistemaId])
+  @@map("informes")
+}
+
+enum EstadoInforme {
+  borrador
+  finalizado
+  entregado
+}
+
+model ComponenteInforme {
+  id                  Int            @id @default(autoincrement())
+  informeId           Int            @map("informe_id")
+  componenteSistemaId Int            @map("componente_sistema_id")
+  versionTemplateId   Int            @map("version_template_id")
+  tipoComponente      TipoComponente @map("tipo_componente")
+  etiqueta            String
+  orden               Int            @default(0)
+  schemaCongelado     Json           @map("schema_congelado")
+  datos               Json           @default("{}")
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
+
+  informe           Informe           @relation(fields: [informeId], references: [id], onDelete: Cascade)
+  componenteSistema ComponenteSistema @relation(fields: [componenteSistemaId], references: [id])
+  versionTemplate   VersionTemplate   @relation(fields: [versionTemplateId], references: [id])
+
+  @@unique([informeId, componenteSistemaId])
+  @@map("componentes_informe")
+}
+
+// ===== CATALOGOS ACEITES Y CONSUMIBLES =====
+
+model Aceite {
+  id         Int      @id @default(autoincrement())
+  nombre     String
+  fabricante String?
+  coste      Decimal? @db.Decimal(10, 2)
+  precio     Decimal? @db.Decimal(10, 2)
+  activo     Boolean  @default(true)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("aceites")
+}
+
+model Consumible {
+  id         Int      @id @default(autoincrement())
+  nombre     String
+  fabricante String?
+  coste      Decimal? @db.Decimal(10, 2)
+  precio     Decimal? @db.Decimal(10, 2)
+  activo     Boolean  @default(true)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("consumibles")
+}
+
+// ===== CONFIGURACION APP =====
+
+model ConfiguracionApp {
+  id        Int      @id @default(autoincrement())
+  clave     String   @unique
+  valor     String   @db.Text
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("configuracion_app")
+}
