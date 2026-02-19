@@ -39,7 +39,7 @@ app.use(errorMiddleware);
 
 // Serve static frontend in production
 if (!isDev) {
-  const clientDist = path.join(__dirname, '..', 'client');
+  const clientDist = path.join(__dirname, '..', '..', 'client');
   app.use(express.static(clientDist));
   app.get('*', (_req, res) => {
     res.sendFile(path.join(clientDist, 'index.html'));

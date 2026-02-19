@@ -10,7 +10,7 @@
     "build:client": "npm install --prefix client && npm run build --prefix client",
     "build:server": "tsc -p tsconfig.json",
     "build": "npm run build:client && npm run build:server && npx prisma generate",
-    "start": "node dist/server/index.js",
+    "start": "node dist/server/src/index.js",
     "db:migrate": "npx prisma migrate deploy",
     "db:seed": "npx prisma db seed",
     "postinstall": "npx prisma generate"
