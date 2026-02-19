@@ -3,6 +3,7 @@ import passport from 'passport';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
 import { authMiddleware, getAuthUser } from '../middleware/auth.middleware';
+import { prisma } from '../config/database';
 
 const router = Router();
 
@@ -48,7 +49,6 @@ router.post('/logout', (_req: Request, res: Response) => {
 // Step 2: navigate to / to see the app
 router.get('/dev-login', async (_req: Request, res: Response) => {
   try {
-    const { prisma } = await import('../config/database');
     const user = await prisma.user.upsert({
       where: { microsoftId: 'dev-admin' },
       update: {},
