@@ -13,7 +13,7 @@
     "start": "node -r tsx/cjs src/index.ts",
     "db:migrate": "npx prisma migrate deploy",
     "db:seed": "npx prisma db seed",
-    "postinstall": "chmod +x node_modules/@esbuild/*/bin/esbuild node_modules/.bin/* 2>/dev/null; node node_modules/prisma/build/index.js generate"
+    "postinstall": "node node_modules/prisma/build/index.js generate"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
