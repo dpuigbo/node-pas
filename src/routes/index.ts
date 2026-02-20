@@ -8,6 +8,7 @@ import modelosRoutes from './modelos.routes';
 import sistemasRoutes from './sistemas.routes';
 import intervencionesRoutes from './intervenciones.routes';
 import catalogosRoutes from './catalogos.routes';
+import informesRoutes from './informes.routes';
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use('/v1/modelos', authMiddleware, modelosRoutes);
 router.use('/v1/sistemas', authMiddleware, sistemasRoutes);
 router.use('/v1/intervenciones', authMiddleware, intervencionesRoutes);
 router.use('/v1/catalogos', authMiddleware, catalogosRoutes);
+router.use('/v1', authMiddleware, informesRoutes);
 
 export default router;

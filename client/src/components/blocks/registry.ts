@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import type { BlockType, BlockDefinition, Block } from '@/types/editor';
+import type { FormFieldProps } from '@/types/formField';
 
 // ===== Component interfaces =====
 
@@ -13,12 +14,15 @@ export interface ConfigPanelProps {
   onChange: (path: string, value: unknown) => void;
 }
 
+export type { FormFieldProps };
+
 // ===== Registry entry =====
 
 interface BlockRegistryEntry {
   definition: BlockDefinition;
   EditorPreview: ComponentType<EditorPreviewProps>;
   ConfigPanel: ComponentType<ConfigPanelProps>;
+  FormField?: ComponentType<FormFieldProps>;
 }
 
 // ===== Registry map =====

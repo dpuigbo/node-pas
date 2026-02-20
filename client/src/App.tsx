@@ -13,8 +13,10 @@ import IntervencionesPage from './pages/IntervencionesPage';
 import CatalogosPage from './pages/CatalogosPage';
 import ConfiguracionPage from './pages/ConfiguracionPage';
 
-// Editor is lazy-loaded (large page, only needed by admins)
+// Lazy-loaded pages (large or with heavy dependencies)
 const EditorPage = lazy(() => import('./pages/EditorPage'));
+const IntervencionDetailPage = lazy(() => import('./pages/IntervencionDetailPage'));
+const InformeFormPage = lazy(() => import('./pages/InformeFormPage'));
 
 function EditorLoader() {
   return (
@@ -50,6 +52,22 @@ export default function App() {
           <Route path="/clientes/:id" element={<ClienteDetailPage />} />
           <Route path="/modelos" element={<ModelosPage />} />
           <Route path="/intervenciones" element={<IntervencionesPage />} />
+          <Route
+            path="/intervenciones/:id"
+            element={
+              <Suspense fallback={<EditorLoader />}>
+                <IntervencionDetailPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/informes/:id"
+            element={
+              <Suspense fallback={<EditorLoader />}>
+                <InformeFormPage />
+              </Suspense>
+            }
+          />
           <Route path="/catalogos" element={<CatalogosPage />} />
           <Route path="/configuracion" element={<ConfiguracionPage />} />
         </Route>
