@@ -12,8 +12,8 @@ const database_1 = require("../config/database");
 const router = (0, express_1.Router)();
 // Initiate Microsoft OAuth
 router.get('/microsoft', passport_1.default.authenticate('microsoft', { session: false }));
-// Microsoft OAuth callback
-router.post('/microsoft/callback', passport_1.default.authenticate('microsoft', { session: false, failureRedirect: '/login' }), (req, res) => {
+// Microsoft OAuth callback (GET — Microsoft redirects with code in query string)
+router.get('/microsoft/callback', passport_1.default.authenticate('microsoft', { session: false, failureRedirect: '/login' }), (req, res) => {
     const user = req.user;
     const token = jsonwebtoken_1.default.sign({ userId: user.id }, env_1.env.JWT_SECRET, { expiresIn: '7d' });
     res.cookie('token', token, {
