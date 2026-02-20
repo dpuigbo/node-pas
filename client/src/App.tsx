@@ -1,4 +1,6 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { AppShell } from './components/layout/AppShell';
 import Dashboard from './pages/Dashboard';
@@ -11,14 +13,36 @@ import IntervencionesPage from './pages/IntervencionesPage';
 import CatalogosPage from './pages/CatalogosPage';
 import ConfiguracionPage from './pages/ConfiguracionPage';
 
+// Editor is lazy-loaded (large page, only needed by admins)
+const EditorPage = lazy(() => import('./pages/EditorPage'));
+
+function EditorLoader() {
+  return (
+    <div className="flex h-screen items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <Routes>
       {/* Ruta publica */}
       <Route path="/login" element={<Login />} />
 
-      {/* Rutas protegidas — rutas explicitas, sin catch-all */}
+      {/* Rutas protegidas */}
       <Route element={<ProtectedRoute />}>
+        {/* Editor — pantalla completa, fuera de AppShell */}
+        <Route
+          path="/modelos/:modeloId/versiones/:versionId/editor"
+          element={
+            <Suspense fallback={<EditorLoader />}>
+              <EditorPage />
+            </Suspense>
+          }
+        />
+
+        {/* App normal con sidebar + header */}
         <Route element={<AppShell />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/fabricantes" element={<FabricantesPage />} />
