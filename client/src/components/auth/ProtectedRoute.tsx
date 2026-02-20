@@ -1,9 +1,10 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { Loader2 } from 'lucide-react';
 
 export function ProtectedRoute() {
   const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -14,7 +15,8 @@ export function ProtectedRoute() {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    // Use Navigate with state to avoid re-render loops
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return <Outlet />;
