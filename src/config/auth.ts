@@ -29,7 +29,11 @@ export function configureAuth() {
           const nombre = profile.displayName || email.split('@')[0];
           const avatar = null;
 
-          const user = await prisma.user.upsert({
+          console.log('[Auth] Microsoft callback — upserting user:', { microsoftId, email, nombre });
+
+          // Timeout to prevent infinite hang if DB adapter stalls
+          const timeoutMs = 15000;
+          const upsertPromise = prisma.user.upsert({
             where: { microsoftId },
             update: {
               nombre,
@@ -44,8 +48,16 @@ export function configureAuth() {
             },
           });
 
+          const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error(`DB upsert timed out after ${timeoutMs}ms`)), timeoutMs),
+          );
+
+          const user = await Promise.race([upsertPromise, timeoutPromise]);
+          console.log('[Auth] User upserted successfully:', user.id);
+
           done(null, user);
         } catch (error) {
+          console.error('[Auth] Microsoft callback error:', error);
           done(error as Error);
         }
       },

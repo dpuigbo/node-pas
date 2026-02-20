@@ -35,6 +35,19 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// DB health check — test actual database connection
+app.get('/api/health/db', async (_req, res) => {
+  try {
+    const { prisma } = await import('./config/database');
+    const timeout = new Promise<never>((_, rej) => setTimeout(() => rej(new Error('DB query timed out (10s)')), 10000));
+    const query = prisma.$queryRawUnsafe('SELECT 1 as ok');
+    await Promise.race([query, timeout]);
+    res.json({ status: 'ok', db: 'connected' });
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', db: err.message });
+  }
+});
+
 // Deploy webhook — lightweight restart only
 // Hostinger handles git pull + npm install + build on deploy.
 // This just restarts Passenger via tmp/restart.txt (uses fs, no child processes).
