@@ -5,10 +5,36 @@
 const path = require('path');
 const fs = require('fs');
 
-// === 1. Load .env if it exists (local dev), otherwise rely on Hostinger panel vars ===
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+// === 1. Restore .env from persistent location if missing (Hostinger deletes it on deploy) ===
+const envPath = path.join(__dirname, '.env');
+const persistentEnvPath = '/home/u306143177/.env.pas-robotics';
 
-// === 2. Fix .htaccess (Hostinger regenerates it with broken PassengerBaseURI /) ===
+try {
+  if (!fs.existsSync(envPath) && fs.existsSync(persistentEnvPath)) {
+    // .env was deleted by deploy — restore from persistent backup
+    fs.copyFileSync(persistentEnvPath, envPath);
+    console.log('[PAS] Restored .env from persistent backup');
+  } else if (fs.existsSync(envPath) && fs.existsSync(persistentEnvPath)) {
+    // Both exist — sync: if project .env is newer (edited via SSH), update backup
+    const envStat = fs.statSync(envPath);
+    const backupStat = fs.statSync(persistentEnvPath);
+    if (envStat.mtimeMs > backupStat.mtimeMs) {
+      fs.copyFileSync(envPath, persistentEnvPath);
+      console.log('[PAS] Updated persistent .env backup');
+    }
+  } else if (fs.existsSync(envPath) && !fs.existsSync(persistentEnvPath)) {
+    // First time: create persistent backup
+    fs.copyFileSync(envPath, persistentEnvPath);
+    console.log('[PAS] Created persistent .env backup');
+  }
+} catch (envErr) {
+  console.warn('[PAS] .env sync warning:', envErr.message);
+}
+
+// === 2. Load .env ===
+require('dotenv').config({ path: envPath });
+
+// === 3. Fix .htaccess (Hostinger regenerates it with broken PassengerBaseURI /) ===
 const htaccessPath = path.join(__dirname, '.htaccess');
 const htaccessContent = [
   'PassengerAppRoot ' + __dirname,
@@ -24,7 +50,7 @@ try {
   }
 } catch (_) {}
 
-// === 3. Start the app (pre-compiled JS, no tsx/esbuild at runtime) ===
+// === 4. Start the app (pre-compiled JS, no tsx/esbuild at runtime) ===
 try {
   require('./dist/server/src/index.js');
 } catch (err) {
