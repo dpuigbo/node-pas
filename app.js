@@ -3,26 +3,36 @@ const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
 
-// Load .env with absolute path so it works regardless of cwd
+// === 1. Ensure .env exists (auto-create for Hostinger) ===
 const envPath = path.join(__dirname, '.env');
-const envExists = fs.existsSync(envPath);
-const dotenvResult = require('dotenv').config({ path: envPath });
-if (!envExists || dotenvResult.error) {
-  console.error(`[PAS] .env file ${envExists ? 'exists but failed to load' : 'NOT FOUND'} at: ${envPath}`);
+if (!fs.existsSync(envPath)) {
+  console.log('[PAS] .env not found — creating from production defaults...');
+  const defaultEnv = [
+    'NODE_ENV=production',
+    'PORT=3000',
+    'DATABASE_URL=mysql://u306143177_admin_db:Setupz0002cf7d36e4@127.0.0.1:3306/u306143177_pas_admin_db',
+    'JWT_SECRET=k8Xp2mQ9vR4wZ7nJ3bF6yT1cA5dH0gLsE8iU2oP7qW4xN6rV9mK3jB5fY1aZ0tG',
+    'MICROSOFT_CLIENT_ID=',
+    'MICROSOFT_CLIENT_SECRET=',
+    'MICROSOFT_CALLBACK_URL=https://admin.pasrobotics.com/api/auth/microsoft/callback',
+    'APP_URL=https://admin.pasrobotics.com',
+    'DEPLOY_SECRET=pas-deploy-2024-k8Xp2mQ9vR4w',
+  ].join('\n') + '\n';
+  fs.writeFileSync(envPath, defaultEnv);
 }
-console.log(`[PAS] DATABASE_URL ${process.env.DATABASE_URL ? 'loaded (' + process.env.DATABASE_URL.substring(0, 20) + '...)' : 'MISSING'}`);
 
-// Fix permissions on every startup — Hostinger loses them after npm install
+// === 2. Load .env ===
+require('dotenv').config({ path: envPath });
+
+// === 3. Fix binary permissions (Hostinger loses them after npm install) ===
 try {
   execSync('chmod +x node_modules/@esbuild/*/bin/esbuild node_modules/.bin/* 2>/dev/null', {
     cwd: __dirname,
     stdio: 'ignore',
   });
-} catch (_) {
-  // Ignore — may fail on Windows dev machines
-}
+} catch (_) {}
 
-// Generate Prisma client if needed
+// === 4. Ensure Prisma client is generated ===
 try {
   require.resolve('@prisma/client');
 } catch (_) {
@@ -37,7 +47,7 @@ try {
   }
 }
 
-// Start the app
+// === 5. Start the app ===
 try {
   require('tsx/cjs');
   require('./src/index.ts');
@@ -45,7 +55,6 @@ try {
   const msg = `[${new Date().toISOString()}] STARTUP ERROR:\n${err.stack || err}\n`;
   fs.appendFileSync(path.join(__dirname, 'startup-error.log'), msg);
   console.error(msg);
-  // Levantar un servidor minimo que muestre el error en vez de 503 mudo
   const http = require('http');
   http.createServer((_req, res) => {
     res.writeHead(500, { 'Content-Type': 'application/json' });
