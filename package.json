@@ -8,12 +8,12 @@
     "dev:client": "npm run dev --prefix client",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "build:client": "npm install --prefix client && npm run build --prefix client",
-    "build:local": "npm run build:client && node node_modules/prisma/build/index.js generate",
-    "build": "node node_modules/prisma/build/index.js generate && npx tsc",
+    "build:local": "npm run build:client && npx prisma generate",
+    "build": "npx prisma generate && npx tsc",
     "start": "node dist/server/src/index.js",
     "db:migrate": "npx prisma migrate deploy",
     "db:seed": "npx prisma db seed",
-    "postinstall": "node node_modules/prisma/build/index.js generate"
+    "postinstall": "npx prisma generate"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
