@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 export default function Login() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  // Mientras verifica el estado de auth, mostrar spinner
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -13,13 +14,10 @@ export default function Login() {
     );
   }
 
+  // Si ya esta autenticado, redirigir al dashboard
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
   }
-
-  const handleMicrosoftLogin = () => {
-    window.location.href = '/api/auth/microsoft';
-  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/30">
@@ -39,8 +37,8 @@ export default function Login() {
 
         {/* Login Button */}
         <div className="space-y-4">
-          <button
-            onClick={handleMicrosoftLogin}
+          <a
+            href="/api/auth/microsoft"
             className="flex w-full items-center justify-center gap-3 rounded-lg border border-border bg-white px-4 py-3 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted"
           >
             <svg className="h-5 w-5" viewBox="0 0 21 21">
@@ -50,7 +48,7 @@ export default function Login() {
               <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
             </svg>
             Iniciar sesion con Microsoft
-          </button>
+          </a>
         </div>
 
         <p className="text-center text-xs text-muted-foreground">

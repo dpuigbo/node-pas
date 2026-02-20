@@ -11,7 +11,7 @@ interface AuthUser {
 export function useAuth() {
   const queryClient = useQueryClient();
 
-  const { data: user, isLoading, error } = useQuery<AuthUser>({
+  const { data: user, isLoading, error, isFetched } = useQuery<AuthUser>({
     queryKey: ['auth', 'me'],
     queryFn: async () => {
       const { data } = await api.get('/auth/me');
@@ -19,6 +19,8 @@ export function useAuth() {
     },
     retry: false,
     staleTime: 5 * 60 * 1000,
+    // No refetch on window focus for auth — prevents loops
+    refetchOnWindowFocus: false,
   });
 
   const logoutMutation = useMutation({
@@ -32,7 +34,9 @@ export function useAuth() {
   return {
     user,
     isLoading,
-    isAuthenticated: !!user && !error,
+    // Only authenticated if we have user data and no error
+    // isFetched ensures we don't flash "not authenticated" before the query runs
+    isAuthenticated: isFetched && !!user && !error,
     isAdmin: user?.rol === 'admin',
     logout: logoutMutation.mutate,
   };
