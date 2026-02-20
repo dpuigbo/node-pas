@@ -13,8 +13,8 @@ router.get(
   passport.authenticate('microsoft', { session: false }),
 );
 
-// Microsoft OAuth callback
-router.post(
+// Microsoft OAuth callback (GET — Microsoft redirects with code in query string)
+router.get(
   '/microsoft/callback',
   passport.authenticate('microsoft', { session: false, failureRedirect: '/login' }),
   (req: Request, res: Response) => {
