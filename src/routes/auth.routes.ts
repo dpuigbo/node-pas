@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
@@ -8,17 +8,37 @@ import { prisma } from '../config/database';
 const router = Router();
 
 // Initiate Microsoft OAuth
-router.get(
-  '/microsoft',
-  passport.authenticate('microsoft', { session: false }),
-);
+router.get('/microsoft', (req: Request, res: Response, next: NextFunction) => {
+  // Check strategy is registered (env vars might be missing after deploy)
+  if (!(passport as any)._strategy('microsoft')) {
+    res.status(503).json({
+      error: 'Microsoft OAuth no configurado',
+      hint: 'Las credenciales MICROSOFT_CLIENT_ID / MICROSOFT_CLIENT_SECRET no estan en .env del servidor. Recrear .env via SSH.',
+      configured: {
+        MICROSOFT_CLIENT_ID: !!env.MICROSOFT_CLIENT_ID,
+        MICROSOFT_CLIENT_SECRET: !!env.MICROSOFT_CLIENT_SECRET,
+        MICROSOFT_TENANT_ID: env.MICROSOFT_TENANT_ID || '(not set)',
+        MICROSOFT_CALLBACK_URL: env.MICROSOFT_CALLBACK_URL,
+      },
+    });
+    return;
+  }
+  passport.authenticate('microsoft', { session: false })(req, res, next);
+});
 
 // Microsoft OAuth callback (GET — Microsoft redirects with code in query string)
-router.get(
-  '/microsoft/callback',
-  passport.authenticate('microsoft', { session: false, failureRedirect: '/login' }),
-  (req: Request, res: Response) => {
-    const user = req.user as any;
+router.get('/microsoft/callback', (req: Request, res: Response, next: NextFunction) => {
+  passport.authenticate('microsoft', { session: false }, (err: any, user: any) => {
+    if (err) {
+      console.error('[Auth] Microsoft callback error:', err);
+      res.redirect(`/login?error=${encodeURIComponent(err.message || 'auth_failed')}`);
+      return;
+    }
+    if (!user) {
+      res.redirect('/login?error=no_user');
+      return;
+    }
+
     const token = jwt.sign({ userId: user.id }, env.JWT_SECRET, { expiresIn: '7d' });
 
     res.cookie('token', token, {
@@ -30,8 +50,8 @@ router.get(
 
     const redirectUrl = env.NODE_ENV === 'production' ? '/' : env.APP_URL;
     res.redirect(redirectUrl);
-  },
-);
+  })(req, res, next);
+});
 
 // Get current user
 router.get('/me', authMiddleware, (req: Request, res: Response) => {
