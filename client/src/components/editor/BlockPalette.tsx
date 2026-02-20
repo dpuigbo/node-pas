@@ -5,7 +5,6 @@ import {
 import { cn } from '@/lib/utils';
 import { blockCategories, blockDefinitions } from '@/components/blocks/registry';
 import { useEditorStore } from '@/stores/useEditorStore';
-import type { BlockType } from '@/types/editor';
 
 // Map icon name strings to actual Lucide components
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {

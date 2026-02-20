@@ -30,7 +30,7 @@ export function EditorToolbar({
     obsoleto: { label: 'Obsoleto', className: 'bg-gray-100 text-gray-600' },
   };
 
-  const badge = estadoBadge[estado] || estadoBadge.borrador;
+  const badge = estadoBadge[estado] ?? { label: 'Borrador', className: 'bg-yellow-100 text-yellow-800' };
 
   return (
     <div className="flex h-14 items-center justify-between border-b bg-background px-4">

@@ -6,25 +6,29 @@ import { blockDefinitions } from '@/components/blocks/registry';
 // ===== Deep set utility =====
 function setDeep(obj: Record<string, unknown>, path: string, value: unknown): Record<string, unknown> {
   const result = { ...obj };
-  const keys = path.split('.');
+  const parts = path.split('.');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let current: any = result;
 
-  for (let i = 0; i < keys.length - 1; i++) {
-    const key = keys[i];
-    const nextKey = keys[i + 1];
-    const isArrayIndex = /^\d+$/.test(nextKey);
+  for (let i = 0; i < parts.length - 1; i++) {
+    const key = parts[i] as string;
+    const nextKey = parts[i + 1] as string | undefined;
+    const isArrayIndex = nextKey != null && /^\d+$/.test(nextKey);
 
     if (Array.isArray(current[key])) {
-      current[key] = [...current[key]];
+      current[key] = [...(current[key] as unknown[])];
     } else if (typeof current[key] === 'object' && current[key] !== null) {
-      current[key] = { ...current[key] };
+      current[key] = { ...(current[key] as Record<string, unknown>) };
     } else {
       current[key] = isArrayIndex ? [] : {};
     }
     current = current[key];
   }
 
-  current[keys[keys.length - 1]] = value;
+  const lastKey = parts[parts.length - 1] as string | undefined;
+  if (lastKey != null) {
+    current[lastKey] = value;
+  }
   return result;
 }
 
@@ -36,7 +40,7 @@ function generateKey(type: BlockType, existingBlocks: Block[]): string {
     .map((b) => {
       const key = (b.config.key as string) || '';
       const match = key.match(new RegExp(`^${prefix}_(\\d+)$`));
-      return match ? parseInt(match[1], 10) : 0;
+      return match?.[1] != null ? parseInt(match[1], 10) : 0;
     });
   const maxNum = existing.length > 0 ? Math.max(...existing) : 0;
   return `${prefix}_${maxNum + 1}`;
@@ -134,9 +138,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const idx = blocks.findIndex((b) => b.id === id);
     if (idx === -1) return;
 
-    const source = blocks[idx];
+    const source = blocks[idx]!;
     const def = blockDefinitions[source.type];
-    const config = JSON.parse(JSON.stringify(source.config));
+    const config = JSON.parse(JSON.stringify(source.config)) as Record<string, unknown>;
 
     // Generate new key for data blocks
     if (def?.hasData && config.key) {
@@ -164,7 +168,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     if (newIdx < 0 || newIdx >= blocks.length) return;
 
     const newBlocks = [...blocks];
-    [newBlocks[idx], newBlocks[newIdx]] = [newBlocks[newIdx], newBlocks[idx]];
+    const a = newBlocks[idx]!;
+    const b = newBlocks[newIdx]!;
+    newBlocks[idx] = b;
+    newBlocks[newIdx] = a;
 
     set({ blocks: newBlocks, isDirty: true });
   },
