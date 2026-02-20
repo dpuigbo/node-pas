@@ -17,7 +17,7 @@ function configureAuth() {
         clientID: env_1.env.MICROSOFT_CLIENT_ID,
         clientSecret: env_1.env.MICROSOFT_CLIENT_SECRET,
         callbackURL: env_1.env.MICROSOFT_CALLBACK_URL,
-        tenant: 'common',
+        tenant: env_1.env.MICROSOFT_TENANT_ID || 'common',
         scope: ['user.read', 'profile', 'email', 'openid'],
     }, async (_accessToken, _refreshToken, profile, done) => {
         try {

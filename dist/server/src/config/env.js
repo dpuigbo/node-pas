@@ -9,6 +9,7 @@ const envSchema = zod_1.z.object({
     JWT_SECRET: zod_1.z.string().min(16).default('dev-secret-change-in-production'),
     MICROSOFT_CLIENT_ID: zod_1.z.string().default(''),
     MICROSOFT_CLIENT_SECRET: zod_1.z.string().default(''),
+    MICROSOFT_TENANT_ID: zod_1.z.string().default('common'),
     MICROSOFT_CALLBACK_URL: zod_1.z.string().default('http://localhost:3000/api/auth/microsoft/callback'),
     APP_URL: zod_1.z.string().default('http://localhost:5173'),
 });
@@ -24,6 +25,7 @@ function loadEnv() {
             JWT_SECRET: process.env.JWT_SECRET || 'dev-secret-change-in-production',
             MICROSOFT_CLIENT_ID: process.env.MICROSOFT_CLIENT_ID || '',
             MICROSOFT_CLIENT_SECRET: process.env.MICROSOFT_CLIENT_SECRET || '',
+            MICROSOFT_TENANT_ID: process.env.MICROSOFT_TENANT_ID || 'common',
             MICROSOFT_CALLBACK_URL: process.env.MICROSOFT_CALLBACK_URL || 'http://localhost:3000/api/auth/microsoft/callback',
             APP_URL: process.env.APP_URL || 'http://localhost:5173',
         };
