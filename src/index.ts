@@ -4,7 +4,6 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import path from 'path';
-import { execSync } from 'child_process';
 import { configureAuth } from './config/auth';
 import { errorMiddleware } from './middleware/error.middleware';
 import apiRoutes from './routes';
@@ -32,8 +31,9 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Deploy webhook — called by GitHub Actions after client build
-// Only does: git pull + prisma generate + restart (lightweight)
+// Deploy webhook — lightweight restart only
+// Hostinger handles git pull + npm install + build on deploy.
+// This just restarts Passenger via tmp/restart.txt (uses fs, no child processes).
 app.post('/api/deploy', (req, res) => {
   const secret = req.headers['x-deploy-secret'] || req.query.secret;
   if (secret !== process.env.DEPLOY_SECRET) {
@@ -42,27 +42,16 @@ app.post('/api/deploy', (req, res) => {
   }
   try {
     const projectRoot = path.join(__dirname, '..');
-    // git pull (gets new code + pre-built dist/client from CI)
-    const pullOutput = execSync('git pull origin main 2>&1', {
-      cwd: projectRoot, timeout: 30000, encoding: 'utf-8',
-    });
-    // fix esbuild permissions
-    try { execSync('chmod +x node_modules/@esbuild/*/bin/esbuild node_modules/.bin/* 2>/dev/null', { cwd: projectRoot }); } catch (_) {}
-    // prisma generate
-    let prismaOutput = '';
-    try {
-      prismaOutput = execSync('node node_modules/prisma/build/index.js generate 2>&1', {
-        cwd: projectRoot, timeout: 15000, encoding: 'utf-8',
-      });
-    } catch (_) {}
-    // Respond before restart (restart kills this process)
-    res.json({ status: 'deployed', pull: pullOutput, prisma: prismaOutput });
-    // Restart Passenger after response is sent
+    const tmpDir = path.join(projectRoot, 'tmp');
+    const fs = require('fs');
+    if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+    res.json({ status: 'restart scheduled' });
+    // Touch restart.txt after response is sent
     setTimeout(() => {
-      try { execSync('mkdir -p tmp && touch tmp/restart.txt', { cwd: projectRoot }); } catch (_) {}
+      try { fs.writeFileSync(path.join(tmpDir, 'restart.txt'), String(Date.now())); } catch (_) {}
     }, 500);
   } catch (err: any) {
-    res.status(500).json({ error: 'Deploy failed', details: err.stdout || err.message });
+    res.status(500).json({ error: 'Deploy failed', details: err.message });
   }
 });
 
