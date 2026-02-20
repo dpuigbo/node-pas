@@ -33,6 +33,7 @@ app.get('/api/health', (_req, res) => {
 });
 
 // Deploy webhook — called by GitHub Actions after client build
+// Only does: git pull + prisma generate + restart (lightweight)
 app.post('/api/deploy', (req, res) => {
   const secret = req.headers['x-deploy-secret'] || req.query.secret;
   if (secret !== process.env.DEPLOY_SECRET) {
@@ -41,14 +42,27 @@ app.post('/api/deploy', (req, res) => {
   }
   try {
     const projectRoot = path.join(__dirname, '..');
-    const output = execSync('bash deploy.sh 2>&1', {
-      cwd: projectRoot,
-      timeout: 60000,
-      encoding: 'utf-8',
+    // git pull (gets new code + pre-built dist/client from CI)
+    const pullOutput = execSync('git pull origin main 2>&1', {
+      cwd: projectRoot, timeout: 30000, encoding: 'utf-8',
     });
-    res.json({ status: 'deployed', output });
+    // fix esbuild permissions
+    try { execSync('chmod +x node_modules/@esbuild/*/bin/esbuild node_modules/.bin/* 2>/dev/null', { cwd: projectRoot }); } catch (_) {}
+    // prisma generate
+    let prismaOutput = '';
+    try {
+      prismaOutput = execSync('node node_modules/prisma/build/index.js generate 2>&1', {
+        cwd: projectRoot, timeout: 15000, encoding: 'utf-8',
+      });
+    } catch (_) {}
+    // Respond before restart (restart kills this process)
+    res.json({ status: 'deployed', pull: pullOutput, prisma: prismaOutput });
+    // Restart Passenger after response is sent
+    setTimeout(() => {
+      try { execSync('mkdir -p tmp && touch tmp/restart.txt', { cwd: projectRoot }); } catch (_) {}
+    }, 500);
   } catch (err: any) {
-    res.status(500).json({ error: 'Deploy failed', output: err.stdout || err.message });
+    res.status(500).json({ error: 'Deploy failed', details: err.stdout || err.message });
   }
 });
 
