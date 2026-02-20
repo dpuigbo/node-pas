@@ -11,19 +11,45 @@ const auth_middleware_1 = require("../middleware/auth.middleware");
 const database_1 = require("../config/database");
 const router = (0, express_1.Router)();
 // Initiate Microsoft OAuth
-router.get('/microsoft', passport_1.default.authenticate('microsoft', { session: false }));
+router.get('/microsoft', (req, res, next) => {
+    // Check strategy is registered (env vars might be missing after deploy)
+    if (!passport_1.default._strategy('microsoft')) {
+        res.status(503).json({
+            error: 'Microsoft OAuth no configurado',
+            hint: 'Las credenciales MICROSOFT_CLIENT_ID / MICROSOFT_CLIENT_SECRET no estan en .env del servidor. Recrear .env via SSH.',
+            configured: {
+                MICROSOFT_CLIENT_ID: !!env_1.env.MICROSOFT_CLIENT_ID,
+                MICROSOFT_CLIENT_SECRET: !!env_1.env.MICROSOFT_CLIENT_SECRET,
+                MICROSOFT_TENANT_ID: env_1.env.MICROSOFT_TENANT_ID || '(not set)',
+                MICROSOFT_CALLBACK_URL: env_1.env.MICROSOFT_CALLBACK_URL,
+            },
+        });
+        return;
+    }
+    passport_1.default.authenticate('microsoft', { session: false })(req, res, next);
+});
 // Microsoft OAuth callback (GET — Microsoft redirects with code in query string)
-router.get('/microsoft/callback', passport_1.default.authenticate('microsoft', { session: false, failureRedirect: '/login' }), (req, res) => {
-    const user = req.user;
-    const token = jsonwebtoken_1.default.sign({ userId: user.id }, env_1.env.JWT_SECRET, { expiresIn: '7d' });
-    res.cookie('token', token, {
-        httpOnly: true,
-        secure: env_1.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-    const redirectUrl = env_1.env.NODE_ENV === 'production' ? '/' : env_1.env.APP_URL;
-    res.redirect(redirectUrl);
+router.get('/microsoft/callback', (req, res, next) => {
+    passport_1.default.authenticate('microsoft', { session: false }, (err, user) => {
+        if (err) {
+            console.error('[Auth] Microsoft callback error:', err);
+            res.redirect(`/login?error=${encodeURIComponent(err.message || 'auth_failed')}`);
+            return;
+        }
+        if (!user) {
+            res.redirect('/login?error=no_user');
+            return;
+        }
+        const token = jsonwebtoken_1.default.sign({ userId: user.id }, env_1.env.JWT_SECRET, { expiresIn: '7d' });
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: env_1.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
+        const redirectUrl = env_1.env.NODE_ENV === 'production' ? '/' : env_1.env.APP_URL;
+        res.redirect(redirectUrl);
+    })(req, res, next);
 });
 // Get current user
 router.get('/me', auth_middleware_1.authMiddleware, (req, res) => {
