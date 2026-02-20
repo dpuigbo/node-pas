@@ -32,7 +32,12 @@ try {
 }
 
 // === 2. Load .env ===
-require('dotenv').config({ path: envPath });
+const dotenvResult = require('dotenv').config({ path: envPath });
+if (dotenvResult.error) {
+  console.warn('[PAS] dotenv error:', dotenvResult.error.message);
+} else {
+  console.log('[PAS] .env loaded, DATABASE_URL:', process.env.DATABASE_URL ? 'SET' : 'MISSING');
+}
 
 // === 3. Fix .htaccess (Hostinger regenerates it with broken PassengerBaseURI /) ===
 const htaccessPath = path.join(__dirname, '.htaccess');
