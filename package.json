@@ -13,7 +13,7 @@
     "start": "node dist/server/src/index.js",
     "db:migrate": "npx prisma migrate deploy",
     "db:seed": "npx prisma db seed",
-    "postinstall": "npx prisma generate"
+    "postinstall": "./node_modules/.bin/prisma generate || echo '[PAS] prisma generate skipped (will use CI-built client)'"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
