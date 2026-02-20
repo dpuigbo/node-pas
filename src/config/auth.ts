@@ -15,7 +15,7 @@ export function configureAuth() {
         clientID: env.MICROSOFT_CLIENT_ID,
         clientSecret: env.MICROSOFT_CLIENT_SECRET,
         callbackURL: env.MICROSOFT_CALLBACK_URL,
-        tenant: 'common',
+        tenant: env.MICROSOFT_TENANT_ID || 'common',
         scope: ['user.read', 'profile', 'email', 'openid'],
       },
       async (_accessToken: string, _refreshToken: string, profile: any, done: Function) => {

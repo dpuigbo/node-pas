@@ -1,6 +1,22 @@
-import { Bot } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
+import { Bot, Loader2 } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 
 export default function Login() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
   const handleMicrosoftLogin = () => {
     window.location.href = '/api/auth/microsoft';
   };
