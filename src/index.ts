@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import path from 'path';
+import { execSync } from 'child_process';
 import { configureAuth } from './config/auth';
 import { errorMiddleware } from './middleware/error.middleware';
 import apiRoutes from './routes';
@@ -29,6 +30,26 @@ app.use(passport.initialize());
 // Health check
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Deploy webhook — called by GitHub Actions after client build
+app.post('/api/deploy', (req, res) => {
+  const secret = req.headers['x-deploy-secret'] || req.query.secret;
+  if (secret !== process.env.DEPLOY_SECRET) {
+    res.status(401).json({ error: 'Invalid deploy secret' });
+    return;
+  }
+  try {
+    const projectRoot = path.join(__dirname, '..');
+    const output = execSync('bash deploy.sh 2>&1', {
+      cwd: projectRoot,
+      timeout: 60000,
+      encoding: 'utf-8',
+    });
+    res.json({ status: 'deployed', output });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Deploy failed', output: err.stdout || err.message });
+  }
 });
 
 // API routes

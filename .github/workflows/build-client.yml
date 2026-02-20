@@ -1,4 +1,4 @@
-name: Build Client
+name: Build & Deploy
 
 on:
   push:
@@ -35,3 +35,12 @@ jobs:
             git commit -m "ci: build client [skip ci]"
             git push
           fi
+
+      - name: Trigger deploy on Hostinger
+        if: always()
+        run: |
+          echo "Triggering deploy webhook..."
+          curl -sf -X POST \
+            -H "x-deploy-secret: ${{ secrets.DEPLOY_SECRET }}" \
+            "https://admin.pasrobotics.com/api/deploy" \
+            --max-time 90 || echo "Deploy webhook failed — manual deploy needed"

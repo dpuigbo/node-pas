@@ -1,29 +1,47 @@
 #!/bin/bash
-set -e
+# PAS Robotics — Deploy script
+# Covers: git pull, npm install, permissions, prisma, .env check, restart
 
-echo "[DEPLOY] Pulling latest code..."
-git pull origin main
+echo "[DEPLOY] Starting at $(date)"
 
-echo "[DEPLOY] Installing dependencies..."
-npm install
+# 1. Pull latest code
+echo "[DEPLOY] git pull..."
+git pull origin main 2>&1 || { echo "[DEPLOY] ERROR: git pull failed"; exit 1; }
 
-echo "[DEPLOY] Fixing binary permissions..."
-chmod +x node_modules/@esbuild/*/bin/esbuild node_modules/.bin/* 2>/dev/null || true
+# 2. Install dependencies (skip if node_modules recent)
+echo "[DEPLOY] npm install..."
+npm install 2>&1 || echo "[DEPLOY] WARN: npm install had issues"
 
-echo "[DEPLOY] Generating Prisma client..."
-npx prisma generate
+# 3. Fix binary permissions (Hostinger loses them)
+echo "[DEPLOY] Fixing permissions..."
+chmod +x node_modules/@esbuild/*/bin/esbuild 2>/dev/null
+chmod +x node_modules/.bin/* 2>/dev/null
+chmod +x client/node_modules/@esbuild/*/bin/esbuild 2>/dev/null
+chmod +x client/node_modules/.bin/* 2>/dev/null
 
-echo "[DEPLOY] Running pending migrations..."
-npx prisma migrate deploy 2>/dev/null || echo "[DEPLOY] No pending migrations"
+# 4. Prisma generate
+echo "[DEPLOY] Prisma generate..."
+npx prisma generate 2>&1 || node node_modules/prisma/build/index.js generate 2>&1
 
+# 5. Prisma migrations
+echo "[DEPLOY] Prisma migrate deploy..."
+npx prisma migrate deploy 2>&1 || echo "[DEPLOY] No pending migrations"
+
+# 6. Check .env exists
+if [ ! -f .env ]; then
+  echo "[DEPLOY] WARNING: .env file missing! App will fail to connect to DB."
+  echo "[DEPLOY] Create it with: nano .env"
+fi
+
+# 7. Restart Passenger
 echo "[DEPLOY] Restarting Passenger..."
-mkdir -p tmp && touch tmp/restart.txt
+mkdir -p tmp
+touch tmp/restart.txt
 
-echo "[DEPLOY] Waiting 3s for restart..."
+# 8. Wait and health check
+echo "[DEPLOY] Waiting 3s..."
 sleep 3
-
 echo "[DEPLOY] Health check:"
-curl -s https://admin.pasrobotics.com/api/health || echo "[DEPLOY] Health check failed - check startup-error.log"
+curl -sf https://admin.pasrobotics.com/api/health && echo "" || echo "[DEPLOY] FAIL — check: cat startup-error.log"
 
-echo ""
-echo "[DEPLOY] Complete!"
+echo "[DEPLOY] Done at $(date)"
