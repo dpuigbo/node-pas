@@ -2,8 +2,8 @@
 node_modules/
 client/node_modules/
 
-# Build output (solo server - client se commitea pre-built)
-dist/server/
+# Build output — both client and server are pre-built by CI and committed
+# (Hostinger runs plain JS, no tsx/esbuild at runtime)
 
 # Environment
 .env

@@ -24,18 +24,9 @@ try {
   }
 } catch (_) {}
 
-// === 3. Fix esbuild binary permissions (fs.chmodSync, no child process) ===
+// === 3. Start the app (pre-compiled JS, no tsx/esbuild at runtime) ===
 try {
-  const esbuildBin = path.join(__dirname, 'node_modules', '@esbuild', 'linux-x64', 'bin', 'esbuild');
-  if (fs.existsSync(esbuildBin)) {
-    fs.chmodSync(esbuildBin, 0o755);
-  }
-} catch (_) {}
-
-// === 4. Start the app ===
-try {
-  require('tsx/cjs');
-  require('./src/index.ts');
+  require('./dist/server/src/index.js');
 } catch (err) {
   const msg = `[${new Date().toISOString()}] STARTUP ERROR:\n${err.stack || err}\n`;
   fs.appendFileSync(path.join(__dirname, 'startup-error.log'), msg);

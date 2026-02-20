@@ -11,6 +11,10 @@ import apiRoutes from './routes';
 const app = express();
 const PORT = process.env.PORT || 3000;
 const isDev = process.env.NODE_ENV !== 'production';
+// Project root: find it by looking for package.json
+// Works with tsx (__dirname=src/) and tsc (__dirname=dist/server/src/)
+const PROJECT_ROOT = [__dirname, path.join(__dirname, '..'), path.join(__dirname, '..', '..', '..')]
+  .find(d => require('fs').existsSync(path.join(d, 'package.json'))) || path.join(__dirname, '..');
 
 // Middleware
 app.use(helmet({ contentSecurityPolicy: false }));
@@ -41,8 +45,7 @@ app.post('/api/deploy', (req, res) => {
     return;
   }
   try {
-    const projectRoot = path.join(__dirname, '..');
-    const tmpDir = path.join(projectRoot, 'tmp');
+    const tmpDir = path.join(PROJECT_ROOT, 'tmp');
     const fs = require('fs');
     if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
     res.json({ status: 'restart scheduled' });
@@ -63,8 +66,7 @@ app.use(errorMiddleware);
 
 // Serve static frontend in production
 if (!isDev) {
-  // __dirname = <project>/src/ (running TS directly with tsx)
-  const clientDist = path.join(__dirname, '..', 'dist', 'client');
+  const clientDist = path.join(PROJECT_ROOT, 'dist', 'client');
   app.use(express.static(clientDist));
   app.get('*', (_req, res) => {
     res.sendFile(path.join(clientDist, 'index.html'));
