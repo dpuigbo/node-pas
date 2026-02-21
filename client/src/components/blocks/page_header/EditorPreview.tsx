@@ -7,6 +7,9 @@ export function EditorPreview({ block }: EditorPreviewProps) {
   const title = (c.title as string) || 'Reporte de mantenimiento';
   const subtitle = (c.subtitle as string) || '';
   const backgroundColor = (c.backgroundColor as string) || '#1f2937';
+  const textColor = (c.textColor as string) || '#ffffff';
+  const textSize = (c.textSize as number) || 12;
+  const logoSize = (c.logoSize as number) || 24;
   const blockLogoUrl = (c.logoUrl as string) || '';
   const height = (c.height as number) || 40;
 
@@ -19,18 +22,33 @@ export function EditorPreview({ block }: EditorPreviewProps) {
       style={{ backgroundColor, height: `${height}px` }}
     >
       <div className="flex flex-col">
-        <span className="text-white text-xs font-semibold">{title}</span>
+        <span
+          className="font-semibold"
+          style={{ color: textColor, fontSize: `${textSize}px` }}
+        >
+          {title}
+        </span>
         {subtitle && (
-          <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
+          <span
+            style={{ color: textColor, opacity: 0.6, fontSize: `${Math.max(textSize - 2, 8)}px` }}
+          >
             {subtitle}
           </span>
         )}
       </div>
       <div className="shrink-0">
         {logoUrl ? (
-          <img src={logoUrl} alt="Logo" className="h-6 w-auto object-contain" />
+          <img
+            src={logoUrl}
+            alt="Logo"
+            className="w-auto object-contain"
+            style={{ height: `${logoSize}px` }}
+          />
         ) : (
-          <div className="flex h-6 w-6 items-center justify-center">
+          <div
+            className="flex items-center justify-center"
+            style={{ height: `${logoSize}px`, width: `${logoSize}px` }}
+          >
             <Bot className="h-4 w-4" style={{ color: 'rgba(255,255,255,0.5)' }} />
           </div>
         )}

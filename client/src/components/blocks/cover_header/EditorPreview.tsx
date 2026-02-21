@@ -2,13 +2,22 @@ import { Bot } from 'lucide-react';
 import type { EditorPreviewProps } from '@/components/blocks/registry';
 import { useEmpresaLogo } from '@/hooks/useCatalogos';
 
+const VALIGN_MAP: Record<string, string> = {
+  top: 'flex-start',
+  center: 'center',
+  bottom: 'flex-end',
+};
+
 export function EditorPreview({ block }: EditorPreviewProps) {
   const c = block.config;
   const title = (c.title as string) || 'Reporte de mantenimiento';
   const subtitle = (c.subtitle as string) || '';
   const companyName = (c.companyName as string) || 'PAS Robotics';
   const logoPosition = (c.logoPosition as string) || 'right';
+  const logoVerticalAlign = (c.logoVerticalAlign as string) || 'center';
   const backgroundColor = (c.backgroundColor as string) || '#000000';
+  const textColor = (c.textColor as string) || '#ffffff';
+  const titleSize = (c.titleSize as number) || 24;
   const blockLogoUrl = (c.logoUrl as string) || '';
   const height = (c.height as number) || 280;
 
@@ -17,22 +26,29 @@ export function EditorPreview({ block }: EditorPreviewProps) {
 
   return (
     <div
-      className="w-full px-8 flex items-center gap-6"
+      className="w-full px-8 flex gap-6"
       style={{
         backgroundColor,
         height: `${height}px`,
         flexDirection: logoPosition === 'right' ? 'row' : 'row-reverse',
+        alignItems: VALIGN_MAP[logoVerticalAlign] || 'center',
       }}
     >
       <div className="flex-1">
-        <p className="text-xs font-medium tracking-widest uppercase mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+        <p
+          className="text-xs font-medium tracking-widest uppercase mb-2"
+          style={{ color: textColor, opacity: 0.6 }}
+        >
           {companyName}
         </p>
-        <h1 className="text-2xl font-extrabold leading-tight text-white">
+        <h1
+          className="font-extrabold leading-tight"
+          style={{ color: textColor, fontSize: `${titleSize}px` }}
+        >
           {title}
         </h1>
         {subtitle && (
-          <p className="text-sm mt-2" style={{ color: 'rgba(255,255,255,0.7)' }}>
+          <p className="text-sm mt-2" style={{ color: textColor, opacity: 0.7 }}>
             {subtitle}
           </p>
         )}

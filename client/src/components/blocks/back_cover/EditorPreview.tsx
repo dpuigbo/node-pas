@@ -10,15 +10,11 @@ export function EditorPreview({ block }: EditorPreviewProps) {
   const empresaLogo = useEmpresaLogo();
   const logoUrl = blockLogoUrl || empresaLogo;
 
-  // back_cover fills entire page — no configurable height, uses flex-1 from parent
+  // back_cover is a FULL PAGE block — uses flex-1 from parent to fill all space
   return (
     <div
-      className="w-full flex items-center justify-center"
-      style={{
-        backgroundColor,
-        minHeight: '400px',
-        height: '100%',
-      }}
+      className="w-full flex-1 flex items-center justify-center"
+      style={{ backgroundColor }}
     >
       {logoUrl ? (
         <img

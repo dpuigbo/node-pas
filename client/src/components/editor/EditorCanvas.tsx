@@ -294,6 +294,12 @@ function PageSheet({
     return blockIds.map((id) => blockMap.get(id)).filter(Boolean) as Block[];
   }, [blockIds, allBlocks]);
 
+  // Check if this page has a back_cover (full-page block)
+  const hasBackCover = useMemo(
+    () => pageBlocks.some((b) => b.type === 'back_cover'),
+    [pageBlocks],
+  );
+
   // Split blocks into top-chrome, content, and bottom-chrome
   const { topChrome, contentBlocks, bottomChrome } = useMemo(() => {
     const top: Block[] = [];
@@ -363,22 +369,24 @@ function PageSheet({
         </div>
       ) : (
         <div className="flex flex-col h-full">
-          {/* Top chrome blocks — edge-to-edge, no margins */}
+          {/* Top chrome blocks — edge-to-edge, fixed height (not stretchy) */}
           {topChrome.length > 0 && (
-            <div className="shrink-0">
+            <div className={hasBackCover ? 'flex flex-col flex-1' : 'shrink-0'}>
               {topChrome.map(renderBlock)}
             </div>
           )}
 
-          {/* Content blocks — with page margins */}
-          <div
-            className="flex-1 flex flex-wrap items-start content-start overflow-hidden"
-            style={{
-              padding: `${topChrome.length > 0 ? 8 : marginTop}px ${marginRight}px ${bottomChrome.length > 0 ? 8 : marginBottom}px ${marginLeft}px`,
-            }}
-          >
-            {contentBlocks.map(renderBlock)}
-          </div>
+          {/* Content blocks — with page margins (hidden when back_cover fills the page) */}
+          {!hasBackCover && (
+            <div
+              className="flex-1 flex flex-wrap items-start content-start overflow-hidden"
+              style={{
+                padding: `${topChrome.length > 0 ? 8 : marginTop}px ${marginRight}px ${bottomChrome.length > 0 ? 8 : marginBottom}px ${marginLeft}px`,
+              }}
+            >
+              {contentBlocks.map(renderBlock)}
+            </div>
+          )}
 
           {/* Bottom chrome blocks — edge-to-edge, pinned to bottom */}
           {bottomChrome.length > 0 && (

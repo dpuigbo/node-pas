@@ -16,6 +16,25 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
           className="h-8"
         />
       </div>
+      {/* Vertical alignment on page */}
+      <div className="space-y-1">
+        <Label className="text-xs">Alineacion vertical en pagina</Label>
+        <div className="flex gap-1">
+          {(['top', 'center', 'bottom'] as const).map((pos) => (
+            <button
+              key={pos}
+              className={`flex-1 rounded border px-2 py-1 text-xs ${
+                (c.verticalAlign || 'top') === pos
+                  ? 'border-primary bg-primary/5 text-primary'
+                  : 'border-border hover:bg-accent'
+              }`}
+              onClick={() => onChange('verticalAlign', pos)}
+            >
+              {pos === 'top' ? 'Arriba' : pos === 'center' ? 'Centro' : 'Abajo'}
+            </button>
+          ))}
+        </div>
+      </div>
       <p className="text-xs text-muted-foreground leading-relaxed">
         Tabla con los datos de la intervencion: actividad, horas, orden de trabajo,
         fecha, tecnicos, telefonos y correos. Se rellena automaticamente

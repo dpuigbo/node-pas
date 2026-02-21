@@ -2,12 +2,21 @@ import { Building2 } from 'lucide-react';
 import type { EditorPreviewProps } from '@/components/blocks/registry';
 
 export function EditorPreview({ block }: EditorPreviewProps) {
-  const title = (block.config.title as string) || '';
+  const c = block.config;
+  const title = (c.title as string) || '';
+  const verticalAlign = (c.verticalAlign as string) || 'top';
+
+  const alignClass =
+    verticalAlign === 'center'
+      ? 'justify-center'
+      : verticalAlign === 'bottom'
+        ? 'justify-end'
+        : 'justify-start';
 
   return (
-    <div className="w-full">
+    <div className={`w-full flex flex-col ${alignClass}`}>
       {title && (
-        <h3 className="text-sm font-bold mb-2">{title}</h3>
+        <h3 className="text-xs font-bold mb-1.5 px-1">{title}</h3>
       )}
       <div className="flex items-start gap-4 border border-gray-200 rounded p-3">
         <div className="shrink-0 w-16 h-12 bg-gray-100 rounded flex items-center justify-center">

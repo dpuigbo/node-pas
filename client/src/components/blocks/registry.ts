@@ -265,7 +265,10 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
       companyName: 'PAS Robotics',
       logoUrl: '',
       logoPosition: 'right',
+      logoVerticalAlign: 'center',
       backgroundColor: '#000000',
+      textColor: '#ffffff',
+      titleSize: 24,
       height: 280,
     },
   },
@@ -279,7 +282,10 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
       title: 'Reporte de mantenimiento',
       subtitle: '',
       logoUrl: '',
+      logoSize: 24,
       backgroundColor: '#1f2937',
+      textColor: '#ffffff',
+      textSize: 12,
       height: 40,
     },
   },
@@ -294,6 +300,9 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
       showPageNumbers: true,
       backgroundColor: '#1f2937',
       accentColor: '#3b82f6',
+      textColor: '#ffffff',
+      textSize: 10,
+      backgroundImage: '',
       height: 36,
     },
   },
@@ -335,6 +344,7 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
     hasData: false,
     defaultConfig: {
       title: '',
+      verticalAlign: 'top',
     },
   },
   client_data: {
@@ -345,6 +355,7 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
     hasData: false,
     defaultConfig: {
       title: '',
+      verticalAlign: 'top',
     },
   },
 };

@@ -118,6 +118,20 @@ export function usePagination({ blocks, pageConfig, blockHeights }: UsePaginatio
         continue;
       }
 
+      // back_cover: full-page block, takes the entire page by itself
+      if (block.type === 'back_cover') {
+        flushRow();
+        if (currentPage.blockIds.length > 0) {
+          pages.push(currentPage);
+          currentPage = { pageIndex: pages.length, blockIds: [] };
+          currentY = 0;
+          chromeHeight = 0;
+        }
+        currentPage.blockIds.push(block.id);
+        chromeHeight = pageHeight; // fills entire page
+        continue;
+      }
+
       // Document chrome blocks: consume from full page height, not content area
       if (DOCUMENT_CHROME_TYPES.has(block.type)) {
         flushRow();
