@@ -31,17 +31,9 @@ const ROWS: { label: string; placeholder: string }[][] = [
 export function EditorPreview({ block }: EditorPreviewProps) {
   const c = block.config;
   const title = (c.title as string) || '';
-  const verticalAlign = (c.verticalAlign as string) || 'top';
-
-  const alignClass =
-    verticalAlign === 'center'
-      ? 'justify-center'
-      : verticalAlign === 'bottom'
-        ? 'justify-end'
-        : 'justify-start';
 
   return (
-    <div className={`w-full flex flex-col ${alignClass}`}>
+    <div className="w-full">
       {title && (
         <h3 className="text-xs font-bold mb-1.5 px-1">{title}</h3>
       )}

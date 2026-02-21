@@ -114,16 +114,10 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
         </Label>
       </div>
       <ColorPicker
-        label="Color principal"
+        label="Color de fondo"
         value={(c.backgroundColor as string) || ''}
         fallback="#1f2937"
         onChange={(v) => onChange('backgroundColor', v)}
-      />
-      <ColorPicker
-        label="Color acento"
-        value={(c.accentColor as string) || ''}
-        fallback="#3b82f6"
-        onChange={(v) => onChange('accentColor', v)}
       />
       <ColorPicker
         label="Color del texto"
@@ -191,7 +185,7 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
       </div>
       <p className="text-xs text-muted-foreground leading-relaxed">
         Este pie aparece en la parte inferior de todas las paginas
-        intermedias del documento.
+        de la seccion donde se coloque.
       </p>
     </div>
   );

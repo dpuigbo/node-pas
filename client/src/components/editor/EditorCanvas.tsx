@@ -49,6 +49,9 @@ const ALWAYS_FULL_TYPES = new Set([
   'page_break', 'content_placeholder', 'intervention_data', 'client_data',
 ]);
 
+/** Blocks whose vertical alignment is controlled at the page level */
+const VERTICALLY_ALIGNABLE = new Set(['intervention_data', 'client_data']);
+
 /** Get the width CSS class for a block based on its type and config */
 function getBlockWidthClass(block: Block): string {
   if (ALWAYS_FULL_TYPES.has(block.type)) {
@@ -79,6 +82,7 @@ function BlockWrapper({
 
   const isSelected = selectedBlockId === block.id;
   const isSectionSeparator = block.type === 'section_separator';
+  const isChrome = DOCUMENT_CHROME_TYPES.has(block.type);
   const entry = getBlockEntry(block.type);
   const widthClass = getBlockWidthClass(block);
   const isFullWidth = widthClass === 'w-full';
@@ -96,7 +100,7 @@ function BlockWrapper({
     isDragging,
   } = useSortable({
     id: block.id,
-    disabled: isSectionSeparator,
+    disabled: isSectionSeparator || isChrome,
   });
 
   const sortableStyle: React.CSSProperties = {
@@ -263,6 +267,7 @@ function PageSheet({
   pageIndex,
   totalPages,
   blockIds,
+  sectionChromeIds,
   allBlocks,
   pageConfig,
   scale,
@@ -271,6 +276,7 @@ function PageSheet({
   pageIndex: number;
   totalPages: number;
   blockIds: string[];
+  sectionChromeIds: string[];
   allBlocks: Block[];
   pageConfig: PageConfig;
   scale: number;
@@ -288,11 +294,23 @@ function PageSheet({
   const marginBottom = pageConfig.margins.bottom * MM_TO_PX;
   const marginLeft = pageConfig.margins.left * MM_TO_PX;
 
-  // Find blocks for this page
-  const pageBlocks = useMemo(() => {
-    const blockMap = new Map(allBlocks.map((b) => [b.id, b]));
-    return blockIds.map((id) => blockMap.get(id)).filter(Boolean) as Block[];
-  }, [blockIds, allBlocks]);
+  // Build block map for lookups
+  const blockMap = useMemo(
+    () => new Map(allBlocks.map((b) => [b.id, b])),
+    [allBlocks],
+  );
+
+  // Find blocks physically on this page
+  const pageBlocks = useMemo(
+    () => blockIds.map((id) => blockMap.get(id)).filter(Boolean) as Block[],
+    [blockIds, blockMap],
+  );
+
+  // Find section chrome blocks to inject
+  const injectedChromeBlocks = useMemo(
+    () => sectionChromeIds.map((id) => blockMap.get(id)).filter(Boolean) as Block[],
+    [sectionChromeIds, blockMap],
+  );
 
   // Check if this page has a back_cover (full-page block)
   const hasBackCover = useMemo(
@@ -301,25 +319,42 @@ function PageSheet({
   );
 
   // Split blocks into top-chrome, content, and bottom-chrome
+  // Chrome comes from BOTH physical page blocks AND injected section chrome
   const { topChrome, contentBlocks, bottomChrome } = useMemo(() => {
-    const top: Block[] = [];
+    const top: { block: Block; isInjected: boolean }[] = [];
     const content: Block[] = [];
-    const bottom: Block[] = [];
+    const bottom: { block: Block; isInjected: boolean }[] = [];
+    const seenIds = new Set<string>();
 
+    // First: injected chrome blocks from the section (these repeat on non-first pages)
+    for (const block of injectedChromeBlocks) {
+      if (seenIds.has(block.id)) continue;
+      seenIds.add(block.id);
+      const pos = DOCUMENT_CHROME_POSITION[block.type] || 'top';
+      if (pos === 'bottom') {
+        bottom.push({ block, isInjected: true });
+      } else {
+        top.push({ block, isInjected: true });
+      }
+    }
+
+    // Then: physical blocks on this page
     for (const block of pageBlocks) {
+      if (seenIds.has(block.id)) continue;
+      seenIds.add(block.id);
       if (DOCUMENT_CHROME_TYPES.has(block.type)) {
         const pos = DOCUMENT_CHROME_POSITION[block.type] || 'top';
         if (pos === 'bottom') {
-          bottom.push(block);
+          bottom.push({ block, isInjected: false });
         } else {
-          top.push(block);
+          top.push({ block, isInjected: false });
         }
       } else {
         content.push(block);
       }
     }
     return { topChrome: top, contentBlocks: content, bottomChrome: bottom };
-  }, [pageBlocks]);
+  }, [pageBlocks, injectedChromeBlocks]);
 
   // Compute global index for each block (for move up/down disabled state)
   const globalIndexMap = useMemo(() => {
@@ -327,6 +362,26 @@ function PageSheet({
     allBlocks.forEach((b, i) => map.set(b.id, i));
     return map;
   }, [allBlocks]);
+
+  // Determine vertical alignment for the content area
+  // If any content block has verticalAlign set, use it for the content zone
+  const contentVerticalAlign = useMemo(() => {
+    for (const b of contentBlocks) {
+      if (VERTICALLY_ALIGNABLE.has(b.type)) {
+        const align = (b.config.verticalAlign as string) || 'top';
+        if (align !== 'top') return align;
+      }
+    }
+    return 'top';
+  }, [contentBlocks]);
+
+  // For flex-wrap containers, use content-* (align-content) instead of justify-*
+  const contentAlignClass =
+    contentVerticalAlign === 'center'
+      ? 'content-center'
+      : contentVerticalAlign === 'bottom'
+        ? 'content-end'
+        : 'content-start';
 
   const renderBlock = (block: Block) => {
     const globalIdx = globalIndexMap.get(block.id) ?? 0;
@@ -338,6 +393,23 @@ function PageSheet({
         totalBlocks={allBlocksCount}
         onHeightChange={onBlockHeightChange}
       />
+    );
+  };
+
+  /** Render a chrome block — either as full BlockWrapper (physical) or simple preview (injected) */
+  const renderChromeEntry = (entry: { block: Block; isInjected: boolean }) => {
+    if (!entry.isInjected) {
+      // Physical — use BlockWrapper for height measurement, selection, toolbar
+      return renderBlock(entry.block);
+    }
+    // Injected — render just the preview (no sortable, no toolbar)
+    const blockEntry = getBlockEntry(entry.block.type);
+    if (!blockEntry) return null;
+    const Preview = blockEntry.EditorPreview;
+    return (
+      <div key={`injected-${entry.block.id}`} className="w-full">
+        <Preview block={entry.block} isSelected={false} />
+      </div>
     );
   };
 
@@ -357,7 +429,7 @@ function PageSheet({
         selectBlock(null);
       }}
     >
-      {pageBlocks.length === 0 && pageIndex === 0 ? (
+      {pageBlocks.length === 0 && injectedChromeBlocks.length === 0 && pageIndex === 0 ? (
         <div
           className="flex flex-col items-center justify-center h-full text-muted-foreground/50"
           style={{ padding: `${marginTop}px ${marginRight}px ${marginBottom}px ${marginLeft}px` }}
@@ -372,14 +444,17 @@ function PageSheet({
           {/* Top chrome blocks — edge-to-edge, fixed height (not stretchy) */}
           {topChrome.length > 0 && (
             <div className={hasBackCover ? 'flex flex-col flex-1' : 'shrink-0'}>
-              {topChrome.map(renderBlock)}
+              {topChrome.map(renderChromeEntry)}
             </div>
           )}
 
-          {/* Content blocks — with page margins (hidden when back_cover fills the page) */}
+          {/* Content blocks — with page margins */}
           {!hasBackCover && (
             <div
-              className="flex-1 flex flex-wrap items-start content-start overflow-hidden"
+              className={cn(
+                'flex-1 flex flex-wrap overflow-hidden items-start',
+                contentAlignClass,
+              )}
               style={{
                 padding: `${topChrome.length > 0 ? 8 : marginTop}px ${marginRight}px ${bottomChrome.length > 0 ? 8 : marginBottom}px ${marginLeft}px`,
               }}
@@ -391,16 +466,13 @@ function PageSheet({
           {/* Bottom chrome blocks — edge-to-edge, pinned to bottom */}
           {bottomChrome.length > 0 && (
             <div className="shrink-0 mt-auto">
-              {bottomChrome.map(renderBlock)}
+              {bottomChrome.map(renderChromeEntry)}
             </div>
           )}
         </div>
       )}
 
-      {/* Page number indicator */}
-      <div className="absolute bottom-2 right-4 text-[10px] text-gray-300 pointer-events-none z-10">
-        Pagina {pageIndex + 1} / {totalPages}
-      </div>
+      {/* Page number indicator removed — page numbers are handled by the page_footer block */}
     </div>
   );
 }
@@ -537,27 +609,46 @@ export function EditorCanvas() {
             className="flex flex-col items-center"
             style={{ gap: `${Math.max(24 * scale, 12)}px` }}
           >
-            {pages.map((page) => (
-              <div
-                key={page.pageIndex}
-                style={{
-                  height: canvasHeight * scale,
-                  width: '100%',
-                  display: 'flex',
-                  justifyContent: 'center',
-                }}
-              >
-                <PageSheet
-                  pageIndex={page.pageIndex}
-                  totalPages={totalPages}
-                  blockIds={page.blockIds}
-                  allBlocks={blocks}
-                  pageConfig={pageConfig}
-                  scale={scale}
-                  onBlockHeightChange={handleBlockHeightChange}
-                />
-              </div>
-            ))}
+            {pages.map((page) => {
+              // Find the separator block if this page starts a section
+              const sepBlock = page.sectionSeparatorId
+                ? blocks.find((b) => b.id === page.sectionSeparatorId)
+                : null;
+
+              return (
+                <div key={page.pageIndex} className="flex flex-col items-center w-full" style={{ gap: `${Math.max(16 * scale, 8)}px` }}>
+                  {/* Section separator rendered OUTSIDE the page */}
+                  {sepBlock && (
+                    <BlockWrapper
+                      block={sepBlock}
+                      index={blocks.findIndex((b) => b.id === sepBlock.id)}
+                      totalBlocks={blocks.length}
+                      onHeightChange={handleBlockHeightChange}
+                    />
+                  )}
+                  {/* The actual page */}
+                  <div
+                    style={{
+                      height: canvasHeight * scale,
+                      width: '100%',
+                      display: 'flex',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <PageSheet
+                      pageIndex={page.pageIndex}
+                      totalPages={totalPages}
+                      blockIds={page.blockIds}
+                      sectionChromeIds={page.sectionChromeIds}
+                      allBlocks={blocks}
+                      pageConfig={pageConfig}
+                      scale={scale}
+                      onBlockHeightChange={handleBlockHeightChange}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </SortableContext>
 

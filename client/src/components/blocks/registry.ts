@@ -299,7 +299,6 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
       companyName: 'PAS Robotics',
       showPageNumbers: true,
       backgroundColor: '#1f2937',
-      accentColor: '#3b82f6',
       textColor: '#ffffff',
       textSize: 10,
       backgroundImage: '',
