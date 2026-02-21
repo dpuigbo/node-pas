@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, Column } from '@/components/shared/DataTable';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useIntervenciones, useCreateIntervencion } from '@/hooks/useIntervenciones';
 import { useClientes } from '@/hooks/useClientes';
+import { useSistemas } from '@/hooks/useSistemas';
 import { useAuth } from '@/hooks/useAuth';
 
 const ESTADO_COLORS: Record<string, 'default' | 'secondary' | 'success' | 'warning' | 'outline'> = {
@@ -29,6 +30,15 @@ const ESTADO_LABELS: Record<string, string> = {
   facturada: 'Facturada',
 };
 
+interface FormState {
+  clienteId: number;
+  tipo: string;
+  titulo: string;
+  sistemaIds: number[];
+}
+
+const EMPTY_FORM: FormState = { clienteId: 0, tipo: 'preventiva', titulo: '', sistemaIds: [] };
+
 export default function IntervencionesPage() {
   const { isAdmin } = useAuth();
   const { data: intervenciones, isLoading } = useIntervenciones();
@@ -37,12 +47,35 @@ export default function IntervencionesPage() {
   const navigate = useNavigate();
 
   const [formOpen, setFormOpen] = useState(false);
-  const [form, setForm] = useState({ clienteId: 0, tipo: 'preventiva', titulo: '' });
+  const [form, setForm] = useState<FormState>({ ...EMPTY_FORM });
+
+  // Sistemas filtered by selected client
+  const { data: sistemas } = useSistemas(
+    form.clienteId ? { clienteId: form.clienteId } : undefined,
+  );
+
+  // Available sistemas (not yet selected)
+  const availableSistemas = useMemo(() => {
+    if (!sistemas) return [];
+    return (sistemas as any[]).filter((s: any) => !form.sistemaIds.includes(s.id));
+  }, [sistemas, form.sistemaIds]);
+
+  const handleClienteChange = (clienteId: number) => {
+    setForm({ ...form, clienteId, sistemaIds: [] }); // Reset sistemas on client change
+  };
+
+  const addSistema = (sistemaId: number) => {
+    setForm({ ...form, sistemaIds: [...form.sistemaIds, sistemaId] });
+  };
+
+  const removeSistema = (sistemaId: number) => {
+    setForm({ ...form, sistemaIds: form.sistemaIds.filter((id) => id !== sistemaId) });
+  };
 
   const handleSubmit = async () => {
     await createMutation.mutateAsync(form);
     setFormOpen(false);
-    setForm({ clienteId: 0, tipo: 'preventiva', titulo: '' });
+    setForm({ ...EMPTY_FORM });
   };
 
   const columns: Column<any>[] = [
@@ -79,6 +112,12 @@ export default function IntervencionesPage() {
     },
   ];
 
+  // Helper to get sistema name by ID
+  const getSistemaName = (id: number) => {
+    const s = (sistemas as any[])?.find((s: any) => s.id === id);
+    return s?.nombre ?? `Sistema #${id}`;
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -102,12 +141,16 @@ export default function IntervencionesPage() {
       />
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Nueva intervencion</DialogTitle></DialogHeader>
           <div className="space-y-4">
+            {/* Cliente */}
             <div>
               <Label>Cliente</Label>
-              <Select value={String(form.clienteId || '')} onValueChange={(v) => setForm({ ...form, clienteId: Number(v) })}>
+              <Select
+                value={String(form.clienteId || '')}
+                onValueChange={(v) => handleClienteChange(Number(v))}
+              >
                 <SelectTrigger><SelectValue placeholder="Seleccionar cliente" /></SelectTrigger>
                 <SelectContent>
                   {clientes?.filter((c: any) => c.activo).map((c: any) => (
@@ -116,6 +159,8 @@ export default function IntervencionesPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Tipo */}
             <div>
               <Label>Tipo</Label>
               <Select value={form.tipo} onValueChange={(v) => setForm({ ...form, tipo: v })}>
@@ -126,14 +171,87 @@ export default function IntervencionesPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Titulo */}
             <div>
               <Label>Titulo</Label>
-              <Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} placeholder="Descripcion breve de la intervencion" />
+              <Input
+                value={form.titulo}
+                onChange={(e) => setForm({ ...form, titulo: e.target.value })}
+                placeholder="Descripcion breve de la intervencion"
+              />
+            </div>
+
+            {/* Sistemas */}
+            <div>
+              <Label>Sistemas</Label>
+              {!form.clienteId ? (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Selecciona un cliente primero para ver sus sistemas.
+                </p>
+              ) : (
+                <div className="space-y-2 mt-1">
+                  {/* Selected sistemas chips */}
+                  {form.sistemaIds.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {form.sistemaIds.map((sid) => (
+                        <Badge key={sid} variant="secondary" className="gap-1 pr-1">
+                          {getSistemaName(sid)}
+                          <button
+                            type="button"
+                            onClick={() => removeSistema(sid)}
+                            className="ml-0.5 rounded-full hover:bg-gray-300/50 p-0.5"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add sistema selector */}
+                  {availableSistemas.length > 0 ? (
+                    <Select
+                      value=""
+                      onValueChange={(v) => addSistema(Number(v))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Anadir sistema..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableSistemas.map((s: any) => (
+                          <SelectItem key={s.id} value={String(s.id)}>
+                            {s.nombre}
+                            {s.fabricante?.nombre && (
+                              <span className="text-muted-foreground ml-1">
+                                ({s.fabricante.nombre})
+                              </span>
+                            )}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : form.sistemaIds.length > 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      Todos los sistemas del cliente han sido asignados.
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Este cliente no tiene sistemas registrados.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setFormOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={!form.titulo.trim() || !form.clienteId}>Crear</Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={!form.titulo.trim() || !form.clienteId || createMutation.isPending}
+            >
+              {createMutation.isPending ? 'Creando...' : 'Crear'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

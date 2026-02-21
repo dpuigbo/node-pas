@@ -1,11 +1,17 @@
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Plus, Cog, AlertCircle } from 'lucide-react';
+import { ArrowLeft, FileText, Plus, Cog, AlertCircle, X, Settings2 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useIntervencion } from '@/hooks/useIntervenciones';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useIntervencion, useUpdateIntervencion } from '@/hooks/useIntervenciones';
 import { useCrearInformes } from '@/hooks/useInformes';
+import { useSistemas } from '@/hooks/useSistemas';
 import { useAuth } from '@/hooks/useAuth';
 
 const ESTADO_INFORME_BADGE: Record<string, string> = {
@@ -35,6 +41,9 @@ export default function IntervencionDetailPage() {
     intervencionId || undefined,
   );
   const crearInformes = useCrearInformes(intervencionId);
+  const updateIntervencion = useUpdateIntervencion();
+
+  const [sistemasDialogOpen, setSistemasDialogOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -48,7 +57,7 @@ export default function IntervencionDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-12">
         <AlertCircle className="h-12 w-12 text-muted-foreground" />
-        <p className="text-muted-foreground">Intervención no encontrada</p>
+        <p className="text-muted-foreground">Intervencion no encontrada</p>
         <Button variant="outline" onClick={() => navigate('/intervenciones')}>
           Volver a intervenciones
         </Button>
@@ -107,12 +116,26 @@ export default function IntervencionDetailPage() {
 
       {/* Sistemas */}
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <Cog className="h-5 w-5" /> Sistemas ({sistemas.length})
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Cog className="h-5 w-5" /> Sistemas ({sistemas.length})
+          </h2>
+          {isAdmin && informes.length === 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSistemasDialogOpen(true)}
+              className="gap-1"
+            >
+              <Settings2 className="h-4 w-4" />
+              Gestionar sistemas
+            </Button>
+          )}
+        </div>
         {sistemas.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No hay sistemas asignados a esta intervención.
+            No hay sistemas asignados a esta intervencion.
+            {isAdmin && ' Pulsa "Gestionar sistemas" para asignarlos.'}
           </p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -156,10 +179,10 @@ export default function IntervencionDetailPage() {
         {informes.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             {sistemas.length === 0
-              ? 'Asigna sistemas a la intervención primero.'
+              ? 'Asigna sistemas a la intervencion primero.'
               : isAdmin
                 ? 'Pulsa "Crear Informes" para generar los informes de cada sistema.'
-                : 'Todavía no se han generado informes.'}
+                : 'Todavia no se han generado informes.'}
           </p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -195,6 +218,145 @@ export default function IntervencionDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Dialog: Gestionar Sistemas */}
+      {isAdmin && (
+        <GestionarSistemasDialog
+          open={sistemasDialogOpen}
+          onOpenChange={setSistemasDialogOpen}
+          intervencion={intervencion}
+          currentSistemaIds={sistemas.map((s: any) => s.sistemaId)}
+          onSave={async (sistemaIds: number[]) => {
+            await updateIntervencion.mutateAsync({
+              id: intervencionId,
+              sistemaIds,
+            });
+            setSistemasDialogOpen(false);
+          }}
+          isSaving={updateIntervencion.isPending}
+        />
+      )}
     </div>
+  );
+}
+
+// ======================== Dialog para gestionar sistemas ========================
+
+interface GestionarSistemasDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  intervencion: any;
+  currentSistemaIds: number[];
+  onSave: (sistemaIds: number[]) => Promise<void>;
+  isSaving: boolean;
+}
+
+function GestionarSistemasDialog({
+  open,
+  onOpenChange,
+  intervencion,
+  currentSistemaIds,
+  onSave,
+  isSaving,
+}: GestionarSistemasDialogProps) {
+  const clienteId = intervencion.clienteId;
+  const { data: sistemas } = useSistemas(clienteId ? { clienteId } : undefined);
+
+  const [selectedIds, setSelectedIds] = useState<number[]>(currentSistemaIds);
+
+  // Reset when dialog opens
+  const handleOpenChange = (isOpen: boolean) => {
+    if (isOpen) setSelectedIds(currentSistemaIds);
+    onOpenChange(isOpen);
+  };
+
+  const availableSistemas = useMemo(() => {
+    if (!sistemas) return [];
+    return (sistemas as any[]).filter((s: any) => !selectedIds.includes(s.id));
+  }, [sistemas, selectedIds]);
+
+  const addSistema = (sid: number) => {
+    setSelectedIds((prev) => [...prev, sid]);
+  };
+
+  const removeSistema = (sid: number) => {
+    setSelectedIds((prev) => prev.filter((id) => id !== sid));
+  };
+
+  const getSistemaName = (sid: number) => {
+    const s = (sistemas as any[])?.find((s: any) => s.id === sid);
+    return s?.nombre ?? `Sistema #${sid}`;
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Gestionar sistemas</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Selecciona los sistemas del cliente que participan en esta intervencion.
+          </p>
+
+          {/* Selected */}
+          {selectedIds.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {selectedIds.map((sid) => (
+                <Badge key={sid} variant="secondary" className="gap-1 pr-1">
+                  {getSistemaName(sid)}
+                  <button
+                    type="button"
+                    onClick={() => removeSistema(sid)}
+                    className="ml-0.5 rounded-full hover:bg-gray-300/50 p-0.5"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          {/* Add selector */}
+          {availableSistemas.length > 0 ? (
+            <Select value="" onValueChange={(v) => addSistema(Number(v))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Anadir sistema..." />
+              </SelectTrigger>
+              <SelectContent>
+                {availableSistemas.map((s: any) => (
+                  <SelectItem key={s.id} value={String(s.id)}>
+                    {s.nombre}
+                    {s.fabricante?.nombre && (
+                      <span className="text-muted-foreground ml-1">
+                        ({s.fabricante.nombre})
+                      </span>
+                    )}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : selectedIds.length > 0 ? (
+            <p className="text-xs text-muted-foreground">
+              Todos los sistemas del cliente han sido asignados.
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Este cliente no tiene sistemas registrados.
+            </p>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => handleOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button onClick={() => onSave(selectedIds)} disabled={isSaving}>
+            {isSaving ? 'Guardando...' : 'Guardar'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
