@@ -155,8 +155,8 @@ enum EstadoTemplate {
 model Sistema {
   id           Int      @id @default(autoincrement())
   clienteId    Int      @map("cliente_id")
-  plantaId     Int      @map("planta_id")
-  maquinaId    Int      @map("maquina_id")
+  plantaId     Int?     @map("planta_id")
+  maquinaId    Int?     @map("maquina_id")
   fabricanteId Int      @map("fabricante_id")
   nombre       String
   descripcion  String?
@@ -164,8 +164,8 @@ model Sistema {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   cliente       Cliente              @relation(fields: [clienteId], references: [id], onDelete: Cascade)
-  planta        Planta               @relation(fields: [plantaId], references: [id], onDelete: Cascade)
-  maquina       Maquina              @relation(fields: [maquinaId], references: [id], onDelete: Cascade)
+  planta        Planta?              @relation(fields: [plantaId], references: [id], onDelete: SetNull)
+  maquina       Maquina?             @relation(fields: [maquinaId], references: [id], onDelete: SetNull)
   fabricante    Fabricante           @relation(fields: [fabricanteId], references: [id], onDelete: Cascade)
   componentes   ComponenteSistema[]
   intervenciones IntervencionSistema[]

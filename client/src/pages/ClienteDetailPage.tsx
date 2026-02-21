@@ -68,8 +68,8 @@ export default function ClienteDetailPage() {
   const handleCreateSistema = async () => {
     await createSistema.mutateAsync({
       clienteId,
-      plantaId: sistemaForm.plantaId,
-      maquinaId: sistemaForm.maquinaId,
+      plantaId: sistemaForm.plantaId || null,
+      maquinaId: sistemaForm.maquinaId || null,
       fabricanteId: sistemaForm.fabricanteId,
       nombre: sistemaForm.nombre,
       descripcion: sistemaForm.descripcion || null,
@@ -104,8 +104,6 @@ export default function ClienteDetailPage() {
 
   const canCreateSistema =
     sistemaForm.nombre.trim() &&
-    sistemaForm.plantaId &&
-    sistemaForm.maquinaId &&
     sistemaForm.fabricanteId;
 
   return (
@@ -169,14 +167,14 @@ export default function ClienteDetailPage() {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold flex items-center gap-2"><Cog className="h-5 w-5" /> Sistemas</h2>
-          {isAdmin && (maquinas?.length ?? 0) > 0 && (
+          {isAdmin && (
             <Button size="sm" onClick={() => setSistemaOpen(true)}><Plus className="h-4 w-4" /> Sistema</Button>
           )}
         </div>
         <DataTable
           columns={sistemaCols}
           data={sistemas || []}
-          emptyMessage="Sin sistemas. Crea plantas y maquinas primero."
+          emptyMessage="Sin sistemas."
           onRowClick={(s) => navigate(`/sistemas/${s.id}`)}
           rowKey={(s) => s.id}
         />
@@ -228,41 +226,7 @@ export default function ClienteDetailPage() {
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Nuevo sistema</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            {/* Planta */}
-            <div>
-              <Label>Planta</Label>
-              <Select
-                value={String(sistemaForm.plantaId || '')}
-                onValueChange={(v) => setSistemaForm({ ...sistemaForm, plantaId: Number(v), maquinaId: 0 })}
-              >
-                <SelectTrigger><SelectValue placeholder="Seleccionar planta..." /></SelectTrigger>
-                <SelectContent>
-                  {plantas?.map((p: any) => <SelectItem key={p.id} value={String(p.id)}>{p.nombre}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Maquina (filtrada por planta) */}
-            <div>
-              <Label>Maquina</Label>
-              {!sistemaForm.plantaId ? (
-                <p className="text-xs text-muted-foreground mt-1">Selecciona una planta primero.</p>
-              ) : maquinasForPlanta.length === 0 ? (
-                <p className="text-xs text-muted-foreground mt-1">No hay maquinas en esta planta.</p>
-              ) : (
-                <Select
-                  value={String(sistemaForm.maquinaId || '')}
-                  onValueChange={(v) => setSistemaForm({ ...sistemaForm, maquinaId: Number(v) })}
-                >
-                  <SelectTrigger><SelectValue placeholder="Seleccionar maquina..." /></SelectTrigger>
-                  <SelectContent>
-                    {maquinasForPlanta.map((m: any) => <SelectItem key={m.id} value={String(m.id)}>{m.nombre}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-
-            {/* Fabricante */}
+            {/* Fabricante (obligatorio) */}
             <div>
               <Label>Fabricante</Label>
               <Select
@@ -297,6 +261,38 @@ export default function ClienteDetailPage() {
                 placeholder="Notas adicionales"
               />
             </div>
+
+            {/* Planta (opcional) */}
+            {(plantas?.length ?? 0) > 0 && (
+              <div>
+                <Label>Planta (opcional)</Label>
+                <Select
+                  value={String(sistemaForm.plantaId || '')}
+                  onValueChange={(v) => setSistemaForm({ ...sistemaForm, plantaId: Number(v), maquinaId: 0 })}
+                >
+                  <SelectTrigger><SelectValue placeholder="Sin planta asignada" /></SelectTrigger>
+                  <SelectContent>
+                    {plantas?.map((p: any) => <SelectItem key={p.id} value={String(p.id)}>{p.nombre}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Maquina (opcional, filtrada por planta) */}
+            {sistemaForm.plantaId > 0 && maquinasForPlanta.length > 0 && (
+              <div>
+                <Label>Maquina (opcional)</Label>
+                <Select
+                  value={String(sistemaForm.maquinaId || '')}
+                  onValueChange={(v) => setSistemaForm({ ...sistemaForm, maquinaId: Number(v) })}
+                >
+                  <SelectTrigger><SelectValue placeholder="Sin maquina asignada" /></SelectTrigger>
+                  <SelectContent>
+                    {maquinasForPlanta.map((m: any) => <SelectItem key={m.id} value={String(m.id)}>{m.nombre}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSistemaOpen(false)}>Cancelar</Button>

@@ -4,8 +4,8 @@ const tipoComponenteEnum = z.enum(['controller', 'mechanical_unit', 'drive_unit'
 
 export const createSistemaSchema = z.object({
   clienteId: z.number().int().positive(),
-  plantaId: z.number().int().positive(),
-  maquinaId: z.number().int().positive(),
+  plantaId: z.number().int().positive().optional().nullable(),
+  maquinaId: z.number().int().positive().optional().nullable(),
   fabricanteId: z.number().int().positive(),
   nombre: z.string().min(1, 'El nombre es obligatorio').max(200),
   descripcion: z.string().max(500).optional().nullable(),
