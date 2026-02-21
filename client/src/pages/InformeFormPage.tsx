@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { useInforme, useSaveDatos, useUpdateEstadoInforme } from '@/hooks/useInformes';
 import { useAuth } from '@/hooks/useAuth';
 import { getBlockEntry } from '@/components/blocks/registry';
+import { FIELD_WIDTH_CSS, type FieldWidth } from '@/types/editor';
 import type { Block, BlockType } from '@/types/editor';
 import type { ComponenteInformeDetalle } from '@/types/informe';
 
@@ -272,7 +273,7 @@ function ComponenteForm({
       </div>
 
       {/* Render blocks */}
-      <div className="space-y-4">
+      <div className="flex flex-wrap items-start gap-y-4">
         {blocks.map((block: Block) => (
           <BlockRenderer
             key={block.id}
@@ -289,6 +290,19 @@ function ComponenteForm({
 
 // ======================== Block Renderer ========================
 
+// Block types that are always full-width in the form layout
+const ALWAYS_FULL_TYPES = new Set<BlockType>([
+  'header', 'section_title', 'divider',
+  'tristate', 'checklist', 'table',
+]);
+
+/** Get width CSS class for a block in the form layout */
+function getFormBlockWidthClass(block: Block): string {
+  if (ALWAYS_FULL_TYPES.has(block.type)) return 'w-full';
+  const width = (block.config.width as FieldWidth) || 'full';
+  return FIELD_WIDTH_CSS[width] || 'w-full';
+}
+
 interface BlockRendererProps {
   block: Block;
   datos: Record<string, unknown>;
@@ -300,11 +314,13 @@ function BlockRenderer({ block, datos, readOnly, onFieldChange }: BlockRendererP
   const entry = getBlockEntry(block.type);
   if (!entry) return null;
 
+  const widthClass = getFormBlockWidthClass(block);
+
   // Structure blocks → render EditorPreview as static
   if (STRUCTURE_BLOCKS.has(block.type)) {
     const Preview = entry.EditorPreview;
     return (
-      <div className="pointer-events-none">
+      <div className={`${widthClass} pointer-events-none`}>
         <Preview block={block} isSelected={false} />
       </div>
     );
@@ -319,19 +335,21 @@ function BlockRenderer({ block, datos, readOnly, onFieldChange }: BlockRendererP
     // Fallback: render EditorPreview as readonly
     const Preview = entry.EditorPreview;
     return (
-      <div className="pointer-events-none opacity-70">
+      <div className={`${widthClass} pointer-events-none opacity-70`}>
         <Preview block={block} isSelected={false} />
       </div>
     );
   }
 
   return (
-    <FormFieldComp
-      block={block}
-      value={datos[key] ?? null}
-      onChange={(v: unknown) => onFieldChange(key, v)}
-      readOnly={readOnly}
-    />
+    <div className={widthClass}>
+      <FormFieldComp
+        block={block}
+        value={datos[key] ?? null}
+        onChange={(v: unknown) => onFieldChange(key, v)}
+        readOnly={readOnly}
+      />
+    </div>
   );
 }
 

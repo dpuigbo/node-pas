@@ -1,13 +1,29 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { Plus, GripVertical, Copy, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
+import { GripVertical, Copy, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEditorStore } from '@/stores/useEditorStore';
 import { getBlockEntry } from '@/components/blocks/registry';
+import { FIELD_WIDTH_CSS, type FieldWidth } from '@/types/editor';
 import type { Block } from '@/types/editor';
 
 // A4 dimensions at 96 DPI: 794 x 1123 px
 const A4_WIDTH = 794;
 const A4_HEIGHT = 1123;
+
+// Block types that are always full-width
+const ALWAYS_FULL_TYPES = new Set([
+  'header', 'section_title', 'divider',
+  'tristate', 'checklist', 'table',
+]);
+
+/** Get the width CSS class for a block based on its type and config */
+function getBlockWidthClass(block: Block): string {
+  if (ALWAYS_FULL_TYPES.has(block.type)) {
+    return 'w-full';
+  }
+  const width = (block.config.width as FieldWidth) || 'full';
+  return FIELD_WIDTH_CSS[width] || 'w-full';
+}
 
 function BlockWrapper({
   block,
@@ -26,13 +42,17 @@ function BlockWrapper({
 
   const isSelected = selectedBlockId === block.id;
   const entry = getBlockEntry(block.type);
+  const widthClass = getBlockWidthClass(block);
+  const isFullWidth = widthClass === 'w-full';
 
   const [hovered, setHovered] = useState(false);
 
   if (!entry) {
     return (
-      <div className="rounded border border-dashed border-destructive bg-destructive/5 p-4 text-sm text-destructive">
-        Bloque desconocido: {block.type}
+      <div className={cn(widthClass, 'p-0.5')}>
+        <div className="rounded border border-dashed border-destructive bg-destructive/5 p-4 text-sm text-destructive">
+          Bloque desconocido: {block.type}
+        </div>
       </div>
     );
   }
@@ -40,10 +60,15 @@ function BlockWrapper({
   const Preview = entry.EditorPreview;
 
   return (
-    <>
+    <div
+      className={cn(widthClass, 'relative group')}
+      style={{ padding: '1px' }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <div
         className={cn(
-          'group relative rounded-sm transition-all',
+          'relative rounded-sm transition-all cursor-pointer',
           isSelected && 'ring-2 ring-primary ring-offset-1',
           !isSelected && hovered && 'ring-1 ring-primary/30',
         )}
@@ -51,47 +76,51 @@ function BlockWrapper({
           e.stopPropagation();
           selectBlock(block.id);
         }}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
       >
-        {/* Block controls on hover */}
+        {/* Floating toolbar on hover/selected */}
         {(hovered || isSelected) && (
-          <div className="absolute -left-10 top-0 flex flex-col gap-0.5 z-10">
+          <div
+            className={cn(
+              'absolute z-20 flex items-center gap-0.5 rounded-md border bg-background/95 shadow-sm backdrop-blur-sm px-1 py-0.5',
+              isFullWidth
+                ? '-top-7 right-2'
+                : '-top-7 left-1/2 -translate-x-1/2',
+            )}
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
-              className="rounded p-1 hover:bg-accent text-muted-foreground"
-              onClick={(e) => { e.stopPropagation(); moveBlock(block.id, 'up'); }}
+              className="rounded p-1 hover:bg-accent text-muted-foreground disabled:opacity-30"
+              onClick={() => moveBlock(block.id, 'up')}
               disabled={index === 0}
               title="Mover arriba"
             >
               <ArrowUp className="h-3 w-3" />
             </button>
-            <div className="rounded p-1 text-muted-foreground cursor-grab">
-              <GripVertical className="h-3 w-3" />
-            </div>
             <button
-              className="rounded p-1 hover:bg-accent text-muted-foreground"
-              onClick={(e) => { e.stopPropagation(); moveBlock(block.id, 'down'); }}
+              className="rounded p-1 text-muted-foreground cursor-grab"
+              title="Arrastrar"
+            >
+              <GripVertical className="h-3 w-3" />
+            </button>
+            <button
+              className="rounded p-1 hover:bg-accent text-muted-foreground disabled:opacity-30"
+              onClick={() => moveBlock(block.id, 'down')}
               disabled={index === totalBlocks - 1}
               title="Mover abajo"
             >
               <ArrowDown className="h-3 w-3" />
             </button>
-          </div>
-        )}
-
-        {/* Block actions on hover */}
-        {(hovered || isSelected) && (
-          <div className="absolute -right-10 top-0 flex flex-col gap-0.5 z-10">
+            <div className="w-px h-4 bg-border mx-0.5" />
             <button
               className="rounded p-1 hover:bg-accent text-muted-foreground"
-              onClick={(e) => { e.stopPropagation(); duplicateBlock(block.id); }}
+              onClick={() => duplicateBlock(block.id)}
               title="Duplicar"
             >
               <Copy className="h-3 w-3" />
             </button>
             <button
               className="rounded p-1 hover:bg-destructive/10 text-destructive"
-              onClick={(e) => { e.stopPropagation(); removeBlock(block.id); }}
+              onClick={() => removeBlock(block.id)}
               title="Eliminar"
             >
               <Trash2 className="h-3 w-3" />
@@ -102,22 +131,7 @@ function BlockWrapper({
         {/* Block preview */}
         <Preview block={block} isSelected={isSelected} />
       </div>
-
-      {/* Insert button between blocks */}
-      <div className="flex justify-center py-0.5 opacity-0 hover:opacity-100 transition-opacity">
-        <button
-          className="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary hover:bg-primary/20 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation();
-            // Insert at next position — will open palette or just add a placeholder
-            // For now, we don't auto-add, user uses palette
-          }}
-          title="Insertar bloque aqui"
-        >
-          <Plus className="h-3 w-3" />
-        </button>
-      </div>
-    </>
+    </div>
   );
 }
 
@@ -133,8 +147,8 @@ export function EditorCanvas() {
   const updateScale = useCallback(() => {
     if (!containerRef.current) return;
     const containerWidth = containerRef.current.clientWidth;
-    // Leave space for block controls (40px each side) + padding
-    const availableWidth = containerWidth - 120;
+    // Leave space for padding
+    const availableWidth = containerWidth - 80;
     const newScale = Math.min(availableWidth / A4_WIDTH, 1);
     setScale(newScale);
   }, []);
@@ -187,7 +201,7 @@ export function EditorCanvas() {
               </p>
             </div>
           ) : (
-            <div className="space-y-0">
+            <div className="flex flex-wrap items-start pt-2">
               {blocks.map((block, i) => (
                 <BlockWrapper
                   key={block.id}
