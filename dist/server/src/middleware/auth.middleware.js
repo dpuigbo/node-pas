@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authMiddleware = authMiddleware;
 exports.getAuthUser = getAuthUser;
+exports.adminMiddleware = adminMiddleware;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const env_1 = require("../config/env");
 const database_1 = require("../config/database");
@@ -33,5 +34,13 @@ async function authMiddleware(req, res, next) {
 }
 function getAuthUser(req) {
     return req.authUser;
+}
+function adminMiddleware(req, res, next) {
+    const user = getAuthUser(req);
+    if (!user || user.rol !== 'admin') {
+        res.status(403).json({ error: 'Se requieren permisos de administrador' });
+        return;
+    }
+    next();
 }
 //# sourceMappingURL=auth.middleware.js.map

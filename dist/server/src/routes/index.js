@@ -14,6 +14,7 @@ const sistemas_routes_1 = __importDefault(require("./sistemas.routes"));
 const intervenciones_routes_1 = __importDefault(require("./intervenciones.routes"));
 const catalogos_routes_1 = __importDefault(require("./catalogos.routes"));
 const informes_routes_1 = __importDefault(require("./informes.routes"));
+const document_templates_routes_1 = __importDefault(require("./document-templates.routes"));
 const router = (0, express_1.Router)();
 // Auth routes (public - no auth required)
 router.use('/auth', auth_routes_1.default);
@@ -26,5 +27,6 @@ router.use('/v1/sistemas', auth_middleware_1.authMiddleware, sistemas_routes_1.d
 router.use('/v1/intervenciones', auth_middleware_1.authMiddleware, intervenciones_routes_1.default);
 router.use('/v1/catalogos', auth_middleware_1.authMiddleware, catalogos_routes_1.default);
 router.use('/v1', auth_middleware_1.authMiddleware, informes_routes_1.default);
+router.use('/v1/document-templates', auth_middleware_1.authMiddleware, document_templates_routes_1.default);
 exports.default = router;
 //# sourceMappingURL=index.js.map
