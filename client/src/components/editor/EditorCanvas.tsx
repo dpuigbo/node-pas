@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { useEditorStore } from '@/stores/useEditorStore';
 import { getBlockEntry } from '@/components/blocks/registry';
 import { FIELD_WIDTH_CSS, BLOCK_ALIGN_CSS, type FieldWidth, type BlockAlign } from '@/types/editor';
-import type { Block } from '@/types/editor';
+import type { Block, PageConfig } from '@/types/editor';
 import { usePagination } from '@/hooks/usePagination';
 
 // A4 dimensions at 96 DPI: 794 x 1123 px
@@ -195,7 +195,7 @@ function PageSheet({
   totalPages: number;
   blockIds: string[];
   allBlocks: Block[];
-  pageConfig: import('@/types/editor').PageConfig;
+  pageConfig: PageConfig;
   scale: number;
   onBlockHeightChange: (id: string, height: number) => void;
 }) {
