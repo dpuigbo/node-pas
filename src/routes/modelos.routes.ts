@@ -5,6 +5,7 @@ import {
   createModeloSchema, updateModeloSchema,
   createVersionSchema, updateVersionSchema, activateVersionSchema,
 } from '../validation/modelos.validation';
+import { getSeedTemplate } from '../lib/templateSeeds';
 
 const router = Router();
 
@@ -117,11 +118,24 @@ router.post('/:modeloId/versiones', requireRole('admin'), async (req: Request, r
     });
     const nextVersion = (lastVersion?.version ?? 0) + 1;
 
+    // If schema is empty and it's the first version, use seed template based on model tipo
+    let schema = data.schema;
+    const blocks = (schema as any)?.blocks;
+    if (!blocks || (Array.isArray(blocks) && blocks.length === 0)) {
+      const modelo = await prisma.modeloComponente.findUnique({
+        where: { id: modeloId },
+        select: { tipo: true },
+      });
+      if (modelo) {
+        schema = getSeedTemplate(modelo.tipo);
+      }
+    }
+
     const version = await prisma.versionTemplate.create({
       data: {
         modeloComponenteId: modeloId,
         version: nextVersion,
-        schema: data.schema,
+        schema: schema as any,
         notas: data.notas,
       },
     });
