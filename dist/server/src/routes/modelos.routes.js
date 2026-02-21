@@ -4,6 +4,7 @@ const express_1 = require("express");
 const role_middleware_1 = require("../middleware/role.middleware");
 const database_1 = require("../config/database");
 const modelos_validation_1 = require("../validation/modelos.validation");
+const templateSeeds_1 = require("../lib/templateSeeds");
 const router = (0, express_1.Router)();
 // ===== MODELOS COMPONENTE =====
 // GET /api/v1/modelos
@@ -132,11 +133,23 @@ router.post('/:modeloId/versiones', (0, role_middleware_1.requireRole)('admin'),
             orderBy: { version: 'desc' },
         });
         const nextVersion = (lastVersion?.version ?? 0) + 1;
+        // If schema is empty and it's the first version, use seed template based on model tipo
+        let schema = data.schema;
+        const blocks = schema?.blocks;
+        if (!blocks || (Array.isArray(blocks) && blocks.length === 0)) {
+            const modelo = await database_1.prisma.modeloComponente.findUnique({
+                where: { id: modeloId },
+                select: { tipo: true },
+            });
+            if (modelo) {
+                schema = (0, templateSeeds_1.getSeedTemplate)(modelo.tipo);
+            }
+        }
         const version = await database_1.prisma.versionTemplate.create({
             data: {
                 modeloComponenteId: modeloId,
                 version: nextVersion,
-                schema: data.schema,
+                schema: schema,
                 notas: data.notas,
             },
         });
