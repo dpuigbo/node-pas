@@ -8,6 +8,29 @@ const passport_1 = __importDefault(require("passport"));
 const passport_microsoft_1 = require("passport-microsoft");
 const database_1 = require("./database");
 const env_1 = require("./env");
+/** Upsert user with timeout and retry */
+async function upsertUserWithRetry(microsoftId, email, nombre, avatar, retries = 2) {
+    const timeoutMs = 10000;
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            const upsertPromise = database_1.prisma.user.upsert({
+                where: { microsoftId },
+                update: { nombre, avatar },
+                create: { microsoftId, email, nombre, avatar, rol: 'tecnico' },
+            });
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error(`DB upsert timed out after ${timeoutMs}ms (attempt ${attempt}/${retries})`)), timeoutMs));
+            const user = await Promise.race([upsertPromise, timeoutPromise]);
+            return user;
+        }
+        catch (err) {
+            console.error(`[Auth] Upsert attempt ${attempt}/${retries} failed:`, err.message);
+            if (attempt === retries)
+                throw err;
+            // Small wait before retry
+            await new Promise((r) => setTimeout(r, 1000));
+        }
+    }
+}
 function configureAuth() {
     if (!env_1.env.MICROSOFT_CLIENT_ID || !env_1.env.MICROSOFT_CLIENT_SECRET) {
         console.warn('[Auth] Microsoft OAuth credentials not configured. Auth disabled.');
@@ -29,24 +52,7 @@ function configureAuth() {
             const nombre = profile.displayName || email.split('@')[0];
             const avatar = null;
             console.log('[Auth] Microsoft callback — upserting user:', { microsoftId, email, nombre });
-            // Timeout to prevent infinite hang if DB adapter stalls
-            const timeoutMs = 15000;
-            const upsertPromise = database_1.prisma.user.upsert({
-                where: { microsoftId },
-                update: {
-                    nombre,
-                    avatar,
-                },
-                create: {
-                    microsoftId,
-                    email,
-                    nombre,
-                    avatar,
-                    rol: 'tecnico',
-                },
-            });
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error(`DB upsert timed out after ${timeoutMs}ms`)), timeoutMs));
-            const user = await Promise.race([upsertPromise, timeoutPromise]);
+            const user = await upsertUserWithRetry(microsoftId, email, nombre, avatar);
             console.log('[Auth] User upserted successfully:', user.id);
             done(null, user);
         }
