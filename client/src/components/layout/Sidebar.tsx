@@ -65,15 +65,8 @@ const navGroups: NavGroup[] = [
   {
     label: 'Configuracion',
     items: [
-      {
-        name: 'Configuracion',
-        href: '/configuracion',
-        icon: Settings,
-        children: [
-          { name: 'General', href: '/configuracion' },
-          { name: 'Plantillas', href: '/configuracion/plantillas' },
-        ],
-      },
+      { name: 'General', href: '/configuracion', icon: Settings },
+      { name: 'Plantillas', href: '/configuracion/plantillas', icon: FileText },
     ],
   },
 ];

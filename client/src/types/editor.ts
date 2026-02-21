@@ -62,6 +62,21 @@ export interface TemplateSchema {
   pageConfig: PageConfig;
 }
 
+// ===== Document chrome blocks (ignore margins, pin to edges) =====
+
+/** Block types that render edge-to-edge ignoring page margins */
+export const DOCUMENT_CHROME_TYPES = new Set<BlockType>([
+  'cover_header', 'page_header', 'page_footer', 'back_cover',
+]);
+
+/** Position hint: top-pinned or bottom-pinned */
+export const DOCUMENT_CHROME_POSITION: Partial<Record<BlockType, 'top' | 'bottom'>> = {
+  cover_header: 'top',
+  page_header: 'top',
+  page_footer: 'bottom',
+  back_cover: 'top', // fills entire page, but starts from top
+};
+
 // ===== Width options for data blocks =====
 
 export type FieldWidth = 'full' | 'half' | 'third' | 'two_thirds';

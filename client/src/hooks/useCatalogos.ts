@@ -71,6 +71,12 @@ export function useDeleteConsumible() {
   });
 }
 
+// Empresa logo (convenience hook — reads from configuracion cache)
+export function useEmpresaLogo(): string {
+  const { data } = useConfiguracion();
+  return (data?.empresa_logo as string) || '';
+}
+
 // Configuracion
 export function useConfiguracion() {
   return useQuery({

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { Block, PageConfig, FieldWidth } from '@/types/editor';
-import { FIELD_WIDTH_FRACTION } from '@/types/editor';
+import { FIELD_WIDTH_FRACTION, DOCUMENT_CHROME_TYPES } from '@/types/editor';
 
 // A4 dimensions at 96 DPI
 const A4_WIDTH = 794;
@@ -45,26 +45,38 @@ export function usePagination({ blocks, pageConfig, blockHeights }: UsePaginatio
 
     const isPortrait = pageConfig.orientation === 'portrait';
     const pageHeight = isPortrait ? A4_HEIGHT : A4_WIDTH;
-    const contentHeight =
-      pageHeight -
-      (pageConfig.margins.top + pageConfig.margins.bottom) * MM_TO_PX;
+    const marginHeight = (pageConfig.margins.top + pageConfig.margins.bottom) * MM_TO_PX;
+    const contentHeight = pageHeight - marginHeight;
 
     const pages: PageAssignment[] = [];
     let currentPage: PageAssignment = { pageIndex: 0, blockIds: [] };
     let currentY = 0;
+    let chromeHeight = 0; // height consumed by document chrome blocks on this page
     let currentRowWidth = 0;
     let currentRowHeight = 0;
     let currentRowBlockIds: string[] = [];
 
+    const getEffectiveContentHeight = () => {
+      // When chrome blocks exist on a page, they consume from full page height
+      // and the content area shrinks; also margins are reduced for chrome pages
+      if (chromeHeight > 0) {
+        return pageHeight - chromeHeight - 16; // 8px gap top + 8px gap bottom
+      }
+      return contentHeight;
+    };
+
     const flushRow = () => {
       if (currentRowBlockIds.length === 0) return;
 
+      const effective = getEffectiveContentHeight();
+
       // Check if row fits on current page
-      if (currentY + currentRowHeight > contentHeight && currentPage.blockIds.length > 0) {
+      if (currentY + currentRowHeight > effective && currentPage.blockIds.length > 0) {
         // Start new page
         pages.push(currentPage);
         currentPage = { pageIndex: pages.length, blockIds: [] };
         currentY = 0;
+        chromeHeight = 0;
       }
 
       // Add row blocks to current page
@@ -85,11 +97,22 @@ export function usePagination({ blocks, pageConfig, blockHeights }: UsePaginatio
           pages.push(currentPage);
           currentPage = { pageIndex: pages.length, blockIds: [] };
           currentY = 0;
+          chromeHeight = 0;
         }
         currentPage.blockIds.push(block.id);
         // Section separator takes ~40px height
         const sepHeight = blockHeights.get(block.id) || 40;
         currentY += sepHeight;
+        continue;
+      }
+
+      // Document chrome blocks: consume from full page height, not content area
+      if (DOCUMENT_CHROME_TYPES.has(block.type)) {
+        flushRow();
+        const bh = blockHeights.get(block.id) || 40;
+        currentPage.blockIds.push(block.id);
+        chromeHeight += bh;
+        // Don't add to currentY — chrome blocks are positioned by flexbox
         continue;
       }
 

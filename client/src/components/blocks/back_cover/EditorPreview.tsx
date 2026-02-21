@@ -1,10 +1,15 @@
 import { Bot } from 'lucide-react';
 import type { EditorPreviewProps } from '@/components/blocks/registry';
+import { useEmpresaLogo } from '@/hooks/useCatalogos';
 
 export function EditorPreview({ block }: EditorPreviewProps) {
   const c = block.config;
-  const logoUrl = (c.logoUrl as string) || '';
+  const blockLogoUrl = (c.logoUrl as string) || '';
   const backgroundColor = (c.backgroundColor as string) || '#111827';
+
+  // Use global empresa logo as fallback
+  const empresaLogo = useEmpresaLogo();
+  const logoUrl = blockLogoUrl || empresaLogo;
 
   return (
     <div

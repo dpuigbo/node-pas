@@ -1,5 +1,6 @@
 import { Bot } from 'lucide-react';
 import type { EditorPreviewProps } from '@/components/blocks/registry';
+import { useEmpresaLogo } from '@/hooks/useCatalogos';
 
 export function EditorPreview({ block }: EditorPreviewProps) {
   const c = block.config;
@@ -8,7 +9,11 @@ export function EditorPreview({ block }: EditorPreviewProps) {
   const companyName = (c.companyName as string) || 'PAS Robotics';
   const logoPosition = (c.logoPosition as string) || 'right';
   const backgroundColor = (c.backgroundColor as string) || '#000000';
-  const logoUrl = (c.logoUrl as string) || '';
+  const blockLogoUrl = (c.logoUrl as string) || '';
+
+  // Use global empresa logo as fallback
+  const empresaLogo = useEmpresaLogo();
+  const logoUrl = blockLogoUrl || empresaLogo;
 
   return (
     <div

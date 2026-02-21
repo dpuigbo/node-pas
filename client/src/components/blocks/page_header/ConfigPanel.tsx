@@ -25,13 +25,16 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
         />
       </div>
       <div className="space-y-1">
-        <Label className="text-xs">URL del logo</Label>
+        <Label className="text-xs">URL del logo (opcional)</Label>
         <Input
           value={(c.logoUrl as string) || ''}
           onChange={(e) => onChange('logoUrl', e.target.value)}
-          placeholder="https://..."
+          placeholder="Vacio = usa logo de Configuracion General"
           className="h-8"
         />
+        <p className="text-[10px] text-muted-foreground">
+          Si no se indica, usa el logo de Configuracion &gt; General.
+        </p>
       </div>
       <div className="space-y-1">
         <Label className="text-xs">Color de fondo</Label>

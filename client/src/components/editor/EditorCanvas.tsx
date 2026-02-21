@@ -3,7 +3,7 @@ import { GripVertical, Copy, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEditorStore } from '@/stores/useEditorStore';
 import { getBlockEntry } from '@/components/blocks/registry';
-import { FIELD_WIDTH_CSS, BLOCK_ALIGN_CSS, type FieldWidth, type BlockAlign } from '@/types/editor';
+import { FIELD_WIDTH_CSS, BLOCK_ALIGN_CSS, DOCUMENT_CHROME_TYPES, DOCUMENT_CHROME_POSITION, type FieldWidth, type BlockAlign } from '@/types/editor';
 import type { Block, PageConfig } from '@/types/editor';
 import { usePagination } from '@/hooks/usePagination';
 
@@ -282,11 +282,37 @@ function PageSheet({
   const canvasWidth = isPortrait ? A4_WIDTH : A4_HEIGHT;
   const canvasHeight = isPortrait ? A4_HEIGHT : A4_WIDTH;
 
+  const marginTop = pageConfig.margins.top * MM_TO_PX;
+  const marginRight = pageConfig.margins.right * MM_TO_PX;
+  const marginBottom = pageConfig.margins.bottom * MM_TO_PX;
+  const marginLeft = pageConfig.margins.left * MM_TO_PX;
+
   // Find blocks for this page
   const pageBlocks = useMemo(() => {
     const blockMap = new Map(allBlocks.map((b) => [b.id, b]));
     return blockIds.map((id) => blockMap.get(id)).filter(Boolean) as Block[];
   }, [blockIds, allBlocks]);
+
+  // Split blocks into top-chrome, content, and bottom-chrome
+  const { topChrome, contentBlocks, bottomChrome } = useMemo(() => {
+    const top: Block[] = [];
+    const content: Block[] = [];
+    const bottom: Block[] = [];
+
+    for (const block of pageBlocks) {
+      if (DOCUMENT_CHROME_TYPES.has(block.type)) {
+        const pos = DOCUMENT_CHROME_POSITION[block.type] || 'top';
+        if (pos === 'bottom') {
+          bottom.push(block);
+        } else {
+          top.push(block);
+        }
+      } else {
+        content.push(block);
+      }
+    }
+    return { topChrome: top, contentBlocks: content, bottomChrome: bottom };
+  }, [pageBlocks]);
 
   // Compute global index for each block (for move up/down disabled state)
   const globalIndexMap = useMemo(() => {
@@ -295,15 +321,27 @@ function PageSheet({
     return map;
   }, [allBlocks]);
 
+  const renderBlock = (block: Block) => {
+    const globalIdx = globalIndexMap.get(block.id) ?? 0;
+    return (
+      <BlockWrapper
+        key={block.id}
+        block={block}
+        index={globalIdx}
+        totalBlocks={allBlocksCount}
+        onHeightChange={onBlockHeightChange}
+      />
+    );
+  };
+
   return (
     <div
-      className="bg-white shadow-lg border relative shrink-0"
+      className="bg-white shadow-lg border relative shrink-0 overflow-hidden"
       style={{
         width: canvasWidth,
         height: canvasHeight,
         transform: `scale(${scale})`,
         transformOrigin: 'top center',
-        padding: `${pageConfig.margins.top * MM_TO_PX}px ${pageConfig.margins.right * MM_TO_PX}px ${pageConfig.margins.bottom * MM_TO_PX}px ${pageConfig.margins.left * MM_TO_PX}px`,
         fontSize: `${pageConfig.fontSize}px`,
       }}
       onClick={(e) => {
@@ -312,31 +350,45 @@ function PageSheet({
       }}
     >
       {pageBlocks.length === 0 && pageIndex === 0 ? (
-        <div className="flex flex-col items-center justify-center h-full text-muted-foreground/50">
+        <div
+          className="flex flex-col items-center justify-center h-full text-muted-foreground/50"
+          style={{ padding: `${marginTop}px ${marginRight}px ${marginBottom}px ${marginLeft}px` }}
+        >
           <p className="text-lg font-medium">Canvas vacio</p>
           <p className="text-sm mt-1">
             Haz clic en un bloque de la paleta para empezar
           </p>
         </div>
       ) : (
-        <div className="flex flex-wrap items-start content-start overflow-hidden">
-          {pageBlocks.map((block) => {
-            const globalIdx = globalIndexMap.get(block.id) ?? 0;
-            return (
-              <BlockWrapper
-                key={block.id}
-                block={block}
-                index={globalIdx}
-                totalBlocks={allBlocksCount}
-                onHeightChange={onBlockHeightChange}
-              />
-            );
-          })}
+        <div className="flex flex-col h-full">
+          {/* Top chrome blocks — edge-to-edge, no margins */}
+          {topChrome.length > 0 && (
+            <div className="shrink-0">
+              {topChrome.map(renderBlock)}
+            </div>
+          )}
+
+          {/* Content blocks — with page margins */}
+          <div
+            className="flex-1 flex flex-wrap items-start content-start overflow-hidden"
+            style={{
+              padding: `${topChrome.length > 0 ? 8 : marginTop}px ${marginRight}px ${bottomChrome.length > 0 ? 8 : marginBottom}px ${marginLeft}px`,
+            }}
+          >
+            {contentBlocks.map(renderBlock)}
+          </div>
+
+          {/* Bottom chrome blocks — edge-to-edge, pinned to bottom */}
+          {bottomChrome.length > 0 && (
+            <div className="shrink-0 mt-auto">
+              {bottomChrome.map(renderBlock)}
+            </div>
+          )}
         </div>
       )}
 
       {/* Page number indicator */}
-      <div className="absolute bottom-2 right-4 text-[10px] text-gray-300 pointer-events-none">
+      <div className="absolute bottom-2 right-4 text-[10px] text-gray-300 pointer-events-none z-10">
         Pagina {pageIndex + 1} / {totalPages}
       </div>
     </div>
