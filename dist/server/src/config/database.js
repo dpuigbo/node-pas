@@ -29,7 +29,10 @@ function createPrismaClient() {
         user: decodeURIComponent(parsed.username),
         password: decodeURIComponent(parsed.password),
         database: parsed.pathname.slice(1), // remove leading /
-        connectionLimit: 2,
+        connectionLimit: 5,
+        connectTimeout: 10000, // 10s to establish connection
+        acquireTimeout: 10000, // 10s to acquire from pool
+        idleTimeout: 60000, // close idle connections after 60s
     });
     return new client_1.PrismaClient({
         adapter,
