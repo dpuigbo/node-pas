@@ -10,21 +10,20 @@ export function EditorPreview({ block }: EditorPreviewProps) {
   const logoPosition = (c.logoPosition as string) || 'right';
   const backgroundColor = (c.backgroundColor as string) || '#000000';
   const blockLogoUrl = (c.logoUrl as string) || '';
+  const height = (c.height as number) || 280;
 
-  // Use global empresa logo as fallback
   const empresaLogo = useEmpresaLogo();
   const logoUrl = blockLogoUrl || empresaLogo;
 
   return (
     <div
-      className="w-full px-8 py-10 flex items-center gap-6"
+      className="w-full px-8 flex items-center gap-6"
       style={{
         backgroundColor,
-        minHeight: '200px',
+        height: `${height}px`,
         flexDirection: logoPosition === 'right' ? 'row' : 'row-reverse',
       }}
     >
-      {/* Text side */}
       <div className="flex-1">
         <p className="text-xs font-medium tracking-widest uppercase mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
           {companyName}
@@ -33,10 +32,11 @@ export function EditorPreview({ block }: EditorPreviewProps) {
           {title}
         </h1>
         {subtitle && (
-          <p className="text-sm mt-2" style={{ color: 'rgba(255,255,255,0.7)' }}>{subtitle}</p>
+          <p className="text-sm mt-2" style={{ color: 'rgba(255,255,255,0.7)' }}>
+            {subtitle}
+          </p>
         )}
       </div>
-      {/* Logo side */}
       <div className="shrink-0">
         {logoUrl ? (
           <img src={logoUrl} alt="Logo" className="h-20 w-auto object-contain" />

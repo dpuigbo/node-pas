@@ -78,6 +78,17 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
           />
         </div>
       </div>
+      <div className="space-y-1">
+        <Label className="text-xs">Altura (px)</Label>
+        <Input
+          type="number"
+          min={100}
+          max={600}
+          value={(c.height as number) || 280}
+          onChange={(e) => onChange('height', Math.max(100, Math.min(600, Number(e.target.value) || 280)))}
+          className="h-8"
+        />
+      </div>
     </div>
   );
 }

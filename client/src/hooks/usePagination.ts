@@ -15,6 +15,7 @@ const ALWAYS_FULL_TYPES = new Set([
   'tristate', 'checklist', 'table',
   'section_separator', 'table_of_contents',
   'cover_header', 'page_header', 'page_footer', 'back_cover',
+  'page_break', 'content_placeholder', 'intervention_data', 'client_data',
 ]);
 
 export interface PageAssignment {
@@ -103,6 +104,17 @@ export function usePagination({ blocks, pageConfig, blockHeights }: UsePaginatio
         // Section separator takes ~40px height
         const sepHeight = blockHeights.get(block.id) || 40;
         currentY += sepHeight;
+        continue;
+      }
+
+      // Page break forces new page
+      if (block.type === 'page_break') {
+        flushRow();
+        currentPage.blockIds.push(block.id);
+        pages.push(currentPage);
+        currentPage = { pageIndex: pages.length, blockIds: [] };
+        currentY = 0;
+        chromeHeight = 0;
         continue;
       }
 

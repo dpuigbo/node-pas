@@ -13,6 +13,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAppLogo } from '@/hooks/useCatalogos';
 
 interface NavChild {
   name: string;
@@ -149,12 +150,18 @@ function SidebarLink({ item }: { item: NavItem }) {
 }
 
 export function Sidebar() {
+  const appLogo = useAppLogo();
+
   return (
     <aside className="flex w-64 flex-col border-r border-sidebar-border bg-sidebar">
       {/* Logo */}
       <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-          <Bot className="h-5 w-5 text-primary-foreground" />
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary overflow-hidden">
+          {appLogo ? (
+            <img src={appLogo} alt="Logo" className="h-7 w-7 object-contain" />
+          ) : (
+            <Bot className="h-5 w-5 text-primary-foreground" />
+          )}
         </div>
         <div>
           <h1 className="text-sm font-bold text-sidebar-foreground">PAS Robotics</h1>

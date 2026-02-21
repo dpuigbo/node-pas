@@ -46,6 +46,7 @@ const ALWAYS_FULL_TYPES = new Set([
   'tristate', 'checklist', 'table',
   'section_separator', 'table_of_contents',
   'cover_header', 'page_header', 'page_footer', 'back_cover',
+  'page_break', 'content_placeholder', 'intervention_data', 'client_data',
 ]);
 
 /** Get the width CSS class for a block based on its type and config */
@@ -343,6 +344,7 @@ function PageSheet({
         transform: `scale(${scale})`,
         transformOrigin: 'top center',
         fontSize: `${pageConfig.fontSize}px`,
+        fontFamily: pageConfig.fontFamily ? `"${pageConfig.fontFamily}", sans-serif` : undefined,
       }}
       onClick={(e) => {
         e.stopPropagation();

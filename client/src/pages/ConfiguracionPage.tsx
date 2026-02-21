@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Save, Upload, X, Bot } from 'lucide-react';
+import { Save, Upload, X, Bot, Image as ImageIcon } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,8 +19,100 @@ const CONFIG_KEYS = [
   { clave: 'informe_pie_pagina', label: 'Pie de pagina en informes', type: 'textarea' },
 ];
 
-// All config keys including the logo (for saving)
-const ALL_KEYS = [...CONFIG_KEYS.map((k) => k.clave), 'empresa_logo'];
+// All config keys including the logos (for saving)
+const ALL_KEYS = [...CONFIG_KEYS.map((k) => k.clave), 'empresa_logo', 'empresa_logo_app'];
+
+// Reusable logo upload section
+function LogoUploadSection({
+  title,
+  description,
+  configKey,
+  logoData,
+  isAdmin,
+  onUpload,
+  onRemove,
+  icon: Icon,
+}: {
+  title: string;
+  description: string;
+  configKey: string;
+  logoData: string;
+  isAdmin: boolean;
+  onUpload: (key: string, data: string) => void;
+  onRemove: (key: string) => void;
+  icon: React.ComponentType<{ className?: string }>;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return;
+    if (file.size > 500 * 1024) {
+      alert('El logo no puede superar los 500KB');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => onUpload(configKey, reader.result as string);
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground mb-4">{description}</p>
+        <div className="flex items-center gap-6">
+          <div className="shrink-0 flex items-center justify-center w-40 h-24 rounded-lg border-2 border-dashed border-muted-foreground/20 bg-muted/30 overflow-hidden">
+            {logoData ? (
+              <img src={logoData} alt={title} className="max-w-full max-h-full object-contain" />
+            ) : (
+              <div className="flex flex-col items-center gap-1 text-muted-foreground/40">
+                <Icon className="h-8 w-8" />
+                <span className="text-xs">Sin logo</span>
+              </div>
+            )}
+          </div>
+          <div className="flex flex-col gap-2">
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFile}
+              className="hidden"
+              disabled={!isAdmin}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => inputRef.current?.click()}
+              disabled={!isAdmin}
+            >
+              <Upload className="h-4 w-4 mr-1" />
+              {logoData ? 'Cambiar logo' : 'Subir logo'}
+            </Button>
+            {logoData && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onRemove(configKey)}
+                disabled={!isAdmin}
+                className="text-destructive hover:text-destructive"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Eliminar
+              </Button>
+            )}
+            <p className="text-xs text-muted-foreground">PNG o JPG. Max 500KB.</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function ConfiguracionPage() {
   const { isAdmin } = useAuth();
@@ -29,7 +121,6 @@ export default function ConfiguracionPage() {
 
   const [values, setValues] = useState<Record<string, string>>({});
   const [dirty, setDirty] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (config) {
@@ -43,34 +134,6 @@ export default function ConfiguracionPage() {
     setDirty(true);
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) return;
-
-    // Validate size (max 500KB for config storage)
-    if (file.size > 500 * 1024) {
-      alert('El logo no puede superar los 500KB');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result as string;
-      handleChange('empresa_logo', base64);
-    };
-    reader.readAsDataURL(file);
-
-    // Reset input so same file can be re-selected
-    e.target.value = '';
-  };
-
-  const handleRemoveLogo = () => {
-    handleChange('empresa_logo', '');
-  };
-
   const handleSave = async () => {
     const items = ALL_KEYS.map((clave) => ({
       clave,
@@ -81,8 +144,6 @@ export default function ConfiguracionPage() {
   };
 
   if (isLoading) return <div className="p-6">Cargando...</div>;
-
-  const logoData = values.empresa_logo || '';
 
   return (
     <div className="space-y-6">
@@ -98,69 +159,29 @@ export default function ConfiguracionPage() {
         }
       />
 
-      {/* Logo card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Logo de la empresa</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Este logo se usara en las cabeceras y portadas de los informes.
-          </p>
-          <div className="flex items-center gap-6">
-            {/* Logo preview */}
-            <div className="shrink-0 flex items-center justify-center w-40 h-24 rounded-lg border-2 border-dashed border-muted-foreground/20 bg-muted/30 overflow-hidden">
-              {logoData ? (
-                <img
-                  src={logoData}
-                  alt="Logo empresa"
-                  className="max-w-full max-h-full object-contain"
-                />
-              ) : (
-                <div className="flex flex-col items-center gap-1 text-muted-foreground/40">
-                  <Bot className="h-8 w-8" />
-                  <span className="text-xs">Sin logo</span>
-                </div>
-              )}
-            </div>
-            {/* Upload controls */}
-            <div className="flex flex-col gap-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleLogoUpload}
-                className="hidden"
-                disabled={!isAdmin}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={!isAdmin}
-              >
-                <Upload className="h-4 w-4 mr-1" />
-                {logoData ? 'Cambiar logo' : 'Subir logo'}
-              </Button>
-              {logoData && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleRemoveLogo}
-                  disabled={!isAdmin}
-                  className="text-destructive hover:text-destructive"
-                >
-                  <X className="h-4 w-4 mr-1" />
-                  Eliminar
-                </Button>
-              )}
-              <p className="text-xs text-muted-foreground">
-                PNG o JPG. Max 500KB.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* App logo */}
+      <LogoUploadSection
+        title="Logo de la aplicacion"
+        description="Este logo aparece en el menu lateral y en la barra de navegacion."
+        configKey="empresa_logo_app"
+        logoData={values.empresa_logo_app || ''}
+        isAdmin={!!isAdmin}
+        onUpload={handleChange}
+        onRemove={(key) => handleChange(key, '')}
+        icon={ImageIcon}
+      />
+
+      {/* Company logo for reports */}
+      <LogoUploadSection
+        title="Logo de la empresa (informes)"
+        description="Este logo se usara en las cabeceras y portadas de los informes."
+        configKey="empresa_logo"
+        logoData={values.empresa_logo || ''}
+        isAdmin={!!isAdmin}
+        onUpload={handleChange}
+        onRemove={(key) => handleChange(key, '')}
+        icon={Bot}
+      />
 
       {/* Company data card */}
       <Card>

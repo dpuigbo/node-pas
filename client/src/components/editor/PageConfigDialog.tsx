@@ -1,6 +1,7 @@
 import { useEditorStore } from '@/stores/useEditorStore';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { FONT_FAMILIES } from '@/types/editor';
 import {
   Dialog,
   DialogContent,
@@ -79,6 +80,22 @@ export function PageConfigDialog({ open, onOpenChange }: PageConfigDialogProps) 
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Font family */}
+          <div className="space-y-2">
+            <Label>Fuente del documento</Label>
+            <select
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              value={pageConfig.fontFamily || 'Inter'}
+              onChange={(e) => updatePageConfig({ fontFamily: e.target.value })}
+            >
+              {FONT_FAMILIES.map((f) => (
+                <option key={f.value} value={f.value} style={{ fontFamily: f.value }}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Font size */}

@@ -2,6 +2,7 @@ import {
   FileText, Heading, Minus, Type, Hash, Calendar, AlignLeft,
   ChevronDown, CheckCircle, ListChecks, Table, Image, Pen,
   List, BookOpen, PanelTop, PanelBottom, Square,
+  SeparatorHorizontal, LayoutTemplate, ClipboardList, Building2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { blockCategories, blockDefinitions } from '@/components/blocks/registry';
@@ -12,6 +13,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   FileText, Heading, Minus, Type, Hash, Calendar, AlignLeft,
   ChevronDown, CheckCircle, ListChecks, Table, Image, Pen,
   List, BookOpen, PanelTop, PanelBottom, Square,
+  SeparatorHorizontal, LayoutTemplate, ClipboardList, Building2,
 };
 
 export function BlockPalette() {

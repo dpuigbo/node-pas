@@ -7,27 +7,28 @@ export function EditorPreview({ block }: EditorPreviewProps) {
   const blockLogoUrl = (c.logoUrl as string) || '';
   const backgroundColor = (c.backgroundColor as string) || '#111827';
 
-  // Use global empresa logo as fallback
   const empresaLogo = useEmpresaLogo();
   const logoUrl = blockLogoUrl || empresaLogo;
 
+  // back_cover fills entire page — no configurable height, uses flex-1 from parent
   return (
     <div
-      className="w-full flex items-center justify-center rounded-sm"
+      className="w-full flex items-center justify-center"
       style={{
         backgroundColor,
-        minHeight: '200px',
+        minHeight: '400px',
+        height: '100%',
       }}
     >
       {logoUrl ? (
         <img
           src={logoUrl}
           alt="Logo"
-          className="max-h-20 max-w-[200px] object-contain"
+          className="max-h-24 max-w-[240px] object-contain"
         />
       ) : (
         <div className="flex flex-col items-center gap-2 opacity-60">
-          <Bot className="h-12 w-12 text-white" />
+          <Bot className="h-14 w-14 text-white" />
           <span className="text-white/50 text-[10px]">Logo de empresa</span>
         </div>
       )}

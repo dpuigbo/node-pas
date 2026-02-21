@@ -52,6 +52,17 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
           />
         </div>
       </div>
+      <div className="space-y-1">
+        <Label className="text-xs">Altura (px)</Label>
+        <Input
+          type="number"
+          min={24}
+          max={120}
+          value={(c.height as number) || 40}
+          onChange={(e) => onChange('height', Math.max(24, Math.min(120, Number(e.target.value) || 40)))}
+          className="h-8"
+        />
+      </div>
       <p className="text-xs text-muted-foreground leading-relaxed">
         Esta cabecera aparece en la parte superior de todas las paginas
         intermedias del documento.

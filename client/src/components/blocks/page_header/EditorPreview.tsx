@@ -8,20 +8,20 @@ export function EditorPreview({ block }: EditorPreviewProps) {
   const subtitle = (c.subtitle as string) || '';
   const backgroundColor = (c.backgroundColor as string) || '#1f2937';
   const blockLogoUrl = (c.logoUrl as string) || '';
+  const height = (c.height as number) || 40;
 
-  // Use global empresa logo as fallback
   const empresaLogo = useEmpresaLogo();
   const logoUrl = blockLogoUrl || empresaLogo;
 
   return (
     <div
-      className="w-full px-4 py-2 flex items-center justify-between"
-      style={{ backgroundColor }}
+      className="w-full px-4 flex items-center justify-between"
+      style={{ backgroundColor, height: `${height}px` }}
     >
-      <div>
+      <div className="flex flex-col">
         <span className="text-white text-xs font-semibold">{title}</span>
         {subtitle && (
-          <span className="text-xs ml-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+          <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
             {subtitle}
           </span>
         )}

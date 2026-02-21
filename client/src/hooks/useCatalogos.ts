@@ -77,6 +77,12 @@ export function useEmpresaLogo(): string {
   return (data?.empresa_logo as string) || '';
 }
 
+// App logo (for sidebar/nav — reads from configuracion cache)
+export function useAppLogo(): string {
+  const { data } = useConfiguracion();
+  return (data?.empresa_logo_app as string) || '';
+}
+
 // Configuracion
 export function useConfiguracion() {
   return useQuery({

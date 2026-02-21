@@ -266,6 +266,7 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
       logoUrl: '',
       logoPosition: 'right',
       backgroundColor: '#000000',
+      height: 280,
     },
   },
   page_header: {
@@ -279,6 +280,7 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
       subtitle: '',
       logoUrl: '',
       backgroundColor: '#1f2937',
+      height: 40,
     },
   },
   page_footer: {
@@ -290,8 +292,9 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
     defaultConfig: {
       companyName: 'PAS Robotics',
       showPageNumbers: true,
-      showTriangle: true,
       backgroundColor: '#1f2937',
+      accentColor: '#3b82f6',
+      height: 36,
     },
   },
   back_cover: {
@@ -305,6 +308,45 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
       backgroundColor: '#111827',
     },
   },
+  // New structural blocks
+  page_break: {
+    type: 'page_break',
+    label: 'Salto de pagina',
+    icon: 'SeparatorHorizontal',
+    category: 'structure',
+    hasData: false,
+    defaultConfig: {},
+  },
+  content_placeholder: {
+    type: 'content_placeholder',
+    label: 'Contenido del sistema',
+    icon: 'LayoutTemplate',
+    category: 'document',
+    hasData: false,
+    defaultConfig: {
+      label: 'Contenido del informe (se llena automaticamente)',
+    },
+  },
+  intervention_data: {
+    type: 'intervention_data',
+    label: 'Datos de intervencion',
+    icon: 'ClipboardList',
+    category: 'document',
+    hasData: false,
+    defaultConfig: {
+      title: '',
+    },
+  },
+  client_data: {
+    type: 'client_data',
+    label: 'Datos del cliente',
+    icon: 'Building2',
+    category: 'document',
+    hasData: false,
+    defaultConfig: {
+      title: '',
+    },
+  },
 };
 
 // ===== Category metadata =====
@@ -312,7 +354,7 @@ export const blockCategories: { id: string; label: string; types: BlockType[] }[
   {
     id: 'structure',
     label: 'Estructura',
-    types: ['header', 'section_title', 'divider', 'table_of_contents'],
+    types: ['header', 'section_title', 'divider', 'table_of_contents', 'page_break'],
   },
   {
     id: 'data',
@@ -332,6 +374,6 @@ export const blockCategories: { id: string; label: string; types: BlockType[] }[
   {
     id: 'document',
     label: 'Documento',
-    types: ['cover_header', 'page_header', 'page_footer', 'back_cover'],
+    types: ['cover_header', 'page_header', 'page_footer', 'back_cover', 'content_placeholder', 'intervention_data', 'client_data'],
   },
 ];

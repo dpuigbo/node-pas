@@ -19,7 +19,11 @@ export type BlockType =
   | 'cover_header'
   | 'page_header'
   | 'page_footer'
-  | 'back_cover';
+  | 'back_cover'
+  | 'page_break'
+  | 'content_placeholder'
+  | 'intervention_data'
+  | 'client_data';
 
 export type BlockCategory = 'structure' | 'data' | 'inspection' | 'media' | 'document';
 
@@ -47,13 +51,27 @@ export interface PageConfig {
   orientation: 'portrait' | 'landscape';
   margins: { top: number; right: number; bottom: number; left: number };
   fontSize: number;
+  fontFamily: string;
 }
 
 export const DEFAULT_PAGE_CONFIG: PageConfig = {
   orientation: 'portrait',
   margins: { top: 20, right: 15, bottom: 20, left: 15 },
   fontSize: 10,
+  fontFamily: 'Inter',
 };
+
+/** Available font families for document templates */
+export const FONT_FAMILIES = [
+  { value: 'Inter', label: 'Inter (sans-serif)' },
+  { value: 'Arial', label: 'Arial' },
+  { value: 'Helvetica', label: 'Helvetica' },
+  { value: 'Georgia', label: 'Georgia (serif)' },
+  { value: 'Times New Roman', label: 'Times New Roman' },
+  { value: 'Courier New', label: 'Courier New (mono)' },
+  { value: 'Roboto', label: 'Roboto' },
+  { value: 'Open Sans', label: 'Open Sans' },
+];
 
 // ===== Schema (persisted in VersionTemplate.schema) =====
 

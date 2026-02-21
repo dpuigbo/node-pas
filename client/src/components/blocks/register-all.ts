@@ -33,3 +33,7 @@ import './cover_header';
 import './page_header';
 import './page_footer';
 import './back_cover';
+import './page_break';
+import './content_placeholder';
+import './intervention_data';
+import './client_data';
