@@ -211,7 +211,7 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
                         col={col}
                         value={row[col.key]}
                         onChange={(v) => updateCell(ri, col.key, v)}
-                        readOnly={readOnly}
+                        readOnly={!!readOnly}
                       />
                     </td>
                   ))}
