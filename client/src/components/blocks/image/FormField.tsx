@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 import { Image as ImageIcon, X, Upload } from 'lucide-react';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import type { FormFieldProps } from '@/types/formField';
 
 interface StoredImage {
