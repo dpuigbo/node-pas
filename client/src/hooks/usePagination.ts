@@ -13,7 +13,7 @@ const MM_TO_PX = 3.78;
 const ALWAYS_FULL_TYPES = new Set([
   'header', 'section_title', 'divider',
   'tristate', 'checklist', 'table',
-  'section_separator',
+  'section_separator', 'table_of_contents',
 ]);
 
 export interface PageAssignment {

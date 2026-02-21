@@ -242,6 +242,16 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
       section: 'portada',
     },
   },
+  table_of_contents: {
+    type: 'table_of_contents',
+    label: 'Tabla de contenidos',
+    icon: 'List',
+    category: 'structure',
+    hasData: false,
+    defaultConfig: {
+      title: 'Tabla de contenidos',
+    },
+  },
 };
 
 // ===== Category metadata =====
@@ -249,7 +259,7 @@ export const blockCategories: { id: string; label: string; types: BlockType[] }[
   {
     id: 'structure',
     label: 'Estructura',
-    types: ['header', 'section_title', 'divider'],
+    types: ['header', 'section_title', 'divider', 'table_of_contents'],
   },
   {
     id: 'data',

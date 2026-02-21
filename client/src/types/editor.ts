@@ -14,7 +14,8 @@ export type BlockType =
   | 'table'
   | 'image'
   | 'signature'
-  | 'section_separator';
+  | 'section_separator'
+  | 'table_of_contents';
 
 export type BlockCategory = 'structure' | 'data' | 'inspection' | 'media';
 

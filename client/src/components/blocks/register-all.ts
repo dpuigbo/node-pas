@@ -7,6 +7,7 @@
 import './header';
 import './section_title';
 import './divider';
+import './table_of_contents';
 
 // Data fields
 import './text_field';

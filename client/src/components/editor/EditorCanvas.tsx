@@ -7,6 +7,32 @@ import { FIELD_WIDTH_CSS, BLOCK_ALIGN_CSS, type FieldWidth, type BlockAlign } fr
 import type { Block, PageConfig } from '@/types/editor';
 import { usePagination } from '@/hooks/usePagination';
 
+// dnd-kit imports
+import {
+  DndContext,
+  closestCenter,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragStartEvent,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// Local arrayMove utility (safe across @dnd-kit versions)
+function arrayMove<T>(array: T[], from: number, to: number): T[] {
+  const newArray = array.slice();
+  const [item] = newArray.splice(from, 1);
+  if (item !== undefined) newArray.splice(to, 0, item);
+  return newArray;
+}
+
 // A4 dimensions at 96 DPI: 794 x 1123 px
 const A4_WIDTH = 794;
 const A4_HEIGHT = 1123;
@@ -18,7 +44,7 @@ const MM_TO_PX = 3.78;
 const ALWAYS_FULL_TYPES = new Set([
   'header', 'section_title', 'divider',
   'tristate', 'checklist', 'table',
-  'section_separator',
+  'section_separator', 'table_of_contents',
 ]);
 
 /** Get the width CSS class for a block based on its type and config */
@@ -30,7 +56,7 @@ function getBlockWidthClass(block: Block): string {
   return FIELD_WIDTH_CSS[width] || 'w-full';
 }
 
-// ======================== BlockWrapper ========================
+// ======================== BlockWrapper (Sortable) ========================
 
 function BlockWrapper({
   block,
@@ -58,6 +84,34 @@ function BlockWrapper({
   const [hovered, setHovered] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
+  // dnd-kit sortable — disabled for section separators
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: block.id,
+    disabled: isSectionSeparator,
+  });
+
+  const sortableStyle: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.3 : 1,
+  };
+
+  // Combined ref: wrapperRef (ResizeObserver) + setNodeRef (dnd-kit)
+  const combinedRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      (wrapperRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      setNodeRef(node);
+    },
+    [setNodeRef],
+  );
+
   // Measure block height and report to parent
   useEffect(() => {
     if (!wrapperRef.current) return;
@@ -72,7 +126,7 @@ function BlockWrapper({
 
   if (!entry) {
     return (
-      <div ref={wrapperRef} className={cn(widthClass, 'p-0.5')}>
+      <div ref={combinedRef} style={sortableStyle} className={cn(widthClass, 'p-0.5')}>
         <div className="rounded border border-dashed border-destructive bg-destructive/5 p-4 text-sm text-destructive">
           Bloque desconocido: {block.type}
         </div>
@@ -86,7 +140,8 @@ function BlockWrapper({
   if (isSectionSeparator) {
     return (
       <div
-        ref={wrapperRef}
+        ref={combinedRef}
+        style={sortableStyle}
         className={cn(
           'w-full cursor-pointer rounded-sm transition-all',
           isSelected && 'ring-2 ring-primary ring-offset-1',
@@ -103,9 +158,9 @@ function BlockWrapper({
 
   return (
     <div
-      ref={wrapperRef}
+      ref={combinedRef}
+      style={{ ...sortableStyle, padding: '1px' }}
       className={cn(widthClass, 'relative group')}
-      style={{ padding: '1px' }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -139,9 +194,12 @@ function BlockWrapper({
             >
               <ArrowUp className="h-3 w-3" />
             </button>
+            {/* Drag handle */}
             <button
-              className="rounded p-1 text-muted-foreground cursor-grab"
+              className="rounded p-1 text-muted-foreground cursor-grab active:cursor-grabbing"
               title="Arrastrar"
+              {...attributes}
+              {...listeners}
             >
               <GripVertical className="h-3 w-3" />
             </button>
@@ -176,6 +234,23 @@ function BlockWrapper({
           <Preview block={block} isSelected={isSelected} />
         </div>
       </div>
+    </div>
+  );
+}
+
+// ======================== DragPreview ========================
+
+function DragPreview({ block }: { block: Block }) {
+  const entry = getBlockEntry(block.type);
+  if (!entry) return null;
+
+  const Preview = entry.EditorPreview;
+  return (
+    <div
+      className="bg-white rounded-md shadow-lg border-2 border-primary/30 p-1 max-w-[600px] pointer-events-none"
+      style={{ opacity: 0.85 }}
+    >
+      <Preview block={block} isSelected={false} />
     </div>
   );
 }
@@ -275,9 +350,18 @@ export function EditorCanvas() {
   const selectBlock = useEditorStore((s) => s.selectBlock);
   const blockHeights = useEditorStore((s) => s.blockHeights);
   const setBlockHeight = useEditorStore((s) => s.setBlockHeight);
+  const reorderBlocks = useEditorStore((s) => s.reorderBlocks);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  // dnd-kit sensors — distance constraint avoids triggering drag on click
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    }),
+  );
 
   // Height change handler — divide by scale to get unscaled height
   const handleBlockHeightChange = useCallback(
@@ -306,11 +390,68 @@ export function EditorCanvas() {
     return () => observer.disconnect();
   }, [updateScale]);
 
+  // Get the section "zone" for a block (between section separators)
+  const getSectionZone = useCallback(
+    (blockId: string): number => {
+      let zone = 0;
+      for (const b of blocks) {
+        if (b.id === blockId) return zone;
+        if (b.type === 'section_separator') zone++;
+      }
+      return zone;
+    },
+    [blocks],
+  );
+
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  }, []);
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      setActiveId(null);
+
+      if (!over || active.id === over.id) return;
+
+      const activeBlock = blocks.find((b) => b.id === active.id);
+      if (!activeBlock || activeBlock.type === 'section_separator') return;
+
+      // Cannot drop on a section separator
+      const overBlock = blocks.find((b) => b.id === over.id);
+      if (overBlock?.type === 'section_separator') return;
+
+      // Check source and destination are in the same section zone
+      const activeZone = getSectionZone(active.id as string);
+      const overZone = getSectionZone(over.id as string);
+      if (activeZone !== overZone) return;
+
+      // Compute new order
+      const oldIndex = blocks.findIndex((b) => b.id === active.id);
+      const newIndex = blocks.findIndex((b) => b.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      const newBlocks = arrayMove(blocks, oldIndex, newIndex);
+      reorderBlocks(newBlocks.map((b) => b.id));
+    },
+    [blocks, getSectionZone, reorderBlocks],
+  );
+
+  const handleDragCancel = useCallback(() => {
+    setActiveId(null);
+  }, []);
+
   // Compute pages
   const { pages, totalPages } = usePagination({ blocks, pageConfig, blockHeights });
 
   const isPortrait = pageConfig.orientation === 'portrait';
   const canvasHeight = isPortrait ? A4_HEIGHT : A4_WIDTH;
+
+  // Active block for DragOverlay
+  const activeBlock = activeId ? blocks.find((b) => b.id === activeId) : null;
+
+  // All block IDs for the single SortableContext
+  const blockIds = useMemo(() => blocks.map((b) => b.id), [blocks]);
 
   return (
     <div
@@ -318,32 +459,50 @@ export function EditorCanvas() {
       className="flex-1 overflow-y-auto bg-muted/40 p-8"
       onClick={() => selectBlock(null)}
     >
-      <div
-        className="flex flex-col items-center"
-        style={{ gap: `${Math.max(24 * scale, 12)}px` }}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
       >
-        {pages.map((page) => (
+        <SortableContext
+          items={blockIds}
+          strategy={verticalListSortingStrategy}
+        >
           <div
-            key={page.pageIndex}
-            style={{
-              height: canvasHeight * scale,
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'center',
-            }}
+            className="flex flex-col items-center"
+            style={{ gap: `${Math.max(24 * scale, 12)}px` }}
           >
-            <PageSheet
-              pageIndex={page.pageIndex}
-              totalPages={totalPages}
-              blockIds={page.blockIds}
-              allBlocks={blocks}
-              pageConfig={pageConfig}
-              scale={scale}
-              onBlockHeightChange={handleBlockHeightChange}
-            />
+            {pages.map((page) => (
+              <div
+                key={page.pageIndex}
+                style={{
+                  height: canvasHeight * scale,
+                  width: '100%',
+                  display: 'flex',
+                  justifyContent: 'center',
+                }}
+              >
+                <PageSheet
+                  pageIndex={page.pageIndex}
+                  totalPages={totalPages}
+                  blockIds={page.blockIds}
+                  allBlocks={blocks}
+                  pageConfig={pageConfig}
+                  scale={scale}
+                  onBlockHeightChange={handleBlockHeightChange}
+                />
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </SortableContext>
+
+        {/* Drag overlay — lightweight preview of the dragged block */}
+        <DragOverlay>
+          {activeBlock ? <DragPreview block={activeBlock} /> : null}
+        </DragOverlay>
+      </DndContext>
     </div>
   );
 }

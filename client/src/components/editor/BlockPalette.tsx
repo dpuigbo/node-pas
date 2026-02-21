@@ -1,6 +1,7 @@
 import {
   FileText, Heading, Minus, Type, Hash, Calendar, AlignLeft,
   ChevronDown, CheckCircle, ListChecks, Table, Image, Pen,
+  List,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { blockCategories, blockDefinitions } from '@/components/blocks/registry';
@@ -10,6 +11,7 @@ import { useEditorStore } from '@/stores/useEditorStore';
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   FileText, Heading, Minus, Type, Hash, Calendar, AlignLeft,
   ChevronDown, CheckCircle, ListChecks, Table, Image, Pen,
+  List,
 };
 
 export function BlockPalette() {
