@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useEditorStore } from '@/stores/useEditorStore';
 
 interface EditorToolbarProps {
+  modeloId: number;
   modeloNombre: string;
   versionNumero: number;
   estado: string;
@@ -14,6 +15,7 @@ interface EditorToolbarProps {
 }
 
 export function EditorToolbar({
+  modeloId,
   modeloNombre,
   versionNumero,
   estado,
@@ -39,8 +41,8 @@ export function EditorToolbar({
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate(`/modelos`)}
-          title="Volver a modelos"
+          onClick={() => navigate(`/modelos/${modeloId}`)}
+          title="Volver al modelo"
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>

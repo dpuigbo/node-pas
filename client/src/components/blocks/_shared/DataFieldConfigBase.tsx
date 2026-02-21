@@ -1,7 +1,8 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { ConfigPanelProps } from '@/components/blocks/registry';
-import { FIELD_WIDTH_LABELS, type FieldWidth } from '@/types/editor';
+import { FIELD_WIDTH_LABELS, type FieldWidth, type BlockAlign } from '@/types/editor';
+import { AlignSelector } from './AlignSelector';
 
 /**
  * Shared config fields for all data blocks:
@@ -72,6 +73,12 @@ export function DataFieldConfigBase({ block, onChange }: ConfigPanelProps) {
           )}
         </div>
       </div>
+
+      {/* Alignment */}
+      <AlignSelector
+        value={(config.align as BlockAlign) || 'left'}
+        onChange={(v) => onChange('align', v)}
+      />
 
       {/* Help text */}
       <div className="space-y-1">

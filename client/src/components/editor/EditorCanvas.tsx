@@ -3,7 +3,7 @@ import { GripVertical, Copy, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEditorStore } from '@/stores/useEditorStore';
 import { getBlockEntry } from '@/components/blocks/registry';
-import { FIELD_WIDTH_CSS, type FieldWidth } from '@/types/editor';
+import { FIELD_WIDTH_CSS, BLOCK_ALIGN_CSS, type FieldWidth, type BlockAlign } from '@/types/editor';
 import type { Block } from '@/types/editor';
 
 // A4 dimensions at 96 DPI: 794 x 1123 px
@@ -128,8 +128,10 @@ function BlockWrapper({
           </div>
         )}
 
-        {/* Block preview */}
-        <Preview block={block} isSelected={isSelected} />
+        {/* Block preview with alignment */}
+        <div className={BLOCK_ALIGN_CSS[(block.config.align as BlockAlign) || 'left']}>
+          <Preview block={block} isSelected={isSelected} />
+        </div>
       </div>
     </div>
   );

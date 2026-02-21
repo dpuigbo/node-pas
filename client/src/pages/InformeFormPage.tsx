@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { useInforme, useSaveDatos, useUpdateEstadoInforme } from '@/hooks/useInformes';
 import { useAuth } from '@/hooks/useAuth';
 import { getBlockEntry } from '@/components/blocks/registry';
-import { FIELD_WIDTH_CSS, type FieldWidth } from '@/types/editor';
+import { FIELD_WIDTH_CSS, BLOCK_ALIGN_CSS, type FieldWidth, type BlockAlign } from '@/types/editor';
 import type { Block, BlockType } from '@/types/editor';
 import type { ComponenteInformeDetalle } from '@/types/informe';
 
@@ -315,12 +315,13 @@ function BlockRenderer({ block, datos, readOnly, onFieldChange }: BlockRendererP
   if (!entry) return null;
 
   const widthClass = getFormBlockWidthClass(block);
+  const alignClass = BLOCK_ALIGN_CSS[(block.config.align as BlockAlign) || 'left'];
 
   // Structure blocks → render EditorPreview as static
   if (STRUCTURE_BLOCKS.has(block.type)) {
     const Preview = entry.EditorPreview;
     return (
-      <div className={`${widthClass} pointer-events-none`}>
+      <div className={`${widthClass} ${alignClass} pointer-events-none`}>
         <Preview block={block} isSelected={false} />
       </div>
     );
@@ -335,14 +336,14 @@ function BlockRenderer({ block, datos, readOnly, onFieldChange }: BlockRendererP
     // Fallback: render EditorPreview as readonly
     const Preview = entry.EditorPreview;
     return (
-      <div className={`${widthClass} pointer-events-none opacity-70`}>
+      <div className={`${widthClass} ${alignClass} pointer-events-none opacity-70`}>
         <Preview block={block} isSelected={false} />
       </div>
     );
   }
 
   return (
-    <div className={widthClass}>
+    <div className={`${widthClass} ${alignClass}`}>
       <FormFieldComp
         block={block}
         value={datos[key] ?? null}

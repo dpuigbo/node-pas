@@ -9,9 +9,112 @@ interface Column {
   label: string;
   type: string;
   width: string;
+  options?: string[];
 }
 
 type Row = Record<string, unknown>;
+
+// ======================== Cell renderers ========================
+
+function CellInput({
+  col,
+  value,
+  onChange,
+  readOnly,
+}: {
+  col: Column;
+  value: unknown;
+  onChange: (v: unknown) => void;
+  readOnly: boolean;
+}) {
+  switch (col.type) {
+    case 'checkbox':
+      return (
+        <div className="flex justify-center py-1">
+          <input
+            type="checkbox"
+            checked={value === true || value === 'true'}
+            onChange={(e) => onChange(e.target.checked)}
+            disabled={readOnly}
+            className="h-4 w-4 rounded border-gray-300"
+          />
+        </div>
+      );
+
+    case 'tristate': {
+      const current = value as string | null;
+      const options: { label: string; color: string; activeColor: string }[] = [
+        { label: 'OK', color: 'text-gray-400 border-gray-200', activeColor: 'bg-green-100 text-green-700 border-green-300' },
+        { label: 'NOK', color: 'text-gray-400 border-gray-200', activeColor: 'bg-red-100 text-red-700 border-red-300' },
+        { label: 'NA', color: 'text-gray-400 border-gray-200', activeColor: 'bg-gray-100 text-gray-600 border-gray-300' },
+      ];
+
+      return (
+        <div className="flex gap-0.5 justify-center py-0.5">
+          {options.map((opt) => (
+            <button
+              key={opt.label}
+              type="button"
+              disabled={readOnly}
+              className={`px-1.5 py-0.5 rounded border text-[11px] font-medium transition-colors ${
+                current === opt.label ? opt.activeColor : opt.color
+              } ${readOnly ? 'cursor-default' : 'cursor-pointer hover:opacity-80'}`}
+              onClick={() => {
+                if (readOnly) return;
+                onChange(current === opt.label ? null : opt.label);
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    case 'select': {
+      const selectOpts = col.options || [];
+      return (
+        <select
+          value={String(value ?? '')}
+          onChange={(e) => onChange(e.target.value || null)}
+          disabled={readOnly}
+          className="h-8 w-full rounded border-0 bg-transparent text-sm px-1 focus:ring-1 focus:ring-primary"
+        >
+          <option value="">—</option>
+          {selectOpts.map((opt) => (
+            <option key={opt} value={opt}>{opt}</option>
+          ))}
+        </select>
+      );
+    }
+
+    case 'date':
+      return (
+        <Input
+          type="date"
+          value={String(value ?? '')}
+          onChange={(e) => onChange(e.target.value || null)}
+          readOnly={readOnly}
+          disabled={readOnly}
+          className="h-8 text-sm border-0 bg-transparent focus-visible:ring-1 px-1"
+        />
+      );
+
+    default:
+      return (
+        <Input
+          type={col.type === 'number' ? 'number' : 'text'}
+          value={String(value ?? '')}
+          onChange={(e) => onChange(e.target.value || null)}
+          readOnly={readOnly}
+          disabled={readOnly}
+          className="h-8 text-sm border-0 bg-transparent focus-visible:ring-1 px-1"
+        />
+      );
+  }
+}
+
+// ======================== Main FormField ========================
 
 export function FormField({ block, value, onChange, readOnly }: FormFieldProps) {
   const c = block.config;
@@ -20,13 +123,15 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
   const allowAddRows = c.allowAddRows !== false;
   const maxRows = (c.maxRows as number) || 50;
   const required = !!c.required;
+  const headerBg = (c.headerBg as string) || '#1f2937';
+  const compact = !!c.compact;
 
   const rows = (value as Row[]) ?? [];
 
-  const updateCell = (rowIdx: number, colKey: string, cellValue: string) => {
+  const updateCell = (rowIdx: number, colKey: string, cellValue: unknown) => {
     if (readOnly) return;
     const next = rows.map((r, i) =>
-      i === rowIdx ? { ...r, [colKey]: cellValue || null } : r,
+      i === rowIdx ? { ...r, [colKey]: cellValue } : r,
     );
     onChange(next);
   };
@@ -54,6 +159,8 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
     );
   }
 
+  const cellPad = compact ? 'px-1 py-0.5' : 'px-2 py-1';
+
   return (
     <div className="space-y-2">
       <Label>
@@ -63,11 +170,11 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
       <div className="rounded border overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-800 text-white">
+            <tr style={{ backgroundColor: headerBg }}>
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className="px-3 py-2 text-left text-xs font-medium"
+                  className={`${cellPad} text-left text-xs font-medium text-white`}
                   style={{
                     width: col.width !== 'auto' ? col.width : undefined,
                   }}
@@ -76,7 +183,7 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
                 </th>
               ))}
               {!readOnly && allowAddRows && (
-                <th className="px-2 py-2 w-10" />
+                <th className={`${cellPad} w-10`} />
               )}
             </tr>
           </thead>
@@ -99,14 +206,12 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
                   className={ri % 2 === 1 ? 'bg-gray-50' : 'bg-white'}
                 >
                   {columns.map((col) => (
-                    <td key={col.key} className="px-2 py-1">
-                      <Input
-                        type={col.type === 'number' ? 'number' : 'text'}
-                        value={String(row[col.key] ?? '')}
-                        onChange={(e) => updateCell(ri, col.key, e.target.value)}
+                    <td key={col.key} className={cellPad}>
+                      <CellInput
+                        col={col}
+                        value={row[col.key]}
+                        onChange={(v) => updateCell(ri, col.key, v)}
                         readOnly={readOnly}
-                        disabled={readOnly}
-                        className="h-8 text-sm border-0 bg-transparent focus-visible:ring-1 px-1"
                       />
                     </td>
                   ))}

@@ -10,6 +10,7 @@ import {
   Bot,
   Zap,
   Move3d,
+  FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -29,13 +30,25 @@ const navGroups: NavGroup[] = [
   {
     items: [
       { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: 'Catalogos Generales',
+    items: [
       { name: 'Clientes', href: '/clientes', icon: Users },
       { name: 'Fabricantes', href: '/fabricantes', icon: Factory },
+      { name: 'Consumibles', href: '/catalogos', icon: Droplets },
       { name: 'Intervenciones', href: '/intervenciones', icon: Wrench },
     ],
   },
   {
-    label: 'Catalogo de Modelos',
+    label: 'Ofertas',
+    items: [
+      { name: 'Ofertas', href: '/ofertas', icon: FileText },
+    ],
+  },
+  {
+    label: 'Catalogo de Componentes',
     items: [
       { name: 'Controladoras', href: '/modelos?tipo=controller', icon: Cpu, matchTipo: 'controller' },
       { name: 'Robots', href: '/modelos?tipo=mechanical_unit', icon: Bot, matchTipo: 'mechanical_unit' },
@@ -45,7 +58,6 @@ const navGroups: NavGroup[] = [
   },
   {
     items: [
-      { name: 'Catalogos', href: '/catalogos', icon: Droplets },
       { name: 'Configuracion', href: '/configuracion', icon: Settings },
     ],
   },

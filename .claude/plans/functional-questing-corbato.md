@@ -1,29 +1,20 @@
-# Plan: Commit y verificar deploy automático en Hostinger
+# Plan: Fix TypeScript build errors (unused imports)
 
 ## Contexto
-La app PAS Robotics Manage ha estado fallando con 503 en cada auto-deploy de Hostinger. Después de múltiples intentos, hemos resuelto los problemas:
+El build del client falla con 3 errores TS6133 (imports declarados pero no usados). El usuario está haciendo `git pull` + `npm run build` manual en SSH porque el auto-deploy de Hostinger no funciona.
 
-1. **Permisos binarios**: Hostinger pierde permisos de ejecución en `node_modules/.bin/*` tras cada `npm install`. Solucionado con `chmod +x` en `postinstall` y `build:client`.
-2. **Compilación TypeScript eliminada**: En vez de compilar con `tsc` (que también tenía problemas de permisos), ahora usamos `tsx` para ejecutar TypeScript directamente en runtime.
-3. **Variables de entorno**: Passenger no recibe las env vars configuradas en el panel de Hostinger. Solucionado añadiendo `dotenv` con ruta absoluta en `app.js`.
-4. **`.htaccess`**: Committed al repo para que apunte siempre a `app.js`.
+## Archivos a corregir
 
-## Estado actual
-- La app **funciona** en el servidor (verificado con `curl localhost:3000/api/health`)
-- Archivos modificados pendientes de commit:
-  - `app.js` — usa dotenv + tsx para ejecutar TS directamente
-  - `package.json` — build simplificado (solo client + prisma), chmod en postinstall
-  - `src/index.ts` — ruta de static files corregida para modo sin compilación
-  - `.htaccess` — nuevo archivo para Passenger
+### 1. `client/src/pages/Dashboard.tsx` (linea 8)
+- Eliminar `CheckCircle` del import de lucide-react (no se usa)
 
-## Plan
+### 2. `client/src/pages/FabricantesPage.tsx` (linea 3)
+- Eliminar `GripVertical` del import de lucide-react (no se usa)
 
-### Paso 1: Commit y push
-Hacer commit de los 4 archivos modificados y push a main para trigger del auto-deploy.
+### 3. `client/src/pages/ModelosPage.tsx` (linea 3)
+- Eliminar `Pencil` del import de lucide-react (no se usa)
 
-### Paso 2: Verificar deploy
-Después del deploy, verificar que `https://admin.pasrobotics.com/api/health` responde correctamente sin intervención manual por SSH.
-
-### Verificación
-- Abrir `https://admin.pasrobotics.com/api/health` → debe devolver `{"status":"ok",...}`
-- Abrir `https://admin.pasrobotics.com/` → debe mostrar el dashboard
+## Verificacion
+- Commit + push
+- En SSH: `git pull origin main && npm run build && touch tmp/restart.txt`
+- Navegar a `https://admin.pasrobotics.com/api/auth/dev-login`

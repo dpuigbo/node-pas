@@ -74,6 +74,16 @@ export const FIELD_WIDTH_CSS: Record<FieldWidth, string> = {
   two_thirds: 'w-2/3',
 };
 
+// ===== Block alignment =====
+
+export type BlockAlign = 'left' | 'center' | 'right';
+
+export const BLOCK_ALIGN_CSS: Record<BlockAlign, string> = {
+  left: 'text-left',
+  center: 'text-center',
+  right: 'text-right',
+};
+
 // ===== Maintenance Level for tristate =====
 
 export type MaintenanceLevel = 'general' | 'level1' | 'level2' | 'level3';

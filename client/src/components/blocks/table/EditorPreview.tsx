@@ -7,12 +7,57 @@ interface Column {
   width: string;
 }
 
+function CellPreview({ col, value }: { col: Column; value: unknown }) {
+  const str = String(value ?? '');
+
+  switch (col.type) {
+    case 'checkbox':
+      return (
+        <div className="flex justify-center">
+          <div className={`h-3 w-3 rounded-sm border ${str === 'true' ? 'bg-primary border-primary' : 'border-gray-300'}`} />
+        </div>
+      );
+
+    case 'tristate': {
+      const v = str || null;
+      return (
+        <div className="flex gap-0.5 justify-center">
+          {(['OK', 'NOK', 'NA'] as const).map((opt) => (
+            <span
+              key={opt}
+              className={`px-1 rounded text-[8px] font-medium ${
+                v === opt
+                  ? opt === 'OK'
+                    ? 'bg-green-100 text-green-700'
+                    : opt === 'NOK'
+                    ? 'bg-red-100 text-red-700'
+                    : 'bg-gray-100 text-gray-500'
+                  : 'text-gray-300'
+              }`}
+            >
+              {opt}
+            </span>
+          ))}
+        </div>
+      );
+    }
+
+    case 'select':
+      return <span className="text-gray-400 italic">{str || 'Seleccionar...'}</span>;
+
+    default:
+      return <span className="text-gray-500">{str}</span>;
+  }
+}
+
 export function EditorPreview({ block }: EditorPreviewProps) {
   const c = block.config;
   const label = (c.label as string) || 'Tabla';
   const columns = (c.columns as Column[]) || [];
   const fixedRows = (c.fixedRows as Record<string, unknown>[]) || [];
   const allowAddRows = c.allowAddRows !== false;
+  const headerBg = (c.headerBg as string) || '#1f2937';
+  const compact = !!c.compact;
 
   if (columns.length === 0) {
     return (
@@ -27,6 +72,7 @@ export function EditorPreview({ block }: EditorPreviewProps) {
 
   const displayRows = fixedRows.slice(0, 3);
   const extraRows = fixedRows.length > 3 ? fixedRows.length - 3 : 0;
+  const cellPad = compact ? 'px-1.5 py-0.5' : 'px-2 py-1';
 
   return (
     <div className="py-2">
@@ -34,11 +80,11 @@ export function EditorPreview({ block }: EditorPreviewProps) {
       <div className="rounded border overflow-hidden">
         <table className="w-full text-[10px]">
           <thead>
-            <tr className="bg-gray-800 text-white">
+            <tr style={{ backgroundColor: headerBg }}>
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className="px-2 py-1 text-left font-medium"
+                  className={`${cellPad} text-left font-medium text-white`}
                   style={{ width: col.width !== 'auto' ? col.width : undefined }}
                 >
                   {col.label}
@@ -51,17 +97,16 @@ export function EditorPreview({ block }: EditorPreviewProps) {
               displayRows.map((row, ri) => (
                 <tr key={ri} className={ri % 2 === 1 ? 'bg-gray-50' : ''}>
                   {columns.map((col) => (
-                    <td key={col.key} className="px-2 py-1 text-gray-500">
-                      {String(row[col.key] || '')}
+                    <td key={col.key} className={cellPad}>
+                      <CellPreview col={col} value={row[col.key]} />
                     </td>
                   ))}
                 </tr>
               ))
             ) : (
-              // Placeholder rows
               <tr>
                 {columns.map((col) => (
-                  <td key={col.key} className="px-2 py-1">
+                  <td key={col.key} className={cellPad}>
                     <div className="h-3 bg-gray-100 rounded" />
                   </td>
                 ))}

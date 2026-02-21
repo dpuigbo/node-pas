@@ -8,12 +8,14 @@ interface Column {
   label: string;
   type: string;
   width: string;
+  options?: string[]; // for select type
 }
 
 const COLUMN_TYPES = [
   { value: 'text', label: 'Texto' },
   { value: 'number', label: 'Numero' },
   { value: 'date', label: 'Fecha' },
+  { value: 'checkbox', label: 'Checkbox' },
   { value: 'tristate', label: 'Tristate' },
   { value: 'select', label: 'Selector' },
 ];
@@ -36,7 +38,7 @@ export function ColumnsEditor({ columns, onChange }: ColumnsEditorProps) {
     onChange(columns.filter((_, i) => i !== index));
   };
 
-  const updateColumn = (index: number, field: keyof Column, val: string) => {
+  const updateColumn = (index: number, field: keyof Column, val: unknown) => {
     const updated = columns.map((col, i) =>
       i === index ? { ...col, [field]: val } : col,
     );
@@ -99,6 +101,21 @@ export function ColumnsEditor({ columns, onChange }: ColumnsEditorProps) {
               title="Ancho (auto, 100px, 20%, etc.)"
             />
           </div>
+          {col.type === 'select' && (
+            <div className="space-y-0.5">
+              <span className="text-[9px] text-muted-foreground">Opciones (una por linea)</span>
+              <textarea
+                value={(col.options || []).join('\n')}
+                onChange={(e) => {
+                  const opts = e.target.value.split('\n').filter((s) => s.trim());
+                  updateColumn(i, 'options', opts);
+                }}
+                placeholder="Opcion 1&#10;Opcion 2"
+                className="w-full rounded border text-[10px] px-1 py-0.5 resize-none"
+                rows={3}
+              />
+            </div>
+          )}
         </div>
       ))}
 

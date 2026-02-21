@@ -316,6 +316,18 @@ model Consumible {
   @@map("consumibles")
 }
 
+// ===== PLANTILLAS DE DOCUMENTO =====
+
+model DocumentTemplate {
+  id        Int      @id @default(autoincrement())
+  tipo      String   @unique  // 'preventivo' | 'correctivo'
+  nombre    String
+  schema    Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("document_templates")
+}
+
 // ===== CONFIGURACION APP =====
 
 model ConfiguracionApp {

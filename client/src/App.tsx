@@ -12,6 +12,7 @@ import ModelosPage from './pages/ModelosPage';
 import IntervencionesPage from './pages/IntervencionesPage';
 import CatalogosPage from './pages/CatalogosPage';
 import ConfiguracionPage from './pages/ConfiguracionPage';
+import OfertasPage from './pages/OfertasPage';
 
 // Lazy-loaded pages (large or with heavy dependencies)
 const EditorPage = lazy(() => import('./pages/EditorPage'));
@@ -19,6 +20,7 @@ const ModeloDetailPage = lazy(() => import('./pages/ModeloDetailPage'));
 const IntervencionDetailPage = lazy(() => import('./pages/IntervencionDetailPage'));
 const InformeFormPage = lazy(() => import('./pages/InformeFormPage'));
 const SistemaDetailPage = lazy(() => import('./pages/SistemaDetailPage'));
+const DocumentTemplateEditorPage = lazy(() => import('./pages/DocumentTemplateEditorPage'));
 
 function EditorLoader() {
   return (
@@ -42,6 +44,16 @@ export default function App() {
           element={
             <Suspense fallback={<EditorLoader />}>
               <EditorPage />
+            </Suspense>
+          }
+        />
+
+        {/* Document template editor — pantalla completa, fuera de AppShell */}
+        <Route
+          path="/document-templates/:id/editor"
+          element={
+            <Suspense fallback={<EditorLoader />}>
+              <DocumentTemplateEditorPage />
             </Suspense>
           }
         />
@@ -86,6 +98,7 @@ export default function App() {
               </Suspense>
             }
           />
+          <Route path="/ofertas" element={<OfertasPage />} />
           <Route path="/catalogos" element={<CatalogosPage />} />
           <Route path="/configuracion" element={<ConfiguracionPage />} />
         </Route>

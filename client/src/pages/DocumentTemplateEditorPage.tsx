@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
-import { useVersion, useUpdateVersion } from '@/hooks/useModelos';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Save, Settings, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useDocumentTemplate, useUpdateDocumentTemplate } from '@/hooks/useDocumentTemplates';
 import { useEditorStore } from '@/stores/useEditorStore';
-import { EditorToolbar } from '@/components/editor/EditorToolbar';
 import { BlockPalette } from '@/components/editor/BlockPalette';
 import { EditorCanvas } from '@/components/editor/EditorCanvas';
 import { ConfigPanel } from '@/components/editor/ConfigPanel';
@@ -12,16 +13,18 @@ import { PageConfigDialog } from '@/components/editor/PageConfigDialog';
 // Import all block registrations
 import '@/components/blocks/register-all';
 
-export default function EditorPage() {
-  const { modeloId: mId, versionId: vId } = useParams<{
-    modeloId: string;
-    versionId: string;
-  }>();
-  const modeloId = Number(mId);
-  const versionId = Number(vId);
+const TIPO_LABELS: Record<string, string> = {
+  preventivo: 'Preventivo',
+  correctivo: 'Correctivo',
+};
 
-  const { data: versionData, isLoading } = useVersion(modeloId || undefined, versionId || undefined);
-  const updateVersion = useUpdateVersion(modeloId);
+export default function DocumentTemplateEditorPage() {
+  const { id } = useParams<{ id: string }>();
+  const templateId = Number(id);
+  const navigate = useNavigate();
+
+  const { data: templateData, isLoading } = useDocumentTemplate(templateId || undefined);
+  const updateTemplate = useUpdateDocumentTemplate(templateId);
 
   const loadSchema = useEditorStore((s) => s.loadSchema);
   const getSchema = useEditorStore((s) => s.getSchema);
@@ -33,20 +36,20 @@ export default function EditorPage() {
   const [showPageConfig, setShowPageConfig] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Load schema from version data
+  // Load schema from template data
   useEffect(() => {
-    if (versionData) {
-      const schema = versionData.schema || { blocks: [], pageConfig: undefined };
+    if (templateData) {
+      const schema = (templateData.schema as any) || { blocks: [], pageConfig: undefined };
       loadSchema(
         {
           blocks: schema.blocks || [],
           pageConfig: schema.pageConfig || undefined,
         },
-        modeloId,
-        versionId,
+        0, // no modeloId for document templates
+        templateId,
       );
     }
-  }, [versionData, modeloId, versionId, loadSchema]);
+  }, [templateData, templateId, loadSchema]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -59,25 +62,23 @@ export default function EditorPage() {
     setIsSaving(true);
     try {
       const schema = getSchema();
-      await updateVersion.mutateAsync({ id: versionId, schema });
+      await updateTemplate.mutateAsync({ schema });
       markClean();
     } catch (err) {
       console.error('Error al guardar:', err);
     } finally {
       setIsSaving(false);
     }
-  }, [isSaving, getSchema, updateVersion, versionId, markClean]);
+  }, [isSaving, getSchema, updateTemplate, markClean]);
 
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      // Ctrl+S: Save
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         if (isDirty) handleSave();
         return;
       }
-      // ESC: Deselect
       if (e.key === 'Escape') {
         selectBlock(null);
         return;
@@ -99,7 +100,7 @@ export default function EditorPage() {
     return () => window.removeEventListener('beforeunload', handler);
   }, [isDirty]);
 
-  if (isLoading || !versionData) {
+  if (isLoading || !templateData) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -109,15 +110,42 @@ export default function EditorPage() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      <EditorToolbar
-        modeloId={modeloId}
-        modeloNombre={versionData.modeloComponente?.nombre || 'Template'}
-        versionNumero={versionData.version}
-        estado={versionData.estado}
-        isSaving={isSaving}
-        onSave={handleSave}
-        onOpenPageConfig={() => setShowPageConfig(true)}
-      />
+      {/* Toolbar */}
+      <div className="flex h-14 items-center justify-between border-b bg-background px-4">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/configuracion')}
+            title="Volver a configuracion"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <span className="font-semibold">{templateData.nombre}</span>
+            <Badge className="bg-blue-100 text-blue-800">
+              {TIPO_LABELS[templateData.tipo] || templateData.tipo}
+            </Badge>
+            {isDirty && (
+              <span className="text-xs text-amber-600 font-medium">Sin guardar</span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowPageConfig(true)}>
+            <Settings className="h-4 w-4 mr-1" />
+            Pagina
+          </Button>
+          <Button size="sm" onClick={handleSave} disabled={isSaving || !isDirty}>
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-1" />
+            ) : (
+              <Save className="h-4 w-4 mr-1" />
+            )}
+            Guardar
+          </Button>
+        </div>
+      </div>
 
       <div className="flex flex-1 overflow-hidden">
         <BlockPalette />

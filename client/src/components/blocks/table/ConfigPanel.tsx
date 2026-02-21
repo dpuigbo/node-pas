@@ -58,6 +58,41 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
         />
       </div>
 
+      {/* Table style */}
+      <div className="border-t pt-3 space-y-3">
+        <Label className="text-xs font-semibold">Estilo de tabla</Label>
+
+        <div className="space-y-1">
+          <Label className="text-xs">Color cabecera</Label>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={(c.headerBg as string) || '#1f2937'}
+              onChange={(e) => onChange('headerBg', e.target.value)}
+              className="h-8 w-8 cursor-pointer rounded border"
+            />
+            <Input
+              value={(c.headerBg as string) || '#1f2937'}
+              onChange={(e) => onChange('headerBg', e.target.value)}
+              className="h-8 font-mono text-xs flex-1"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id={`compact-${block.id}`}
+            checked={!!c.compact}
+            onChange={(e) => onChange('compact', e.target.checked)}
+            className="h-4 w-4 rounded"
+          />
+          <Label htmlFor={`compact-${block.id}`} className="text-xs cursor-pointer">
+            Compacta (padding reducido)
+          </Label>
+        </div>
+      </div>
+
       {/* Allow add rows */}
       <div className="border-t pt-3 space-y-3">
         <div className="flex items-center gap-2">

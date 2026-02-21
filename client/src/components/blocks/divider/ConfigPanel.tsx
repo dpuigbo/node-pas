@@ -1,6 +1,8 @@
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import type { ConfigPanelProps } from '@/components/blocks/registry';
+import type { BlockAlign } from '@/types/editor';
+import { AlignSelector } from '@/components/blocks/_shared/AlignSelector';
 
 export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
   const c = block.config;
@@ -57,6 +59,11 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
           ))}
         </div>
       </div>
+
+      <AlignSelector
+        value={(c.align as BlockAlign) || 'left'}
+        onChange={(v) => onChange('align', v)}
+      />
 
       {c.style !== 'space' && (
         <div className="space-y-1">

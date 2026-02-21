@@ -40,3 +40,12 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
 export function getAuthUser(req: Request): AuthUser {
   return (req as any).authUser;
 }
+
+export function adminMiddleware(req: Request, res: Response, next: NextFunction) {
+  const user = getAuthUser(req);
+  if (!user || user.rol !== 'admin') {
+    res.status(403).json({ error: 'Se requieren permisos de administrador' });
+    return;
+  }
+  next();
+}
