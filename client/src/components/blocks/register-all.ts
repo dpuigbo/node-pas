@@ -27,3 +27,9 @@ import './signature';
 
 // Document template sections (not in palette — auto-inserted)
 import './section_separator';
+
+// Document template blocks
+import './cover_header';
+import './page_header';
+import './page_footer';
+import './back_cover';

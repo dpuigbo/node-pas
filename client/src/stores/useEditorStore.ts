@@ -149,7 +149,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const def = blockDefinitions[type];
     if (!def) return;
 
-    const { blocks } = get();
+    const { blocks, selectedBlockId, isDocumentTemplate } = get();
     const config = { ...def.defaultConfig };
 
     // Auto-generate key for data blocks
@@ -164,9 +164,44 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     };
 
     const newBlocks = [...blocks];
+
     if (index !== undefined && index >= 0 && index <= blocks.length) {
+      // Explicit index provided
       newBlocks.splice(index, 0, newBlock);
+    } else if (isDocumentTemplate) {
+      // Smart insertion for document templates
+      if (selectedBlockId) {
+        const selectedIdx = blocks.findIndex((b) => b.id === selectedBlockId);
+        if (selectedIdx !== -1) {
+          const selectedBlock = blocks[selectedIdx]!;
+          if (selectedBlock.type === 'section_separator') {
+            // Selected block is a section separator → insert right after it
+            // but before the next section separator (or end)
+            let insertIdx = selectedIdx + 1;
+            while (insertIdx < blocks.length && blocks[insertIdx]!.type !== 'section_separator') {
+              insertIdx++;
+            }
+            newBlocks.splice(insertIdx, 0, newBlock);
+          } else {
+            // Insert after the selected block
+            newBlocks.splice(selectedIdx + 1, 0, newBlock);
+          }
+        } else {
+          // Selected block not found — insert at end of first section
+          const firstSepIdx = blocks.findIndex(
+            (b, i) => i > 0 && b.type === 'section_separator',
+          );
+          newBlocks.splice(firstSepIdx !== -1 ? firstSepIdx : blocks.length, 0, newBlock);
+        }
+      } else {
+        // No selection — insert at end of first section (before second separator)
+        const firstSepIdx = blocks.findIndex(
+          (b, i) => i > 0 && b.type === 'section_separator',
+        );
+        newBlocks.splice(firstSepIdx !== -1 ? firstSepIdx : blocks.length, 0, newBlock);
+      }
     } else {
+      // Non-template: append at end (original behavior)
       newBlocks.push(newBlock);
     }
 

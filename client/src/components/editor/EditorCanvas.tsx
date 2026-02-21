@@ -45,6 +45,7 @@ const ALWAYS_FULL_TYPES = new Set([
   'header', 'section_title', 'divider',
   'tristate', 'checklist', 'table',
   'section_separator', 'table_of_contents',
+  'cover_header', 'page_header', 'page_footer', 'back_cover',
 ]);
 
 /** Get the width CSS class for a block based on its type and config */

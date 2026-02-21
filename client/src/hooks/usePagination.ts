@@ -14,6 +14,7 @@ const ALWAYS_FULL_TYPES = new Set([
   'header', 'section_title', 'divider',
   'tristate', 'checklist', 'table',
   'section_separator', 'table_of_contents',
+  'cover_header', 'page_header', 'page_footer', 'back_cover',
 ]);
 
 export interface PageAssignment {

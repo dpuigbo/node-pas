@@ -252,6 +252,59 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
       title: 'Tabla de contenidos',
     },
   },
+  // Document template blocks
+  cover_header: {
+    type: 'cover_header',
+    label: 'Portada (banner)',
+    icon: 'BookOpen',
+    category: 'document',
+    hasData: false,
+    defaultConfig: {
+      title: 'Reporte de mantenimiento',
+      subtitle: '',
+      companyName: 'PAS Robotics',
+      logoUrl: '',
+      logoPosition: 'right',
+      backgroundColor: '#000000',
+    },
+  },
+  page_header: {
+    type: 'page_header',
+    label: 'Cabecera de pagina',
+    icon: 'PanelTop',
+    category: 'document',
+    hasData: false,
+    defaultConfig: {
+      title: 'Reporte de mantenimiento',
+      subtitle: '',
+      logoUrl: '',
+      backgroundColor: '#1f2937',
+    },
+  },
+  page_footer: {
+    type: 'page_footer',
+    label: 'Pie de pagina',
+    icon: 'PanelBottom',
+    category: 'document',
+    hasData: false,
+    defaultConfig: {
+      companyName: 'PAS Robotics',
+      showPageNumbers: true,
+      showTriangle: true,
+      backgroundColor: '#1f2937',
+    },
+  },
+  back_cover: {
+    type: 'back_cover',
+    label: 'Contraportada',
+    icon: 'Square',
+    category: 'document',
+    hasData: false,
+    defaultConfig: {
+      logoUrl: '',
+      backgroundColor: '#111827',
+    },
+  },
 };
 
 // ===== Category metadata =====
@@ -275,5 +328,10 @@ export const blockCategories: { id: string; label: string; types: BlockType[] }[
     id: 'media',
     label: 'Media y firma',
     types: ['image', 'signature'],
+  },
+  {
+    id: 'document',
+    label: 'Documento',
+    types: ['cover_header', 'page_header', 'page_footer', 'back_cover'],
   },
 ];

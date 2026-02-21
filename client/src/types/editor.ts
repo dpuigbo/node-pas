@@ -15,9 +15,13 @@ export type BlockType =
   | 'image'
   | 'signature'
   | 'section_separator'
-  | 'table_of_contents';
+  | 'table_of_contents'
+  | 'cover_header'
+  | 'page_header'
+  | 'page_footer'
+  | 'back_cover';
 
-export type BlockCategory = 'structure' | 'data' | 'inspection' | 'media';
+export type BlockCategory = 'structure' | 'data' | 'inspection' | 'media' | 'document';
 
 export interface BlockDefinition {
   type: BlockType;

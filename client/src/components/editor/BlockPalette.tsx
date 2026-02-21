@@ -1,7 +1,7 @@
 import {
   FileText, Heading, Minus, Type, Hash, Calendar, AlignLeft,
   ChevronDown, CheckCircle, ListChecks, Table, Image, Pen,
-  List,
+  List, BookOpen, PanelTop, PanelBottom, Square,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { blockCategories, blockDefinitions } from '@/components/blocks/registry';
@@ -11,11 +11,12 @@ import { useEditorStore } from '@/stores/useEditorStore';
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   FileText, Heading, Minus, Type, Hash, Calendar, AlignLeft,
   ChevronDown, CheckCircle, ListChecks, Table, Image, Pen,
-  List,
+  List, BookOpen, PanelTop, PanelBottom, Square,
 };
 
 export function BlockPalette() {
   const addBlock = useEditorStore((s) => s.addBlock);
+  const isDocumentTemplate = useEditorStore((s) => s.isDocumentTemplate);
 
   return (
     <div className="flex w-56 flex-col border-r bg-background overflow-y-auto">
@@ -27,6 +28,8 @@ export function BlockPalette() {
 
       <div className="flex-1 overflow-y-auto p-2 space-y-4">
         {blockCategories.map((cat) => {
+          // Hide 'document' category for non-template editors
+          if (cat.id === 'document' && !isDocumentTemplate) return null;
           // Filter out types that shouldn't appear in the palette
           const visibleTypes = cat.types.filter((t) => t !== 'section_separator');
           if (visibleTypes.length === 0) return null;
