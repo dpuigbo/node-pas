@@ -264,8 +264,6 @@ function DragPreview({ block }: { block: Block }) {
 // ======================== PageSheet ========================
 
 function PageSheet({
-  pageIndex,
-  totalPages,
   blockIds,
   sectionChromeIds,
   allBlocks,
@@ -273,8 +271,6 @@ function PageSheet({
   scale,
   onBlockHeightChange,
 }: {
-  pageIndex: number;
-  totalPages: number;
   blockIds: string[];
   sectionChromeIds: string[];
   allBlocks: Block[];
@@ -429,7 +425,7 @@ function PageSheet({
         selectBlock(null);
       }}
     >
-      {pageBlocks.length === 0 && injectedChromeBlocks.length === 0 && pageIndex === 0 ? (
+      {pageBlocks.length === 0 && injectedChromeBlocks.length === 0 ? (
         <div
           className="flex flex-col items-center justify-center h-full text-muted-foreground/50"
           style={{ padding: `${marginTop}px ${marginRight}px ${marginBottom}px ${marginLeft}px` }}
@@ -577,7 +573,7 @@ export function EditorCanvas() {
   }, []);
 
   // Compute pages
-  const { pages, totalPages } = usePagination({ blocks, pageConfig, blockHeights });
+  const { pages } = usePagination({ blocks, pageConfig, blockHeights });
 
   const isPortrait = pageConfig.orientation === 'portrait';
   const canvasHeight = isPortrait ? A4_HEIGHT : A4_WIDTH;
@@ -636,8 +632,6 @@ export function EditorCanvas() {
                     }}
                   >
                     <PageSheet
-                      pageIndex={page.pageIndex}
-                      totalPages={totalPages}
                       blockIds={page.blockIds}
                       sectionChromeIds={page.sectionChromeIds}
                       allBlocks={blocks}
