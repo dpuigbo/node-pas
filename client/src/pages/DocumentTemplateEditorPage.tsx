@@ -47,6 +47,7 @@ export default function DocumentTemplateEditorPage() {
         },
         0, // no modeloId for document templates
         templateId,
+        true, // isDocumentTemplate — inserts section separators
       );
     }
   }, [templateData, templateId, loadSchema]);
@@ -116,8 +117,8 @@ export default function DocumentTemplateEditorPage() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/configuracion')}
-            title="Volver a configuracion"
+            onClick={() => navigate('/configuracion/plantillas')}
+            title="Volver a plantillas"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>

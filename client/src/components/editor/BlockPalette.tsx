@@ -24,13 +24,17 @@ export function BlockPalette() {
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 space-y-4">
-        {blockCategories.map((cat) => (
+        {blockCategories.map((cat) => {
+          // Filter out types that shouldn't appear in the palette
+          const visibleTypes = cat.types.filter((t) => t !== 'section_separator');
+          if (visibleTypes.length === 0) return null;
+          return (
           <div key={cat.id}>
             <p className="px-2 pb-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">
               {cat.label}
             </p>
             <div className="space-y-0.5">
-              {cat.types.map((type) => {
+              {visibleTypes.map((type) => {
                 const def = blockDefinitions[type];
                 const Icon = iconMap[def.icon];
                 return (
@@ -51,7 +55,8 @@ export function BlockPalette() {
               })}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

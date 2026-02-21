@@ -232,6 +232,16 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
       width: 'half',
     },
   },
+  section_separator: {
+    type: 'section_separator',
+    label: 'Separador de seccion',
+    icon: 'FileStack',
+    category: 'structure',
+    hasData: false,
+    defaultConfig: {
+      section: 'portada',
+    },
+  },
 };
 
 // ===== Category metadata =====

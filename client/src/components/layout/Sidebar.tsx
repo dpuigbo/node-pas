@@ -14,11 +14,17 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+interface NavChild {
+  name: string;
+  href: string;
+}
+
 interface NavItem {
   name: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   matchTipo?: string; // for matching tipo query param on /modelos
+  children?: NavChild[];
 }
 
 interface NavGroup {
@@ -57,8 +63,17 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
+    label: 'Configuracion',
     items: [
-      { name: 'Configuracion', href: '/configuracion', icon: Settings },
+      {
+        name: 'Configuracion',
+        href: '/configuracion',
+        icon: Settings,
+        children: [
+          { name: 'General', href: '/configuracion' },
+          { name: 'Plantillas', href: '/configuracion/plantillas' },
+        ],
+      },
     ],
   },
 ];
@@ -66,6 +81,37 @@ const navGroups: NavGroup[] = [
 function SidebarLink({ item }: { item: NavItem }) {
   const location = useLocation();
   const [searchParams] = useSearchParams();
+
+  // Items with children: render as expandable group
+  if (item.children) {
+    return (
+      <div>
+        <div className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground">
+          <item.icon className="h-4 w-4" />
+          {item.name}
+        </div>
+        <div className="ml-7 space-y-0.5">
+          {item.children.map((child) => (
+            <NavLink
+              key={child.href}
+              to={child.href}
+              end
+              className={({ isActive }) =>
+                cn(
+                  'flex items-center rounded-lg px-3 py-1.5 text-sm transition-colors',
+                  isActive
+                    ? 'bg-sidebar-accent text-primary font-medium'
+                    : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground',
+                )
+              }
+            >
+              {child.name}
+            </NavLink>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   // For catalog items with matchTipo, determine active state manually
   if (item.matchTipo) {

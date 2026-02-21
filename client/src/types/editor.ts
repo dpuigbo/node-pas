@@ -13,7 +13,8 @@ export type BlockType =
   | 'checklist'
   | 'table'
   | 'image'
-  | 'signature';
+  | 'signature'
+  | 'section_separator';
 
 export type BlockCategory = 'structure' | 'data' | 'inspection' | 'media';
 
@@ -83,6 +84,25 @@ export const BLOCK_ALIGN_CSS: Record<BlockAlign, string> = {
   center: 'text-center',
   right: 'text-right',
 };
+
+// ===== Width fractions for pagination =====
+
+export const FIELD_WIDTH_FRACTION: Record<FieldWidth, number> = {
+  full: 1,
+  half: 0.5,
+  third: 0.333,
+  two_thirds: 0.667,
+};
+
+// ===== Document template sections =====
+
+export type DocumentSection = 'portada' | 'intermedia' | 'contraportada';
+
+export const DOCUMENT_SECTIONS: { id: DocumentSection; label: string; color: string }[] = [
+  { id: 'portada', label: 'Portada', color: '#2563eb' },
+  { id: 'intermedia', label: 'Pagina Intermedia (Cabecera + Pie)', color: '#059669' },
+  { id: 'contraportada', label: 'Contraportada', color: '#7c3aed' },
+];
 
 // ===== Maintenance Level for tristate =====
 

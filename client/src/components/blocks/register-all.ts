@@ -23,3 +23,6 @@ import './table';
 // Media
 import './image';
 import './signature';
+
+// Document template sections (not in palette — auto-inserted)
+import './section_separator';

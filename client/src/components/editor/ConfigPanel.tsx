@@ -55,29 +55,31 @@ export function ConfigPanel() {
         />
       </div>
 
-      {/* Footer actions */}
-      <div className="flex items-center gap-2 border-t px-4 py-3">
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1"
-          onClick={() => duplicateBlock(block.id)}
-        >
-          <Copy className="h-4 w-4 mr-1" />
-          Duplicar
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1 text-destructive hover:bg-destructive/10"
-          onClick={() => {
-            removeBlock(block.id);
-          }}
-        >
-          <Trash2 className="h-4 w-4 mr-1" />
-          Eliminar
-        </Button>
-      </div>
+      {/* Footer actions — hidden for section separators */}
+      {block.type !== 'section_separator' && (
+        <div className="flex items-center gap-2 border-t px-4 py-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => duplicateBlock(block.id)}
+          >
+            <Copy className="h-4 w-4 mr-1" />
+            Duplicar
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 text-destructive hover:bg-destructive/10"
+            onClick={() => {
+              removeBlock(block.id);
+            }}
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            Eliminar
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -13,6 +13,7 @@ import IntervencionesPage from './pages/IntervencionesPage';
 import CatalogosPage from './pages/CatalogosPage';
 import ConfiguracionPage from './pages/ConfiguracionPage';
 import OfertasPage from './pages/OfertasPage';
+import PlantillasPage from './pages/PlantillasPage';
 
 // Lazy-loaded pages (large or with heavy dependencies)
 const EditorPage = lazy(() => import('./pages/EditorPage'));
@@ -101,6 +102,7 @@ export default function App() {
           <Route path="/ofertas" element={<OfertasPage />} />
           <Route path="/catalogos" element={<CatalogosPage />} />
           <Route path="/configuracion" element={<ConfiguracionPage />} />
+          <Route path="/configuracion/plantillas" element={<PlantillasPage />} />
         </Route>
       </Route>
 

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Block, BlockType, PageConfig, TemplateSchema } from '@/types/editor';
+import type { Block, BlockType, PageConfig, TemplateSchema, DocumentSection } from '@/types/editor';
 import { DEFAULT_PAGE_CONFIG } from '@/types/editor';
 import { blockDefinitions } from '@/components/blocks/registry';
 
@@ -51,6 +51,39 @@ function uuid(): string {
   return crypto.randomUUID();
 }
 
+// ===== Ensure section separators for document templates =====
+const SECTIONS_ORDER: DocumentSection[] = ['portada', 'intermedia', 'contraportada'];
+
+function ensureSectionSeparators(blocks: Block[]): Block[] {
+  const existing = blocks.filter((b) => b.type === 'section_separator');
+  const existingSections = existing.map((b) => b.config.section as DocumentSection);
+
+  if (SECTIONS_ORDER.every((s) => existingSections.includes(s))) {
+    return blocks; // All separators present
+  }
+
+  // Build new block list with separators in correct positions
+  const nonSeparators = blocks.filter((b) => b.type !== 'section_separator');
+  const result: Block[] = [];
+
+  for (const section of SECTIONS_ORDER) {
+    result.push({
+      id: `section-${section}`,
+      type: 'section_separator' as BlockType,
+      config: { section },
+    });
+  }
+
+  // Append existing non-separator blocks after the last separator (contraportada)
+  // In practice, for a fresh template there are no blocks
+  if (nonSeparators.length > 0) {
+    // Insert after portada separator
+    result.splice(1, 0, ...nonSeparators);
+  }
+
+  return result;
+}
+
 // ===== Store Interface =====
 interface EditorState {
   // Data
@@ -60,9 +93,13 @@ interface EditorState {
   isDirty: boolean;
   versionId: number | null;
   modeloId: number | null;
+  isDocumentTemplate: boolean;
+
+  // Block height tracking for pagination
+  blockHeights: Map<string, number>;
 
   // Actions
-  loadSchema: (schema: TemplateSchema, modeloId: number, versionId: number) => void;
+  loadSchema: (schema: TemplateSchema, modeloId: number, versionId: number, isDocumentTemplate?: boolean) => void;
   addBlock: (type: BlockType, index?: number) => void;
   removeBlock: (id: string) => void;
   duplicateBlock: (id: string) => void;
@@ -71,6 +108,7 @@ interface EditorState {
   updateBlockConfig: (id: string, path: string, value: unknown) => void;
   selectBlock: (id: string | null) => void;
   updatePageConfig: (config: Partial<PageConfig>) => void;
+  setBlockHeight: (id: string, height: number) => void;
   getSchema: () => TemplateSchema;
   markClean: () => void;
   reset: () => void;
@@ -84,15 +122,26 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   isDirty: false,
   versionId: null,
   modeloId: null,
+  isDocumentTemplate: false,
+  blockHeights: new Map(),
 
-  loadSchema: (schema, modeloId, versionId) => {
+  loadSchema: (schema, modeloId, versionId, isDocumentTemplate = false) => {
+    let blocks = schema.blocks || [];
+
+    // For document templates, ensure section separators exist
+    if (isDocumentTemplate) {
+      blocks = ensureSectionSeparators(blocks);
+    }
+
     set({
-      blocks: schema.blocks || [],
+      blocks,
       pageConfig: schema.pageConfig || { ...DEFAULT_PAGE_CONFIG },
       selectedBlockId: null,
       isDirty: false,
       versionId,
       modeloId,
+      isDocumentTemplate,
+      blockHeights: new Map(),
     });
   },
 
@@ -126,10 +175,18 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   removeBlock: (id) => {
     const { blocks, selectedBlockId } = get();
+    // Cannot remove section separators
+    const block = blocks.find((b) => b.id === id);
+    if (block?.type === 'section_separator') return;
+
+    const newHeights = new Map(get().blockHeights);
+    newHeights.delete(id);
+
     set({
       blocks: blocks.filter((b) => b.id !== id),
       isDirty: true,
       selectedBlockId: selectedBlockId === id ? null : selectedBlockId,
+      blockHeights: newHeights,
     });
   },
 
@@ -139,6 +196,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     if (idx === -1) return;
 
     const source = blocks[idx]!;
+    // Cannot duplicate section separators
+    if (source.type === 'section_separator') return;
+
     const def = blockDefinitions[source.type];
     const config = JSON.parse(JSON.stringify(source.config)) as Record<string, unknown>;
 
@@ -164,8 +224,15 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const idx = blocks.findIndex((b) => b.id === id);
     if (idx === -1) return;
 
+    const block = blocks[idx]!;
+    // Cannot move section separators
+    if (block.type === 'section_separator') return;
+
     const newIdx = direction === 'up' ? idx - 1 : idx + 1;
     if (newIdx < 0 || newIdx >= blocks.length) return;
+
+    // Don't swap with a section separator
+    if (blocks[newIdx]!.type === 'section_separator') return;
 
     const newBlocks = [...blocks];
     const a = newBlocks[idx]!;
@@ -209,6 +276,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     });
   },
 
+  setBlockHeight: (id, height) => {
+    const { blockHeights } = get();
+    if (blockHeights.get(id) === height) return; // avoid unnecessary re-renders
+    const next = new Map(blockHeights);
+    next.set(id, height);
+    set({ blockHeights: next });
+  },
+
   getSchema: () => {
     const { blocks, pageConfig } = get();
     return { blocks, pageConfig };
@@ -226,6 +301,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       isDirty: false,
       versionId: null,
       modeloId: null,
+      isDocumentTemplate: false,
+      blockHeights: new Map(),
     });
   },
 }));
