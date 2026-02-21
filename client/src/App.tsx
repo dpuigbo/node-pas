@@ -17,6 +17,7 @@ import ConfiguracionPage from './pages/ConfiguracionPage';
 const EditorPage = lazy(() => import('./pages/EditorPage'));
 const IntervencionDetailPage = lazy(() => import('./pages/IntervencionDetailPage'));
 const InformeFormPage = lazy(() => import('./pages/InformeFormPage'));
+const SistemaDetailPage = lazy(() => import('./pages/SistemaDetailPage'));
 
 function EditorLoader() {
   return (
@@ -50,6 +51,14 @@ export default function App() {
           <Route path="/fabricantes" element={<FabricantesPage />} />
           <Route path="/clientes" element={<ClientesPage />} />
           <Route path="/clientes/:id" element={<ClienteDetailPage />} />
+          <Route
+            path="/sistemas/:id"
+            element={
+              <Suspense fallback={<EditorLoader />}>
+                <SistemaDetailPage />
+              </Suspense>
+            }
+          />
           <Route path="/modelos" element={<ModelosPage />} />
           <Route path="/intervenciones" element={<IntervencionesPage />} />
           <Route
