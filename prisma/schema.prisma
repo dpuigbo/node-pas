@@ -125,6 +125,7 @@ enum TipoComponente {
   controller
   mechanical_unit
   drive_unit
+  external_axis
 }
 
 model VersionTemplate {

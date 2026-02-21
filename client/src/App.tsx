@@ -15,6 +15,7 @@ import ConfiguracionPage from './pages/ConfiguracionPage';
 
 // Lazy-loaded pages (large or with heavy dependencies)
 const EditorPage = lazy(() => import('./pages/EditorPage'));
+const ModeloDetailPage = lazy(() => import('./pages/ModeloDetailPage'));
 const IntervencionDetailPage = lazy(() => import('./pages/IntervencionDetailPage'));
 const InformeFormPage = lazy(() => import('./pages/InformeFormPage'));
 const SistemaDetailPage = lazy(() => import('./pages/SistemaDetailPage'));
@@ -60,6 +61,14 @@ export default function App() {
             }
           />
           <Route path="/modelos" element={<ModelosPage />} />
+          <Route
+            path="/modelos/:modeloId"
+            element={
+              <Suspense fallback={<EditorLoader />}>
+                <ModeloDetailPage />
+              </Suspense>
+            }
+          />
           <Route path="/intervenciones" element={<IntervencionesPage />} />
           <Route
             path="/intervenciones/:id"

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const tipoComponenteEnum = z.enum(['controller', 'mechanical_unit', 'drive_unit']);
+const tipoComponenteEnum = z.enum(['controller', 'mechanical_unit', 'drive_unit', 'external_axis']);
 
 export const createSistemaSchema = z.object({
   clienteId: z.number().int().positive(),

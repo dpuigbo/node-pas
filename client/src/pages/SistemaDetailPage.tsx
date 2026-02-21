@@ -20,6 +20,7 @@ const TIPO_LABELS: Record<string, string> = {
   controller: 'Controlador',
   mechanical_unit: 'Unidad mecanica',
   drive_unit: 'Unidad de accionamiento',
+  external_axis: 'Eje externo',
 };
 
 export default function SistemaDetailPage() {
@@ -186,6 +187,7 @@ export default function SistemaDetailPage() {
                   <SelectItem value="controller">Controlador</SelectItem>
                   <SelectItem value="mechanical_unit">Unidad mecanica</SelectItem>
                   <SelectItem value="drive_unit">Unidad de accionamiento</SelectItem>
+                  <SelectItem value="external_axis">Eje externo</SelectItem>
                 </SelectContent>
               </Select>
             </div>
