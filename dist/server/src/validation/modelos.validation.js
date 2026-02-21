@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.activateVersionSchema = exports.updateVersionSchema = exports.createVersionSchema = exports.updateModeloSchema = exports.createModeloSchema = void 0;
 const zod_1 = require("zod");
-const tipoComponenteEnum = zod_1.z.enum(['controller', 'mechanical_unit', 'drive_unit']);
+const tipoComponenteEnum = zod_1.z.enum(['controller', 'mechanical_unit', 'drive_unit', 'external_axis']);
 exports.createModeloSchema = zod_1.z.object({
     fabricanteId: zod_1.z.number().int().positive(),
     tipo: tipoComponenteEnum,
