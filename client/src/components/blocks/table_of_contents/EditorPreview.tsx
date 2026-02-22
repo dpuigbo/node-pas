@@ -27,7 +27,7 @@ export function EditorPreview({ block }: EditorPreviewProps) {
     .filter((b) => b.type === 'section_title')
     .map((b, idx) => ({
       number: idx + 1,
-      title: (b.config.title as string) || 'Seccion',
+      title: (b.config.title as string) || '',
       level: (b.config.level as number) || 1,
       pageNumber: blockPageMap.get(b.id) ?? '—',
     }));

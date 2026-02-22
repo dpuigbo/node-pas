@@ -3,7 +3,7 @@ import { MAINTENANCE_LEVEL_COLORS, MAINTENANCE_LEVEL_LABELS, type MaintenanceLev
 
 export function EditorPreview({ block }: EditorPreviewProps) {
   const c = block.config;
-  const label = (c.label as string) || 'Punto de inspeccion';
+  const label = (c.label as string) || '';
   const withObs = c.withObservation !== false;
   const level = (c.maintenanceLevel as MaintenanceLevel) || 'general';
   const required = !!c.required;

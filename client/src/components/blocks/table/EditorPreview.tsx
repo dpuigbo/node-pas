@@ -52,7 +52,7 @@ function CellPreview({ col, value }: { col: Column; value: unknown }) {
 
 export function EditorPreview({ block }: EditorPreviewProps) {
   const c = block.config;
-  const label = (c.label as string) || 'Tabla';
+  const label = (c.label as string) || '';
   const columns = (c.columns as Column[]) || [];
   const fixedRows = (c.fixedRows as Record<string, unknown>[]) || [];
   const allowAddRows = c.allowAddRows !== false;
@@ -62,7 +62,7 @@ export function EditorPreview({ block }: EditorPreviewProps) {
   if (columns.length === 0) {
     return (
       <div className="py-2">
-        <div className="text-xs font-medium text-gray-700 mb-1">{label}</div>
+        {label && <div className="text-xs font-medium text-gray-700 mb-1">{label}</div>}
         <div className="rounded border border-dashed border-gray-200 p-4 text-center text-[10px] text-gray-300">
           Sin columnas definidas
         </div>
@@ -76,7 +76,7 @@ export function EditorPreview({ block }: EditorPreviewProps) {
 
   return (
     <div className="py-2">
-      <div className="text-xs font-medium text-gray-700 mb-1">{label}</div>
+      {label && <div className="text-xs font-medium text-gray-700 mb-1">{label}</div>}
       <div className="rounded border overflow-hidden">
         <table className="w-full text-[10px]">
           <thead>

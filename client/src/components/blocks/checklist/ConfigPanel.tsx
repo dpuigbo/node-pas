@@ -32,6 +32,29 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
         />
       </div>
 
+      {/* Layout direction */}
+      <div className="space-y-1">
+        <Label className="text-xs">Disposicion de items</Label>
+        <div className="flex gap-1">
+          {([
+            { value: 'vertical', label: 'Vertical' },
+            { value: 'horizontal', label: 'Horizontal' },
+          ] as const).map((opt) => (
+            <button
+              key={opt.value}
+              className={`flex-1 rounded border px-2 py-1 text-xs ${
+                (c.layout || 'vertical') === opt.value
+                  ? 'border-primary bg-primary/5 text-primary'
+                  : 'border-border hover:bg-accent'
+              }`}
+              onClick={() => onChange('layout', opt.value)}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Items */}
       <div className="border-t pt-3">
         <ItemsEditor

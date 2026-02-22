@@ -184,6 +184,7 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
     defaultConfig: {
       key: '',
       label: 'Lista de verificacion',
+      layout: 'vertical',
       items: [] as { key: string; label: string }[],
     },
   },

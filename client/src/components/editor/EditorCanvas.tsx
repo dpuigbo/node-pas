@@ -460,7 +460,7 @@ function PageSheet({
                 padding: `${topChrome.length > 0 ? 8 : marginTop}px ${marginRight}px ${bottomChrome.length > 0 ? 8 : marginBottom}px ${marginLeft}px`,
               }}
             >
-              <div className="flex flex-wrap items-start">
+              <div className="flex flex-wrap items-start shrink-0">
                 {contentBlocks.map(renderBlock)}
               </div>
             </div>

@@ -13,7 +13,7 @@ interface DataFieldPreviewWrapperProps {
  */
 export function DataFieldPreviewWrapper({ block, children }: DataFieldPreviewWrapperProps) {
   const config = block.config;
-  const label = (config.label as string) || 'Campo';
+  const label = (config.label as string) || '';
   const required = !!config.required;
   const helpText = (config.helpText as string) || '';
 
@@ -21,10 +21,12 @@ export function DataFieldPreviewWrapper({ block, children }: DataFieldPreviewWra
     <div className="py-1">
       <div className="space-y-1">
         {/* Label */}
-        <div className="text-xs font-medium text-gray-700">
-          {label}
-          {required && <span className="text-red-500 ml-0.5">*</span>}
-        </div>
+        {(label || required) && (
+          <div className="text-xs font-medium text-gray-700">
+            {label}
+            {required && <span className="text-red-500 ml-0.5">*</span>}
+          </div>
+        )}
 
         {/* Inner content (input preview) */}
         {children}
