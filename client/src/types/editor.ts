@@ -24,7 +24,8 @@ export type BlockType =
   | 'content_placeholder'
   | 'intervention_data'
   | 'client_data'
-  | 'equipment_exchange';
+  | 'equipment_exchange'
+  | 'component_section';
 
 export type BlockCategory = 'structure' | 'data' | 'inspection' | 'media' | 'document';
 

@@ -384,6 +384,16 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
       required: false,
     },
   },
+  component_section: {
+    type: 'component_section',
+    label: 'Seccion de componente',
+    icon: 'Layers',
+    category: 'structure',
+    hasData: false,
+    defaultConfig: {
+      contentType: 'controller_info',
+    },
+  },
 };
 
 // ===== Category metadata =====
@@ -391,7 +401,7 @@ export const blockCategories: { id: string; label: string; types: BlockType[] }[
   {
     id: 'structure',
     label: 'Estructura',
-    types: ['header', 'section_title', 'divider', 'table_of_contents', 'page_break'],
+    types: ['header', 'section_title', 'divider', 'table_of_contents', 'page_break', 'component_section'],
   },
   {
     id: 'data',
