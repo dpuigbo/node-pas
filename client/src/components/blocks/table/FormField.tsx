@@ -114,17 +114,159 @@ function CellInput({
   }
 }
 
+// ======================== Top header layout ========================
+
+function TopHeaderTable({
+  columns,
+  rows,
+  headerBg,
+  cellPad,
+  allowAddRows,
+  readOnly,
+  updateCell,
+  removeRow,
+}: {
+  columns: Column[];
+  rows: Row[];
+  headerBg: string;
+  cellPad: string;
+  allowAddRows: boolean;
+  readOnly: boolean;
+  updateCell: (ri: number, colKey: string, value: unknown) => void;
+  removeRow: (ri: number) => void;
+}) {
+  return (
+    <table className="w-full text-sm">
+      <thead>
+        <tr style={{ backgroundColor: headerBg }}>
+          {columns.map((col) => (
+            <th
+              key={col.key}
+              className={`${cellPad} text-left text-xs font-medium text-white`}
+              style={{ width: col.width !== 'auto' ? col.width : undefined }}
+            >
+              {col.label}
+            </th>
+          ))}
+          {!readOnly && allowAddRows && (
+            <th className={`${cellPad} w-10`} />
+          )}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.length === 0 ? (
+          <tr>
+            <td
+              colSpan={columns.length + (!readOnly && allowAddRows ? 1 : 0)}
+              className="px-3 py-4 text-center text-xs text-gray-400 italic"
+            >
+              Sin datos. {allowAddRows && !readOnly && 'Pulsa + para anadir una fila.'}
+            </td>
+          </tr>
+        ) : (
+          rows.map((row, ri) => (
+            <tr key={ri} className={ri % 2 === 1 ? 'bg-gray-50' : 'bg-white'}>
+              {columns.map((col) => (
+                <td key={col.key} className={cellPad}>
+                  <CellInput
+                    col={col}
+                    value={row[col.key]}
+                    onChange={(v) => updateCell(ri, col.key, v)}
+                    readOnly={!!readOnly}
+                  />
+                </td>
+              ))}
+              {!readOnly && allowAddRows && (
+                <td className="px-1 py-1 text-center">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-gray-400 hover:text-red-500"
+                    onClick={() => removeRow(ri)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </td>
+              )}
+            </tr>
+          ))
+        )}
+      </tbody>
+    </table>
+  );
+}
+
+// ======================== Left header layout ========================
+
+function LeftHeaderTable({
+  columns,
+  rows,
+  headerBg,
+  cellPad,
+  readOnly,
+  updateCell,
+}: {
+  columns: Column[];
+  rows: Row[];
+  headerBg: string;
+  cellPad: string;
+  readOnly: boolean;
+  updateCell: (ri: number, colKey: string, value: unknown) => void;
+}) {
+  // Lateral: each column becomes a row, each row becomes a data column
+  // First cell is the header label, remaining cells are data for each row
+  const dataCount = Math.max(rows.length, 1);
+
+  return (
+    <table className="w-full text-sm">
+      <tbody>
+        {columns.map((col, ci) => (
+          <tr key={col.key} className={ci % 2 === 1 ? 'bg-gray-50' : 'bg-white'}>
+            <th
+              className={`${cellPad} text-left text-xs font-medium text-white whitespace-nowrap`}
+              style={{ backgroundColor: headerBg, width: '35%' }}
+            >
+              {col.label}
+            </th>
+            {rows.length === 0 ? (
+              <td className={cellPad}>
+                <span className="text-xs text-gray-400 italic">Sin datos</span>
+              </td>
+            ) : (
+              rows.map((row, ri) => (
+                <td key={ri} className={cellPad} style={{ width: `${65 / dataCount}%` }}>
+                  <CellInput
+                    col={col}
+                    value={row[col.key]}
+                    onChange={(v) => updateCell(ri, col.key, v)}
+                    readOnly={!!readOnly}
+                  />
+                </td>
+              ))
+            )}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
 // ======================== Main FormField ========================
 
 export function FormField({ block, value, onChange, readOnly }: FormFieldProps) {
   const c = block.config;
   const label = (c.label as string) || 'Tabla';
+  const title = (c.title as string) || '';
+  const titleBg = (c.titleBg as string) || '#1f2937';
+  const titleColor = (c.titleColor as string) || '#ffffff';
   const columns = (c.columns as Column[]) || [];
   const allowAddRows = c.allowAddRows !== false;
   const maxRows = (c.maxRows as number) || 50;
   const required = !!c.required;
   const headerBg = (c.headerBg as string) || '#1f2937';
   const compact = !!c.compact;
+  const headerPosition = (c.headerPosition as string) || 'top';
 
   const rows = (value as Row[]) ?? [];
 
@@ -168,73 +310,39 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
         {required && <span className="text-red-500 ml-0.5">*</span>}
       </Label>
       <div className="rounded border overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr style={{ backgroundColor: headerBg }}>
-              {columns.map((col) => (
-                <th
-                  key={col.key}
-                  className={`${cellPad} text-left text-xs font-medium text-white`}
-                  style={{
-                    width: col.width !== 'auto' ? col.width : undefined,
-                  }}
-                >
-                  {col.label}
-                </th>
-              ))}
-              {!readOnly && allowAddRows && (
-                <th className={`${cellPad} w-10`} />
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={
-                    columns.length + (!readOnly && allowAddRows ? 1 : 0)
-                  }
-                  className="px-3 py-4 text-center text-xs text-gray-400 italic"
-                >
-                  Sin datos. {allowAddRows && !readOnly && 'Pulsa + para anadir una fila.'}
-                </td>
-              </tr>
-            ) : (
-              rows.map((row, ri) => (
-                <tr
-                  key={ri}
-                  className={ri % 2 === 1 ? 'bg-gray-50' : 'bg-white'}
-                >
-                  {columns.map((col) => (
-                    <td key={col.key} className={cellPad}>
-                      <CellInput
-                        col={col}
-                        value={row[col.key]}
-                        onChange={(v) => updateCell(ri, col.key, v)}
-                        readOnly={!!readOnly}
-                      />
-                    </td>
-                  ))}
-                  {!readOnly && allowAddRows && (
-                    <td className="px-1 py-1 text-center">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-gray-400 hover:text-red-500"
-                        onClick={() => removeRow(ri)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </td>
-                  )}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+        {/* Title bar */}
+        {title && (
+          <div
+            className="px-3 py-1.5 text-sm font-semibold"
+            style={{ backgroundColor: titleBg, color: titleColor }}
+          >
+            {title}
+          </div>
+        )}
+
+        {headerPosition === 'left' ? (
+          <LeftHeaderTable
+            columns={columns}
+            rows={rows}
+            headerBg={headerBg}
+            cellPad={cellPad}
+            readOnly={!!readOnly}
+            updateCell={updateCell}
+          />
+        ) : (
+          <TopHeaderTable
+            columns={columns}
+            rows={rows}
+            headerBg={headerBg}
+            cellPad={cellPad}
+            allowAddRows={allowAddRows}
+            readOnly={!!readOnly}
+            updateCell={updateCell}
+            removeRow={removeRow}
+          />
+        )}
       </div>
-      {allowAddRows && !readOnly && rows.length < maxRows && (
+      {headerPosition === 'top' && allowAddRows && !readOnly && rows.length < maxRows && (
         <Button
           type="button"
           variant="outline"

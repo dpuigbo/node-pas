@@ -14,6 +14,7 @@ interface Column {
 export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
   const c = block.config;
   const columns = (c.columns as Column[]) || [];
+  const headerPosition = (c.headerPosition as string) || 'top';
 
   return (
     <div className="space-y-3">
@@ -39,6 +40,103 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
           onChange={(e) => onChange('label', e.target.value)}
           className="h-8"
         />
+      </div>
+
+      {/* Title */}
+      <div className="border-t pt-3 space-y-3">
+        <Label className="text-xs font-semibold">Titulo de tabla</Label>
+        <div className="space-y-1">
+          <Label className="text-xs">Texto del titulo</Label>
+          <Input
+            value={(c.title as string) || ''}
+            onChange={(e) => onChange('title', e.target.value)}
+            placeholder="Ej: Control general de la controladora"
+            className="h-8"
+          />
+        </div>
+        {(c.title as string) && (
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs">Fondo titulo</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={(c.titleBg as string) || '#1f2937'}
+                  onChange={(e) => onChange('titleBg', e.target.value)}
+                  className="h-8 w-8 cursor-pointer rounded border"
+                />
+                <Input
+                  value={(c.titleBg as string) || '#1f2937'}
+                  onChange={(e) => onChange('titleBg', e.target.value)}
+                  className="h-8 font-mono text-xs flex-1"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Color texto titulo</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={(c.titleColor as string) || '#ffffff'}
+                  onChange={(e) => onChange('titleColor', e.target.value)}
+                  className="h-8 w-8 cursor-pointer rounded border"
+                />
+                <Input
+                  value={(c.titleColor as string) || '#ffffff'}
+                  onChange={(e) => onChange('titleColor', e.target.value)}
+                  className="h-8 font-mono text-xs flex-1"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Header position */}
+      <div className="border-t pt-3 space-y-2">
+        <Label className="text-xs font-semibold">Posicion de cabecera</Label>
+        <div className="flex gap-2">
+          <label
+            className={`flex-1 flex items-center gap-2 p-2 rounded-md border cursor-pointer transition-colors ${
+              headerPosition === 'top'
+                ? 'border-blue-400 bg-blue-50'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <input
+              type="radio"
+              name={`headerPos-${block.id}`}
+              value="top"
+              checked={headerPosition === 'top'}
+              onChange={() => onChange('headerPosition', 'top')}
+              className="h-3.5 w-3.5"
+            />
+            <div>
+              <div className="text-xs font-medium">Superior</div>
+              <div className="text-[10px] text-muted-foreground">Cabecera horizontal</div>
+            </div>
+          </label>
+          <label
+            className={`flex-1 flex items-center gap-2 p-2 rounded-md border cursor-pointer transition-colors ${
+              headerPosition === 'left'
+                ? 'border-blue-400 bg-blue-50'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <input
+              type="radio"
+              name={`headerPos-${block.id}`}
+              value="left"
+              checked={headerPosition === 'left'}
+              onChange={() => onChange('headerPosition', 'left')}
+              className="h-3.5 w-3.5"
+            />
+            <div>
+              <div className="text-xs font-medium">Lateral</div>
+              <div className="text-[10px] text-muted-foreground">Cabecera a la izquierda</div>
+            </div>
+          </label>
+        </div>
       </div>
 
       {/* Columns */}

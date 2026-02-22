@@ -197,6 +197,10 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
     defaultConfig: {
       key: '',
       label: 'Tabla',
+      title: '',
+      titleBg: '#1f2937',
+      titleColor: '#ffffff',
+      headerPosition: 'top',
       columns: [] as { key: string; label: string; type: string; width: string }[],
       fixedRows: [] as Record<string, unknown>[],
       allowAddRows: true,
@@ -334,6 +338,7 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
     hasData: false,
     defaultConfig: {
       label: 'Contenido del informe (se llena automaticamente)',
+      contentType: 'all',
     },
   },
   intervention_data: {
