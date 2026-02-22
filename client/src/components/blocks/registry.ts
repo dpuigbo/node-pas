@@ -344,6 +344,7 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
     hasData: false,
     defaultConfig: {
       title: '',
+      accentColor: '#1e40af',
       verticalAlign: 'top',
     },
   },
@@ -355,6 +356,7 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
     hasData: false,
     defaultConfig: {
       title: '',
+      accentColor: '#1e40af',
       verticalAlign: 'top',
     },
   },

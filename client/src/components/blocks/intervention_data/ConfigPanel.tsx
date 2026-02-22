@@ -16,6 +16,25 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
           className="h-8"
         />
       </div>
+
+      {/* Accent color */}
+      <div className="space-y-1">
+        <Label className="text-xs">Color de acento</Label>
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={(c.accentColor as string) || '#1e40af'}
+            onChange={(e) => onChange('accentColor', e.target.value)}
+            className="h-8 w-10 rounded border cursor-pointer"
+          />
+          <Input
+            value={(c.accentColor as string) || '#1e40af'}
+            onChange={(e) => onChange('accentColor', e.target.value)}
+            className="h-8 flex-1 font-mono text-xs"
+          />
+        </div>
+      </div>
+
       {/* Vertical alignment on page */}
       <div className="space-y-1">
         <Label className="text-xs">Alineacion vertical en pagina</Label>
@@ -35,10 +54,10 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
           ))}
         </div>
       </div>
+
       <p className="text-xs text-muted-foreground leading-relaxed">
-        Tabla con los datos de la intervencion: actividad, horas, orden de trabajo,
-        fecha, tecnicos, telefonos y correos. Se rellena automaticamente
-        al crear el informe.
+        Datos de la intervencion agrupados por secciones. Se rellenan
+        automaticamente al crear el informe.
       </p>
     </div>
   );
