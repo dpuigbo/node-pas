@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -5,7 +6,6 @@ import {
   Loader2,
   AlertCircle,
   Eye,
-  Layers,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,7 @@ import { getBlockEntry } from '@/components/blocks/registry';
 import { FIELD_WIDTH_CSS, BLOCK_ALIGN_CSS } from '@/types/editor';
 import type { BlockType, FieldWidth, BlockAlign } from '@/types/editor';
 import type { AssembledBlock } from '@/types/informe';
+import { DocumentPageLayout } from '@/components/DocumentPageLayout';
 
 // Ensure all blocks are registered
 import '@/components/blocks/register-all';
@@ -48,13 +49,6 @@ const ALWAYS_FULL_TYPES = new Set<string>([
   'table_of_contents', 'page_break', 'intervention_data', 'client_data',
 ]);
 
-/** Section separator labels */
-const SECTION_LABELS: Record<string, string> = {
-  portada: 'Portada',
-  intermedia: 'Contenido',
-  contraportada: 'Contraportada',
-};
-
 // ======================== Main Component ========================
 
 export default function InformePreviewPage() {
@@ -63,6 +57,11 @@ export default function InformePreviewPage() {
   const navigate = useNavigate();
 
   const { data, isLoading, error } = useAssembledReport(informeId || undefined);
+
+  // Block render callback — all blocks are read-only in preview
+  const renderBlock = useCallback((block: AssembledBlock) => {
+    return <PreviewBlockRenderer block={block} />;
+  }, []);
 
   if (isLoading) {
     return (
@@ -124,12 +123,13 @@ export default function InformePreviewPage() {
         </div>
       </div>
 
-      {/* Document canvas */}
+      {/* Document canvas — uses proper page layout */}
       <div className="flex-1 overflow-auto bg-gray-100">
         <div className="py-8 px-4">
-          <DocumentCanvas
+          <DocumentPageLayout
             blocks={assembled.blocks}
             pageConfig={assembled.pageConfig}
+            renderBlock={renderBlock}
           />
         </div>
       </div>
@@ -137,100 +137,11 @@ export default function InformePreviewPage() {
   );
 }
 
-// ======================== Document Canvas ========================
+// ======================== Block Renderer (read-only) ========================
 
-interface DocumentCanvasProps {
-  blocks: AssembledBlock[];
-  pageConfig: {
-    orientation: 'portrait' | 'landscape';
-    margins: { top: number; right: number; bottom: number; left: number };
-    fontSize: number;
-    fontFamily: string;
-  };
-}
-
-function DocumentCanvas({ blocks, pageConfig }: DocumentCanvasProps) {
-  const isLandscape = pageConfig.orientation === 'landscape';
-  const pageWidth = isLandscape ? 1123 : 794;
-  const { margins } = pageConfig;
-
-  // Track current component for grouping headers
-  let lastComponenteId: number | undefined;
-
-  return (
-    <div
-      className="mx-auto bg-white shadow-lg"
-      style={{
-        width: pageWidth,
-        minHeight: isLandscape ? 794 : 1123,
-        paddingTop: `${margins.top}mm`,
-        paddingRight: `${margins.right}mm`,
-        paddingBottom: `${margins.bottom}mm`,
-        paddingLeft: `${margins.left}mm`,
-        fontFamily: pageConfig.fontFamily,
-        fontSize: pageConfig.fontSize,
-      }}
-    >
-      <div className="flex flex-wrap items-start">
-        {blocks.map((block) => {
-          const elements: React.ReactNode[] = [];
-
-          // Insert component separator when transitioning between components
-          if (
-            block._source === 'component' &&
-            block._componenteInformeId !== lastComponenteId
-          ) {
-            lastComponenteId = block._componenteInformeId;
-            elements.push(
-              <div
-                key={`comp-sep-${block._componenteInformeId}`}
-                className="w-full flex items-center gap-2 py-2 px-1 my-1"
-              >
-                <Layers className="h-3.5 w-3.5 text-blue-500" />
-                <span className="text-xs font-medium text-blue-600">
-                  {block._componenteEtiqueta}
-                </span>
-                <div className="flex-1 border-t border-blue-200" />
-              </div>,
-            );
-          }
-
-          elements.push(
-            <AssembledBlockRenderer key={block.id} block={block} />,
-          );
-
-          return elements;
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ======================== Block Renderer ========================
-
-interface AssembledBlockRendererProps {
-  block: AssembledBlock;
-}
-
-function AssembledBlockRenderer({ block }: AssembledBlockRendererProps) {
+function PreviewBlockRenderer({ block }: { block: AssembledBlock }) {
   const entry = getBlockEntry(block.type as BlockType);
   if (!entry) return null;
-
-  // Section separators get special rendering
-  if (block.type === 'section_separator') {
-    const section = block.config.section as string;
-    return (
-      <div className="w-full my-4">
-        <div className="flex items-center gap-2 py-2">
-          <div className="flex-1 border-t-2 border-dashed border-gray-300" />
-          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-            {SECTION_LABELS[section] ?? section}
-          </span>
-          <div className="flex-1 border-t-2 border-dashed border-gray-300" />
-        </div>
-      </div>
-    );
-  }
 
   const widthClass = getBlockWidthClass(block);
   const alignClass = BLOCK_ALIGN_CSS[(block.config.align as BlockAlign) || 'left'];
@@ -245,7 +156,7 @@ function AssembledBlockRenderer({ block }: AssembledBlockRendererProps) {
     );
   }
 
-  // Data blocks → render FormField with value if available
+  // Data blocks → render FormField with value if available (read-only)
   const FormFieldComp = entry.FormField;
   if (FormFieldComp && block._dataKey) {
     return (

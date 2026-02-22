@@ -9,7 +9,6 @@ import {
   Loader2,
   Circle,
   Eye,
-  Layers,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +22,7 @@ import { getBlockEntry } from '@/components/blocks/registry';
 import { FIELD_WIDTH_CSS, BLOCK_ALIGN_CSS } from '@/types/editor';
 import type { BlockType, FieldWidth, BlockAlign } from '@/types/editor';
 import type { AssembledBlock } from '@/types/informe';
+import { DocumentPageLayout } from '@/components/DocumentPageLayout';
 
 // Ensure all blocks are registered
 import '@/components/blocks/register-all';
@@ -41,14 +41,6 @@ const ESTADO_LABEL: Record<string, string> = {
   entregado: 'Entregado',
 };
 
-/** Structure blocks rendered via EditorPreview (read-only) */
-const STRUCTURE_BLOCKS = new Set<string>([
-  'header', 'section_title', 'divider', 'section_separator',
-  'cover_header', 'page_header', 'page_footer', 'back_cover',
-  'table_of_contents', 'page_break', 'content_placeholder',
-  'intervention_data', 'client_data', 'component_section',
-]);
-
 /** Blocks that always render full-width */
 const ALWAYS_FULL_TYPES = new Set<string>([
   'header', 'section_title', 'divider', 'section_separator',
@@ -57,12 +49,13 @@ const ALWAYS_FULL_TYPES = new Set<string>([
   'table_of_contents', 'page_break', 'intervention_data', 'client_data',
 ]);
 
-/** Section separator display labels */
-const SECTION_LABELS: Record<string, string> = {
-  portada: 'Portada',
-  intermedia: 'Contenido',
-  contraportada: 'Contraportada',
-};
+/** Structure blocks rendered via EditorPreview (read-only) */
+const STRUCTURE_BLOCKS = new Set<string>([
+  'header', 'section_title', 'divider', 'section_separator',
+  'cover_header', 'page_header', 'page_footer', 'back_cover',
+  'table_of_contents', 'page_break', 'content_placeholder',
+  'intervention_data', 'client_data', 'component_section',
+]);
 
 // ======================== Main Component ========================
 
@@ -131,6 +124,21 @@ export default function InformeFormPage() {
       setIsSaving(false);
     }
   }, [hasDirtyChanges, isSaving, dirtyComponentIds, localDatos, queryClient, informeId]);
+
+  // Block render callback for DocumentPageLayout
+  const renderBlock = useCallback(
+    (block: AssembledBlock) => {
+      return (
+        <FormBlockRenderer
+          block={block}
+          localDatos={localDatos}
+          readOnly={readOnly}
+          onFieldChange={handleFieldChange}
+        />
+      );
+    },
+    [localDatos, readOnly, handleFieldChange],
+  );
 
   // ======================== Loading & error states ========================
 
@@ -225,101 +233,15 @@ export default function InformeFormPage() {
         </div>
       </div>
 
-      {/* Assembled document form */}
+      {/* Assembled document form — uses proper page layout */}
       <div className="flex-1 overflow-auto bg-gray-100">
         <div className="py-8 px-4">
-          <AssembledDocumentForm
+          <DocumentPageLayout
             blocks={assembled.blocks}
             pageConfig={assembled.pageConfig}
-            localDatos={localDatos}
-            readOnly={readOnly}
-            onFieldChange={handleFieldChange}
+            renderBlock={renderBlock}
           />
         </div>
-      </div>
-    </div>
-  );
-}
-
-// ======================== Assembled Document Form ========================
-
-interface AssembledDocumentFormProps {
-  blocks: AssembledBlock[];
-  pageConfig: {
-    orientation: 'portrait' | 'landscape';
-    margins: { top: number; right: number; bottom: number; left: number };
-    fontSize: number;
-    fontFamily: string;
-  };
-  localDatos: Record<number, Record<string, unknown>>;
-  readOnly: boolean;
-  onFieldChange: (componenteInformeId: number, key: string, value: unknown) => void;
-}
-
-function AssembledDocumentForm({
-  blocks,
-  pageConfig,
-  localDatos,
-  readOnly,
-  onFieldChange,
-}: AssembledDocumentFormProps) {
-  const isLandscape = pageConfig.orientation === 'landscape';
-  const pageWidth = isLandscape ? 1123 : 794;
-  const { margins } = pageConfig;
-
-  // Track current component for grouping headers
-  let lastComponenteId: number | undefined;
-
-  return (
-    <div
-      className="mx-auto bg-white shadow-lg"
-      style={{
-        width: pageWidth,
-        minHeight: isLandscape ? 794 : 1123,
-        paddingTop: `${margins.top}mm`,
-        paddingRight: `${margins.right}mm`,
-        paddingBottom: `${margins.bottom}mm`,
-        paddingLeft: `${margins.left}mm`,
-        fontFamily: pageConfig.fontFamily,
-        fontSize: pageConfig.fontSize,
-      }}
-    >
-      <div className="flex flex-wrap items-start">
-        {blocks.map((block) => {
-          const elements: React.ReactNode[] = [];
-
-          // Insert component separator when transitioning between components
-          if (
-            block._source === 'component' &&
-            block._componenteInformeId !== lastComponenteId
-          ) {
-            lastComponenteId = block._componenteInformeId;
-            elements.push(
-              <div
-                key={`comp-sep-${block._componenteInformeId}`}
-                className="w-full flex items-center gap-2 py-2 px-1 my-1"
-              >
-                <Layers className="h-3.5 w-3.5 text-blue-500" />
-                <span className="text-xs font-medium text-blue-600">
-                  {block._componenteEtiqueta}
-                </span>
-                <div className="flex-1 border-t border-blue-200" />
-              </div>,
-            );
-          }
-
-          elements.push(
-            <FormBlockRenderer
-              key={block.id}
-              block={block}
-              localDatos={localDatos}
-              readOnly={readOnly}
-              onFieldChange={onFieldChange}
-            />,
-          );
-
-          return elements;
-        })}
       </div>
     </div>
   );
@@ -342,22 +264,6 @@ function FormBlockRenderer({
 }: FormBlockRendererProps) {
   const entry = getBlockEntry(block.type as BlockType);
   if (!entry) return null;
-
-  // Section separators → visual divider
-  if (block.type === 'section_separator') {
-    const section = block.config.section as string;
-    return (
-      <div className="w-full my-4">
-        <div className="flex items-center gap-2 py-2">
-          <div className="flex-1 border-t-2 border-dashed border-gray-300" />
-          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-            {SECTION_LABELS[section] ?? section}
-          </span>
-          <div className="flex-1 border-t-2 border-dashed border-gray-300" />
-        </div>
-      </div>
-    );
-  }
 
   const widthClass = getFormBlockWidthClass(block);
   const alignClass = BLOCK_ALIGN_CSS[(block.config.align as BlockAlign) || 'left'];
@@ -428,7 +334,7 @@ function FinalizarButton({
   const handleFinalizar = async () => {
     if (
       !window.confirm(
-        'Una vez finalizado, los datos del informe no se podran modificar. ¿Continuar?',
+        'Una vez finalizado, los datos del informe no se podran modificar. \u00bfContinuar?',
       )
     )
       return;
