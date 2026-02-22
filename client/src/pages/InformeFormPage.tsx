@@ -23,6 +23,7 @@ import { FIELD_WIDTH_CSS, BLOCK_ALIGN_CSS } from '@/types/editor';
 import type { BlockType, FieldWidth, BlockAlign } from '@/types/editor';
 import type { AssembledBlock } from '@/types/informe';
 import { DocumentPageLayout } from '@/components/DocumentPageLayout';
+import { AssembledTableOfContents } from '@/components/AssembledTableOfContents';
 
 // Ensure all blocks are registered
 import '@/components/blocks/register-all';
@@ -126,8 +127,17 @@ export default function InformeFormPage() {
   }, [hasDirtyChanges, isSaving, dirtyComponentIds, localDatos, queryClient, informeId]);
 
   // Block render callback for DocumentPageLayout
+  const allBlocks = data?.assembled?.blocks;
   const renderBlock = useCallback(
     (block: AssembledBlock) => {
+      // Table of contents uses standalone component (editor store not available)
+      if (block.type === 'table_of_contents' && allBlocks) {
+        return (
+          <div className="w-full pointer-events-none">
+            <AssembledTableOfContents block={block} allBlocks={allBlocks} />
+          </div>
+        );
+      }
       return (
         <FormBlockRenderer
           block={block}
@@ -137,7 +147,7 @@ export default function InformeFormPage() {
         />
       );
     },
-    [localDatos, readOnly, handleFieldChange],
+    [localDatos, readOnly, handleFieldChange, allBlocks],
   );
 
   // ======================== Loading & error states ========================
