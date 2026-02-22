@@ -23,7 +23,8 @@ export type BlockType =
   | 'page_break'
   | 'content_placeholder'
   | 'intervention_data'
-  | 'client_data';
+  | 'client_data'
+  | 'equipment_exchange';
 
 export type BlockCategory = 'structure' | 'data' | 'inspection' | 'media' | 'document';
 

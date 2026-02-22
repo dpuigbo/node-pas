@@ -20,6 +20,7 @@ import './select_field';
 import './tristate';
 import './checklist';
 import './table';
+import './equipment_exchange';
 
 // Media
 import './image';

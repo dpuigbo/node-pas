@@ -359,6 +359,20 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
       verticalAlign: 'top',
     },
   },
+  equipment_exchange: {
+    type: 'equipment_exchange',
+    label: 'Intercambio de equipos',
+    icon: 'ArrowLeftRight',
+    category: 'inspection',
+    hasData: true,
+    defaultConfig: {
+      key: '',
+      label: 'Intercambio de equipos',
+      defaultRows: 5,
+      headerBg: '#1f2937',
+      required: false,
+    },
+  },
 };
 
 // ===== Category metadata =====
@@ -376,7 +390,7 @@ export const blockCategories: { id: string; label: string; types: BlockType[] }[
   {
     id: 'inspection',
     label: 'Inspeccion',
-    types: ['tristate', 'checklist', 'table'],
+    types: ['tristate', 'checklist', 'table', 'equipment_exchange'],
   },
   {
     id: 'media',
