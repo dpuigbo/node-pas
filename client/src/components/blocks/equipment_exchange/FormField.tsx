@@ -33,6 +33,7 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
   const label = (c.label as string) || '';
   const required = !!c.required;
   const headerBg = (c.headerBg as string) || '#1f2937';
+  const headerColor = (c.headerColor as string) || '#ffffff';
   const defaultRows = (c.defaultRows as number) || 5;
 
   // Initialize rows if empty
@@ -66,22 +67,22 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
         <table className="w-full text-sm">
           <thead>
             <tr style={{ backgroundColor: headerBg }}>
-              <th className="text-white font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" style={{ width: '7%' }}>
+              <th className="font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" style={{ color: headerColor }} style={{ width: '7%' }}>
                 Uds.<br/>Salida
               </th>
-              <th className="text-white font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" colSpan={2}>
+              <th className="font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" style={{ color: headerColor }} colSpan={2}>
                 Designacion
               </th>
-              <th className="text-white font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" colSpan={2}>
+              <th className="font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" style={{ color: headerColor }} colSpan={2}>
                 Numero de serie
               </th>
-              <th className="text-white font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" style={{ width: '10%' }}>
+              <th className="font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" style={{ color: headerColor }} style={{ width: '10%' }}>
                 Inter-<br/>cambio
               </th>
-              <th className="text-white font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" style={{ width: '8%' }}>
+              <th className="font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" style={{ color: headerColor }} style={{ width: '8%' }}>
                 Usado
               </th>
-              <th className="text-white font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" style={{ width: '7%' }}>
+              <th className="font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" style={{ color: headerColor }} style={{ width: '7%' }}>
                 Uds.<br/>Usadas
               </th>
               {!readOnly && <th className="w-10" />}

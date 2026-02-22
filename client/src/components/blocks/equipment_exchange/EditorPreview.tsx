@@ -4,6 +4,7 @@ export function EditorPreview({ block }: EditorPreviewProps) {
   const c = block.config;
   const label = (c.label as string) || '';
   const headerBg = (c.headerBg as string) || '#1f2937';
+  const headerColor = (c.headerColor as string) || '#ffffff';
   const defaultRows = (c.defaultRows as number) || 5;
 
   const previewCount = Math.min(defaultRows, 3);
@@ -17,22 +18,22 @@ export function EditorPreview({ block }: EditorPreviewProps) {
         <table className="w-full text-[8px] border-collapse">
           <thead>
             <tr style={{ backgroundColor: headerBg }}>
-              <th className="text-white font-medium px-1 py-1 text-center border-r border-white/20" rowSpan={2} style={{ width: '7%' }}>
+              <th className="font-medium px-1 py-1 text-center border-r border-white/20" style={{ color: headerColor }} rowSpan={2} style={{ width: '7%' }}>
                 Uds.<br/>Salida
               </th>
-              <th className="text-white font-medium px-1 py-1 text-center border-r border-white/20" colSpan={2}>
+              <th className="font-medium px-1 py-1 text-center border-r border-white/20" style={{ color: headerColor }} colSpan={2}>
                 Designacion
               </th>
-              <th className="text-white font-medium px-1 py-1 text-center border-r border-white/20" colSpan={2}>
+              <th className="font-medium px-1 py-1 text-center border-r border-white/20" style={{ color: headerColor }} colSpan={2}>
                 Numero de serie
               </th>
-              <th className="text-white font-medium px-1 py-1 text-center border-r border-white/20" rowSpan={2} style={{ width: '12%' }}>
+              <th className="font-medium px-1 py-1 text-center border-r border-white/20" style={{ color: headerColor }} rowSpan={2} style={{ width: '12%' }}>
                 Inter-<br/>cambio
               </th>
-              <th className="text-white font-medium px-1 py-1 text-center border-r border-white/20" rowSpan={2} style={{ width: '8%' }}>
+              <th className="font-medium px-1 py-1 text-center border-r border-white/20" style={{ color: headerColor }} rowSpan={2} style={{ width: '8%' }}>
                 Usado
               </th>
-              <th className="text-white font-medium px-1 py-1 text-center" rowSpan={2} style={{ width: '7%' }}>
+              <th className="font-medium px-1 py-1 text-center" style={{ color: headerColor }} rowSpan={2} style={{ width: '7%' }}>
                 Uds.<br/>Usadas
               </th>
             </tr>

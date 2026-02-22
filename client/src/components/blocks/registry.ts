@@ -376,6 +376,7 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
       label: 'Intercambio de equipos',
       defaultRows: 5,
       headerBg: '#1f2937',
+      headerColor: '#ffffff',
       required: false,
     },
   },

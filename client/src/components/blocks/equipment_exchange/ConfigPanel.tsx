@@ -45,21 +45,42 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
         />
       </div>
 
-      {/* Header background color */}
-      <div className="space-y-1">
-        <Label className="text-xs">Color cabecera</Label>
-        <div className="flex items-center gap-2">
-          <input
-            type="color"
-            value={(c.headerBg as string) || '#1f2937'}
-            onChange={(e) => onChange('headerBg', e.target.value)}
-            className="h-8 w-10 rounded border cursor-pointer"
-          />
-          <Input
-            value={(c.headerBg as string) || '#1f2937'}
-            onChange={(e) => onChange('headerBg', e.target.value)}
-            className="h-8 flex-1 font-mono text-xs"
-          />
+      {/* Header colors */}
+      <div className="space-y-2">
+        <Label className="text-xs font-semibold">Estilo cabecera</Label>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <Label className="text-xs">Fondo</Label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={(c.headerBg as string) || '#1f2937'}
+                onChange={(e) => onChange('headerBg', e.target.value)}
+                className="h-8 w-8 rounded border cursor-pointer"
+              />
+              <Input
+                value={(c.headerBg as string) || '#1f2937'}
+                onChange={(e) => onChange('headerBg', e.target.value)}
+                className="h-8 flex-1 font-mono text-xs"
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Texto</Label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={(c.headerColor as string) || '#ffffff'}
+                onChange={(e) => onChange('headerColor', e.target.value)}
+                className="h-8 w-8 rounded border cursor-pointer"
+              />
+              <Input
+                value={(c.headerColor as string) || '#ffffff'}
+                onChange={(e) => onChange('headerColor', e.target.value)}
+                className="h-8 flex-1 font-mono text-xs"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
