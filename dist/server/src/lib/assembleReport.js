@@ -139,7 +139,7 @@ const DATA_BLOCK_TYPES = new Set([
  * - Resolves {{placeholders}} with base context (sistema/cliente/intervencion)
  */
 function assembleReport(input) {
-    const { documentSchema, componentes, baseContext } = input;
+    const { documentSchema, componentes, baseContext, datosDocumento = {} } = input;
     const result = [];
     // Sort components by orden
     const sortedComponents = [...componentes].sort((a, b) => a.orden - b.orden);
@@ -196,12 +196,23 @@ function assembleReport(input) {
             // === Regular document block (cover_header, page_header, etc.) ===
             const cloned = JSON.parse(JSON.stringify(docBlock));
             const resolvedConfig = deepResolveStrings(cloned.config, baseContext);
-            result.push({
+            const assembled = {
                 id: cloned.id,
                 type: cloned.type,
                 config: resolvedConfig,
                 _source: 'document',
-            });
+            };
+            // If this is a data block directly in the document template,
+            // pair it with its value from datosDocumento
+            if (DATA_BLOCK_TYPES.has(cloned.type)) {
+                const key = cloned.config.key;
+                if (key) {
+                    assembled._dataKey = key;
+                    const rawValue = datosDocumento[key] ?? null;
+                    assembled._dataValue = deepResolveStrings(rawValue, baseContext);
+                }
+            }
+            result.push(assembled);
         }
     }
     return {

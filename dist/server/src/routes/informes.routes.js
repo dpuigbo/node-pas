@@ -252,6 +252,7 @@ router.get('/informes/:id/assembled', async (req, res, next) => {
             documentSchema,
             componentes,
             baseContext,
+            datosDocumento: informe.datosDocumento || {},
         });
         res.json({
             informe: {
@@ -308,6 +309,33 @@ router.patch('/componentes-informe/:id/datos', async (req, res, next) => {
             data: { datos: merged },
         });
         res.json(updated);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// ================================================================
+// PATCH /informes/:id/datos-documento
+// Technician or admin. Shallow-merges incoming document-level datos.
+// ================================================================
+router.patch('/informes/:id/datos-documento', async (req, res, next) => {
+    try {
+        const { datos: incoming } = informes_validation_1.updateDatosComponenteSchema.parse(req.body);
+        const id = Number(req.params.id);
+        const existing = await database_1.prisma.informe.findUnique({ where: { id } });
+        if (!existing) {
+            res.status(404).json({ error: 'Informe no encontrado' });
+            return;
+        }
+        const merged = {
+            ...(existing.datosDocumento || {}),
+            ...incoming,
+        };
+        const updated = await database_1.prisma.informe.update({
+            where: { id },
+            data: { datosDocumento: merged },
+        });
+        res.json({ id: updated.id, datosDocumento: updated.datosDocumento });
     }
     catch (err) {
         next(err);
