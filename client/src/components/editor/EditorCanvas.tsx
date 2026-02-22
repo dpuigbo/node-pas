@@ -386,11 +386,20 @@ function PageSheet({
     return 'top';
   }, [contentBlocks]);
 
-  // Compute inline margin style for vertical alignment of the inner content wrapper
-  const contentWrapperStyle: React.CSSProperties = useMemo(() => {
-    if (contentVerticalAlign === 'center') return { marginTop: 'auto', marginBottom: 'auto' };
-    if (contentVerticalAlign === 'bottom') return { marginTop: 'auto' };
-    return {};
+  // Compute inline styles for vertical alignment using the OUTER content div
+  const contentAreaStyle: React.CSSProperties = useMemo(() => {
+    const base: React.CSSProperties = {
+      flex: '1 1 0%',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+    };
+    if (contentVerticalAlign === 'center') {
+      base.justifyContent = 'center';
+    } else if (contentVerticalAlign === 'bottom') {
+      base.justifyContent = 'flex-end';
+    }
+    return base;
   }, [contentVerticalAlign]);
 
   const renderBlock = (block: Block) => {
@@ -461,15 +470,12 @@ function PageSheet({
           {/* Content blocks — with page margins */}
           {!hasBackCover && (
             <div
-              className="flex-1 flex flex-col overflow-hidden"
               style={{
+                ...contentAreaStyle,
                 padding: `${topChrome.length > 0 ? 8 : marginTop}px ${marginRight}px ${bottomChrome.length > 0 ? 8 : marginBottom}px ${marginLeft}px`,
               }}
             >
-              <div
-                className="flex flex-wrap items-start shrink-0"
-                style={contentWrapperStyle}
-              >
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', flexShrink: 0 }}>
                 {contentBlocks.map(renderBlock)}
               </div>
             </div>
