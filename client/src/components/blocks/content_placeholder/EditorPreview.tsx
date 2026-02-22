@@ -25,7 +25,8 @@ const ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
 
 export function EditorPreview({ block }: EditorPreviewProps) {
   const contentType = (block.config.contentType as SystemContentType) || 'all';
-  const option = SYSTEM_CONTENT_TYPES.find((t) => t.value === contentType) || SYSTEM_CONTENT_TYPES[0];
+  const fallback = SYSTEM_CONTENT_TYPES[0] as (typeof SYSTEM_CONTENT_TYPES)[number];
+  const option = SYSTEM_CONTENT_TYPES.find((t) => t.value === contentType) ?? fallback;
   const Icon = ICON_MAP[option.icon] || LayoutTemplate;
 
   return (
