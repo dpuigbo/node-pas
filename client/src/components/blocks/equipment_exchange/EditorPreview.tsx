@@ -18,7 +18,7 @@ export function EditorPreview({ block }: EditorPreviewProps) {
         <table className="w-full text-[8px] border-collapse">
           <thead>
             <tr style={{ backgroundColor: headerBg }}>
-              <th className="font-medium px-1 py-1 text-center border-r border-white/20" style={{ color: headerColor }} rowSpan={2} style={{ width: '7%' }}>
+              <th className="font-medium px-1 py-1 text-center border-r border-white/20" style={{ color: headerColor, width: '7%' }} rowSpan={2}>
                 Uds.<br/>Salida
               </th>
               <th className="font-medium px-1 py-1 text-center border-r border-white/20" style={{ color: headerColor }} colSpan={2}>
@@ -27,13 +27,13 @@ export function EditorPreview({ block }: EditorPreviewProps) {
               <th className="font-medium px-1 py-1 text-center border-r border-white/20" style={{ color: headerColor }} colSpan={2}>
                 Numero de serie
               </th>
-              <th className="font-medium px-1 py-1 text-center border-r border-white/20" style={{ color: headerColor }} rowSpan={2} style={{ width: '12%' }}>
+              <th className="font-medium px-1 py-1 text-center border-r border-white/20" style={{ color: headerColor, width: '12%' }} rowSpan={2}>
                 Inter-<br/>cambio
               </th>
-              <th className="font-medium px-1 py-1 text-center border-r border-white/20" style={{ color: headerColor }} rowSpan={2} style={{ width: '8%' }}>
+              <th className="font-medium px-1 py-1 text-center border-r border-white/20" style={{ color: headerColor, width: '8%' }} rowSpan={2}>
                 Usado
               </th>
-              <th className="font-medium px-1 py-1 text-center" style={{ color: headerColor }} rowSpan={2} style={{ width: '7%' }}>
+              <th className="font-medium px-1 py-1 text-center" style={{ color: headerColor, width: '7%' }} rowSpan={2}>
                 Uds.<br/>Usadas
               </th>
             </tr>

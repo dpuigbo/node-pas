@@ -67,7 +67,7 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
         <table className="w-full text-sm">
           <thead>
             <tr style={{ backgroundColor: headerBg }}>
-              <th className="font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" style={{ color: headerColor }} style={{ width: '7%' }}>
+              <th className="font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" style={{ color: headerColor, width: '7%' }}>
                 Uds.<br/>Salida
               </th>
               <th className="font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" style={{ color: headerColor }} colSpan={2}>
@@ -76,13 +76,13 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
               <th className="font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" style={{ color: headerColor }} colSpan={2}>
                 Numero de serie
               </th>
-              <th className="font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" style={{ color: headerColor }} style={{ width: '10%' }}>
+              <th className="font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" style={{ color: headerColor, width: '10%' }}>
                 Inter-<br/>cambio
               </th>
-              <th className="font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" style={{ color: headerColor }} style={{ width: '8%' }}>
+              <th className="font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" style={{ color: headerColor, width: '8%' }}>
                 Usado
               </th>
-              <th className="font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" style={{ color: headerColor }} style={{ width: '7%' }}>
+              <th className="font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" style={{ color: headerColor, width: '7%' }}>
                 Uds.<br/>Usadas
               </th>
               {!readOnly && <th className="w-10" />}
