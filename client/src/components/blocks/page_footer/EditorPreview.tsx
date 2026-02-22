@@ -36,7 +36,9 @@ export function EditorPreview({ block }: EditorPreviewProps) {
       {/* Page numbers — right */}
       {showPageNumbers && (
         <span className="relative z-[1]" style={{ color: textColor, opacity: 0.8, fontSize: `${Math.max(textSize - 1, 7)}px` }}>
-          Pagina X de N
+          {typeof c._pageNumber === 'number'
+            ? `Pagina ${c._pageNumber} de ${c._totalPages}`
+            : 'Pagina X de N'}
         </span>
       )}
     </div>

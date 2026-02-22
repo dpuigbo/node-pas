@@ -70,6 +70,8 @@ interface AssemblyInput {
   documentSchema: TemplateSchema;
   componentes: AssemblyComponente[];
   baseContext: Record<string, string | undefined>;
+  /** Document-level datos (for data blocks that live directly in the document template) */
+  datosDocumento?: Record<string, unknown>;
 }
 
 // ===== Default page config =====
@@ -239,7 +241,7 @@ const DATA_BLOCK_TYPES = new Set([
  * - Resolves {{placeholders}} with base context (sistema/cliente/intervencion)
  */
 export function assembleReport(input: AssemblyInput): AssemblyResult {
-  const { documentSchema, componentes, baseContext } = input;
+  const { documentSchema, componentes, baseContext, datosDocumento = {} } = input;
   const result: AssembledBlock[] = [];
 
   // Sort components by orden
@@ -308,12 +310,25 @@ export function assembleReport(input: AssemblyInput): AssemblyResult {
         baseContext,
       ) as Record<string, unknown>;
 
-      result.push({
+      const assembled: AssembledBlock = {
         id: cloned.id,
         type: cloned.type,
         config: resolvedConfig,
         _source: 'document',
-      });
+      };
+
+      // If this is a data block directly in the document template,
+      // pair it with its value from datosDocumento
+      if (DATA_BLOCK_TYPES.has(cloned.type)) {
+        const key = cloned.config.key as string | undefined;
+        if (key) {
+          assembled._dataKey = key;
+          const rawValue = datosDocumento[key] ?? null;
+          assembled._dataValue = deepResolveStrings(rawValue, baseContext);
+        }
+      }
+
+      result.push(assembled);
     }
   }
 

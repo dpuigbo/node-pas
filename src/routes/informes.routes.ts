@@ -309,6 +309,7 @@ router.get(
         documentSchema,
         componentes,
         baseContext,
+        datosDocumento: (informe.datosDocumento as Record<string, unknown>) || {},
       });
 
       res.json({
@@ -373,6 +374,40 @@ router.patch(
       });
 
       res.json(updated);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// ================================================================
+// PATCH /informes/:id/datos-documento
+// Technician or admin. Shallow-merges incoming document-level datos.
+// ================================================================
+router.patch(
+  '/informes/:id/datos-documento',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { datos: incoming } = updateDatosComponenteSchema.parse(req.body);
+      const id = Number(req.params.id);
+
+      const existing = await prisma.informe.findUnique({ where: { id } });
+      if (!existing) {
+        res.status(404).json({ error: 'Informe no encontrado' });
+        return;
+      }
+
+      const merged = {
+        ...((existing.datosDocumento as Record<string, unknown>) || {}),
+        ...incoming,
+      };
+
+      const updated = await prisma.informe.update({
+        where: { id },
+        data: { datosDocumento: merged as object },
+      });
+
+      res.json({ id: updated.id, datosDocumento: updated.datosDocumento });
     } catch (err) {
       next(err);
     }

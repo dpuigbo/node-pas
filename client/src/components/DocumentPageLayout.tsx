@@ -10,12 +10,11 @@
  * - Content blocks rendered WITH page margins
  * - Vertically alignable blocks (intervention_data, client_data) as direct
  *   flex-col children for independent vertical positioning
- * - back_cover fills entire page
- * - Component transition indicators between different component blocks
+ * - back_cover fills entire page (fixed height, not minHeight)
+ * - Page numbering: injects _pageNumber/_totalPages into chrome blocks
  */
 
 import React, { useMemo } from 'react';
-import { Layers } from 'lucide-react';
 import { DOCUMENT_CHROME_TYPES, DOCUMENT_CHROME_POSITION } from '@/types/editor';
 import type { BlockType } from '@/types/editor';
 import type { AssembledBlock } from '@/types/informe';
@@ -47,13 +46,6 @@ interface PageConfig {
 interface Section {
   separator?: AssembledBlock;
   blocks: AssembledBlock[];
-}
-
-interface ChromeSplit {
-  topChrome: AssembledBlock[];
-  content: AssembledBlock[];
-  bottomChrome: AssembledBlock[];
-  hasBackCover: boolean;
 }
 
 /** A group of normal blocks rendered inside a flex-wrap row */
@@ -103,7 +95,7 @@ function splitIntoSections(blocks: AssembledBlock[]): Section[] {
 }
 
 /** Separate chrome blocks (edge-to-edge) from content blocks (inside margins) */
-function splitChromeAndContent(blocks: AssembledBlock[]): ChromeSplit {
+function splitChromeAndContent(blocks: AssembledBlock[]) {
   const topChrome: AssembledBlock[] = [];
   const content: AssembledBlock[] = [];
   const bottomChrome: AssembledBlock[] = [];
@@ -135,7 +127,6 @@ function splitByPageBreak(content: AssembledBlock[]): AssembledBlock[][] {
 
   for (const block of content) {
     if (block.type === 'page_break') {
-      // page_break ends current page, start a new one
       pages.push(current);
       current = [];
     } else {
@@ -143,7 +134,6 @@ function splitByPageBreak(content: AssembledBlock[]): AssembledBlock[][] {
     }
   }
 
-  // Push final page (even if empty, to ensure at least one page)
   if (current.length > 0 || pages.length === 0) {
     pages.push(current);
   }
@@ -152,11 +142,8 @@ function splitByPageBreak(content: AssembledBlock[]): AssembledBlock[][] {
 }
 
 /**
- * Split content blocks into segments: groups of normal blocks (rendered in
- * flex-wrap rows) interleaved with vertically alignable blocks (direct
- * children of flex-col for independent vertical positioning).
- *
- * Replicates EditorCanvas PageSheet contentSegments logic.
+ * Split content blocks into segments: groups of normal blocks (flex-wrap rows)
+ * interleaved with vertically alignable blocks (direct flex-col children).
  */
 function buildContentSegments(contentBlocks: AssembledBlock[]): ContentSegment[] {
   const result: ContentSegment[] = [];
@@ -164,7 +151,6 @@ function buildContentSegments(contentBlocks: AssembledBlock[]): ContentSegment[]
 
   for (const b of contentBlocks) {
     if (VERTICALLY_ALIGNABLE.has(b.type)) {
-      // Flush current group
       if (currentGroup.length > 0) {
         result.push({ type: 'group', blocks: [...currentGroup] });
         currentGroup = [];
@@ -175,7 +161,6 @@ function buildContentSegments(contentBlocks: AssembledBlock[]): ContentSegment[]
     }
   }
 
-  // Flush remaining group
   if (currentGroup.length > 0) {
     result.push({ type: 'group', blocks: currentGroup });
   }
@@ -184,44 +169,36 @@ function buildContentSegments(contentBlocks: AssembledBlock[]): ContentSegment[]
 }
 
 /**
- * Render a group of content blocks with component transition indicators.
- * Returns a list of ReactNodes with blue separators between component groups.
+ * Count total pages across all sections for page numbering.
+ * Each section produces N sub-pages (split by page_break).
  */
-function renderGroupWithTransitions(
-  groupBlocks: AssembledBlock[],
-  renderBlock: (block: AssembledBlock) => React.ReactNode,
-  lastComponenteIdRef: { current: number | undefined },
-): React.ReactNode[] {
-  const elements: React.ReactNode[] = [];
-
-  for (const block of groupBlocks) {
-    // Insert component separator when transitioning between components
-    if (
-      block._source === 'component' &&
-      block._componenteInformeId !== undefined &&
-      block._componenteInformeId !== lastComponenteIdRef.current
-    ) {
-      lastComponenteIdRef.current = block._componenteInformeId;
-      elements.push(
-        <div
-          key={`comp-sep-${block._componenteInformeId}`}
-          className="w-full flex items-center gap-2 py-2 px-1 my-1"
-        >
-          <Layers className="h-3.5 w-3.5 text-blue-500" />
-          <span className="text-xs font-medium text-blue-600">
-            {block._componenteEtiqueta}
-          </span>
-          <div className="flex-1 border-t border-blue-200" />
-        </div>,
-      );
+function countTotalPages(sections: Section[]): number {
+  let total = 0;
+  for (const section of sections) {
+    const { content, hasBackCover } = splitChromeAndContent(section.blocks);
+    if (hasBackCover) {
+      total += 1;
+    } else {
+      total += splitByPageBreak(content).length;
     }
-
-    elements.push(
-      <React.Fragment key={block.id}>{renderBlock(block)}</React.Fragment>,
-    );
   }
+  return Math.max(total, 1);
+}
 
-  return elements;
+/** Inject _pageNumber and _totalPages into a chrome block (non-mutating clone) */
+function withPageNumbers(
+  block: AssembledBlock,
+  pageNumber: number,
+  totalPages: number,
+): AssembledBlock {
+  return {
+    ...block,
+    config: {
+      ...block.config,
+      _pageNumber: pageNumber,
+      _totalPages: totalPages,
+    },
+  };
 }
 
 // ======================== Page Container ========================
@@ -239,8 +216,9 @@ interface PageContainerProps {
   marginBottom: number;
   marginLeft: number;
   renderBlock: (block: AssembledBlock) => React.ReactNode;
-  /** Unique key prefix to avoid duplicate React keys when chrome repeats */
   keyPrefix: string;
+  pageNumber: number;
+  totalPages: number;
 }
 
 function PageContainer({
@@ -257,28 +235,33 @@ function PageContainer({
   marginLeft,
   renderBlock,
   keyPrefix,
+  pageNumber,
+  totalPages,
 }: PageContainerProps) {
   const segments = useMemo(
     () => buildContentSegments(contentBlocks),
     [contentBlocks],
   );
 
-  // Track component transitions across all segments
-  const lastComponenteIdRef = useMemo(() => ({ current: undefined as number | undefined }), []);
-
   return (
     <div
       className="bg-white shadow-lg border overflow-hidden"
       style={{
         width: canvasWidth,
-        minHeight: canvasHeight,
+        // back_cover needs fixed height to fill page; content pages use minHeight
+        ...(hasBackCover
+          ? { height: canvasHeight }
+          : { minHeight: canvasHeight }),
         fontSize: `${pageConfig.fontSize}px`,
         fontFamily: pageConfig.fontFamily
           ? `"${pageConfig.fontFamily}", sans-serif`
           : undefined,
       }}
     >
-      <div className="flex flex-col" style={{ minHeight: canvasHeight }}>
+      <div
+        className="flex flex-col"
+        style={hasBackCover ? { height: canvasHeight } : { minHeight: canvasHeight }}
+      >
         {/* ===== Top chrome — edge-to-edge, no margins ===== */}
         {topChrome.length > 0 && (
           <div className={hasBackCover ? 'flex flex-col flex-1' : 'shrink-0'}>
@@ -287,7 +270,7 @@ function PageContainer({
                 key={`${keyPrefix}_tc_${b.id}`}
                 className={`w-full ${hasBackCover && b.type === 'back_cover' ? 'flex-1 flex flex-col' : ''}`}
               >
-                {renderBlock(b)}
+                {renderBlock(withPageNumbers(b, pageNumber, totalPages))}
               </div>
             ))}
           </div>
@@ -316,11 +299,11 @@ function PageContainer({
                       flexShrink: 0,
                     }}
                   >
-                    {renderGroupWithTransitions(
-                      seg.blocks,
-                      renderBlock,
-                      lastComponenteIdRef,
-                    )}
+                    {seg.blocks.map((block) => (
+                      <React.Fragment key={block.id}>
+                        {renderBlock(block)}
+                      </React.Fragment>
+                    ))}
                   </div>
                 );
               }
@@ -339,34 +322,10 @@ function PageContainer({
                 style.marginTop = 'auto';
               }
 
-              // Also handle component transition for alignable blocks
-              const transitionElements: React.ReactNode[] = [];
-              if (
-                seg.block._source === 'component' &&
-                seg.block._componenteInformeId !== undefined &&
-                seg.block._componenteInformeId !== lastComponenteIdRef.current
-              ) {
-                lastComponenteIdRef.current = seg.block._componenteInformeId;
-                transitionElements.push(
-                  <div
-                    key={`comp-sep-${seg.block._componenteInformeId}`}
-                    className="w-full flex items-center gap-2 py-2 px-1 my-1"
-                    style={{ flexShrink: 0 }}
-                  >
-                    <Layers className="h-3.5 w-3.5 text-blue-500" />
-                    <span className="text-xs font-medium text-blue-600">
-                      {seg.block._componenteEtiqueta}
-                    </span>
-                    <div className="flex-1 border-t border-blue-200" />
-                  </div>,
-                );
-              }
-
               return (
-                <React.Fragment key={seg.block.id}>
-                  {transitionElements}
-                  <div style={style}>{renderBlock(seg.block)}</div>
-                </React.Fragment>
+                <div key={seg.block.id} style={style}>
+                  {renderBlock(seg.block)}
+                </div>
               );
             })}
           </div>
@@ -377,7 +336,7 @@ function PageContainer({
           <div className="shrink-0 mt-auto">
             {bottomChrome.map((b) => (
               <div key={`${keyPrefix}_bc_${b.id}`} className="w-full">
-                {renderBlock(b)}
+                {renderBlock(withPageNumbers(b, pageNumber, totalPages))}
               </div>
             ))}
           </div>
@@ -395,6 +354,7 @@ export function DocumentPageLayout({
   renderBlock,
 }: DocumentPageLayoutProps) {
   const sections = useMemo(() => splitIntoSections(blocks), [blocks]);
+  const totalPages = useMemo(() => countTotalPages(sections), [sections]);
 
   const isPortrait = pageConfig.orientation === 'portrait';
   const canvasWidth = isPortrait ? A4_WIDTH : A4_HEIGHT;
@@ -404,21 +364,23 @@ export function DocumentPageLayout({
   const mBottom = pageConfig.margins.bottom * MM_TO_PX;
   const mLeft = pageConfig.margins.left * MM_TO_PX;
 
+  // Track page number across all sections
+  let currentPage = 0;
+
   return (
-    <div className="flex flex-col items-center gap-8">
+    <div className="flex flex-col items-center gap-2">
       {sections.map((section, si) => {
         const { topChrome, content, bottomChrome, hasBackCover } =
           splitChromeAndContent(section.blocks);
 
-        // Split content by page_break into sub-pages
         const contentPages = splitByPageBreak(content);
 
         return (
-          <div key={si} className="flex flex-col items-center w-full gap-6">
+          <div key={si} className="flex flex-col items-center w-full gap-2">
             {/* Section separator label (outside pages) */}
             {section.separator && (
               <div
-                className="w-full flex items-center gap-2 py-2"
+                className="w-full flex items-center gap-2 py-1"
                 style={{ maxWidth: canvasWidth }}
               >
                 <div className="flex-1 border-t-2 border-dashed border-gray-300" />
@@ -432,24 +394,29 @@ export function DocumentPageLayout({
             )}
 
             {/* Render a PageContainer for each sub-page */}
-            {contentPages.map((pageContent, pi) => (
-              <PageContainer
-                key={`s${si}_p${pi}`}
-                canvasWidth={canvasWidth}
-                canvasHeight={canvasHeight}
-                pageConfig={pageConfig}
-                topChrome={topChrome}
-                bottomChrome={bottomChrome}
-                contentBlocks={pageContent}
-                hasBackCover={hasBackCover && pi === 0}
-                marginTop={mTop}
-                marginRight={mRight}
-                marginBottom={mBottom}
-                marginLeft={mLeft}
-                renderBlock={renderBlock}
-                keyPrefix={`s${si}_p${pi}`}
-              />
-            ))}
+            {contentPages.map((pageContent, pi) => {
+              currentPage++;
+              return (
+                <PageContainer
+                  key={`s${si}_p${pi}`}
+                  canvasWidth={canvasWidth}
+                  canvasHeight={canvasHeight}
+                  pageConfig={pageConfig}
+                  topChrome={topChrome}
+                  bottomChrome={bottomChrome}
+                  contentBlocks={pageContent}
+                  hasBackCover={hasBackCover && pi === 0}
+                  marginTop={mTop}
+                  marginRight={mRight}
+                  marginBottom={mBottom}
+                  marginLeft={mLeft}
+                  renderBlock={renderBlock}
+                  keyPrefix={`s${si}_p${pi}`}
+                  pageNumber={currentPage}
+                  totalPages={totalPages}
+                />
+              );
+            })}
           </div>
         );
       })}

@@ -50,8 +50,12 @@ const ALWAYS_FULL_TYPES = new Set<string>([
   'table_of_contents', 'page_break', 'intervention_data', 'client_data',
 ]);
 
-/** Structure blocks rendered via EditorPreview (read-only) */
-const STRUCTURE_BLOCKS = new Set<string>([
+/**
+ * Structure-only blocks rendered via EditorPreview (always read-only).
+ * Data block types (table, tristate, checklist, etc.) are intentionally
+ * EXCLUDED so they render as editable FormFields when they have a _dataKey.
+ */
+const STRUCTURE_ONLY_BLOCKS = new Set<string>([
   'header', 'section_title', 'divider', 'section_separator',
   'cover_header', 'page_header', 'page_footer', 'back_cover',
   'table_of_contents', 'page_break', 'content_placeholder',
@@ -70,30 +74,40 @@ export default function InformeFormPage() {
   const { data, isLoading, error } = useAssembledReport(informeId || undefined);
 
   // Local dirty datos per componenteInforme id
-  const [localDatos, setLocalDatos] = useState<Record<number, Record<string, unknown>>>({});
+  const [localCompDatos, setLocalCompDatos] = useState<Record<number, Record<string, unknown>>>({});
+  // Local dirty datos for document-level blocks (keyed by data key)
+  const [localDocDatos, setLocalDocDatos] = useState<Record<string, unknown>>({});
   const [isSaving, setIsSaving] = useState(false);
 
   const readOnly = data?.informe?.estado !== 'borrador';
 
   // Check if any component has unsaved changes
-  const hasDirtyChanges = useMemo(
-    () => Object.values(localDatos).some((d) => d && Object.keys(d).length > 0),
-    [localDatos],
+  const hasCompDirty = useMemo(
+    () => Object.values(localCompDatos).some((d) => d && Object.keys(d).length > 0),
+    [localCompDatos],
   );
+
+  // Check if document-level blocks have unsaved changes
+  const hasDocDirty = useMemo(
+    () => Object.keys(localDocDatos).length > 0,
+    [localDocDatos],
+  );
+
+  const hasDirtyChanges = hasCompDirty || hasDocDirty;
 
   // Get unique dirty component IDs
   const dirtyComponentIds = useMemo(
-    () => Object.entries(localDatos)
+    () => Object.entries(localCompDatos)
       .filter(([, d]) => d && Object.keys(d).length > 0)
       .map(([id]) => Number(id)),
-    [localDatos],
+    [localCompDatos],
   );
 
-  // Handle field change: routes to correct componenteInforme
-  const handleFieldChange = useCallback(
+  // Handle field change for component data blocks
+  const handleCompFieldChange = useCallback(
     (componenteInformeId: number, key: string, value: unknown) => {
       if (readOnly) return;
-      setLocalDatos((prev) => ({
+      setLocalCompDatos((prev) => ({
         ...prev,
         [componenteInformeId]: {
           ...(prev[componenteInformeId] ?? {}),
@@ -104,18 +118,40 @@ export default function InformeFormPage() {
     [readOnly],
   );
 
-  // Save all dirty component datos in parallel
+  // Handle field change for document-level data blocks
+  const handleDocFieldChange = useCallback(
+    (key: string, value: unknown) => {
+      if (readOnly) return;
+      setLocalDocDatos((prev) => ({
+        ...prev,
+        [key]: value,
+      }));
+    },
+    [readOnly],
+  );
+
+  // Save all dirty datos (component + document) in parallel
   const handleSaveAll = useCallback(async () => {
     if (!hasDirtyChanges || isSaving) return;
     setIsSaving(true);
     try {
-      const promises = dirtyComponentIds.map(async (compId) => {
-        const datos = localDatos[compId];
-        if (!datos || Object.keys(datos).length === 0) return;
-        await api.patch(`/v1/componentes-informe/${compId}/datos`, { datos });
-      });
+      const promises: Promise<unknown>[] = [];
+
+      // Save component datos
+      for (const compId of dirtyComponentIds) {
+        const datos = localCompDatos[compId];
+        if (!datos || Object.keys(datos).length === 0) continue;
+        promises.push(api.patch(`/v1/componentes-informe/${compId}/datos`, { datos }));
+      }
+
+      // Save document-level datos
+      if (hasDocDirty) {
+        promises.push(api.patch(`/v1/informes/${informeId}/datos-documento`, { datos: localDocDatos }));
+      }
+
       await Promise.all(promises);
-      setLocalDatos({});
+      setLocalCompDatos({});
+      setLocalDocDatos({});
       // Refresh assembled report to get updated datos
       queryClient.invalidateQueries({ queryKey: ['informes', informeId, 'assembled'] });
     } catch (err: any) {
@@ -124,7 +160,7 @@ export default function InformeFormPage() {
     } finally {
       setIsSaving(false);
     }
-  }, [hasDirtyChanges, isSaving, dirtyComponentIds, localDatos, queryClient, informeId]);
+  }, [hasDirtyChanges, isSaving, dirtyComponentIds, localCompDatos, hasDocDirty, localDocDatos, queryClient, informeId]);
 
   // Block render callback for DocumentPageLayout
   const allBlocks = data?.assembled?.blocks;
@@ -141,13 +177,15 @@ export default function InformeFormPage() {
       return (
         <FormBlockRenderer
           block={block}
-          localDatos={localDatos}
+          localCompDatos={localCompDatos}
+          localDocDatos={localDocDatos}
           readOnly={readOnly}
-          onFieldChange={handleFieldChange}
+          onCompFieldChange={handleCompFieldChange}
+          onDocFieldChange={handleDocFieldChange}
         />
       );
     },
-    [localDatos, readOnly, handleFieldChange, allBlocks],
+    [localCompDatos, localDocDatos, readOnly, handleCompFieldChange, handleDocFieldChange, allBlocks],
   );
 
   // ======================== Loading & error states ========================
@@ -175,6 +213,9 @@ export default function InformeFormPage() {
   }
 
   const { informe, assembled, documentTemplate } = data;
+
+  // Count dirty items for save button label
+  const dirtyCount = dirtyComponentIds.length + (hasDocDirty ? 1 : 0);
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
@@ -229,7 +270,7 @@ export default function InformeFormPage() {
                 <Save className="h-4 w-4" />
               )}
               Guardar
-              {dirtyComponentIds.length > 0 && ` (${dirtyComponentIds.length})`}
+              {dirtyCount > 0 && ` (${dirtyCount})`}
             </Button>
           )}
 
@@ -261,16 +302,20 @@ export default function InformeFormPage() {
 
 interface FormBlockRendererProps {
   block: AssembledBlock;
-  localDatos: Record<number, Record<string, unknown>>;
+  localCompDatos: Record<number, Record<string, unknown>>;
+  localDocDatos: Record<string, unknown>;
   readOnly: boolean;
-  onFieldChange: (componenteInformeId: number, key: string, value: unknown) => void;
+  onCompFieldChange: (componenteInformeId: number, key: string, value: unknown) => void;
+  onDocFieldChange: (key: string, value: unknown) => void;
 }
 
 function FormBlockRenderer({
   block,
-  localDatos,
+  localCompDatos,
+  localDocDatos,
   readOnly,
-  onFieldChange,
+  onCompFieldChange,
+  onDocFieldChange,
 }: FormBlockRendererProps) {
   const entry = getBlockEntry(block.type as BlockType);
   if (!entry) return null;
@@ -278,8 +323,8 @@ function FormBlockRenderer({
   const widthClass = getFormBlockWidthClass(block);
   const alignClass = BLOCK_ALIGN_CSS[(block.config.align as BlockAlign) || 'left'];
 
-  // Structure blocks → render EditorPreview as static
-  if (STRUCTURE_BLOCKS.has(block.type)) {
+  // Structure-only blocks → render EditorPreview as static
+  if (STRUCTURE_ONLY_BLOCKS.has(block.type)) {
     const Preview = entry.EditorPreview;
     return (
       <div className={`${widthClass} ${alignClass} pointer-events-none`}>
@@ -288,23 +333,34 @@ function FormBlockRenderer({
     );
   }
 
-  // Data blocks from components → editable FormField
+  // Data blocks with _dataKey → editable FormField
   const FormFieldComp = entry.FormField;
-  if (FormFieldComp && block._dataKey && block._componenteInformeId) {
-    // Get current value: local override > assembled value (from server datos + resolved)
-    const compLocalDatos = localDatos[block._componenteInformeId];
-    const value = compLocalDatos?.[block._dataKey] !== undefined
-      ? compLocalDatos[block._dataKey]
-      : block._dataValue ?? null;
+  if (FormFieldComp && block._dataKey) {
+    let value: unknown;
+    let onChange: (v: unknown) => void;
+
+    if (block._componenteInformeId) {
+      // Component data block
+      const compLocal = localCompDatos[block._componenteInformeId];
+      value = compLocal?.[block._dataKey] !== undefined
+        ? compLocal[block._dataKey]
+        : block._dataValue ?? null;
+      onChange = (v: unknown) =>
+        onCompFieldChange(block._componenteInformeId!, block._dataKey!, v);
+    } else {
+      // Document-level data block
+      value = localDocDatos[block._dataKey] !== undefined
+        ? localDocDatos[block._dataKey]
+        : block._dataValue ?? null;
+      onChange = (v: unknown) => onDocFieldChange(block._dataKey!, v);
+    }
 
     return (
       <div className={`${widthClass} ${alignClass}`}>
         <FormFieldComp
           block={block as any}
           value={value}
-          onChange={(v: unknown) =>
-            onFieldChange(block._componenteInformeId!, block._dataKey!, v)
-          }
+          onChange={onChange}
           readOnly={readOnly}
         />
       </div>

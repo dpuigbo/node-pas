@@ -260,7 +260,7 @@ function LeftHeaderTable({
 
 export function FormField({ block, value, onChange, readOnly }: FormFieldProps) {
   const c = block.config;
-  const label = (c.label as string) || 'Tabla';
+  const label = (c.label as string) || '';
   const title = (c.title as string) || '';
   const titleBg = (c.titleBg as string) || '#1f2937';
   const titleColor = (c.titleColor as string) || '#ffffff';
@@ -310,10 +310,12 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
 
   return (
     <div className="space-y-2">
-      <Label>
-        {label}
-        {required && <span className="text-red-500 ml-0.5">*</span>}
-      </Label>
+      {(label || required) && (
+        <Label>
+          {label}
+          {required && <span className="text-red-500 ml-0.5">*</span>}
+        </Label>
+      )}
       <div className="rounded border overflow-x-auto">
         {/* Title bar */}
         {title && (

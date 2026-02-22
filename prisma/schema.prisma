@@ -248,6 +248,7 @@ model Informe {
   estado           EstadoInforme @default(borrador)
   fechaRealizacion DateTime?     @map("fecha_realizacion")
   notas            String?       @db.Text
+  datosDocumento   Json          @default("{}") @map("datos_documento")
   creadoPorId      Int?          @map("creado_por_id")
   createdAt        DateTime      @default(now()) @map("created_at")
   updatedAt        DateTime      @updatedAt @map("updated_at")
