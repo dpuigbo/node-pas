@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
-import type { InformeDetalle } from '@/types/informe';
+import type { InformeDetalle, AssembledReportResponse } from '@/types/informe';
 
 /** Create informes for all sistemas in an intervencion (atomic) */
 export function useCrearInformes(intervencionId: number) {
@@ -35,6 +35,18 @@ export function useSaveDatos(componenteInformeId: number, informeId: number) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['informes', informeId] });
     },
+  });
+}
+
+/** Fetch the fully assembled report (document + components merged) */
+export function useAssembledReport(id: number | undefined) {
+  return useQuery<AssembledReportResponse>({
+    queryKey: ['informes', id, 'assembled'],
+    queryFn: async () => {
+      const { data } = await api.get(`/v1/informes/${id}/assembled`);
+      return data;
+    },
+    enabled: !!id,
   });
 }
 

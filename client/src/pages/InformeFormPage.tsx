@@ -7,6 +7,7 @@ import {
   AlertCircle,
   Loader2,
   Circle,
+  Eye,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -137,6 +138,15 @@ export default function InformeFormPage() {
             {informe.sistema.fabricante.nombre}
           </p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate(`/informes/${informeId}/preview`)}
+          className="gap-1"
+        >
+          <Eye className="h-4 w-4" />
+          Vista documento
+        </Button>
         <Badge
           className={ESTADO_BADGE[informe.estado] ?? 'bg-gray-100 text-gray-700'}
         >

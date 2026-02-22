@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Plus, Cog, AlertCircle, X, Settings2 } from 'lucide-react';
+import { ArrowLeft, FileText, Plus, Cog, AlertCircle, X, Settings2, Eye } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -209,9 +209,23 @@ export default function IntervencionDetailPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-xs text-muted-foreground">
-                    Clic para abrir y rellenar
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">
+                      Clic para abrir y rellenar
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs gap-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/informes/${informe.id}/preview`);
+                      }}
+                    >
+                      <Eye className="h-3 w-3" />
+                      Preview
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}

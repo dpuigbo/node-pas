@@ -1,0 +1,278 @@
+import { useParams, useNavigate } from 'react-router-dom';
+import {
+  ArrowLeft,
+  FileText,
+  Loader2,
+  AlertCircle,
+  Eye,
+  Layers,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useAssembledReport } from '@/hooks/useInformes';
+import { getBlockEntry } from '@/components/blocks/registry';
+import { FIELD_WIDTH_CSS, BLOCK_ALIGN_CSS } from '@/types/editor';
+import type { BlockType, FieldWidth, BlockAlign } from '@/types/editor';
+import type { AssembledBlock } from '@/types/informe';
+
+// Ensure all blocks are registered
+import '@/components/blocks/register-all';
+
+// ======================== Constants ========================
+
+const ESTADO_BADGE: Record<string, string> = {
+  borrador: 'bg-gray-100 text-gray-700',
+  finalizado: 'bg-amber-100 text-amber-700',
+  entregado: 'bg-green-100 text-green-700',
+};
+
+const ESTADO_LABEL: Record<string, string> = {
+  borrador: 'Borrador',
+  finalizado: 'Finalizado',
+  entregado: 'Entregado',
+};
+
+/** Structure blocks rendered via EditorPreview */
+const STRUCTURE_BLOCKS = new Set<string>([
+  'header', 'section_title', 'divider', 'section_separator',
+  'cover_header', 'page_header', 'page_footer', 'back_cover',
+  'table_of_contents', 'page_break', 'content_placeholder',
+  'intervention_data', 'client_data', 'component_section',
+]);
+
+/** Blocks that always render full-width */
+const ALWAYS_FULL_TYPES = new Set<string>([
+  'header', 'section_title', 'divider', 'section_separator',
+  'tristate', 'checklist', 'table', 'equipment_exchange',
+  'cover_header', 'page_header', 'page_footer', 'back_cover',
+  'table_of_contents', 'page_break', 'intervention_data', 'client_data',
+]);
+
+/** Section separator labels */
+const SECTION_LABELS: Record<string, string> = {
+  portada: 'Portada',
+  intermedia: 'Contenido',
+  contraportada: 'Contraportada',
+};
+
+// ======================== Main Component ========================
+
+export default function InformePreviewPage() {
+  const { id } = useParams<{ id: string }>();
+  const informeId = Number(id);
+  const navigate = useNavigate();
+
+  const { data, isLoading, error } = useAssembledReport(informeId || undefined);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center gap-4">
+        <AlertCircle className="h-12 w-12 text-muted-foreground" />
+        <p className="text-muted-foreground">
+          {(error as Error)?.message || 'No se pudo cargar el informe ensamblado'}
+        </p>
+        <Button variant="outline" onClick={() => navigate(-1)}>
+          Volver
+        </Button>
+      </div>
+    );
+  }
+
+  const { informe, assembled, documentTemplate } = data;
+
+  return (
+    <div className="flex h-screen flex-col overflow-hidden">
+      {/* Toolbar */}
+      <div className="flex h-14 items-center justify-between border-b bg-background px-4 shrink-0">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(`/informes/${informeId}`)}
+            title="Volver al formulario"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <Eye className="h-4 w-4 text-muted-foreground" />
+            <span className="font-semibold">{informe.sistema.nombre}</span>
+            <Badge className="bg-blue-100 text-blue-800">
+              {documentTemplate.nombre}
+            </Badge>
+            <Badge className={ESTADO_BADGE[informe.estado] ?? 'bg-gray-100 text-gray-700'}>
+              {ESTADO_LABEL[informe.estado] ?? informe.estado}
+            </Badge>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(`/informes/${informeId}`)}
+          >
+            <FileText className="h-4 w-4 mr-1" />
+            Formulario
+          </Button>
+        </div>
+      </div>
+
+      {/* Document canvas */}
+      <div className="flex-1 overflow-auto bg-gray-100">
+        <div className="py-8 px-4">
+          <DocumentCanvas
+            blocks={assembled.blocks}
+            pageConfig={assembled.pageConfig}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ======================== Document Canvas ========================
+
+interface DocumentCanvasProps {
+  blocks: AssembledBlock[];
+  pageConfig: {
+    orientation: 'portrait' | 'landscape';
+    margins: { top: number; right: number; bottom: number; left: number };
+    fontSize: number;
+    fontFamily: string;
+  };
+}
+
+function DocumentCanvas({ blocks, pageConfig }: DocumentCanvasProps) {
+  const isLandscape = pageConfig.orientation === 'landscape';
+  const pageWidth = isLandscape ? 1123 : 794;
+  const { margins } = pageConfig;
+
+  // Track current component for grouping headers
+  let lastComponenteId: number | undefined;
+
+  return (
+    <div
+      className="mx-auto bg-white shadow-lg"
+      style={{
+        width: pageWidth,
+        minHeight: isLandscape ? 794 : 1123,
+        paddingTop: `${margins.top}mm`,
+        paddingRight: `${margins.right}mm`,
+        paddingBottom: `${margins.bottom}mm`,
+        paddingLeft: `${margins.left}mm`,
+        fontFamily: pageConfig.fontFamily,
+        fontSize: pageConfig.fontSize,
+      }}
+    >
+      <div className="flex flex-wrap items-start">
+        {blocks.map((block) => {
+          const elements: React.ReactNode[] = [];
+
+          // Insert component separator when transitioning between components
+          if (
+            block._source === 'component' &&
+            block._componenteInformeId !== lastComponenteId
+          ) {
+            lastComponenteId = block._componenteInformeId;
+            elements.push(
+              <div
+                key={`comp-sep-${block._componenteInformeId}`}
+                className="w-full flex items-center gap-2 py-2 px-1 my-1"
+              >
+                <Layers className="h-3.5 w-3.5 text-blue-500" />
+                <span className="text-xs font-medium text-blue-600">
+                  {block._componenteEtiqueta}
+                </span>
+                <div className="flex-1 border-t border-blue-200" />
+              </div>,
+            );
+          }
+
+          elements.push(
+            <AssembledBlockRenderer key={block.id} block={block} />,
+          );
+
+          return elements;
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ======================== Block Renderer ========================
+
+interface AssembledBlockRendererProps {
+  block: AssembledBlock;
+}
+
+function AssembledBlockRenderer({ block }: AssembledBlockRendererProps) {
+  const entry = getBlockEntry(block.type as BlockType);
+  if (!entry) return null;
+
+  // Section separators get special rendering
+  if (block.type === 'section_separator') {
+    const section = block.config.section as string;
+    return (
+      <div className="w-full my-4">
+        <div className="flex items-center gap-2 py-2">
+          <div className="flex-1 border-t-2 border-dashed border-gray-300" />
+          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+            {SECTION_LABELS[section] ?? section}
+          </span>
+          <div className="flex-1 border-t-2 border-dashed border-gray-300" />
+        </div>
+      </div>
+    );
+  }
+
+  const widthClass = getBlockWidthClass(block);
+  const alignClass = BLOCK_ALIGN_CSS[(block.config.align as BlockAlign) || 'left'];
+
+  // Structure blocks → render EditorPreview as static
+  if (STRUCTURE_BLOCKS.has(block.type)) {
+    const Preview = entry.EditorPreview;
+    return (
+      <div className={`${widthClass} ${alignClass} pointer-events-none`}>
+        <Preview block={block as any} isSelected={false} />
+      </div>
+    );
+  }
+
+  // Data blocks → render FormField with value if available
+  const FormFieldComp = entry.FormField;
+  if (FormFieldComp && block._dataKey) {
+    return (
+      <div className={`${widthClass} ${alignClass}`}>
+        <FormFieldComp
+          block={block as any}
+          value={block._dataValue ?? null}
+          onChange={() => {}} // Read-only, no-op
+          readOnly={true}
+        />
+      </div>
+    );
+  }
+
+  // Fallback: render EditorPreview
+  const Preview = entry.EditorPreview;
+  return (
+    <div className={`${widthClass} ${alignClass} pointer-events-none`}>
+      <Preview block={block as any} isSelected={false} />
+    </div>
+  );
+}
+
+// ======================== Helpers ========================
+
+function getBlockWidthClass(block: AssembledBlock): string {
+  if (ALWAYS_FULL_TYPES.has(block.type)) return 'w-full';
+  const width = (block.config.width as FieldWidth) || 'full';
+  return FIELD_WIDTH_CSS[width] || 'w-full';
+}

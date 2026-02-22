@@ -22,6 +22,7 @@ const IntervencionDetailPage = lazy(() => import('./pages/IntervencionDetailPage
 const InformeFormPage = lazy(() => import('./pages/InformeFormPage'));
 const SistemaDetailPage = lazy(() => import('./pages/SistemaDetailPage'));
 const DocumentTemplateEditorPage = lazy(() => import('./pages/DocumentTemplateEditorPage'));
+const InformePreviewPage = lazy(() => import('./pages/InformePreviewPage'));
 
 function EditorLoader() {
   return (
@@ -55,6 +56,16 @@ export default function App() {
           element={
             <Suspense fallback={<EditorLoader />}>
               <DocumentTemplateEditorPage />
+            </Suspense>
+          }
+        />
+
+        {/* Report preview — pantalla completa, fuera de AppShell */}
+        <Route
+          path="/informes/:id/preview"
+          element={
+            <Suspense fallback={<EditorLoader />}>
+              <InformePreviewPage />
             </Suspense>
           }
         />
