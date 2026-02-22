@@ -169,11 +169,14 @@ function assembleReport(input) {
                         _componenteEtiqueta: comp.etiqueta,
                     };
                     // If this is a data block, pair with its value from datos
+                    // Also resolve placeholders inside datos (e.g. fixedRows cells
+                    // that were initialized with {{componente.etiqueta}} text)
                     if (DATA_BLOCK_TYPES.has(cloned.type)) {
                         const key = cloned.config.key;
                         if (key) {
                             assembled._dataKey = key;
-                            assembled._dataValue = comp.datos[key] ?? null;
+                            const rawValue = comp.datos[key] ?? null;
+                            assembled._dataValue = deepResolveStrings(rawValue, compContext);
                         }
                     }
                     result.push(assembled);
