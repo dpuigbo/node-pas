@@ -3,6 +3,7 @@ import { Label } from '@/components/ui/label';
 import type { ConfigPanelProps } from '@/components/blocks/registry';
 import { ColumnsEditor } from '@/components/blocks/_shared/ColumnsEditor';
 import { FixedRowsEditor } from '@/components/blocks/_shared/FixedRowsEditor';
+import { PlaceholderInput } from '@/components/blocks/_shared/PlaceholderInput';
 
 interface Column {
   key: string;
@@ -47,11 +48,10 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
         <Label className="text-xs font-semibold">Titulo de tabla</Label>
         <div className="space-y-1">
           <Label className="text-xs">Texto del titulo</Label>
-          <Input
+          <PlaceholderInput
             value={(c.title as string) || ''}
-            onChange={(e) => onChange('title', e.target.value)}
-            placeholder="Ej: Control general de la controladora"
-            className="h-8"
+            onChange={(v) => onChange('title', v)}
+            placeholder="Ej: Control general de {{componente.etiqueta}}"
           />
         </div>
         {(c.title as string) && (
@@ -160,20 +160,38 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
       <div className="border-t pt-3 space-y-3">
         <Label className="text-xs font-semibold">Estilo de tabla</Label>
 
-        <div className="space-y-1">
-          <Label className="text-xs">Color cabecera</Label>
-          <div className="flex items-center gap-2">
-            <input
-              type="color"
-              value={(c.headerBg as string) || '#1f2937'}
-              onChange={(e) => onChange('headerBg', e.target.value)}
-              className="h-8 w-8 cursor-pointer rounded border"
-            />
-            <Input
-              value={(c.headerBg as string) || '#1f2937'}
-              onChange={(e) => onChange('headerBg', e.target.value)}
-              className="h-8 font-mono text-xs flex-1"
-            />
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <Label className="text-xs">Fondo cabecera</Label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={(c.headerBg as string) || '#1f2937'}
+                onChange={(e) => onChange('headerBg', e.target.value)}
+                className="h-8 w-8 cursor-pointer rounded border"
+              />
+              <Input
+                value={(c.headerBg as string) || '#1f2937'}
+                onChange={(e) => onChange('headerBg', e.target.value)}
+                className="h-8 font-mono text-xs flex-1"
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Texto cabecera</Label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={(c.headerColor as string) || '#ffffff'}
+                onChange={(e) => onChange('headerColor', e.target.value)}
+                className="h-8 w-8 cursor-pointer rounded border"
+              />
+              <Input
+                value={(c.headerColor as string) || '#ffffff'}
+                onChange={(e) => onChange('headerColor', e.target.value)}
+                className="h-8 font-mono text-xs flex-1"
+              />
+            </div>
           </div>
         </div>
 

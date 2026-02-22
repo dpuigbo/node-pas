@@ -1,9 +1,10 @@
 import type { EditorPreviewProps } from '@/components/blocks/registry';
+import { resolveWithExamples } from '@/lib/placeholders';
 
 export function EditorPreview({ block }: EditorPreviewProps) {
   const c = block.config;
-  const title = (c.title as string) || '';
-  const description = (c.description as string) || '';
+  const title = resolveWithExamples((c.title as string) || '');
+  const description = resolveWithExamples((c.description as string) || '');
   const level = (c.level as number) || 1;
   const color = (c.color as string) || '#2563eb';
 

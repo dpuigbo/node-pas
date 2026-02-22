@@ -201,6 +201,7 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
       titleBg: '#1f2937',
       titleColor: '#ffffff',
       headerPosition: 'top',
+      headerColor: '#ffffff',
       columns: [] as { key: string; label: string; type: string; width: string }[],
       fixedRows: [] as Record<string, unknown>[],
       allowAddRows: true,

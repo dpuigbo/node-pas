@@ -120,6 +120,7 @@ function TopHeaderTable({
   columns,
   rows,
   headerBg,
+  headerColor,
   cellPad,
   allowAddRows,
   readOnly,
@@ -129,6 +130,7 @@ function TopHeaderTable({
   columns: Column[];
   rows: Row[];
   headerBg: string;
+  headerColor: string;
   cellPad: string;
   allowAddRows: boolean;
   readOnly: boolean;
@@ -142,8 +144,8 @@ function TopHeaderTable({
           {columns.map((col) => (
             <th
               key={col.key}
-              className={`${cellPad} text-left text-xs font-medium text-white`}
-              style={{ width: col.width !== 'auto' ? col.width : undefined }}
+              className={`${cellPad} text-left text-xs font-medium`}
+              style={{ width: col.width !== 'auto' ? col.width : undefined, color: headerColor }}
             >
               {col.label}
             </th>
@@ -203,6 +205,7 @@ function LeftHeaderTable({
   columns,
   rows,
   headerBg,
+  headerColor,
   cellPad,
   readOnly,
   updateCell,
@@ -210,6 +213,7 @@ function LeftHeaderTable({
   columns: Column[];
   rows: Row[];
   headerBg: string;
+  headerColor: string;
   cellPad: string;
   readOnly: boolean;
   updateCell: (ri: number, colKey: string, value: unknown) => void;
@@ -224,8 +228,8 @@ function LeftHeaderTable({
         {columns.map((col, ci) => (
           <tr key={col.key} className={ci % 2 === 1 ? 'bg-gray-50' : 'bg-white'}>
             <th
-              className={`${cellPad} text-left text-xs font-medium text-white whitespace-nowrap`}
-              style={{ backgroundColor: headerBg, width: '35%' }}
+              className={`${cellPad} text-left text-xs font-medium whitespace-nowrap`}
+              style={{ backgroundColor: headerBg, color: headerColor, width: '35%' }}
             >
               {col.label}
             </th>
@@ -265,6 +269,7 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
   const maxRows = (c.maxRows as number) || 50;
   const required = !!c.required;
   const headerBg = (c.headerBg as string) || '#1f2937';
+  const headerColor = (c.headerColor as string) || '#ffffff';
   const compact = !!c.compact;
   const headerPosition = (c.headerPosition as string) || 'top';
 
@@ -325,6 +330,7 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
             columns={columns}
             rows={rows}
             headerBg={headerBg}
+            headerColor={headerColor}
             cellPad={cellPad}
             readOnly={!!readOnly}
             updateCell={updateCell}
@@ -334,6 +340,7 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
             columns={columns}
             rows={rows}
             headerBg={headerBg}
+            headerColor={headerColor}
             cellPad={cellPad}
             allowAddRows={allowAddRows}
             readOnly={!!readOnly}

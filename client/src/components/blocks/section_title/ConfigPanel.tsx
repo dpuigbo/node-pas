@@ -3,6 +3,7 @@ import { Label } from '@/components/ui/label';
 import type { ConfigPanelProps } from '@/components/blocks/registry';
 import type { BlockAlign } from '@/types/editor';
 import { AlignSelector } from '@/components/blocks/_shared/AlignSelector';
+import { PlaceholderInput } from '@/components/blocks/_shared/PlaceholderInput';
 
 export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
   const c = block.config;
@@ -11,20 +12,19 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
     <div className="space-y-3">
       <div className="space-y-1">
         <Label className="text-xs">Titulo</Label>
-        <Input
+        <PlaceholderInput
           value={(c.title as string) || ''}
-          onChange={(e) => onChange('title', e.target.value)}
-          className="h-8"
+          onChange={(v) => onChange('title', v)}
+          placeholder="Ej: Control de {{componente.etiqueta}}"
         />
       </div>
 
       <div className="space-y-1">
         <Label className="text-xs">Descripcion</Label>
-        <Input
+        <PlaceholderInput
           value={(c.description as string) || ''}
-          onChange={(e) => onChange('description', e.target.value)}
+          onChange={(v) => onChange('description', v)}
           placeholder="Opcional"
-          className="h-8"
         />
       </div>
 

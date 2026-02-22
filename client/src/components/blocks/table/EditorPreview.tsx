@@ -1,4 +1,5 @@
 import type { EditorPreviewProps } from '@/components/blocks/registry';
+import { resolveWithExamples } from '@/lib/placeholders';
 
 interface Column {
   key: string;
@@ -55,12 +56,14 @@ function TopHeaderPreview({
   columns,
   fixedRows,
   headerBg,
+  headerColor,
   cellPad,
   allowAddRows,
 }: {
   columns: Column[];
   fixedRows: Record<string, unknown>[];
   headerBg: string;
+  headerColor: string;
   cellPad: string;
   allowAddRows: boolean;
 }) {
@@ -75,8 +78,8 @@ function TopHeaderPreview({
             {columns.map((col) => (
               <th
                 key={col.key}
-                className={`${cellPad} text-left font-medium text-white`}
-                style={{ width: col.width !== 'auto' ? col.width : undefined }}
+                className={`${cellPad} text-left font-medium`}
+                style={{ width: col.width !== 'auto' ? col.width : undefined, color: headerColor }}
               >
                 {col.label}
               </th>
@@ -124,11 +127,13 @@ function LeftHeaderPreview({
   columns,
   fixedRows,
   headerBg,
+  headerColor,
   cellPad,
 }: {
   columns: Column[];
   fixedRows: Record<string, unknown>[];
   headerBg: string;
+  headerColor: string;
   cellPad: string;
 }) {
   // In lateral mode, each column becomes a row; fixedRows[0] provides data columns
@@ -142,8 +147,8 @@ function LeftHeaderPreview({
         {columns.map((col, ci) => (
           <tr key={col.key} className={ci % 2 === 1 ? 'bg-gray-50' : ''}>
             <th
-              className={`${cellPad} text-left font-medium text-white whitespace-nowrap`}
-              style={{ backgroundColor: headerBg, width: '35%' }}
+              className={`${cellPad} text-left font-medium whitespace-nowrap`}
+              style={{ backgroundColor: headerBg, color: headerColor, width: '35%' }}
             >
               {col.label}
             </th>
@@ -169,13 +174,14 @@ function LeftHeaderPreview({
 export function EditorPreview({ block }: EditorPreviewProps) {
   const c = block.config;
   const label = (c.label as string) || '';
-  const title = (c.title as string) || '';
+  const title = resolveWithExamples((c.title as string) || '');
   const titleBg = (c.titleBg as string) || '#1f2937';
   const titleColor = (c.titleColor as string) || '#ffffff';
   const columns = (c.columns as Column[]) || [];
   const fixedRows = (c.fixedRows as Record<string, unknown>[]) || [];
   const allowAddRows = c.allowAddRows !== false;
   const headerBg = (c.headerBg as string) || '#1f2937';
+  const headerColor = (c.headerColor as string) || '#ffffff';
   const compact = !!c.compact;
   const headerPosition = (c.headerPosition as string) || 'top';
 
@@ -211,6 +217,7 @@ export function EditorPreview({ block }: EditorPreviewProps) {
             columns={columns}
             fixedRows={fixedRows}
             headerBg={headerBg}
+            headerColor={headerColor}
             cellPad={cellPad}
           />
         ) : (
@@ -218,6 +225,7 @@ export function EditorPreview({ block }: EditorPreviewProps) {
             columns={columns}
             fixedRows={fixedRows}
             headerBg={headerBg}
+            headerColor={headerColor}
             cellPad={cellPad}
             allowAddRows={allowAddRows}
           />
