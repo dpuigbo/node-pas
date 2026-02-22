@@ -278,11 +278,14 @@ export function assembleReport(input: AssemblyInput): AssemblyResult {
           };
 
           // If this is a data block, pair with its value from datos
+          // Also resolve placeholders inside datos (e.g. fixedRows cells
+          // that were initialized with {{componente.etiqueta}} text)
           if (DATA_BLOCK_TYPES.has(cloned.type)) {
             const key = cloned.config.key as string | undefined;
             if (key) {
               assembled._dataKey = key;
-              assembled._dataValue = comp.datos[key] ?? null;
+              const rawValue = comp.datos[key] ?? null;
+              assembled._dataValue = deepResolveStrings(rawValue, compContext);
             }
           }
 

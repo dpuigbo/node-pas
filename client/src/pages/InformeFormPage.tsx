@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
   Save,
@@ -8,20 +9,25 @@ import {
   Loader2,
   Circle,
   Eye,
+  Layers,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useInforme, useSaveDatos, useUpdateEstadoInforme } from '@/hooks/useInformes';
+import api from '@/lib/api';
+import {
+  useAssembledReport,
+  useUpdateEstadoInforme,
+} from '@/hooks/useInformes';
 import { useAuth } from '@/hooks/useAuth';
 import { getBlockEntry } from '@/components/blocks/registry';
-import { FIELD_WIDTH_CSS, BLOCK_ALIGN_CSS, type FieldWidth, type BlockAlign } from '@/types/editor';
-import type { Block, BlockType } from '@/types/editor';
-import type { ComponenteInformeDetalle } from '@/types/informe';
+import { FIELD_WIDTH_CSS, BLOCK_ALIGN_CSS } from '@/types/editor';
+import type { BlockType, FieldWidth, BlockAlign } from '@/types/editor';
+import type { AssembledBlock } from '@/types/informe';
 
 // Ensure all blocks are registered
 import '@/components/blocks/register-all';
 
-// ======================== Status badges ========================
+// ======================== Constants ========================
 
 const ESTADO_BADGE: Record<string, string> = {
   borrador: 'bg-gray-100 text-gray-700',
@@ -35,80 +41,114 @@ const ESTADO_LABEL: Record<string, string> = {
   entregado: 'Entregado',
 };
 
-// ======================== Structure block types (no data) ========================
+/** Structure blocks rendered via EditorPreview (read-only) */
+const STRUCTURE_BLOCKS = new Set<string>([
+  'header', 'section_title', 'divider', 'section_separator',
+  'cover_header', 'page_header', 'page_footer', 'back_cover',
+  'table_of_contents', 'page_break', 'content_placeholder',
+  'intervention_data', 'client_data', 'component_section',
+]);
 
-const STRUCTURE_BLOCKS = new Set<BlockType>(['header', 'section_title', 'divider']);
+/** Blocks that always render full-width */
+const ALWAYS_FULL_TYPES = new Set<string>([
+  'header', 'section_title', 'divider', 'section_separator',
+  'tristate', 'checklist', 'table', 'equipment_exchange',
+  'cover_header', 'page_header', 'page_footer', 'back_cover',
+  'table_of_contents', 'page_break', 'intervention_data', 'client_data',
+]);
 
-// ======================== Component ========================
+/** Section separator display labels */
+const SECTION_LABELS: Record<string, string> = {
+  portada: 'Portada',
+  intermedia: 'Contenido',
+  contraportada: 'Contraportada',
+};
+
+// ======================== Main Component ========================
 
 export default function InformeFormPage() {
   const { id } = useParams<{ id: string }>();
   const informeId = Number(id);
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
+  const queryClient = useQueryClient();
 
-  const { data: informe, isLoading } = useInforme(informeId || undefined);
-
-  // Active tab (componente index)
-  const [activeTab, setActiveTab] = useState(0);
+  const { data, isLoading, error } = useAssembledReport(informeId || undefined);
 
   // Local dirty datos per componenteInforme id
   const [localDatos, setLocalDatos] = useState<Record<number, Record<string, unknown>>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Track which tabs have unsaved changes
-  const dirtyTabs = useMemo(() => {
-    const set = new Set<number>();
-    if (!informe) return set;
-    for (const comp of informe.componentes) {
-      if (localDatos[comp.id]) set.add(comp.id);
-    }
-    return set;
-  }, [informe, localDatos]);
+  const readOnly = data?.informe?.estado !== 'borrador';
 
-  const activeComp: ComponenteInformeDetalle | undefined =
-    informe?.componentes?.[activeTab];
+  // Check if any component has unsaved changes
+  const hasDirtyChanges = useMemo(
+    () => Object.values(localDatos).some((d) => d && Object.keys(d).length > 0),
+    [localDatos],
+  );
 
-  const readOnly = informe?.estado !== 'borrador';
+  // Get unique dirty component IDs
+  const dirtyComponentIds = useMemo(
+    () => Object.entries(localDatos)
+      .filter(([, d]) => d && Object.keys(d).length > 0)
+      .map(([id]) => Number(id)),
+    [localDatos],
+  );
 
-  // Merged datos: server datos + local overrides
-  const mergedDatos = useMemo(() => {
-    if (!activeComp) return {};
-    return {
-      ...activeComp.datos,
-      ...(localDatos[activeComp.id] ?? {}),
-    };
-  }, [activeComp, localDatos]);
-
-  // Handle field change
+  // Handle field change: routes to correct componenteInforme
   const handleFieldChange = useCallback(
-    (key: string, value: unknown) => {
-      if (!activeComp || readOnly) return;
+    (componenteInformeId: number, key: string, value: unknown) => {
+      if (readOnly) return;
       setLocalDatos((prev) => ({
         ...prev,
-        [activeComp.id]: {
-          ...(prev[activeComp.id] ?? {}),
+        [componenteInformeId]: {
+          ...(prev[componenteInformeId] ?? {}),
           [key]: value,
         },
       }));
     },
-    [activeComp, readOnly],
+    [readOnly],
   );
+
+  // Save all dirty component datos in parallel
+  const handleSaveAll = useCallback(async () => {
+    if (!hasDirtyChanges || isSaving) return;
+    setIsSaving(true);
+    try {
+      const promises = dirtyComponentIds.map(async (compId) => {
+        const datos = localDatos[compId];
+        if (!datos || Object.keys(datos).length === 0) return;
+        await api.patch(`/v1/componentes-informe/${compId}/datos`, { datos });
+      });
+      await Promise.all(promises);
+      setLocalDatos({});
+      // Refresh assembled report to get updated datos
+      queryClient.invalidateQueries({ queryKey: ['informes', informeId, 'assembled'] });
+    } catch (err: any) {
+      const msg = err?.response?.data?.error ?? 'Error al guardar';
+      alert(msg);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [hasDirtyChanges, isSaving, dirtyComponentIds, localDatos, queryClient, informeId]);
 
   // ======================== Loading & error states ========================
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
-  if (!informe) {
+  if (error || !data) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 py-12">
+      <div className="flex h-screen flex-col items-center justify-center gap-4">
         <AlertCircle className="h-12 w-12 text-muted-foreground" />
-        <p className="text-muted-foreground">Informe no encontrado</p>
+        <p className="text-muted-foreground">
+          {(error as Error)?.message || 'No se pudo cargar el informe'}
+        </p>
         <Button variant="outline" onClick={() => navigate(-1)}>
           Volver
         </Button>
@@ -116,183 +156,170 @@ export default function InformeFormPage() {
     );
   }
 
-  const componentes = informe.componentes;
+  const { informe, assembled, documentTemplate } = data;
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate(`/intervenciones/${informe.intervencionId}`)}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-lg font-semibold truncate">
-            {informe.sistema.nombre}
-          </h1>
-          <p className="text-sm text-muted-foreground truncate">
-            {informe.intervencion.titulo} —{' '}
-            {informe.sistema.fabricante.nombre}
-          </p>
+    <div className="flex h-screen flex-col overflow-hidden">
+      {/* Toolbar */}
+      <div className="flex h-14 items-center justify-between border-b bg-background px-4 shrink-0">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(`/intervenciones/${informe.intervencion.id}`)}
+            title="Volver a intervencion"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <span className="font-semibold">{informe.sistema.nombre}</span>
+            <Badge className="bg-blue-100 text-blue-800">
+              {documentTemplate.nombre}
+            </Badge>
+            <Badge className={ESTADO_BADGE[informe.estado] ?? 'bg-gray-100 text-gray-700'}>
+              {ESTADO_LABEL[informe.estado] ?? informe.estado}
+            </Badge>
+            {hasDirtyChanges && (
+              <span className="text-xs text-amber-600 font-medium">
+                <Circle className="inline h-2 w-2 fill-amber-500 text-amber-500 mr-1" />
+                Sin guardar
+              </span>
+            )}
+          </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate(`/informes/${informeId}/preview`)}
-          className="gap-1"
-        >
-          <Eye className="h-4 w-4" />
-          Vista documento
-        </Button>
-        <Badge
-          className={ESTADO_BADGE[informe.estado] ?? 'bg-gray-100 text-gray-700'}
-        >
-          {ESTADO_LABEL[informe.estado] ?? informe.estado}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(`/informes/${informeId}/preview`)}
+            className="gap-1"
+          >
+            <Eye className="h-4 w-4" />
+            Vista previa
+          </Button>
+
+          {!readOnly && (
+            <Button
+              size="sm"
+              onClick={handleSaveAll}
+              disabled={!hasDirtyChanges || isSaving}
+              className="gap-1"
+            >
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              Guardar
+              {dirtyComponentIds.length > 0 && ` (${dirtyComponentIds.length})`}
+            </Button>
+          )}
+
+          {isAdmin && informe.estado === 'borrador' && (
+            <FinalizarButton
+              informeId={informeId}
+              intervencionId={informe.intervencion.id}
+              disabled={hasDirtyChanges}
+            />
+          )}
+        </div>
       </div>
 
-      {/* Tabs */}
-      {componentes.length > 1 && (
-        <div className="flex gap-1 overflow-x-auto border-b pb-1">
-          {componentes.map((comp, idx) => {
-            const isActive = idx === activeTab;
-            const isDirty = dirtyTabs.has(comp.id);
-            return (
-              <button
-                key={comp.id}
-                type="button"
-                onClick={() => setActiveTab(idx)}
-                className={`relative flex items-center gap-1.5 whitespace-nowrap rounded-t px-3 py-2 text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-white border border-b-white text-primary shadow-sm -mb-px'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-gray-50'
-                }`}
-              >
-                {isDirty && (
-                  <Circle className="h-2 w-2 fill-amber-500 text-amber-500" />
-                )}
-                {comp.etiqueta}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Active component form */}
-      {activeComp && (
-        <ComponenteForm
-          key={activeComp.id}
-          componente={activeComp}
-          datos={mergedDatos}
-          readOnly={readOnly}
-          onFieldChange={handleFieldChange}
-          informeId={informeId}
-          localDatos={localDatos[activeComp.id]}
-          onSaved={() =>
-            setLocalDatos((prev) => {
-              const next = { ...prev };
-              delete next[activeComp.id];
-              return next;
-            })
-          }
-        />
-      )}
-
-      {/* Admin actions */}
-      {isAdmin && informe.estado === 'borrador' && (
-        <div className="flex justify-end border-t pt-4">
-          <FinalizarButton
-            informeId={informeId}
-            intervencionId={informe.intervencionId}
+      {/* Assembled document form */}
+      <div className="flex-1 overflow-auto bg-gray-100">
+        <div className="py-8 px-4">
+          <AssembledDocumentForm
+            blocks={assembled.blocks}
+            pageConfig={assembled.pageConfig}
+            localDatos={localDatos}
+            readOnly={readOnly}
+            onFieldChange={handleFieldChange}
           />
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
-// ======================== Sub-components ========================
+// ======================== Assembled Document Form ========================
 
-interface ComponenteFormProps {
-  componente: ComponenteInformeDetalle;
-  datos: Record<string, unknown>;
+interface AssembledDocumentFormProps {
+  blocks: AssembledBlock[];
+  pageConfig: {
+    orientation: 'portrait' | 'landscape';
+    margins: { top: number; right: number; bottom: number; left: number };
+    fontSize: number;
+    fontFamily: string;
+  };
+  localDatos: Record<number, Record<string, unknown>>;
   readOnly: boolean;
-  onFieldChange: (key: string, value: unknown) => void;
-  informeId: number;
-  localDatos: Record<string, unknown> | undefined;
-  onSaved: () => void;
+  onFieldChange: (componenteInformeId: number, key: string, value: unknown) => void;
 }
 
-function ComponenteForm({
-  componente,
-  datos,
+function AssembledDocumentForm({
+  blocks,
+  pageConfig,
+  localDatos,
   readOnly,
   onFieldChange,
-  informeId,
-  localDatos,
-  onSaved,
-}: ComponenteFormProps) {
-  const saveMutation = useSaveDatos(componente.id, informeId);
-  const hasDirty = !!localDatos && Object.keys(localDatos).length > 0;
+}: AssembledDocumentFormProps) {
+  const isLandscape = pageConfig.orientation === 'landscape';
+  const pageWidth = isLandscape ? 1123 : 794;
+  const { margins } = pageConfig;
 
-  const handleSave = async () => {
-    if (!localDatos || !hasDirty) return;
-    try {
-      await saveMutation.mutateAsync(localDatos);
-      onSaved();
-    } catch (err: any) {
-      const msg = err?.response?.data?.error ?? 'Error al guardar';
-      alert(msg);
-    }
-  };
-
-  const blocks = componente.schemaCongelado?.blocks ?? [];
+  // Track current component for grouping headers
+  let lastComponenteId: number | undefined;
 
   return (
-    <div className="space-y-4">
-      {/* Component info */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-medium">
-            {componente.etiqueta}
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            {componente.componenteSistema.modeloComponente.nombre}
-            {componente.componenteSistema.numeroSerie &&
-              ` · S/N: ${componente.componenteSistema.numeroSerie}`}
-          </p>
-        </div>
-        {!readOnly && (
-          <Button
-            size="sm"
-            onClick={handleSave}
-            disabled={!hasDirty || saveMutation.isPending}
-            className="gap-1"
-          >
-            {saveMutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Save className="h-4 w-4" />
-            )}
-            Guardar
-          </Button>
-        )}
-      </div>
+    <div
+      className="mx-auto bg-white shadow-lg"
+      style={{
+        width: pageWidth,
+        minHeight: isLandscape ? 794 : 1123,
+        paddingTop: `${margins.top}mm`,
+        paddingRight: `${margins.right}mm`,
+        paddingBottom: `${margins.bottom}mm`,
+        paddingLeft: `${margins.left}mm`,
+        fontFamily: pageConfig.fontFamily,
+        fontSize: pageConfig.fontSize,
+      }}
+    >
+      <div className="flex flex-wrap items-start">
+        {blocks.map((block) => {
+          const elements: React.ReactNode[] = [];
 
-      {/* Render blocks */}
-      <div className="flex flex-wrap items-start gap-y-4">
-        {blocks.map((block: Block) => (
-          <BlockRenderer
-            key={block.id}
-            block={block}
-            datos={datos}
-            readOnly={readOnly}
-            onFieldChange={onFieldChange}
-          />
-        ))}
+          // Insert component separator when transitioning between components
+          if (
+            block._source === 'component' &&
+            block._componenteInformeId !== lastComponenteId
+          ) {
+            lastComponenteId = block._componenteInformeId;
+            elements.push(
+              <div
+                key={`comp-sep-${block._componenteInformeId}`}
+                className="w-full flex items-center gap-2 py-2 px-1 my-1"
+              >
+                <Layers className="h-3.5 w-3.5 text-blue-500" />
+                <span className="text-xs font-medium text-blue-600">
+                  {block._componenteEtiqueta}
+                </span>
+                <div className="flex-1 border-t border-blue-200" />
+              </div>,
+            );
+          }
+
+          elements.push(
+            <FormBlockRenderer
+              key={block.id}
+              block={block}
+              localDatos={localDatos}
+              readOnly={readOnly}
+              onFieldChange={onFieldChange}
+            />,
+          );
+
+          return elements;
+        })}
       </div>
     </div>
   );
@@ -300,29 +327,37 @@ function ComponenteForm({
 
 // ======================== Block Renderer ========================
 
-// Block types that are always full-width in the form layout
-const ALWAYS_FULL_TYPES = new Set<BlockType>([
-  'header', 'section_title', 'divider',
-  'tristate', 'checklist', 'table',
-]);
-
-/** Get width CSS class for a block in the form layout */
-function getFormBlockWidthClass(block: Block): string {
-  if (ALWAYS_FULL_TYPES.has(block.type)) return 'w-full';
-  const width = (block.config.width as FieldWidth) || 'full';
-  return FIELD_WIDTH_CSS[width] || 'w-full';
-}
-
-interface BlockRendererProps {
-  block: Block;
-  datos: Record<string, unknown>;
+interface FormBlockRendererProps {
+  block: AssembledBlock;
+  localDatos: Record<number, Record<string, unknown>>;
   readOnly: boolean;
-  onFieldChange: (key: string, value: unknown) => void;
+  onFieldChange: (componenteInformeId: number, key: string, value: unknown) => void;
 }
 
-function BlockRenderer({ block, datos, readOnly, onFieldChange }: BlockRendererProps) {
-  const entry = getBlockEntry(block.type);
+function FormBlockRenderer({
+  block,
+  localDatos,
+  readOnly,
+  onFieldChange,
+}: FormBlockRendererProps) {
+  const entry = getBlockEntry(block.type as BlockType);
   if (!entry) return null;
+
+  // Section separators → visual divider
+  if (block.type === 'section_separator') {
+    const section = block.config.section as string;
+    return (
+      <div className="w-full my-4">
+        <div className="flex items-center gap-2 py-2">
+          <div className="flex-1 border-t-2 border-dashed border-gray-300" />
+          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+            {SECTION_LABELS[section] ?? section}
+          </span>
+          <div className="flex-1 border-t-2 border-dashed border-gray-300" />
+        </div>
+      </div>
+    );
+  }
 
   const widthClass = getFormBlockWidthClass(block);
   const alignClass = BLOCK_ALIGN_CSS[(block.config.align as BlockAlign) || 'left'];
@@ -332,36 +367,49 @@ function BlockRenderer({ block, datos, readOnly, onFieldChange }: BlockRendererP
     const Preview = entry.EditorPreview;
     return (
       <div className={`${widthClass} ${alignClass} pointer-events-none`}>
-        <Preview block={block} isSelected={false} />
+        <Preview block={block as any} isSelected={false} />
       </div>
     );
   }
 
-  // Data blocks → render FormField if available
-  const key = block.config.key as string | undefined;
-  if (!key) return null;
-
+  // Data blocks from components → editable FormField
   const FormFieldComp = entry.FormField;
-  if (!FormFieldComp) {
-    // Fallback: render EditorPreview as readonly
-    const Preview = entry.EditorPreview;
+  if (FormFieldComp && block._dataKey && block._componenteInformeId) {
+    // Get current value: local override > assembled value (from server datos + resolved)
+    const compLocalDatos = localDatos[block._componenteInformeId];
+    const value = compLocalDatos?.[block._dataKey] !== undefined
+      ? compLocalDatos[block._dataKey]
+      : block._dataValue ?? null;
+
     return (
-      <div className={`${widthClass} ${alignClass} pointer-events-none opacity-70`}>
-        <Preview block={block} isSelected={false} />
+      <div className={`${widthClass} ${alignClass}`}>
+        <FormFieldComp
+          block={block as any}
+          value={value}
+          onChange={(v: unknown) =>
+            onFieldChange(block._componenteInformeId!, block._dataKey!, v)
+          }
+          readOnly={readOnly}
+        />
       </div>
     );
   }
 
+  // Fallback: render EditorPreview
+  const Preview = entry.EditorPreview;
   return (
-    <div className={`${widthClass} ${alignClass}`}>
-      <FormFieldComp
-        block={block}
-        value={datos[key] ?? null}
-        onChange={(v: unknown) => onFieldChange(key, v)}
-        readOnly={readOnly}
-      />
+    <div className={`${widthClass} ${alignClass} pointer-events-none`}>
+      <Preview block={block as any} isSelected={false} />
     </div>
   );
+}
+
+// ======================== Helpers ========================
+
+function getFormBlockWidthClass(block: AssembledBlock): string {
+  if (ALWAYS_FULL_TYPES.has(block.type)) return 'w-full';
+  const width = (block.config.width as FieldWidth) || 'full';
+  return FIELD_WIDTH_CSS[width] || 'w-full';
 }
 
 // ======================== Finalizar Button ========================
@@ -369,9 +417,11 @@ function BlockRenderer({ block, datos, readOnly, onFieldChange }: BlockRendererP
 function FinalizarButton({
   informeId,
   intervencionId,
+  disabled,
 }: {
   informeId: number;
   intervencionId: number;
+  disabled: boolean;
 }) {
   const mutation = useUpdateEstadoInforme(informeId, intervencionId);
 
@@ -393,16 +443,17 @@ function FinalizarButton({
   return (
     <Button
       onClick={handleFinalizar}
-      disabled={mutation.isPending}
+      disabled={mutation.isPending || disabled}
       variant="default"
       className="gap-1"
+      title={disabled ? 'Guarda los cambios antes de finalizar' : undefined}
     >
       {mutation.isPending ? (
         <Loader2 className="h-4 w-4 animate-spin" />
       ) : (
         <CheckCircle2 className="h-4 w-4" />
       )}
-      Finalizar informe
+      Finalizar
     </Button>
   );
 }

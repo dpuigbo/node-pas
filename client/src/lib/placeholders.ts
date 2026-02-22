@@ -87,6 +87,84 @@ export function resolveWithExamples(text: string): string {
 }
 
 /**
+ * Recursively resolve all {{placeholder}} tokens in any JSON structure.
+ * Walks strings, arrays, and plain objects.
+ */
+export function deepResolveStrings(
+  value: unknown,
+  context: Record<string, string | undefined>,
+): unknown {
+  if (typeof value === 'string') {
+    return resolvePlaceholders(value, context);
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => deepResolveStrings(item, context));
+  }
+  if (value !== null && typeof value === 'object') {
+    const result: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      result[k] = deepResolveStrings(v, context);
+    }
+    return result;
+  }
+  return value;
+}
+
+/**
+ * Build a placeholder context for the report form view.
+ * Takes informe-level data + per-component data and produces
+ * the key-value map for resolving {{placeholder}} tokens.
+ */
+export function buildFormContext(
+  informe: {
+    intervencion: {
+      titulo: string;
+      referencia?: string | null;
+      fechaInicio?: string | null;
+      cliente?: { nombre: string } | null;
+    };
+    sistema: {
+      nombre: string;
+      descripcion?: string | null;
+      fabricante: { nombre: string };
+      planta?: { nombre: string } | null;
+      maquina?: { nombre: string } | null;
+    };
+  },
+  componente: {
+    etiqueta: string;
+    tipoComponente: string;
+    componenteSistema: {
+      etiqueta: string;
+      numeroSerie: string | null;
+      numEjes?: number | null;
+      modeloComponente: { nombre: string };
+    };
+  },
+): Record<string, string | undefined> {
+  return {
+    'sistema.nombre': informe.sistema.nombre,
+    'sistema.descripcion': informe.sistema.descripcion ?? undefined,
+    'sistema.fabricante': informe.sistema.fabricante.nombre,
+    'cliente.nombre': informe.intervencion.cliente?.nombre ?? undefined,
+    'cliente.planta': informe.sistema.planta?.nombre ?? undefined,
+    'cliente.maquina': informe.sistema.maquina?.nombre ?? undefined,
+    'intervencion.actividad': informe.intervencion.titulo,
+    'intervencion.fecha': informe.intervencion.fechaInicio
+      ? new Date(informe.intervencion.fechaInicio).toLocaleDateString('es-ES')
+      : undefined,
+    'intervencion.referencia': informe.intervencion.referencia ?? undefined,
+    'componente.etiqueta': componente.componenteSistema.etiqueta,
+    'componente.tipo': componente.tipoComponente,
+    'componente.numero_serie': componente.componenteSistema.numeroSerie ?? undefined,
+    'componente.num_ejes': componente.componenteSistema.numEjes != null
+      ? String(componente.componenteSistema.numEjes)
+      : undefined,
+    'componente.modelo': componente.componenteSistema.modeloComponente.nombre,
+  };
+}
+
+/**
  * Extract all placeholder keys found in a text.
  */
 export function extractPlaceholders(text: string): string[] {
