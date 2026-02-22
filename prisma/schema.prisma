@@ -37,6 +37,13 @@ model Cliente {
   id                  Int       @id @default(autoincrement())
   nombre              String
   sede                String?
+  direccion           String?
+  ciudad              String?
+  codigoPostal        String?   @map("codigo_postal")
+  provincia           String?
+  telefono            String?
+  email               String?
+  personaContacto     String?   @map("persona_contacto")
   tarifaHoraTrabajo   Decimal?  @map("tarifa_hora_trabajo") @db.Decimal(10, 2)
   tarifaHoraViaje     Decimal?  @map("tarifa_hora_viaje") @db.Decimal(10, 2)
   dietas              Decimal?  @db.Decimal(10, 2)

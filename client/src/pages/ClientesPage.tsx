@@ -28,22 +28,44 @@ export default function ClientesPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [deleting, setDeleting] = useState<any>(null);
-  const [form, setForm] = useState({ nombre: '', sede: '' });
+  const [form, setForm] = useState({
+    nombre: '', sede: '', direccion: '', ciudad: '',
+    codigoPostal: '', provincia: '', telefono: '', email: '', personaContacto: '',
+  });
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ nombre: '', sede: '' });
+    setForm({
+      nombre: '', sede: '', direccion: '', ciudad: '',
+      codigoPostal: '', provincia: '', telefono: '', email: '', personaContacto: '',
+    });
     setFormOpen(true);
   };
 
   const openEdit = (cli: any) => {
     setEditing(cli);
-    setForm({ nombre: cli.nombre, sede: cli.sede || '' });
+    setForm({
+      nombre: cli.nombre, sede: cli.sede || '',
+      direccion: cli.direccion || '', ciudad: cli.ciudad || '',
+      codigoPostal: cli.codigoPostal || '', provincia: cli.provincia || '',
+      telefono: cli.telefono || '', email: cli.email || '',
+      personaContacto: cli.personaContacto || '',
+    });
     setFormOpen(true);
   };
 
   const handleSubmit = async () => {
-    const body = { nombre: form.nombre, sede: form.sede || null };
+    const body = {
+      nombre: form.nombre,
+      sede: form.sede || null,
+      direccion: form.direccion || null,
+      ciudad: form.ciudad || null,
+      codigoPostal: form.codigoPostal || null,
+      provincia: form.provincia || null,
+      telefono: form.telefono || null,
+      email: form.email || null,
+      personaContacto: form.personaContacto || null,
+    };
     if (editing) {
       await updateMutation.mutateAsync({ id: editing.id, ...body });
     } else {
@@ -126,7 +148,7 @@ export default function ClientesPage() {
           <DialogHeader>
             <DialogTitle>{editing ? 'Editar cliente' : 'Nuevo cliente'}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
             <div>
               <Label>Nombre</Label>
               <Input value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} placeholder="Nombre del cliente" />
@@ -134,6 +156,38 @@ export default function ClientesPage() {
             <div>
               <Label>Sede</Label>
               <Input value={form.sede} onChange={(e) => setForm({ ...form, sede: e.target.value })} placeholder="Ciudad o direccion" />
+            </div>
+            <div>
+              <Label>Persona de contacto</Label>
+              <Input value={form.personaContacto} onChange={(e) => setForm({ ...form, personaContacto: e.target.value })} placeholder="Nombre contacto" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Telefono</Label>
+                <Input value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} placeholder="+34 XXX XX XX XX" />
+              </div>
+              <div>
+                <Label>Email</Label>
+                <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="email@cliente.com" />
+              </div>
+            </div>
+            <div>
+              <Label>Direccion</Label>
+              <Input value={form.direccion} onChange={(e) => setForm({ ...form, direccion: e.target.value })} placeholder="Calle, numero..." />
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label>Ciudad</Label>
+                <Input value={form.ciudad} onChange={(e) => setForm({ ...form, ciudad: e.target.value })} placeholder="Ciudad" />
+              </div>
+              <div>
+                <Label>CP</Label>
+                <Input value={form.codigoPostal} onChange={(e) => setForm({ ...form, codigoPostal: e.target.value })} placeholder="08001" />
+              </div>
+              <div>
+                <Label>Provincia</Label>
+                <Input value={form.provincia} onChange={(e) => setForm({ ...form, provincia: e.target.value })} placeholder="Provincia" />
+              </div>
             </div>
           </div>
           <DialogFooter>

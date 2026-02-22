@@ -352,6 +352,10 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
     defaultConfig: {
       title: '',
       accentColor: '#1e40af',
+      sectionBg: '#1e40af',
+      sectionColor: '#ffffff',
+      labelBg: '#f9fafb',
+      labelColor: '#4b5563',
       verticalAlign: 'top',
     },
   },

@@ -29,14 +29,17 @@ const SECTIONS: { title: string; fields: { label: string; placeholder: string; s
 export function EditorPreview({ block }: EditorPreviewProps) {
   const c = block.config;
   const title = (c.title as string) || '';
-  const accentColor = (c.accentColor as string) || '#1e40af';
+  const sectionBg = (c.sectionBg as string) || (c.accentColor as string) || '#1e40af';
+  const sectionColor = (c.sectionColor as string) || '#ffffff';
+  const labelBg = (c.labelBg as string) || '#f9fafb';
+  const labelColor = (c.labelColor as string) || '#4b5563';
 
   return (
     <div className="w-full">
       {title && (
         <div
-          className="text-[10px] font-bold uppercase tracking-wider mb-2 px-1"
-          style={{ color: accentColor }}
+          className="text-xs font-bold uppercase tracking-wider mb-2 px-1"
+          style={{ color: sectionBg }}
         >
           {title}
         </div>
@@ -46,8 +49,8 @@ export function EditorPreview({ block }: EditorPreviewProps) {
           <div key={si}>
             {/* Section header */}
             <div
-              className="px-3 py-1 text-[8px] font-bold uppercase tracking-wider text-white"
-              style={{ backgroundColor: accentColor }}
+              className="px-3 py-1 text-xs font-bold uppercase tracking-wider"
+              style={{ backgroundColor: sectionBg, color: sectionColor }}
             >
               {section.title}
             </div>
@@ -60,10 +63,13 @@ export function EditorPreview({ block }: EditorPreviewProps) {
                     fi % 2 === 0 ? 'border-r border-r-gray-100' : ''
                   }`}
                 >
-                  <span className="text-[8px] font-semibold text-gray-600 bg-gray-50 px-2 py-1 shrink-0 w-[90px]">
+                  <span
+                    className="text-xs font-semibold px-2 py-1 shrink-0 w-[100px]"
+                    style={{ backgroundColor: labelBg, color: labelColor }}
+                  >
                     {field.label}
                   </span>
-                  <span className="text-[8px] text-gray-400 px-2 py-1 flex-1 truncate">
+                  <span className="text-xs text-gray-400 px-2 py-1 flex-1 truncate">
                     {field.placeholder}
                   </span>
                 </div>

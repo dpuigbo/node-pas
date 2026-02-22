@@ -15,8 +15,8 @@ export function EditorPreview({ block }: EditorPreviewProps) {
           <Building2 className="h-6 w-6 text-gray-400" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-semibold text-gray-700">Nombre del cliente</div>
-          <div className="text-[10px] text-gray-500 mt-1 space-y-0.5">
+          <div className="text-xs font-semibold text-gray-700">Nombre del cliente</div>
+          <div className="text-xs text-gray-500 mt-1 space-y-0.5">
             <div>Direccion del cliente</div>
             <div>Ciudad, CP (Provincia)</div>
           </div>

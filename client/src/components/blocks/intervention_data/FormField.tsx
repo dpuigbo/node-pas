@@ -36,7 +36,10 @@ const SECTIONS: {
 export function FormField({ block, value, onChange, readOnly }: FormFieldProps) {
   const c = block.config;
   const title = (c.title as string) || '';
-  const accentColor = (c.accentColor as string) || '#1e40af';
+  const sectionBg = (c.sectionBg as string) || (c.accentColor as string) || '#1e40af';
+  const sectionColor = (c.sectionColor as string) || '#ffffff';
+  const labelBg = (c.labelBg as string) || '#f9fafb';
+  const labelColor = (c.labelColor as string) || '#4b5563';
 
   const data = (value as Record<string, string>) || {};
 
@@ -49,8 +52,8 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
     <div className="w-full">
       {title && (
         <div
-          className="text-[10px] font-bold uppercase tracking-wider mb-2 px-1"
-          style={{ color: accentColor }}
+          className="text-xs font-bold uppercase tracking-wider mb-2 px-1"
+          style={{ color: sectionBg }}
         >
           {title}
         </div>
@@ -60,8 +63,8 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
           <div key={si}>
             {/* Section header */}
             <div
-              className="px-3 py-1 text-[8px] font-bold uppercase tracking-wider text-white"
-              style={{ backgroundColor: accentColor }}
+              className="px-3 py-1 text-xs font-bold uppercase tracking-wider"
+              style={{ backgroundColor: sectionBg, color: sectionColor }}
             >
               {section.title}
             </div>
@@ -74,7 +77,10 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
                     fi % 2 === 0 ? 'border-r border-r-gray-100' : ''
                   }`}
                 >
-                  <span className="text-[8px] font-semibold text-gray-600 bg-gray-50 px-2 py-1 shrink-0 w-[90px] flex items-center">
+                  <span
+                    className="text-xs font-semibold px-2 py-1 shrink-0 w-[100px] flex items-center"
+                    style={{ backgroundColor: labelBg, color: labelColor }}
+                  >
                     {field.label}
                   </span>
                   <div className="flex-1 min-w-0">
@@ -85,7 +91,7 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
                       onChange={(e) => handleChange(field.dataKey, e.target.value)}
                       readOnly={readOnly}
                       disabled={readOnly}
-                      className="h-auto py-1 px-2 text-[8px] border-0 rounded-none bg-transparent focus-visible:ring-1 focus-visible:ring-inset"
+                      className="h-auto py-1 px-2 text-xs border-0 rounded-none bg-transparent focus-visible:ring-1 focus-visible:ring-inset"
                     />
                   </div>
                 </div>
