@@ -6,6 +6,7 @@ const auth_middleware_1 = require("../middleware/auth.middleware");
 const database_1 = require("../config/database");
 const informes_validation_1 = require("../validation/informes.validation");
 const initDatos_1 = require("../lib/initDatos");
+const assembleReport_1 = require("../lib/assembleReport");
 const router = (0, express_1.Router)();
 // ================================================================
 // POST /intervenciones/:intervencionId/informes
@@ -120,13 +121,20 @@ router.get('/informes/:id', async (req, res, next) => {
             where: { id: Number(req.params.id) },
             include: {
                 intervencion: {
-                    select: { id: true, titulo: true, tipo: true, estado: true },
+                    select: {
+                        id: true, titulo: true, tipo: true, estado: true,
+                        referencia: true, fechaInicio: true, fechaFin: true,
+                        cliente: { select: { id: true, nombre: true, sede: true } },
+                    },
                 },
                 sistema: {
                     select: {
                         id: true,
                         nombre: true,
-                        fabricante: { select: { nombre: true } },
+                        descripcion: true,
+                        fabricante: { select: { id: true, nombre: true } },
+                        planta: { select: { id: true, nombre: true } },
+                        maquina: { select: { id: true, nombre: true } },
                     },
                 },
                 creadoPor: { select: { id: true, nombre: true } },
@@ -139,6 +147,7 @@ router.get('/informes/:id', async (req, res, next) => {
                                 etiqueta: true,
                                 tipo: true,
                                 numeroSerie: true,
+                                numEjes: true,
                                 modeloComponente: {
                                     select: { id: true, nombre: true, tipo: true },
                                 },
@@ -153,6 +162,123 @@ router.get('/informes/:id', async (req, res, next) => {
             return;
         }
         res.json(informe);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// ================================================================
+// GET /informes/:id/assembled
+// Any authenticated user. Returns the fully assembled report
+// merging document template + component frozen schemas.
+// ================================================================
+router.get('/informes/:id/assembled', async (req, res, next) => {
+    try {
+        const informeId = Number(req.params.id);
+        // Fetch informe with full context for placeholder resolution
+        const informe = await database_1.prisma.informe.findUnique({
+            where: { id: informeId },
+            include: {
+                intervencion: {
+                    select: {
+                        id: true, titulo: true, tipo: true, estado: true,
+                        referencia: true, fechaInicio: true, fechaFin: true,
+                        cliente: { select: { id: true, nombre: true, sede: true } },
+                    },
+                },
+                sistema: {
+                    select: {
+                        id: true,
+                        nombre: true,
+                        descripcion: true,
+                        fabricante: { select: { id: true, nombre: true } },
+                        planta: { select: { id: true, nombre: true } },
+                        maquina: { select: { id: true, nombre: true } },
+                    },
+                },
+                creadoPor: { select: { id: true, nombre: true } },
+                componentes: {
+                    orderBy: { orden: 'asc' },
+                    include: {
+                        componenteSistema: {
+                            select: {
+                                id: true,
+                                etiqueta: true,
+                                tipo: true,
+                                numeroSerie: true,
+                                numEjes: true,
+                                modeloComponente: {
+                                    select: { id: true, nombre: true, tipo: true },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        if (!informe) {
+            res.status(404).json({ error: 'Informe no encontrado' });
+            return;
+        }
+        // Determine document template type from intervencion tipo
+        const docTipo = informe.intervencion.tipo === 'preventiva'
+            ? 'preventivo'
+            : 'correctivo';
+        const documentTemplate = await database_1.prisma.documentTemplate.findUnique({
+            where: { tipo: docTipo },
+        });
+        if (!documentTemplate) {
+            res.status(422).json({
+                error: `No se encontro plantilla de documento para tipo "${docTipo}"`,
+            });
+            return;
+        }
+        const documentSchema = documentTemplate.schema;
+        // Build placeholder context
+        const baseContext = (0, assembleReport_1.buildPlaceholderContext)(informe);
+        // Map component data for assembly
+        const componentes = informe.componentes.map((c) => ({
+            id: c.id,
+            componenteSistemaId: c.componenteSistemaId,
+            etiqueta: c.etiqueta,
+            orden: c.orden,
+            tipoComponente: c.tipoComponente,
+            schemaCongelado: c.schemaCongelado,
+            datos: c.datos || {},
+            componenteSistema: c.componenteSistema,
+        }));
+        // Run assembly
+        const assembled = (0, assembleReport_1.assembleReport)({
+            documentSchema,
+            componentes,
+            baseContext,
+        });
+        res.json({
+            informe: {
+                id: informe.id,
+                estado: informe.estado,
+                intervencion: {
+                    id: informe.intervencion.id,
+                    titulo: informe.intervencion.titulo,
+                    tipo: informe.intervencion.tipo,
+                    referencia: informe.intervencion.referencia,
+                    fechaInicio: informe.intervencion.fechaInicio,
+                },
+                sistema: {
+                    id: informe.sistema.id,
+                    nombre: informe.sistema.nombre,
+                    fabricante: informe.sistema.fabricante,
+                    planta: informe.sistema.planta,
+                    maquina: informe.sistema.maquina,
+                },
+            },
+            assembled,
+            documentTemplate: {
+                id: documentTemplate.id,
+                tipo: documentTemplate.tipo,
+                nombre: documentTemplate.nombre,
+            },
+        });
     }
     catch (err) {
         next(err);
