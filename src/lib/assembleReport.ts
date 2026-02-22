@@ -328,6 +328,47 @@ export function assembleReport(input: AssemblyInput): AssemblyResult {
         }
       }
 
+      // Special handling: intervention_data → editable table seeded from context
+      if (cloned.type === 'intervention_data') {
+        const key = '__intervention_data';
+        assembled._dataKey = key;
+        const seeded: Record<string, string> = {
+          actividad: String(baseContext['intervencion.actividad'] ?? ''),
+          ordenTrabajo: String(baseContext['intervencion.referencia'] ?? ''),
+          fecha: String(baseContext['intervencion.fecha'] ?? ''),
+          horas: '',
+          horaInicio: '',
+          horaFin: '',
+          tecnicoPas: '',
+          tecnicoCliente: '',
+          telTecnico: '',
+          telContacto: '',
+          emailTecnico: '',
+          emailContacto: '',
+        };
+        const userEdits =
+          (datosDocumento[key] as Record<string, unknown>) || {};
+        assembled._dataValue = { ...seeded, ...userEdits };
+      }
+
+      // Special handling: client_data → editable card seeded from context
+      if (cloned.type === 'client_data') {
+        const key = '__client_data';
+        assembled._dataKey = key;
+        const seeded: Record<string, string> = {
+          nombre: String(baseContext['cliente.nombre'] ?? ''),
+          planta: String(baseContext['cliente.planta'] ?? ''),
+          maquina: String(baseContext['cliente.maquina'] ?? ''),
+          direccion: '',
+          ciudad: '',
+          cp: '',
+          provincia: '',
+        };
+        const userEdits =
+          (datosDocumento[key] as Record<string, unknown>) || {};
+        assembled._dataValue = { ...seeded, ...userEdits };
+      }
+
       result.push(assembled);
     }
   }

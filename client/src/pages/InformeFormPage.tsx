@@ -59,7 +59,7 @@ const STRUCTURE_ONLY_BLOCKS = new Set<string>([
   'header', 'section_title', 'divider', 'section_separator',
   'cover_header', 'page_header', 'page_footer', 'back_cover',
   'table_of_contents', 'page_break', 'content_placeholder',
-  'intervention_data', 'client_data', 'component_section',
+  'component_section',
 ]);
 
 // ======================== Main Component ========================
@@ -323,11 +323,14 @@ function FormBlockRenderer({
   const widthClass = getFormBlockWidthClass(block);
   const alignClass = BLOCK_ALIGN_CSS[(block.config.align as BlockAlign) || 'left'];
 
+  const isBackCover = block.type === 'back_cover';
+  const flexFill = isBackCover ? 'flex-1 flex flex-col' : '';
+
   // Structure-only blocks → render EditorPreview as static
   if (STRUCTURE_ONLY_BLOCKS.has(block.type)) {
     const Preview = entry.EditorPreview;
     return (
-      <div className={`${widthClass} ${alignClass} pointer-events-none`}>
+      <div className={`${widthClass} ${alignClass} pointer-events-none ${flexFill}`}>
         <Preview block={block as any} isSelected={false} />
       </div>
     );
