@@ -376,13 +376,12 @@ function PageSheet({
     return 'top';
   }, [contentBlocks]);
 
-  // Map vertical alignment to justify-content for the inner flex column wrapper
-  const contentJustify =
-    contentVerticalAlign === 'center'
-      ? 'justify-center'
-      : contentVerticalAlign === 'bottom'
-        ? 'justify-end'
-        : 'justify-start';
+  // Compute inline margin style for vertical alignment of the inner content wrapper
+  const contentWrapperStyle: React.CSSProperties = useMemo(() => {
+    if (contentVerticalAlign === 'center') return { marginTop: 'auto', marginBottom: 'auto' };
+    if (contentVerticalAlign === 'bottom') return { marginTop: 'auto' };
+    return {};
+  }, [contentVerticalAlign]);
 
   const renderBlock = (block: Block) => {
     const globalIdx = globalIndexMap.get(block.id) ?? 0;
@@ -452,15 +451,15 @@ function PageSheet({
           {/* Content blocks — with page margins */}
           {!hasBackCover && (
             <div
-              className={cn(
-                'flex-1 flex flex-col overflow-hidden',
-                contentJustify,
-              )}
+              className="flex-1 flex flex-col overflow-hidden"
               style={{
                 padding: `${topChrome.length > 0 ? 8 : marginTop}px ${marginRight}px ${bottomChrome.length > 0 ? 8 : marginBottom}px ${marginLeft}px`,
               }}
             >
-              <div className="flex flex-wrap items-start shrink-0">
+              <div
+                className="flex flex-wrap items-start shrink-0"
+                style={contentWrapperStyle}
+              >
                 {contentBlocks.map(renderBlock)}
               </div>
             </div>

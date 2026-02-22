@@ -57,7 +57,7 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
         </Label>
       </div>
 
-      {/* Width */}
+      {/* Width — controls horizontal layout (side by side) */}
       <div className="space-y-1">
         <Label className="text-xs">Ancho</Label>
         <div className="grid grid-cols-2 gap-1">
@@ -77,6 +77,9 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
             ),
           )}
         </div>
+        <p className="text-[10px] text-muted-foreground">
+          Usa Mitad o Tercio para colocar firmas lado a lado
+        </p>
       </div>
     </div>
   );
