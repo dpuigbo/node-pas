@@ -1,10 +1,14 @@
 import type { EditorPreviewProps } from '@/components/blocks/registry';
+import { resolveWithExamples } from '@/lib/placeholders';
 
 export function EditorPreview({ block }: EditorPreviewProps) {
   const c = block.config;
   const label = (c.label as string) || '';
-  const headerBg = (c.headerBg as string) || '#1f2937';
-  const headerColor = (c.headerColor as string) || '#ffffff';
+  const title = resolveWithExamples((c.title as string) || '');
+  const titleBg = (c.titleBg as string) || '#1f2937';
+  const titleColor = (c.titleColor as string) || '#ffffff';
+  const headerBg = (c.headerBg as string) || '#f3f4f6';
+  const headerColor = (c.headerColor as string) || '#92400e';
   const defaultRows = (c.defaultRows as number) || 5;
 
   const previewCount = Math.min(defaultRows, 3);
@@ -15,6 +19,14 @@ export function EditorPreview({ block }: EditorPreviewProps) {
         <div className="text-xs font-bold mb-1.5 px-1">{label}</div>
       )}
       <div className="border rounded overflow-hidden">
+        {title && (
+          <div
+            className="px-3 py-1.5 text-[11px] font-semibold"
+            style={{ backgroundColor: titleBg, color: titleColor }}
+          >
+            {title}
+          </div>
+        )}
         <table className="w-full text-[8px] border-collapse">
           <thead>
             <tr style={{ backgroundColor: headerBg }}>

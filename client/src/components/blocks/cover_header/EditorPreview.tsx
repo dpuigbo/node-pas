@@ -1,6 +1,7 @@
 import { Bot } from 'lucide-react';
 import type { EditorPreviewProps } from '@/components/blocks/registry';
 import { useEmpresaLogo } from '@/hooks/useCatalogos';
+import { resolveWithExamples } from '@/lib/placeholders';
 
 const VALIGN_MAP: Record<string, string> = {
   top: 'flex-start',
@@ -10,8 +11,8 @@ const VALIGN_MAP: Record<string, string> = {
 
 export function EditorPreview({ block }: EditorPreviewProps) {
   const c = block.config;
-  const title = (c.title as string) || 'Reporte de mantenimiento';
-  const subtitle = (c.subtitle as string) || '';
+  const title = resolveWithExamples((c.title as string) || 'Reporte de mantenimiento');
+  const subtitle = resolveWithExamples((c.subtitle as string) || '');
   const companyName = (c.companyName as string) || 'PAS Robotics';
   const logoPosition = (c.logoPosition as string) || 'right';
   const logoVerticalAlign = (c.logoVerticalAlign as string) || 'center';

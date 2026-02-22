@@ -1,6 +1,7 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { ConfigPanelProps } from '@/components/blocks/registry';
+import { PlaceholderInput } from '@/components/blocks/_shared/PlaceholderInput';
 
 /** Reusable number input that allows typing freely, clamping only on blur */
 function NumInput({
@@ -76,19 +77,18 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
     <div className="space-y-3">
       <div className="space-y-1">
         <Label className="text-xs">Titulo del reporte</Label>
-        <Input
+        <PlaceholderInput
           value={(c.title as string) || ''}
-          onChange={(e) => onChange('title', e.target.value)}
-          className="h-8"
+          onChange={(v) => onChange('title', v)}
+          placeholder="Ej: Reporte de {{intervencion.actividad}}"
         />
       </div>
       <div className="space-y-1">
         <Label className="text-xs">Subtitulo</Label>
-        <Input
+        <PlaceholderInput
           value={(c.subtitle as string) || ''}
-          onChange={(e) => onChange('subtitle', e.target.value)}
-          className="h-8"
-          placeholder="Ej: IRB1200-5/0.9 - IRC5 Compact"
+          onChange={(v) => onChange('subtitle', v)}
+          placeholder="Ej: {{sistema.nombre}} - {{sistema.fabricante}}"
         />
       </div>
       <div className="space-y-1">

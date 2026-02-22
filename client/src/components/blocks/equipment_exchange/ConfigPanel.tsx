@@ -1,6 +1,7 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { ConfigPanelProps } from '@/components/blocks/registry';
+import { PlaceholderInput } from '@/components/blocks/_shared/PlaceholderInput';
 
 export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
   const c = block.config;
@@ -30,6 +31,55 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
           placeholder="Intercambio de equipos"
           className="h-8"
         />
+      </div>
+
+      {/* Title */}
+      <div className="border-t pt-3 space-y-3">
+        <Label className="text-xs font-semibold">Titulo de tabla</Label>
+        <div className="space-y-1">
+          <Label className="text-xs">Texto del titulo</Label>
+          <PlaceholderInput
+            value={(c.title as string) || ''}
+            onChange={(v) => onChange('title', v)}
+            placeholder="Ej: Intercambio de equipos - {{componente.etiqueta}}"
+          />
+        </div>
+        {(c.title as string) && (
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs">Fondo titulo</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={(c.titleBg as string) || '#1f2937'}
+                  onChange={(e) => onChange('titleBg', e.target.value)}
+                  className="h-8 w-8 cursor-pointer rounded border"
+                />
+                <Input
+                  value={(c.titleBg as string) || '#1f2937'}
+                  onChange={(e) => onChange('titleBg', e.target.value)}
+                  className="h-8 font-mono text-xs flex-1"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Color texto titulo</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={(c.titleColor as string) || '#ffffff'}
+                  onChange={(e) => onChange('titleColor', e.target.value)}
+                  className="h-8 w-8 cursor-pointer rounded border"
+                />
+                <Input
+                  value={(c.titleColor as string) || '#ffffff'}
+                  onChange={(e) => onChange('titleColor', e.target.value)}
+                  className="h-8 font-mono text-xs flex-1"
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Default rows */}

@@ -32,8 +32,11 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
   const c = block.config;
   const label = (c.label as string) || '';
   const required = !!c.required;
-  const headerBg = (c.headerBg as string) || '#1f2937';
-  const headerColor = (c.headerColor as string) || '#ffffff';
+  const title = (c.title as string) || '';
+  const titleBg = (c.titleBg as string) || '#1f2937';
+  const titleColor = (c.titleColor as string) || '#ffffff';
+  const headerBg = (c.headerBg as string) || '#f3f4f6';
+  const headerColor = (c.headerColor as string) || '#92400e';
   const defaultRows = (c.defaultRows as number) || 5;
 
   // Initialize rows if empty
@@ -64,6 +67,14 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
         </Label>
       )}
       <div className="rounded border overflow-x-auto">
+        {title && (
+          <div
+            className="px-3 py-1.5 text-sm font-semibold"
+            style={{ backgroundColor: titleBg, color: titleColor }}
+          >
+            {title}
+          </div>
+        )}
         <table className="w-full text-sm">
           <thead>
             <tr style={{ backgroundColor: headerBg }}>

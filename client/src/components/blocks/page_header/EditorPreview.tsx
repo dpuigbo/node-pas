@@ -1,11 +1,12 @@
 import { Bot } from 'lucide-react';
 import type { EditorPreviewProps } from '@/components/blocks/registry';
 import { useEmpresaLogo } from '@/hooks/useCatalogos';
+import { resolveWithExamples } from '@/lib/placeholders';
 
 export function EditorPreview({ block }: EditorPreviewProps) {
   const c = block.config;
-  const title = (c.title as string) || 'Reporte de mantenimiento';
-  const subtitle = (c.subtitle as string) || '';
+  const title = resolveWithExamples((c.title as string) || 'Reporte de mantenimiento');
+  const subtitle = resolveWithExamples((c.subtitle as string) || '');
   const backgroundColor = (c.backgroundColor as string) || '#1f2937';
   const textColor = (c.textColor as string) || '#ffffff';
   const textSize = (c.textSize as number) || 12;
