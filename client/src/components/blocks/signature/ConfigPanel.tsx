@@ -57,7 +57,7 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
         </Label>
       </div>
 
-      {/* Width — controls horizontal layout (side by side) */}
+      {/* Width */}
       <div className="space-y-1">
         <Label className="text-xs">Ancho</Label>
         <div className="grid grid-cols-2 gap-1">
@@ -77,9 +77,30 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
             ),
           )}
         </div>
-        <p className="text-[10px] text-muted-foreground">
-          Usa Mitad o Tercio para colocar firmas lado a lado
-        </p>
+      </div>
+
+      {/* Horizontal alignment */}
+      <div className="space-y-1">
+        <Label className="text-xs">Alineacion horizontal</Label>
+        <div className="flex gap-1">
+          {([
+            { value: 'left', label: 'Izquierda' },
+            { value: 'center', label: 'Centro' },
+            { value: 'right', label: 'Derecha' },
+          ] as const).map((opt) => (
+            <button
+              key={opt.value}
+              className={`flex-1 rounded border px-2 py-1 text-xs ${
+                (c.align || 'left') === opt.value
+                  ? 'border-primary bg-primary/5 text-primary'
+                  : 'border-border hover:bg-accent'
+              }`}
+              onClick={() => onChange('align', opt.value)}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -88,6 +88,16 @@ function BlockWrapper({
   const widthClass = getBlockWidthClass(block);
   const isFullWidth = widthClass === 'w-full';
 
+  // Horizontal alignment: ml-auto pushes right, mx-auto centers in flex-wrap row
+  const blockAlign = (block.config.align as BlockAlign) || 'left';
+  const alignMarginClass = isFullWidth
+    ? ''
+    : blockAlign === 'right'
+      ? 'ml-auto'
+      : blockAlign === 'center'
+        ? 'mx-auto'
+        : '';
+
   const [hovered, setHovered] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -167,7 +177,7 @@ function BlockWrapper({
     <div
       ref={combinedRef}
       style={{ ...sortableStyle, padding: isBackCover ? undefined : '1px' }}
-      className={cn(widthClass, 'relative group', isBackCover && 'flex-1 flex flex-col')}
+      className={cn(widthClass, 'relative group', isBackCover && 'flex-1 flex flex-col', alignMarginClass)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
