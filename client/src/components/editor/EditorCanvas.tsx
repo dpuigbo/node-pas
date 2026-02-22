@@ -374,33 +374,32 @@ function PageSheet({
     return map;
   }, [allBlocks]);
 
-  // Determine vertical alignment for the content area
-  // If any content block has verticalAlign set, use it for the content zone
-  const contentVerticalAlign = useMemo(() => {
+  /**
+   * Split contentBlocks into "segments": groups of normal blocks (wrapped in flex-wrap)
+   * interleaved with alignable blocks (rendered as direct flex-col children for independent alignment).
+   */
+  const contentSegments = useMemo(() => {
+    const result: ({ type: 'group'; blocks: Block[] } | { type: 'alignable'; block: Block })[] = [];
+    let currentGroup: Block[] = [];
+
     for (const b of contentBlocks) {
       if (VERTICALLY_ALIGNABLE.has(b.type)) {
-        const align = (b.config.verticalAlign as string) || 'top';
-        if (align !== 'top') return align;
+        // Flush current group
+        if (currentGroup.length > 0) {
+          result.push({ type: 'group', blocks: [...currentGroup] });
+          currentGroup = [];
+        }
+        result.push({ type: 'alignable', block: b });
+      } else {
+        currentGroup.push(b);
       }
     }
-    return 'top';
-  }, [contentBlocks]);
-
-  // Compute inline styles for vertical alignment using the OUTER content div
-  const contentAreaStyle: React.CSSProperties = useMemo(() => {
-    const base: React.CSSProperties = {
-      flex: '1 1 0%',
-      display: 'flex',
-      flexDirection: 'column',
-      overflow: 'hidden',
-    };
-    if (contentVerticalAlign === 'center') {
-      base.justifyContent = 'center';
-    } else if (contentVerticalAlign === 'bottom') {
-      base.justifyContent = 'flex-end';
+    // Flush remaining group
+    if (currentGroup.length > 0) {
+      result.push({ type: 'group', blocks: currentGroup });
     }
-    return base;
-  }, [contentVerticalAlign]);
+    return result;
+  }, [contentBlocks]);
 
   const renderBlock = (block: Block) => {
     const globalIdx = globalIndexMap.get(block.id) ?? 0;
@@ -471,13 +470,36 @@ function PageSheet({
           {!hasBackCover && (
             <div
               style={{
-                ...contentAreaStyle,
+                flex: '1 1 0%',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
                 padding: `${topChrome.length > 0 ? 8 : marginTop}px ${marginRight}px ${bottomChrome.length > 0 ? 8 : marginBottom}px ${marginLeft}px`,
               }}
             >
-              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', flexShrink: 0 }}>
-                {contentBlocks.map(renderBlock)}
-              </div>
+              {contentSegments.map((seg, si) => {
+                if (seg.type === 'group') {
+                  return (
+                    <div key={`grp-${si}`} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', flexShrink: 0 }}>
+                      {seg.blocks.map(renderBlock)}
+                    </div>
+                  );
+                }
+                // Alignable block — direct child of flex-col with individual margin
+                const align = (seg.block.config.verticalAlign as string) || 'top';
+                const style: React.CSSProperties = { flexShrink: 0, width: '100%' };
+                if (align === 'center') {
+                  style.marginTop = 'auto';
+                  style.marginBottom = 'auto';
+                } else if (align === 'bottom') {
+                  style.marginTop = 'auto';
+                }
+                return (
+                  <div key={seg.block.id} style={style}>
+                    {renderBlock(seg.block)}
+                  </div>
+                );
+              })}
             </div>
           )}
 
