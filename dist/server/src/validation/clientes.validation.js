@@ -5,6 +5,13 @@ const zod_1 = require("zod");
 exports.createClienteSchema = zod_1.z.object({
     nombre: zod_1.z.string().min(1, 'El nombre es obligatorio').max(200),
     sede: zod_1.z.string().max(200).optional().nullable(),
+    direccion: zod_1.z.string().max(500).optional().nullable(),
+    ciudad: zod_1.z.string().max(200).optional().nullable(),
+    codigoPostal: zod_1.z.string().max(20).optional().nullable(),
+    provincia: zod_1.z.string().max(200).optional().nullable(),
+    telefono: zod_1.z.string().max(50).optional().nullable(),
+    email: zod_1.z.string().max(200).optional().nullable(),
+    personaContacto: zod_1.z.string().max(200).optional().nullable(),
     tarifaHoraTrabajo: zod_1.z.number().positive().optional().nullable(),
     tarifaHoraViaje: zod_1.z.number().positive().optional().nullable(),
     dietas: zod_1.z.number().positive().optional().nullable(),

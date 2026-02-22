@@ -82,11 +82,20 @@ function extractSection(blocks, contentType) {
  * This covers sistema, cliente, and intervencion placeholders.
  */
 function buildPlaceholderContext(informe) {
+    const cli = informe.intervencion.cliente;
     return {
         'sistema.nombre': informe.sistema.nombre,
         'sistema.descripcion': informe.sistema.descripcion ?? undefined,
         'sistema.fabricante': informe.sistema.fabricante.nombre,
-        'cliente.nombre': informe.intervencion.cliente?.nombre ?? undefined,
+        'cliente.nombre': cli?.nombre ?? undefined,
+        'cliente.sede': cli?.sede ?? undefined,
+        'cliente.direccion': cli?.direccion ?? undefined,
+        'cliente.ciudad': cli?.ciudad ?? undefined,
+        'cliente.codigoPostal': cli?.codigoPostal ?? undefined,
+        'cliente.provincia': cli?.provincia ?? undefined,
+        'cliente.telefono': cli?.telefono ?? undefined,
+        'cliente.email': cli?.email ?? undefined,
+        'cliente.personaContacto': cli?.personaContacto ?? undefined,
         'cliente.planta': informe.sistema.planta?.nombre ?? undefined,
         'cliente.maquina': informe.sistema.maquina?.nombre ?? undefined,
         'intervencion.actividad': informe.intervencion.titulo,
@@ -125,6 +134,28 @@ const DATA_BLOCK_TYPES = new Set([
     'signature',
     'equipment_exchange',
 ]);
+/**
+ * Compute the initial default value for a data block (same logic as initDatos).
+ * Used when no saved value exists yet in datos/datosDocumento.
+ */
+function computeDefaultValue(block) {
+    switch (block.type) {
+        case 'tristate':
+            return { valor: null, observacion: '' };
+        case 'checklist':
+            return [];
+        case 'table': {
+            const fixedRows = block.config.fixedRows ?? [];
+            return fixedRows.length > 0 ? JSON.parse(JSON.stringify(fixedRows)) : [];
+        }
+        case 'equipment_exchange':
+            return [];
+        case 'image':
+            return [];
+        default:
+            return null;
+    }
+}
 // ===== Main assembly function =====
 /**
  * Assemble a complete report by merging a document template with
@@ -175,7 +206,10 @@ function assembleReport(input) {
                         const key = cloned.config.key;
                         if (key) {
                             assembled._dataKey = key;
-                            const rawValue = comp.datos[key] ?? null;
+                            // Use saved value, or compute default (e.g. fixedRows for tables)
+                            const rawValue = key in comp.datos
+                                ? comp.datos[key]
+                                : computeDefaultValue(cloned);
                             assembled._dataValue = deepResolveStrings(rawValue, compContext);
                         }
                     }
@@ -208,7 +242,10 @@ function assembleReport(input) {
                 const key = cloned.config.key;
                 if (key) {
                     assembled._dataKey = key;
-                    const rawValue = datosDocumento[key] ?? null;
+                    // Use saved value, or compute default (e.g. fixedRows for tables)
+                    const rawValue = key in datosDocumento
+                        ? datosDocumento[key]
+                        : computeDefaultValue(cloned);
                     assembled._dataValue = deepResolveStrings(rawValue, baseContext);
                 }
             }
@@ -241,10 +278,13 @@ function assembleReport(input) {
                     nombre: String(baseContext['cliente.nombre'] ?? ''),
                     planta: String(baseContext['cliente.planta'] ?? ''),
                     maquina: String(baseContext['cliente.maquina'] ?? ''),
-                    direccion: '',
-                    ciudad: '',
-                    cp: '',
-                    provincia: '',
+                    direccion: String(baseContext['cliente.direccion'] ?? ''),
+                    ciudad: String(baseContext['cliente.ciudad'] ?? ''),
+                    cp: String(baseContext['cliente.codigoPostal'] ?? ''),
+                    provincia: String(baseContext['cliente.provincia'] ?? ''),
+                    telefono: String(baseContext['cliente.telefono'] ?? ''),
+                    email: String(baseContext['cliente.email'] ?? ''),
+                    personaContacto: String(baseContext['cliente.personaContacto'] ?? ''),
                 };
                 const userEdits = datosDocumento[key] || {};
                 assembled._dataValue = { ...seeded, ...userEdits };

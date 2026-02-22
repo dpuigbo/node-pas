@@ -124,7 +124,14 @@ router.get('/informes/:id', async (req, res, next) => {
                     select: {
                         id: true, titulo: true, tipo: true, estado: true,
                         referencia: true, fechaInicio: true, fechaFin: true,
-                        cliente: { select: { id: true, nombre: true, sede: true } },
+                        cliente: {
+                            select: {
+                                id: true, nombre: true, sede: true,
+                                direccion: true, ciudad: true, codigoPostal: true,
+                                provincia: true, telefono: true, email: true,
+                                personaContacto: true,
+                            },
+                        },
                     },
                 },
                 sistema: {
@@ -183,7 +190,14 @@ router.get('/informes/:id/assembled', async (req, res, next) => {
                     select: {
                         id: true, titulo: true, tipo: true, estado: true,
                         referencia: true, fechaInicio: true, fechaFin: true,
-                        cliente: { select: { id: true, nombre: true, sede: true } },
+                        cliente: {
+                            select: {
+                                id: true, nombre: true, sede: true,
+                                direccion: true, ciudad: true, codigoPostal: true,
+                                provincia: true, telefono: true, email: true,
+                                personaContacto: true,
+                            },
+                        },
                     },
                 },
                 sistema: {
