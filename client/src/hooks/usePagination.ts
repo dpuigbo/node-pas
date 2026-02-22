@@ -223,8 +223,8 @@ export function usePagination({ blocks, pageConfig, blockHeights }: UsePaginatio
     // Flush remaining row
     flushRow();
 
-    // Push last page
-    if (currentPage.blockIds.length > 0 || pages.length === 0) {
+    // Push last page — also push if it carries a section separator (even if empty)
+    if (currentPage.blockIds.length > 0 || currentPage.sectionSeparatorId || pages.length === 0) {
       if (!isFirstPageOfSection) {
         currentPage.sectionChromeIds = getSectionChromeIds();
       }

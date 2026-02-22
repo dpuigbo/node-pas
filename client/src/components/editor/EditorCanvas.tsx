@@ -83,6 +83,7 @@ function BlockWrapper({
   const isSelected = selectedBlockId === block.id;
   const isSectionSeparator = block.type === 'section_separator';
   const isChrome = DOCUMENT_CHROME_TYPES.has(block.type);
+  const isBackCover = block.type === 'back_cover';
   const entry = getBlockEntry(block.type);
   const widthClass = getBlockWidthClass(block);
   const isFullWidth = widthClass === 'w-full';
@@ -165,14 +166,15 @@ function BlockWrapper({
   return (
     <div
       ref={combinedRef}
-      style={{ ...sortableStyle, padding: '1px' }}
-      className={cn(widthClass, 'relative group')}
+      style={{ ...sortableStyle, padding: isBackCover ? undefined : '1px' }}
+      className={cn(widthClass, 'relative group', isBackCover && 'flex-1 flex flex-col')}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       <div
         className={cn(
           'relative rounded-sm transition-all cursor-pointer',
+          isBackCover && 'flex-1 flex flex-col',
           isSelected && 'ring-2 ring-primary ring-offset-1',
           !isSelected && hovered && 'ring-1 ring-primary/30',
         )}
@@ -236,7 +238,10 @@ function BlockWrapper({
         )}
 
         {/* Block preview with alignment */}
-        <div className={BLOCK_ALIGN_CSS[(block.config.align as BlockAlign) || 'left']}>
+        <div className={cn(
+          BLOCK_ALIGN_CSS[(block.config.align as BlockAlign) || 'left'],
+          isBackCover && 'flex-1 flex flex-col',
+        )}>
           <Preview block={block} isSelected={isSelected} />
         </div>
       </div>
@@ -371,13 +376,13 @@ function PageSheet({
     return 'top';
   }, [contentBlocks]);
 
-  // For flex-wrap containers, use content-* (align-content) instead of justify-*
-  const contentAlignClass =
+  // Map vertical alignment to justify-content for the inner flex column wrapper
+  const contentJustify =
     contentVerticalAlign === 'center'
-      ? 'content-center'
+      ? 'justify-center'
       : contentVerticalAlign === 'bottom'
-        ? 'content-end'
-        : 'content-start';
+        ? 'justify-end'
+        : 'justify-start';
 
   const renderBlock = (block: Block) => {
     const globalIdx = globalIndexMap.get(block.id) ?? 0;
@@ -448,14 +453,16 @@ function PageSheet({
           {!hasBackCover && (
             <div
               className={cn(
-                'flex-1 flex flex-wrap overflow-hidden items-start',
-                contentAlignClass,
+                'flex-1 flex flex-col overflow-hidden',
+                contentJustify,
               )}
               style={{
                 padding: `${topChrome.length > 0 ? 8 : marginTop}px ${marginRight}px ${bottomChrome.length > 0 ? 8 : marginBottom}px ${marginLeft}px`,
               }}
             >
-              {contentBlocks.map(renderBlock)}
+              <div className="flex flex-wrap items-start">
+                {contentBlocks.map(renderBlock)}
+              </div>
             </div>
           )}
 
