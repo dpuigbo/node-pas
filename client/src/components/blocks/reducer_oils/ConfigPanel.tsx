@@ -45,6 +45,7 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
 
   const toggleNivel = (idx: number, nivel: string) => {
     const row = fixedRows[idx];
+    if (!row) return;
     const current = row.niveles || [];
     const next = current.includes(nivel)
       ? current.filter((n) => n !== nivel)
