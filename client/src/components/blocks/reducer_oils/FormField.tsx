@@ -7,6 +7,7 @@ interface OilRow {
   tipoSuministro: string;
   aceiteId: number | null;
   volumen: string;
+  niveles: string[];
   control: boolean;
   cambio: boolean;
   observaciones: string;
@@ -21,8 +22,11 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
   const titleColor = (c.titleColor as string) || '#ffffff';
   const headerBg = (c.headerBg as string) || '#f3f4f6';
   const headerColor = (c.headerColor as string) || '#1f2937';
+  const compact = !!c.compact;
 
   const rows: OilRow[] = (value as OilRow[]) || [];
+
+  const cellPad = compact ? 'px-1.5 py-0.5' : 'px-2 py-1.5';
 
   const updateCell = (rowIdx: number, field: keyof OilRow, val: unknown) => {
     if (readOnly) return;
@@ -50,12 +54,12 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
         <table className="w-full text-xs">
           <thead>
             <tr style={{ backgroundColor: headerBg }}>
-              <th className="font-medium text-xs px-2 py-1.5 text-left" style={{ color: headerColor, width: '7%' }}>Eje</th>
-              <th className="font-medium text-xs px-2 py-1.5 text-left" style={{ color: headerColor, width: '28%' }}>Tipo suministro</th>
-              <th className="font-medium text-xs px-2 py-1.5 text-left" style={{ color: headerColor, width: '13%' }}>Volumen</th>
-              <th className="font-medium text-xs px-2 py-1.5 text-center" style={{ color: headerColor, width: '10%' }}>Control</th>
-              <th className="font-medium text-xs px-2 py-1.5 text-center" style={{ color: headerColor, width: '10%' }}>Cambio</th>
-              <th className="font-medium text-xs px-2 py-1.5 text-left" style={{ color: headerColor, width: '32%' }}>Observaciones</th>
+              <th className={`font-medium text-xs ${cellPad} text-left`} style={{ color: headerColor, width: '7%' }}>Eje</th>
+              <th className={`font-medium text-xs ${cellPad} text-left`} style={{ color: headerColor, width: '28%' }}>Tipo suministro</th>
+              <th className={`font-medium text-xs ${cellPad} text-left`} style={{ color: headerColor, width: '13%' }}>Volumen</th>
+              <th className={`font-medium text-xs ${cellPad} text-center`} style={{ color: headerColor, width: '10%' }}>Control</th>
+              <th className={`font-medium text-xs ${cellPad} text-center`} style={{ color: headerColor, width: '10%' }}>Cambio</th>
+              <th className={`font-medium text-xs ${cellPad} text-left`} style={{ color: headerColor, width: '32%' }}>Observaciones</th>
             </tr>
           </thead>
           <tbody>
@@ -69,9 +73,9 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
               rows.map((row, ri) => (
                 <tr key={ri} className={ri % 2 === 1 ? 'bg-gray-50' : 'bg-white'}>
                   {/* Template data — read-only always */}
-                  <td className="px-2 py-1.5 text-gray-600 border-t border-gray-100 text-center">{row.eje}</td>
-                  <td className="px-2 py-1.5 text-gray-600 border-t border-gray-100">{row.tipoSuministro}</td>
-                  <td className="px-2 py-1.5 text-gray-600 border-t border-gray-100">{row.volumen || '-'}</td>
+                  <td className={`${cellPad} text-gray-600 border-t border-gray-100 text-center`}>{row.eje}</td>
+                  <td className={`${cellPad} text-gray-600 border-t border-gray-100`}>{row.tipoSuministro}</td>
+                  <td className={`${cellPad} text-gray-600 border-t border-gray-100`}>{row.volumen || '-'}</td>
                   {/* User-editable columns */}
                   <td className="px-2 py-1 border-t border-gray-100 text-center">
                     <div className="flex justify-center">

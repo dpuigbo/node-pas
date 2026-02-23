@@ -15,9 +15,12 @@ export function EditorPreview({ block }: EditorPreviewProps) {
   const titleColor = (c.titleColor as string) || '#ffffff';
   const headerBg = (c.headerBg as string) || '#f3f4f6';
   const headerColor = (c.headerColor as string) || '#1f2937';
+  const compact = !!c.compact;
   const fixedRows = (c.fixedRows as FixedRow[]) || [];
   const previewRows = fixedRows.slice(0, 5);
   const extraRows = fixedRows.length > 5 ? fixedRows.length - 5 : 0;
+
+  const cellPad = compact ? 'px-1.5 py-0.5' : 'px-2 py-1';
 
   return (
     <div className="w-full py-1">
@@ -36,28 +39,28 @@ export function EditorPreview({ block }: EditorPreviewProps) {
         <table className="w-full text-[10px] border-collapse">
           <thead>
             <tr style={{ backgroundColor: headerBg }}>
-              <th className="font-medium px-2 py-1 text-left" style={{ color: headerColor, width: '7%' }}>Eje</th>
-              <th className="font-medium px-2 py-1 text-left" style={{ color: headerColor, width: '30%' }}>Tipo suministro</th>
-              <th className="font-medium px-2 py-1 text-left" style={{ color: headerColor, width: '15%' }}>Volumen</th>
-              <th className="font-medium px-2 py-1 text-center" style={{ color: headerColor, width: '12%' }}>Control</th>
-              <th className="font-medium px-2 py-1 text-center" style={{ color: headerColor, width: '12%' }}>Cambio</th>
-              <th className="font-medium px-2 py-1 text-left" style={{ color: headerColor, width: '24%' }}>Observaciones</th>
+              <th className={`font-medium ${cellPad} text-left`} style={{ color: headerColor, width: '7%' }}>Eje</th>
+              <th className={`font-medium ${cellPad} text-left`} style={{ color: headerColor, width: '30%' }}>Tipo suministro</th>
+              <th className={`font-medium ${cellPad} text-left`} style={{ color: headerColor, width: '15%' }}>Volumen</th>
+              <th className={`font-medium ${cellPad} text-center`} style={{ color: headerColor, width: '12%' }}>Control</th>
+              <th className={`font-medium ${cellPad} text-center`} style={{ color: headerColor, width: '12%' }}>Cambio</th>
+              <th className={`font-medium ${cellPad} text-left`} style={{ color: headerColor, width: '24%' }}>Observaciones</th>
             </tr>
           </thead>
           <tbody>
             {previewRows.length > 0 ? (
               previewRows.map((row, ri) => (
                 <tr key={ri} className={ri % 2 === 1 ? 'bg-gray-50' : ''}>
-                  <td className="px-2 py-1 text-gray-500 border-t border-gray-100">{row.eje}</td>
-                  <td className="px-2 py-1 text-gray-500 border-t border-gray-100">{row.tipoSuministro || '—'}</td>
-                  <td className="px-2 py-1 text-gray-500 border-t border-gray-100">{row.volumen || '-'}</td>
-                  <td className="px-2 py-1 border-t border-gray-100 text-center">
+                  <td className={`${cellPad} text-gray-500 border-t border-gray-100`}>{row.eje}</td>
+                  <td className={`${cellPad} text-gray-500 border-t border-gray-100`}>{row.tipoSuministro || '—'}</td>
+                  <td className={`${cellPad} text-gray-500 border-t border-gray-100`}>{row.volumen || '-'}</td>
+                  <td className={`${cellPad} border-t border-gray-100 text-center`}>
                     <div className="flex justify-center"><div className="h-2.5 w-2.5 rounded-sm border border-gray-300" /></div>
                   </td>
-                  <td className="px-2 py-1 border-t border-gray-100 text-center">
+                  <td className={`${cellPad} border-t border-gray-100 text-center`}>
                     <div className="flex justify-center"><div className="h-2.5 w-2.5 rounded-sm border border-gray-300" /></div>
                   </td>
-                  <td className="px-2 py-1 text-gray-400 border-t border-gray-100">-</td>
+                  <td className={`${cellPad} text-gray-400 border-t border-gray-100`}>-</td>
                 </tr>
               ))
             ) : (
