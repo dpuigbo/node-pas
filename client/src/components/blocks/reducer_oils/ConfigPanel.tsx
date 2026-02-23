@@ -146,48 +146,57 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
           Define eje, tipo de aceite/grasa (del catalogo), volumen y niveles de mantenimiento.
           En el formulario, el tecnico rellena Control, Cambio y Observaciones.
         </p>
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           {fixedRows.map((row, idx) => (
-            <div key={idx} className="bg-gray-50 rounded border">
-              {/* Row 1: eje, aceite, volumen, delete */}
-              <div className="flex items-center gap-1.5 p-1.5">
-                <Input
-                  type="number"
-                  min={1}
-                  value={row.eje}
-                  onChange={(e) => updateRow(idx, 'eje', Number(e.target.value) || '')}
-                  className="h-7 w-12 text-xs text-center"
-                  title="Eje"
-                />
-                <select
-                  value={row.aceiteId ?? ''}
-                  onChange={(e) => handleAceiteChange(idx, e.target.value)}
-                  className="h-7 flex-1 text-xs border rounded bg-white px-1 focus:ring-1 focus:ring-primary"
-                >
-                  <option value="">— Aceite —</option>
-                  {activeAceites.map((a) => (
-                    <option key={a.id} value={a.id}>{a.nombre}</option>
-                  ))}
-                </select>
-                <Input
-                  value={row.volumen}
-                  onChange={(e) => updateRow(idx, 'volumen', e.target.value)}
-                  placeholder="Vol."
-                  className="h-7 w-16 text-xs"
-                  title="Volumen"
-                />
+            <div key={idx} className="bg-gray-50 rounded border p-1.5 space-y-1.5">
+              {/* Line 1: Eje + delete */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-muted-foreground w-6">Eje</span>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={row.eje}
+                    onChange={(e) => updateRow(idx, 'eje', Number(e.target.value) || '')}
+                    className="h-7 w-14 text-xs text-center"
+                  />
+                </div>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 shrink-0 text-gray-400 hover:text-red-500"
+                  className="h-6 w-6 shrink-0 text-gray-400 hover:text-red-500"
                   onClick={() => removeRow(idx)}
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-3 w-3" />
                 </Button>
               </div>
-              {/* Row 2: niveles de mantenimiento */}
-              <div className="flex items-center gap-1.5 px-1.5 pb-1.5 pt-0">
+              {/* Line 2: Aceite dropdown (full width) */}
+              <select
+                value={row.aceiteId ?? ''}
+                onChange={(e) => handleAceiteChange(idx, e.target.value)}
+                className="h-7 w-full text-xs border rounded bg-white px-1.5 focus:ring-1 focus:ring-primary"
+              >
+                <option value="">— Seleccionar aceite/grasa —</option>
+                {activeAceites.map((a) => (
+                  <option key={a.id} value={a.id}>{a.nombre}{a.unidad ? ` (${a.unidad})` : ''}</option>
+                ))}
+              </select>
+              {/* Line 3: Volumen */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-muted-foreground w-12 shrink-0">Volumen</span>
+                <Input
+                  value={row.volumen}
+                  onChange={(e) => updateRow(idx, 'volumen', e.target.value)}
+                  placeholder="Ej: 2.5"
+                  className="h-7 flex-1 text-xs"
+                />
+                {row.unidad && (
+                  <span className="text-[10px] text-muted-foreground shrink-0">{row.unidad}</span>
+                )}
+              </div>
+              {/* Line 4: Niveles */}
+              <div className="flex items-center gap-1 flex-wrap">
                 <span className="text-[10px] text-muted-foreground shrink-0">Niveles:</span>
                 {MAINTENANCE_LEVELS.map((nivel) => {
                   const active = (row.niveles || []).includes(nivel);
