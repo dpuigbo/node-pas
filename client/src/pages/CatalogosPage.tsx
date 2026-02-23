@@ -17,7 +17,9 @@ import { useAuth } from '@/hooks/useAuth';
 
 const UNIDADES = ['litros', 'ml', 'kg', 'g', 'cm³', 'unidades'] as const;
 
-// ===== Aceites table (with unidad) =====
+const SELECT_CLASS = 'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring';
+
+// ===== Aceites table =====
 
 function AceitesTable({ items, isLoading, isAdmin, onCreate, onUpdate, onDelete }: any) {
   const [formOpen, setFormOpen] = useState(false);
@@ -55,7 +57,7 @@ function AceitesTable({ items, isLoading, isAdmin, onCreate, onUpdate, onDelete 
       setFormOpen(false);
     } catch (err) {
       console.error('Error guardando aceite:', err);
-      alert('Error al guardar: ' + (err as any)?.response?.data?.message || (err as Error).message);
+      alert('Error al guardar: ' + ((err as any)?.response?.data?.message || (err as Error).message));
     }
   };
 
@@ -96,7 +98,7 @@ function AceitesTable({ items, isLoading, isAdmin, onCreate, onUpdate, onDelete 
                 <select
                   value={form.unidad}
                   onChange={(e) => setForm({ ...form, unidad: e.target.value })}
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className={SELECT_CLASS}
                 >
                   <option value="">— Sin unidad —</option>
                   {UNIDADES.map((u) => (
@@ -104,6 +106,141 @@ function AceitesTable({ items, isLoading, isAdmin, onCreate, onUpdate, onDelete 
                   ))}
                 </select>
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Coste</Label><Input type="number" step="0.01" value={form.coste} onChange={(e) => setForm({ ...form, coste: e.target.value })} /></div>
+              <div><Label>Precio</Label><Input type="number" step="0.01" value={form.precio} onChange={(e) => setForm({ ...form, precio: e.target.value })} /></div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFormOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSubmit} disabled={!form.nombre.trim()}>{editing ? 'Guardar' : 'Crear'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// ===== Baterias table =====
+
+const COMPATIBLE_CON_OPTIONS = [
+  { value: '', label: 'Ambos (manipulador y controlador)' },
+  { value: 'mechanical_unit', label: 'Solo manipulador' },
+  { value: 'controller', label: 'Solo controlador' },
+] as const;
+
+const COMPATIBLE_CON_LABELS: Record<string, string> = {
+  mechanical_unit: 'Manipulador',
+  controller: 'Controlador',
+};
+
+const EMPTY_BATERIA_FORM = {
+  nombre: '', fabricante: '', compatibleCon: '', refOriginal: '', refProveedor: '',
+  denominacion: '', fabricanteRobot: '', coste: '', precio: '',
+};
+
+function BateriasTable({ items, isLoading, isAdmin, onCreate, onUpdate, onDelete }: any) {
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<any>(null);
+  const [form, setForm] = useState({ ...EMPTY_BATERIA_FORM });
+
+  const openCreate = () => {
+    setEditing(null);
+    setForm({ ...EMPTY_BATERIA_FORM });
+    setFormOpen(true);
+  };
+  const openEdit = (item: any) => {
+    setEditing(item);
+    setForm({
+      nombre: item.nombre,
+      fabricante: item.fabricante || '',
+      compatibleCon: item.compatibleCon || '',
+      refOriginal: item.refOriginal || '',
+      refProveedor: item.refProveedor || '',
+      denominacion: item.denominacion || '',
+      fabricanteRobot: item.fabricanteRobot || '',
+      coste: item.coste ? String(item.coste) : '',
+      precio: item.precio ? String(item.precio) : '',
+    });
+    setFormOpen(true);
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const body = {
+        nombre: form.nombre,
+        fabricante: form.fabricante || null,
+        tipo: 'bateria',
+        compatibleCon: form.compatibleCon || null,
+        refOriginal: form.refOriginal || null,
+        refProveedor: form.refProveedor || null,
+        denominacion: form.denominacion || null,
+        fabricanteRobot: form.fabricanteRobot || null,
+        coste: form.coste ? Number(form.coste) : null,
+        precio: form.precio ? Number(form.precio) : null,
+      };
+      if (editing) await onUpdate({ id: editing.id, ...body });
+      else await onCreate(body);
+      setFormOpen(false);
+    } catch (err) {
+      console.error('Error guardando bateria:', err);
+      alert('Error al guardar: ' + ((err as any)?.response?.data?.message || (err as Error).message));
+    }
+  };
+
+  const columns: Column<any>[] = [
+    { key: 'nombre', header: 'Nombre' },
+    { key: 'fabricante', header: 'Fabricante', render: (i) => i.fabricante || '-' },
+    { key: 'compatibleCon', header: 'Compatible con', render: (i) => COMPATIBLE_CON_LABELS[i.compatibleCon] || 'Ambos' },
+    { key: 'refOriginal', header: 'Ref. original', render: (i) => i.refOriginal || '-' },
+    { key: 'fabricanteRobot', header: 'Fab. robot', render: (i) => i.fabricanteRobot || '-' },
+    { key: 'coste', header: 'Coste', render: (i) => i.coste ? `${Number(i.coste).toFixed(2)}` : '-' },
+    { key: 'precio', header: 'Precio', render: (i) => i.precio ? `${Number(i.precio).toFixed(2)}` : '-' },
+    { key: 'activo', header: 'Estado', render: (i) => <Badge variant={i.activo ? 'success' : 'outline'}>{i.activo ? 'Activo' : 'Inactivo'}</Badge> },
+    ...(isAdmin ? [{
+      key: 'actions', header: '', className: 'w-24',
+      render: (item: any) => (
+        <div className="flex gap-1">
+          <Button variant="ghost" size="icon" onClick={() => openEdit(item)}><Pencil className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" onClick={() => onDelete(item.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+        </div>
+      ),
+    }] : []),
+  ];
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Baterías</h2>
+        {isAdmin && <Button size="sm" onClick={openCreate}><Plus className="h-4 w-4" /> Nueva</Button>}
+      </div>
+      <DataTable columns={columns} data={items || []} isLoading={isLoading} emptyMessage="Sin baterías" rowKey={(i) => i.id} />
+      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>{editing ? 'Editar' : 'Nueva'} batería</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div><Label>Nombre</Label><Input value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Fabricante</Label><Input value={form.fabricante} onChange={(e) => setForm({ ...form, fabricante: e.target.value })} /></div>
+              <div><Label>Fabricante robot</Label><Input value={form.fabricanteRobot} onChange={(e) => setForm({ ...form, fabricanteRobot: e.target.value })} placeholder="ABB, KUKA, Fanuc..." /></div>
+            </div>
+            <div>
+              <Label>Compatible con</Label>
+              <select
+                value={form.compatibleCon}
+                onChange={(e) => setForm({ ...form, compatibleCon: e.target.value })}
+                className={SELECT_CLASS}
+              >
+                {COMPATIBLE_CON_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+            <div><Label>Denominacion</Label><Input value={form.denominacion} onChange={(e) => setForm({ ...form, denominacion: e.target.value })} placeholder="Descripcion de la bateria" /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Ref. original</Label><Input value={form.refOriginal} onChange={(e) => setForm({ ...form, refOriginal: e.target.value })} placeholder="Referencia fabricante" /></div>
+              <div><Label>Ref. proveedor</Label><Input value={form.refProveedor} onChange={(e) => setForm({ ...form, refProveedor: e.target.value })} placeholder="Referencia proveedor" /></div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div><Label>Coste</Label><Input type="number" step="0.01" value={form.coste} onChange={(e) => setForm({ ...form, coste: e.target.value })} /></div>
@@ -169,7 +306,7 @@ function ConsumiblesTable({ items, isLoading, isAdmin, onCreate, onUpdate, onDel
       setFormOpen(false);
     } catch (err) {
       console.error('Error guardando consumible:', err);
-      alert('Error al guardar: ' + (err as any)?.response?.data?.message || (err as Error).message);
+      alert('Error al guardar: ' + ((err as any)?.response?.data?.message || (err as Error).message));
     }
   };
 
@@ -197,7 +334,7 @@ function ConsumiblesTable({ items, isLoading, isAdmin, onCreate, onUpdate, onDel
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Consumibles</h2>
+        <h2 className="text-lg font-semibold">Consumibles generales</h2>
         {isAdmin && <Button size="sm" onClick={openCreate}><Plus className="h-4 w-4" /> Nuevo</Button>}
       </div>
       <DataTable columns={columns} data={items || []} isLoading={isLoading} emptyMessage="Sin consumibles" rowKey={(i) => i.id} />
@@ -235,7 +372,8 @@ function ConsumiblesTable({ items, isLoading, isAdmin, onCreate, onUpdate, onDel
 export default function CatalogosPage() {
   const { isAdmin } = useAuth();
   const { data: aceites, isLoading: loadingAceites } = useAceites();
-  const { data: consumibles, isLoading: loadingConsumibles } = useConsumibles();
+  const { data: baterias, isLoading: loadingBaterias } = useConsumibles({ tipo: 'bateria' });
+  const { data: consumibles, isLoading: loadingConsumibles } = useConsumibles({ tipo: 'general' });
   const createAceite = useCreateAceite();
   const updateAceite = useUpdateAceite();
   const deleteAceite = useDeleteAceite();
@@ -245,7 +383,7 @@ export default function CatalogosPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title="Catalogos" description="Aceites, grasas y consumibles" />
+      <PageHeader title="Catalogos" description="Aceites, grasas, baterías y consumibles" />
       <AceitesTable
         items={aceites}
         isLoading={loadingAceites}
@@ -253,6 +391,14 @@ export default function CatalogosPage() {
         onCreate={(d: any) => createAceite.mutateAsync(d)}
         onUpdate={(d: any) => updateAceite.mutateAsync(d)}
         onDelete={(id: number) => deleteAceite.mutateAsync(id)}
+      />
+      <BateriasTable
+        items={baterias}
+        isLoading={loadingBaterias}
+        isAdmin={isAdmin}
+        onCreate={(d: any) => createConsumible.mutateAsync(d)}
+        onUpdate={(d: any) => updateConsumible.mutateAsync(d)}
+        onDelete={(id: number) => deleteConsumible.mutateAsync(id)}
       />
       <ConsumiblesTable
         items={consumibles}
