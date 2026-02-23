@@ -2,33 +2,27 @@ import { Input } from '@/components/ui/input';
 import type { FormFieldProps } from '@/types/formField';
 
 /**
- * Field definitions grouped by section.
- * Each field has a dataKey that maps to a property in the _dataValue object.
+ * Field rows grouped by section. Each row has 2 field pairs.
+ * [leftLabel, leftKey, leftPlaceholder, rightLabel, rightKey, rightPlaceholder]
  */
 const SECTIONS: {
   title: string;
-  fields: { label: string; dataKey: string; placeholder: string; type?: string }[];
+  rows: [string, string, string, string, string, string][];
 }[] = [
   {
     title: 'Intervencion',
-    fields: [
-      { label: 'Actividad', dataKey: 'actividad', placeholder: 'Nivel 1' },
-      { label: 'Orden de trabajo', dataKey: 'ordenTrabajo', placeholder: 'OT26-XXXXX' },
-      { label: 'Fecha', dataKey: 'fecha', placeholder: 'DD/MM/YYYY' },
-      { label: 'Horas', dataKey: 'horas', placeholder: '2:30' },
-      { label: 'Hora inicio', dataKey: 'horaInicio', placeholder: 'HH:MM' },
-      { label: 'Hora fin', dataKey: 'horaFin', placeholder: 'HH:MM' },
+    rows: [
+      ['Actividad', 'actividad', 'Nivel 1', 'Horas', 'horas', '2:30'],
+      ['N° trabajo', 'ordenTrabajo', 'OT26-XXXXX', 'Fecha', 'fecha', 'DD/MM/YYYY'],
+      ['Hora inicio', 'horaInicio', 'HH:MM', 'Hora fin', 'horaFin', 'HH:MM'],
     ],
   },
   {
     title: 'Personal',
-    fields: [
-      { label: 'Tecnico PAS', dataKey: 'tecnicoPas', placeholder: 'Nombre' },
-      { label: 'Tecnico cliente', dataKey: 'tecnicoCliente', placeholder: 'Nombre' },
-      { label: 'Tel. tecnico', dataKey: 'telTecnico', placeholder: '+34 XXX XX XX XX', type: 'tel' },
-      { label: 'Tel. contacto', dataKey: 'telContacto', placeholder: '+34 XXX XX XX XX', type: 'tel' },
-      { label: 'Email tecnico', dataKey: 'emailTecnico', placeholder: 'email@empresa.com', type: 'email' },
-      { label: 'Email contacto', dataKey: 'emailContacto', placeholder: 'email@cliente.com', type: 'email' },
+    rows: [
+      ['Tecnico PAS', 'tecnicoPas', 'Nombre', 'Tecnico cliente', 'tecnicoCliente', 'Nombre'],
+      ['Tel. tecnico', 'telTecnico', '+34 XXX XX XX XX', 'Tel. contacto', 'telContacto', '+34 XXX XX XX XX'],
+      ['Email tecnico', 'emailTecnico', 'email@empresa.com', 'Email contacto', 'emailContacto', 'email@cliente.com'],
     ],
   },
 ];
@@ -58,47 +52,66 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
           {title}
         </div>
       )}
-      <div className="border border-gray-200 rounded overflow-hidden">
-        {SECTIONS.map((section, si) => (
-          <div key={si}>
-            {/* Section header */}
-            <div
-              className="px-3 py-1 text-xs font-bold uppercase tracking-wider"
-              style={{ backgroundColor: sectionBg, color: sectionColor }}
-            >
-              {section.title}
-            </div>
-            {/* Fields grid: 2 columns */}
-            <div className="grid grid-cols-2">
-              {section.fields.map((field, fi) => (
-                <div
-                  key={fi}
-                  className={`flex border-b border-gray-100 ${
-                    fi % 2 === 0 ? 'border-r border-r-gray-100' : ''
-                  }`}
-                >
-                  <span
-                    className="text-xs font-semibold px-2 py-1 shrink-0 w-[100px] flex items-center"
-                    style={{ backgroundColor: labelBg, color: labelColor }}
+      <div className="border border-gray-200 overflow-hidden">
+        <table className="w-full border-collapse text-xs">
+          <tbody>
+            {SECTIONS.map((section, si) => (
+              <>
+                {/* Section header */}
+                <tr key={`h-${si}`}>
+                  <td
+                    colSpan={4}
+                    className="px-3 py-1 font-bold uppercase tracking-wider text-xs"
+                    style={{ backgroundColor: sectionBg, color: sectionColor }}
                   >
-                    {field.label}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <Input
-                      type={field.type || 'text'}
-                      value={data[field.dataKey] || ''}
-                      placeholder={field.placeholder}
-                      onChange={(e) => handleChange(field.dataKey, e.target.value)}
-                      readOnly={readOnly}
-                      disabled={readOnly}
-                      className="h-auto py-1 px-2 text-xs border-0 rounded-none bg-transparent focus-visible:ring-1 focus-visible:ring-inset"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+                    {section.title}
+                  </td>
+                </tr>
+                {/* Field rows */}
+                {section.rows.map((row, ri) => (
+                  <tr key={`r-${si}-${ri}`} className="border-b border-gray-100">
+                    {/* Left pair */}
+                    <td
+                      className="font-semibold px-2 py-1 border-r border-gray-100 whitespace-nowrap text-xs"
+                      style={{ backgroundColor: labelBg, color: labelColor, width: '18%' }}
+                    >
+                      {row[0]}
+                    </td>
+                    <td className="border-r border-gray-100 p-0" style={{ width: '32%' }}>
+                      <Input
+                        type="text"
+                        value={data[row[1]] || ''}
+                        placeholder={row[2]}
+                        onChange={(e) => handleChange(row[1], e.target.value)}
+                        readOnly={readOnly}
+                        disabled={readOnly}
+                        className="h-auto py-1 px-2 text-xs border-0 rounded-none bg-transparent focus-visible:ring-1 focus-visible:ring-inset"
+                      />
+                    </td>
+                    {/* Right pair */}
+                    <td
+                      className="font-semibold px-2 py-1 border-r border-gray-100 whitespace-nowrap text-xs"
+                      style={{ backgroundColor: labelBg, color: labelColor, width: '18%' }}
+                    >
+                      {row[3]}
+                    </td>
+                    <td className="p-0" style={{ width: '32%' }}>
+                      <Input
+                        type="text"
+                        value={data[row[4]] || ''}
+                        placeholder={row[5]}
+                        onChange={(e) => handleChange(row[4], e.target.value)}
+                        readOnly={readOnly}
+                        disabled={readOnly}
+                        className="h-auto py-1 px-2 text-xs border-0 rounded-none bg-transparent focus-visible:ring-1 focus-visible:ring-inset"
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

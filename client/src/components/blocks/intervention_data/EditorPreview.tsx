@@ -1,27 +1,26 @@
 import type { EditorPreviewProps } from '@/components/blocks/registry';
 
-/** Field definitions grouped into logical sections */
-const SECTIONS: { title: string; fields: { label: string; placeholder: string; span?: 2 }[] }[] = [
+/**
+ * Each row has 2 field pairs: [left_label, left_placeholder, right_label, right_placeholder]
+ */
+const SECTIONS: {
+  title: string;
+  rows: [string, string, string, string][];
+}[] = [
   {
     title: 'Intervencion',
-    fields: [
-      { label: 'Actividad', placeholder: 'Nivel 1' },
-      { label: 'Orden de trabajo', placeholder: 'OT26-XXXXX' },
-      { label: 'Fecha', placeholder: 'DD/MM/YYYY' },
-      { label: 'Horas', placeholder: '2:30' },
-      { label: 'Hora inicio', placeholder: 'HH:MM' },
-      { label: 'Hora fin', placeholder: 'HH:MM' },
+    rows: [
+      ['Actividad', 'Nivel 1', 'Horas', '2:30'],
+      ['N° trabajo', 'OT26-XXXXX', 'Fecha', 'DD/MM/YYYY'],
+      ['Hora inicio', 'HH:MM', 'Hora fin', 'HH:MM'],
     ],
   },
   {
     title: 'Personal',
-    fields: [
-      { label: 'Tecnico PAS', placeholder: 'Nombre' },
-      { label: 'Tecnico cliente', placeholder: 'Nombre' },
-      { label: 'Tel. tecnico', placeholder: '+34 XXX XX XX XX' },
-      { label: 'Tel. contacto', placeholder: '+34 XXX XX XX XX' },
-      { label: 'Email tecnico', placeholder: 'email@empresa.com' },
-      { label: 'Email contacto', placeholder: 'email@cliente.com' },
+    rows: [
+      ['Tecnico PAS', 'Nombre', 'Tecnico cliente', 'Nombre'],
+      ['Tel. tecnico', '+34 XXX XX XX XX', 'Tel. contacto', '+34 XXX XX XX XX'],
+      ['Email tecnico', 'email@empresa.com', 'Email contacto', 'email@cliente.com'],
     ],
   },
 ];
@@ -44,39 +43,50 @@ export function EditorPreview({ block }: EditorPreviewProps) {
           {title}
         </div>
       )}
-      <div className="border border-gray-200 rounded overflow-hidden">
-        {SECTIONS.map((section, si) => (
-          <div key={si}>
-            {/* Section header */}
-            <div
-              className="px-3 py-1 text-xs font-bold uppercase tracking-wider"
-              style={{ backgroundColor: sectionBg, color: sectionColor }}
-            >
-              {section.title}
-            </div>
-            {/* Fields grid: 2 columns */}
-            <div className="grid grid-cols-2">
-              {section.fields.map((field, fi) => (
-                <div
-                  key={fi}
-                  className={`flex border-b border-gray-100 ${
-                    fi % 2 === 0 ? 'border-r border-r-gray-100' : ''
-                  }`}
-                >
-                  <span
-                    className="text-xs font-semibold px-2 py-1 shrink-0 w-[100px]"
-                    style={{ backgroundColor: labelBg, color: labelColor }}
+      <div className="border border-gray-200 overflow-hidden">
+        <table className="w-full border-collapse text-[10px]">
+          <tbody>
+            {SECTIONS.map((section, si) => (
+              <>
+                {/* Section header */}
+                <tr key={`h-${si}`}>
+                  <td
+                    colSpan={4}
+                    className="px-3 py-1 font-bold uppercase tracking-wider"
+                    style={{ backgroundColor: sectionBg, color: sectionColor }}
                   >
-                    {field.label}
-                  </span>
-                  <span className="text-xs text-gray-400 px-2 py-1 flex-1 truncate">
-                    {field.placeholder}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+                    {section.title}
+                  </td>
+                </tr>
+                {/* Field rows */}
+                {section.rows.map((row, ri) => (
+                  <tr key={`r-${si}-${ri}`} className="border-b border-gray-100">
+                    {/* Left pair */}
+                    <td
+                      className="font-semibold px-2 py-1 border-r border-gray-100 whitespace-nowrap"
+                      style={{ backgroundColor: labelBg, color: labelColor, width: '18%' }}
+                    >
+                      {row[0]}
+                    </td>
+                    <td className="px-2 py-1 text-gray-400 border-r border-gray-100" style={{ width: '32%' }}>
+                      {row[1]}
+                    </td>
+                    {/* Right pair */}
+                    <td
+                      className="font-semibold px-2 py-1 border-r border-gray-100 whitespace-nowrap"
+                      style={{ backgroundColor: labelBg, color: labelColor, width: '18%' }}
+                    >
+                      {row[2]}
+                    </td>
+                    <td className="px-2 py-1 text-gray-400" style={{ width: '32%' }}>
+                      {row[3]}
+                    </td>
+                  </tr>
+                ))}
+              </>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

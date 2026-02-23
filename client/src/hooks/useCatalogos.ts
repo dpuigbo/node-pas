@@ -37,14 +37,28 @@ export function useDeleteAceite() {
 }
 
 // Consumibles
-export function useConsumibles() {
+export function useConsumibles(filters?: { tipo?: string; compatibleCon?: string }) {
+  const params = new URLSearchParams();
+  if (filters?.tipo) params.set('tipo', filters.tipo);
+  if (filters?.compatibleCon) params.set('compatibleCon', filters.compatibleCon);
+  const qs = params.toString();
   return useQuery({
-    queryKey: ['catalogos', 'consumibles'],
+    queryKey: ['catalogos', 'consumibles', filters || {}],
     queryFn: async () => {
-      const { data } = await api.get('/v1/catalogos/consumibles');
+      const { data } = await api.get(`/v1/catalogos/consumibles${qs ? `?${qs}` : ''}`);
       return data;
     },
   });
+}
+
+/** Convenience: batteries for mechanical units */
+export function useBateriasMechanical() {
+  return useConsumibles({ tipo: 'bateria', compatibleCon: 'mechanical_unit' });
+}
+
+/** Convenience: batteries for controllers */
+export function useBateriasController() {
+  return useConsumibles({ tipo: 'bateria', compatibleCon: 'controller' });
 }
 
 export function useCreateConsumible() {

@@ -13,6 +13,8 @@ export const updateAceiteSchema = createAceiteSchema.partial();
 export const createConsumibleSchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio').max(200),
   fabricante: z.string().max(200).optional().nullable(),
+  tipo: z.string().max(50).optional().default('general'),
+  compatibleCon: z.string().max(50).optional().nullable(),
   coste: z.number().positive().optional().nullable(),
   precio: z.number().positive().optional().nullable(),
   activo: z.boolean().optional().default(true),

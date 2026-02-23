@@ -18,7 +18,7 @@ export function EditorPreview({ block }: EditorPreviewProps) {
       {label && (
         <div className="text-xs font-bold mb-1.5 px-1">{label}</div>
       )}
-      <div className="border rounded overflow-hidden">
+      <div className="border overflow-hidden">
         {title && (
           <div
             className="px-3 py-1.5 text-[11px] font-semibold"
@@ -63,22 +63,22 @@ export function EditorPreview({ block }: EditorPreviewProps) {
                   <td className="border border-gray-200 p-0" colSpan={2}>
                     <div className="flex border-b border-gray-100">
                       <span className="bg-gray-50 px-1.5 py-0.5 font-medium text-gray-500 border-r border-gray-100 shrink-0 w-[38px]">Entrada</span>
-                      <span className="px-1.5 py-0.5 text-gray-400 flex-1 truncate">{hasData ? '3HAC044075-001' : '-'}</span>
+                      <span className="px-1.5 py-0.5 text-gray-400 flex-1 break-all">{hasData ? '3HAC044075-001' : '-'}</span>
                     </div>
                     <div className="flex">
                       <span className="bg-gray-50 px-1.5 py-0.5 font-medium text-gray-500 border-r border-gray-100 shrink-0 w-[38px]">Salida</span>
-                      <span className="px-1.5 py-0.5 text-gray-400 flex-1 truncate">{hasData ? '3HAC044075-001' : '-'}</span>
+                      <span className="px-1.5 py-0.5 text-gray-400 flex-1 break-all">{hasData ? '3HAC044075-001' : '-'}</span>
                     </div>
                   </td>
                   {/* Numero de serie: Entrada + Salida stacked */}
                   <td className="border border-gray-200 p-0" colSpan={2}>
                     <div className="flex border-b border-gray-100">
                       <span className="bg-gray-50 px-1.5 py-0.5 font-medium text-gray-500 border-r border-gray-100 shrink-0 w-[38px]">Entrada</span>
-                      <span className="px-1.5 py-0.5 text-gray-400 flex-1 truncate">-</span>
+                      <span className="px-1.5 py-0.5 text-gray-400 flex-1 break-all">-</span>
                     </div>
                     <div className="flex">
                       <span className="bg-gray-50 px-1.5 py-0.5 font-medium text-gray-500 border-r border-gray-100 shrink-0 w-[38px]">Salida</span>
-                      <span className="px-1.5 py-0.5 text-gray-400 flex-1 truncate">-</span>
+                      <span className="px-1.5 py-0.5 text-gray-400 flex-1 break-all">-</span>
                     </div>
                   </td>
                   {/* Intercambio */}

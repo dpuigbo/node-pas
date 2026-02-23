@@ -273,10 +273,15 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
       logoUrl: '',
       logoPosition: 'right',
       logoVerticalAlign: 'center',
+      logoOffsetX: 0,
+      logoOffsetY: 0,
       backgroundColor: '#000000',
       textColor: '#ffffff',
       titleSize: 24,
       height: 280,
+      showAccentLine: false,
+      accentLineColor: '#ffffff',
+      accentLineWidth: 3,
     },
   },
   page_header: {
@@ -398,6 +403,48 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
       contentType: 'controller_info',
     },
   },
+  reducer_oils: {
+    type: 'reducer_oils',
+    label: 'Aceites en reductoras',
+    icon: 'Droplets',
+    category: 'inspection',
+    hasData: true,
+    defaultConfig: {
+      key: '',
+      label: 'Aceites en reductoras',
+      title: '',
+      titleBg: '#1f2937',
+      titleColor: '#ffffff',
+      headerBg: '#f3f4f6',
+      headerColor: '#1f2937',
+      defaultRows: 6,
+      required: false,
+    },
+  },
+  battery_manipulator: {
+    type: 'battery_manipulator',
+    label: 'Bateria manipulador',
+    icon: 'Battery',
+    category: 'inspection',
+    hasData: true,
+    defaultConfig: {
+      key: '',
+      label: 'Bateria manipulador',
+      required: false,
+    },
+  },
+  battery_controller: {
+    type: 'battery_controller',
+    label: 'Bateria controlador',
+    icon: 'BatteryCharging',
+    category: 'inspection',
+    hasData: true,
+    defaultConfig: {
+      key: '',
+      label: 'Bateria controlador',
+      required: false,
+    },
+  },
 };
 
 // ===== Category metadata =====
@@ -415,7 +462,7 @@ export const blockCategories: { id: string; label: string; types: BlockType[] }[
   {
     id: 'inspection',
     label: 'Inspeccion',
-    types: ['tristate', 'checklist', 'table', 'equipment_exchange'],
+    types: ['tristate', 'checklist', 'table', 'equipment_exchange', 'reducer_oils', 'battery_manipulator', 'battery_controller'],
   },
   {
     id: 'media',

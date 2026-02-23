@@ -25,7 +25,10 @@ export type BlockType =
   | 'intervention_data'
   | 'client_data'
   | 'equipment_exchange'
-  | 'component_section';
+  | 'component_section'
+  | 'reducer_oils'
+  | 'battery_manipulator'
+  | 'battery_controller';
 
 export type BlockCategory = 'structure' | 'data' | 'inspection' | 'media' | 'document';
 

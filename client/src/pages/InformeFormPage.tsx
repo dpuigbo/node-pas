@@ -45,7 +45,8 @@ const ESTADO_LABEL: Record<string, string> = {
 /** Blocks that always render full-width */
 const ALWAYS_FULL_TYPES = new Set<string>([
   'header', 'section_title', 'divider', 'section_separator',
-  'tristate', 'checklist', 'table', 'equipment_exchange',
+  'tristate', 'checklist', 'table', 'equipment_exchange', 'reducer_oils',
+  'battery_manipulator', 'battery_controller',
   'cover_header', 'page_header', 'page_footer', 'back_cover',
   'table_of_contents', 'page_break', 'intervention_data', 'client_data',
 ]);

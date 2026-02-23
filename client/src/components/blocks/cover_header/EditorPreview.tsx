@@ -21,6 +21,11 @@ export function EditorPreview({ block }: EditorPreviewProps) {
   const titleSize = (c.titleSize as number) || 24;
   const blockLogoUrl = (c.logoUrl as string) || '';
   const height = (c.height as number) || 280;
+  const logoOffsetX = (c.logoOffsetX as number) || 0;
+  const logoOffsetY = (c.logoOffsetY as number) || 0;
+  const showAccentLine = !!c.showAccentLine;
+  const accentLineColor = (c.accentLineColor as string) || textColor;
+  const accentLineWidth = (c.accentLineWidth as number) || 3;
 
   const empresaLogo = useEmpresaLogo();
   const logoUrl = blockLogoUrl || empresaLogo;
@@ -36,6 +41,16 @@ export function EditorPreview({ block }: EditorPreviewProps) {
       }}
     >
       <div className="flex-1">
+        {showAccentLine && (
+          <div
+            className="mb-3"
+            style={{
+              width: '60px',
+              height: `${accentLineWidth}px`,
+              backgroundColor: accentLineColor,
+            }}
+          />
+        )}
         <p
           className="text-xs font-medium tracking-widest uppercase mb-2"
           style={{ color: textColor, opacity: 0.6 }}
@@ -54,11 +69,16 @@ export function EditorPreview({ block }: EditorPreviewProps) {
           </p>
         )}
       </div>
-      <div className="shrink-0">
+      <div
+        className="shrink-0"
+        style={{
+          transform: `translate(${logoOffsetX}px, ${logoOffsetY}px)`,
+        }}
+      >
         {logoUrl ? (
           <img src={logoUrl} alt="Logo" className="h-20 w-auto object-contain" />
         ) : (
-          <div className="flex h-20 w-20 items-center justify-center rounded-lg" style={{ border: '2px dashed rgba(255,255,255,0.3)' }}>
+          <div className="flex h-20 w-20 items-center justify-center" style={{ border: '2px dashed rgba(255,255,255,0.3)' }}>
             <Bot className="h-10 w-10" style={{ color: 'rgba(255,255,255,0.4)' }} />
           </div>
         )}

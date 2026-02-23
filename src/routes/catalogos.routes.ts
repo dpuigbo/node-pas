@@ -50,10 +50,13 @@ router.delete('/aceites/:id', requireRole('admin'), async (req: Request, res: Re
 
 // ===== CONSUMIBLES =====
 
-// GET /api/v1/catalogos/consumibles
-router.get('/consumibles', async (_req: Request, res: Response, next: NextFunction) => {
+// GET /api/v1/catalogos/consumibles?tipo=bateria&compatibleCon=mechanical_unit
+router.get('/consumibles', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const consumibles = await prisma.consumible.findMany({ orderBy: { nombre: 'asc' } });
+    const where: Record<string, unknown> = {};
+    if (req.query.tipo) where.tipo = String(req.query.tipo);
+    if (req.query.compatibleCon) where.compatibleCon = String(req.query.compatibleCon);
+    const consumibles = await prisma.consumible.findMany({ where, orderBy: { nombre: 'asc' } });
     res.json(consumibles);
   } catch (err) { next(err); }
 });

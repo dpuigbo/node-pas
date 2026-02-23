@@ -137,6 +137,32 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
           ))}
         </div>
       </div>
+      {/* Logo offset */}
+      <div className="space-y-1">
+        <Label className="text-xs">Ajuste posicion del logo</Label>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-0.5">
+            <span className="text-[10px] text-muted-foreground">Horizontal (px)</span>
+            <NumInput
+              value={(c.logoOffsetX as number) || 0}
+              onChange={(v) => onChange('logoOffsetX', v)}
+              min={-200}
+              max={200}
+              fallback={0}
+            />
+          </div>
+          <div className="space-y-0.5">
+            <span className="text-[10px] text-muted-foreground">Vertical (px)</span>
+            <NumInput
+              value={(c.logoOffsetY as number) || 0}
+              onChange={(v) => onChange('logoOffsetY', v)}
+              min={-200}
+              max={200}
+              fallback={0}
+            />
+          </div>
+        </div>
+      </div>
       <div className="space-y-1">
         <Label className="text-xs">URL del logo (opcional)</Label>
         <Input
@@ -148,6 +174,42 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
         <p className="text-[10px] text-muted-foreground">
           Si no se indica, usa el logo de Configuracion &gt; General.
         </p>
+      </div>
+      {/* Accent line */}
+      <div className="space-y-1.5 border-t pt-3">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs">Linea decorativa</Label>
+          <button
+            className={`rounded border px-2 py-0.5 text-xs ${
+              c.showAccentLine
+                ? 'border-primary bg-primary/5 text-primary'
+                : 'border-border hover:bg-accent'
+            }`}
+            onClick={() => onChange('showAccentLine', !c.showAccentLine)}
+          >
+            {c.showAccentLine ? 'Activada' : 'Desactivada'}
+          </button>
+        </div>
+        {c.showAccentLine && (
+          <div className="space-y-2">
+            <ColorPicker
+              label="Color de la linea"
+              value={(c.accentLineColor as string) || ''}
+              fallback="#ffffff"
+              onChange={(v) => onChange('accentLineColor', v)}
+            />
+            <div className="space-y-1">
+              <Label className="text-xs">Grosor de la linea (px)</Label>
+              <NumInput
+                value={(c.accentLineWidth as number) || 3}
+                onChange={(v) => onChange('accentLineWidth', v)}
+                min={1}
+                max={10}
+                fallback={3}
+              />
+            </div>
+          </div>
+        )}
       </div>
       <ColorPicker
         label="Color de fondo"

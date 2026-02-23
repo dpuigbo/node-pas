@@ -316,7 +316,7 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
           {required && <span className="text-red-500 ml-0.5">*</span>}
         </Label>
       )}
-      <div className="rounded border overflow-x-auto">
+      <div className="border overflow-x-auto">
         {/* Title bar */}
         {title && (
           <div

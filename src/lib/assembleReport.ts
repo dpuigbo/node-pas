@@ -243,6 +243,9 @@ const DATA_BLOCK_TYPES = new Set([
   'image',
   'signature',
   'equipment_exchange',
+  'reducer_oils',
+  'battery_manipulator',
+  'battery_controller',
 ]);
 
 /**
@@ -261,6 +264,12 @@ function computeDefaultValue(block: Block): unknown {
     }
     case 'equipment_exchange':
       return [];
+    case 'reducer_oils':
+      return [];
+    case 'battery_manipulator':
+      return { consumibleId: null, consumibleNombre: '', cantidad: 1, notas: '' };
+    case 'battery_controller':
+      return { consumibleId: null, consumibleNombre: '', cantidad: 1, notas: '' };
     case 'image':
       return [];
     default:
@@ -403,17 +412,15 @@ export function assembleReport(input: AssemblyInput): AssemblyResult {
       if (cloned.type === 'client_data') {
         const key = '__client_data';
         assembled._dataKey = key;
+        // Compose full address from parts
+        const addrParts = [
+          baseContext['cliente.direccion'],
+          [baseContext['cliente.codigoPostal'], baseContext['cliente.ciudad']].filter(Boolean).join(' '),
+          baseContext['cliente.provincia'],
+        ].filter(Boolean);
         const seeded: Record<string, string> = {
           nombre: String(baseContext['cliente.nombre'] ?? ''),
-          planta: String(baseContext['cliente.planta'] ?? ''),
-          maquina: String(baseContext['cliente.maquina'] ?? ''),
-          direccion: String(baseContext['cliente.direccion'] ?? ''),
-          ciudad: String(baseContext['cliente.ciudad'] ?? ''),
-          cp: String(baseContext['cliente.codigoPostal'] ?? ''),
-          provincia: String(baseContext['cliente.provincia'] ?? ''),
-          telefono: String(baseContext['cliente.telefono'] ?? ''),
-          email: String(baseContext['cliente.email'] ?? ''),
-          personaContacto: String(baseContext['cliente.personaContacto'] ?? ''),
+          direccion: addrParts.join(', '),
         };
         const userEdits =
           (datosDocumento[key] as Record<string, unknown>) || {};

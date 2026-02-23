@@ -21,6 +21,9 @@ import './tristate';
 import './checklist';
 import './table';
 import './equipment_exchange';
+import './reducer_oils';
+import './battery_manipulator';
+import './battery_controller';
 
 // Media
 import './image';
