@@ -153,8 +153,10 @@ function computeDefaultValue(block) {
         }
         case 'equipment_exchange':
             return [];
-        case 'reducer_oils':
-            return [];
+        case 'reducer_oils': {
+            const oilRows = block.config.fixedRows ?? [];
+            return oilRows.map(row => ({ ...row, control: false, cambio: false, observaciones: '' }));
+        }
         case 'battery_manipulator':
             return { consumibleId: null, consumibleNombre: '', cantidad: 1, notas: '' };
         case 'battery_controller':

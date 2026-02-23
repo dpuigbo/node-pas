@@ -48,9 +48,11 @@ function initDatos(schema) {
             case 'equipment_exchange':
                 datos[key] = [];
                 break;
-            case 'reducer_oils':
-                datos[key] = [];
+            case 'reducer_oils': {
+                const oilRows = block.config.fixedRows ?? [];
+                datos[key] = oilRows.map(row => ({ ...row, control: false, cambio: false, observaciones: '' }));
                 break;
+            }
             case 'battery_manipulator':
                 datos[key] = { consumibleId: null, consumibleNombre: '', cantidad: 1, notas: '' };
                 break;
