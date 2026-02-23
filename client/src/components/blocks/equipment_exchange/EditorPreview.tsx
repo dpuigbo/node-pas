@@ -18,7 +18,7 @@ export function EditorPreview({ block }: EditorPreviewProps) {
       {label && (
         <div className="text-xs font-bold mb-1.5 px-1">{label}</div>
       )}
-      <div className="border overflow-hidden">
+      <div className="rounded-sm border overflow-hidden">
         {title && (
           <div
             className="px-3 py-1.5 text-[11px] font-semibold"

@@ -50,7 +50,7 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
           {required && <span className="text-red-500 ml-0.5">*</span>}
         </Label>
       )}
-      <div className="border border-gray-200 p-3 space-y-2">
+      <div className="rounded-sm border border-gray-200 p-3 space-y-2">
         <div className="space-y-1">
           <Label className="text-xs text-gray-500">Bateria</Label>
           <select

@@ -417,7 +417,7 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
       titleColor: '#ffffff',
       headerBg: '#f3f4f6',
       headerColor: '#1f2937',
-      defaultRows: 6,
+      fixedRows: [],
       required: false,
     },
   },

@@ -52,7 +52,7 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
           {title}
         </div>
       )}
-      <div className="border border-gray-200 overflow-hidden">
+      <div className="rounded-sm border border-gray-200 overflow-hidden">
         <table className="w-full border-collapse text-xs">
           <tbody>
             {SECTIONS.map((section, si) => (

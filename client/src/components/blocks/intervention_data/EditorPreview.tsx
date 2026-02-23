@@ -43,7 +43,7 @@ export function EditorPreview({ block }: EditorPreviewProps) {
           {title}
         </div>
       )}
-      <div className="border border-gray-200 overflow-hidden">
+      <div className="rounded-sm border border-gray-200 overflow-hidden">
         <table className="w-full border-collapse text-[10px]">
           <tbody>
             {SECTIONS.map((section, si) => (

@@ -66,7 +66,7 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
           {required && <span className="text-red-500 ml-0.5">*</span>}
         </Label>
       )}
-      <div className="border overflow-x-auto">
+      <div className="rounded-sm border overflow-x-auto">
         {title && (
           <div
             className="px-3 py-1.5 text-sm font-semibold"

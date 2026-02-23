@@ -189,7 +189,7 @@ export function EditorPreview({ block }: EditorPreviewProps) {
     return (
       <div className="py-2">
         {label && <div className="text-xs font-medium text-gray-700 mb-1">{label}</div>}
-        <div className="border border-dashed border-gray-200 p-4 text-center text-[10px] text-gray-300">
+        <div className="rounded-sm border border-dashed border-gray-200 p-4 text-center text-[10px] text-gray-300">
           Sin columnas definidas
         </div>
       </div>
@@ -201,7 +201,7 @@ export function EditorPreview({ block }: EditorPreviewProps) {
   return (
     <div className="py-2">
       {label && <div className="text-xs font-medium text-gray-700 mb-1">{label}</div>}
-      <div className="border overflow-hidden">
+      <div className="rounded-sm border overflow-hidden">
         {/* Title bar */}
         {title && (
           <div
