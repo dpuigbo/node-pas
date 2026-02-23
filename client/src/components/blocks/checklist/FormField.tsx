@@ -11,6 +11,7 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
   const label = (c.label as string) || 'Lista de verificacion';
   const items = (c.items as ChecklistItem[]) || [];
   const required = !!c.required;
+  const layout = (c.layout as string) || 'vertical';
 
   // value is an array of checked keys, e.g. ["item_1", "item_3"]
   const checked = (value as string[]) ?? [];
@@ -23,6 +24,22 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
     onChange(next);
   };
 
+  const itemElements = items.map((item) => (
+    <label
+      key={item.key}
+      className="flex items-center gap-2 cursor-pointer select-none"
+    >
+      <input
+        type="checkbox"
+        checked={checked.includes(item.key)}
+        onChange={() => toggle(item.key)}
+        disabled={readOnly}
+        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+      />
+      <span className="text-sm text-gray-700">{item.label}</span>
+    </label>
+  ));
+
   return (
     <div className="space-y-2">
       <Label>
@@ -31,23 +48,13 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
       </Label>
       {items.length === 0 ? (
         <p className="text-xs text-muted-foreground italic">Sin items definidos</p>
+      ) : layout === 'horizontal' ? (
+        <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+          {itemElements}
+        </div>
       ) : (
         <div className="space-y-1.5">
-          {items.map((item) => (
-            <label
-              key={item.key}
-              className="flex items-center gap-2 cursor-pointer select-none"
-            >
-              <input
-                type="checkbox"
-                checked={checked.includes(item.key)}
-                onChange={() => toggle(item.key)}
-                disabled={readOnly}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-              <span className="text-sm text-gray-700">{item.label}</span>
-            </label>
-          ))}
+          {itemElements}
         </div>
       )}
     </div>
