@@ -42,16 +42,21 @@ function AceitesTable({ items, isLoading, isAdmin, onCreate, onUpdate, onDelete 
   };
 
   const handleSubmit = async () => {
-    const body = {
-      nombre: form.nombre,
-      fabricante: form.fabricante || null,
-      unidad: form.unidad || null,
-      coste: form.coste ? Number(form.coste) : null,
-      precio: form.precio ? Number(form.precio) : null,
-    };
-    if (editing) await onUpdate({ id: editing.id, ...body });
-    else await onCreate(body);
-    setFormOpen(false);
+    try {
+      const body = {
+        nombre: form.nombre,
+        fabricante: form.fabricante || null,
+        unidad: form.unidad || null,
+        coste: form.coste ? Number(form.coste) : null,
+        precio: form.precio ? Number(form.precio) : null,
+      };
+      if (editing) await onUpdate({ id: editing.id, ...body });
+      else await onCreate(body);
+      setFormOpen(false);
+    } catch (err) {
+      console.error('Error guardando aceite:', err);
+      alert('Error al guardar: ' + (err as any)?.response?.data?.message || (err as Error).message);
+    }
   };
 
   const columns: Column<any>[] = [
@@ -148,19 +153,24 @@ function ConsumiblesTable({ items, isLoading, isAdmin, onCreate, onUpdate, onDel
   };
 
   const handleSubmit = async () => {
-    const body = {
-      nombre: form.nombre,
-      fabricante: form.fabricante || null,
-      refOriginal: form.refOriginal || null,
-      refProveedor: form.refProveedor || null,
-      denominacion: form.denominacion || null,
-      fabricanteRobot: form.fabricanteRobot || null,
-      coste: form.coste ? Number(form.coste) : null,
-      precio: form.precio ? Number(form.precio) : null,
-    };
-    if (editing) await onUpdate({ id: editing.id, ...body });
-    else await onCreate(body);
-    setFormOpen(false);
+    try {
+      const body = {
+        nombre: form.nombre,
+        fabricante: form.fabricante || null,
+        refOriginal: form.refOriginal || null,
+        refProveedor: form.refProveedor || null,
+        denominacion: form.denominacion || null,
+        fabricanteRobot: form.fabricanteRobot || null,
+        coste: form.coste ? Number(form.coste) : null,
+        precio: form.precio ? Number(form.precio) : null,
+      };
+      if (editing) await onUpdate({ id: editing.id, ...body });
+      else await onCreate(body);
+      setFormOpen(false);
+    } catch (err) {
+      console.error('Error guardando consumible:', err);
+      alert('Error al guardar: ' + (err as any)?.response?.data?.message || (err as Error).message);
+    }
   };
 
   const columns: Column<any>[] = [
