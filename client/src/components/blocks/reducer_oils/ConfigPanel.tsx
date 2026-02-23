@@ -89,7 +89,7 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
         />
       </div>
 
-      {/* Title */}
+      {/* Titulo de tabla */}
       <div className="border-t pt-3 space-y-3">
         <Label className="text-xs font-semibold">Titulo de tabla</Label>
         <div className="space-y-1">
@@ -100,60 +100,45 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
             placeholder="Ej: Reductoras del {{componente.etiqueta}}"
           />
         </div>
-        {!!(c.title as string) && (
+        {(c.title as string) && (
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
               <Label className="text-xs">Fondo titulo</Label>
               <div className="flex items-center gap-2">
-                <input type="color" value={(c.titleBg as string) || '#1f2937'} onChange={(e) => onChange('titleBg', e.target.value)} className="h-8 w-8 cursor-pointer rounded border" />
-                <Input value={(c.titleBg as string) || '#1f2937'} onChange={(e) => onChange('titleBg', e.target.value)} className="h-8 font-mono text-xs flex-1" />
+                <input
+                  type="color"
+                  value={(c.titleBg as string) || '#1f2937'}
+                  onChange={(e) => onChange('titleBg', e.target.value)}
+                  className="h-8 w-8 cursor-pointer rounded border"
+                />
+                <Input
+                  value={(c.titleBg as string) || '#1f2937'}
+                  onChange={(e) => onChange('titleBg', e.target.value)}
+                  className="h-8 font-mono text-xs flex-1"
+                />
               </div>
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Color texto titulo</Label>
               <div className="flex items-center gap-2">
-                <input type="color" value={(c.titleColor as string) || '#ffffff'} onChange={(e) => onChange('titleColor', e.target.value)} className="h-8 w-8 cursor-pointer rounded border" />
-                <Input value={(c.titleColor as string) || '#ffffff'} onChange={(e) => onChange('titleColor', e.target.value)} className="h-8 font-mono text-xs flex-1" />
+                <input
+                  type="color"
+                  value={(c.titleColor as string) || '#ffffff'}
+                  onChange={(e) => onChange('titleColor', e.target.value)}
+                  className="h-8 w-8 cursor-pointer rounded border"
+                />
+                <Input
+                  value={(c.titleColor as string) || '#ffffff'}
+                  onChange={(e) => onChange('titleColor', e.target.value)}
+                  className="h-8 font-mono text-xs flex-1"
+                />
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Table style */}
-      <div className="border-t pt-3 space-y-3">
-        <Label className="text-xs font-semibold">Estilo de tabla</Label>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <Label className="text-xs">Fondo cabecera</Label>
-            <div className="flex items-center gap-2">
-              <input type="color" value={(c.headerBg as string) || '#f3f4f6'} onChange={(e) => onChange('headerBg', e.target.value)} className="h-8 w-8 rounded border cursor-pointer" />
-              <Input value={(c.headerBg as string) || '#f3f4f6'} onChange={(e) => onChange('headerBg', e.target.value)} className="h-8 flex-1 font-mono text-xs" />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Texto cabecera</Label>
-            <div className="flex items-center gap-2">
-              <input type="color" value={(c.headerColor as string) || '#1f2937'} onChange={(e) => onChange('headerColor', e.target.value)} className="h-8 w-8 rounded border cursor-pointer" />
-              <Input value={(c.headerColor as string) || '#1f2937'} onChange={(e) => onChange('headerColor', e.target.value)} className="h-8 flex-1 font-mono text-xs" />
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id={`compact-${block.id}`}
-            checked={!!c.compact}
-            onChange={(e) => onChange('compact', e.target.checked)}
-            className="h-4 w-4 rounded"
-          />
-          <Label htmlFor={`compact-${block.id}`} className="text-xs cursor-pointer">
-            Compacta (padding reducido)
-          </Label>
-        </div>
-      </div>
-
-      {/* Fixed Rows Editor */}
+      {/* Filas (datos de plantilla) */}
       <div className="border-t pt-3 space-y-2">
         <Label className="text-xs font-semibold">Filas de la tabla (datos de plantilla)</Label>
         <p className="text-[10px] text-muted-foreground">
@@ -230,18 +215,73 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
         </Button>
       </div>
 
-      {/* Required */}
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          id={`required-${block.id}`}
-          checked={!!c.required}
-          onChange={(e) => onChange('required', e.target.checked)}
-          className="h-4 w-4 rounded"
-        />
-        <Label htmlFor={`required-${block.id}`} className="text-xs cursor-pointer">
-          Obligatorio
-        </Label>
+      {/* Estilo de tabla — same position as table block (after rows) */}
+      <div className="border-t pt-3 space-y-3">
+        <Label className="text-xs font-semibold">Estilo de tabla</Label>
+
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <Label className="text-xs">Fondo cabecera</Label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={(c.headerBg as string) || '#1f2937'}
+                onChange={(e) => onChange('headerBg', e.target.value)}
+                className="h-8 w-8 cursor-pointer rounded border"
+              />
+              <Input
+                value={(c.headerBg as string) || '#1f2937'}
+                onChange={(e) => onChange('headerBg', e.target.value)}
+                className="h-8 font-mono text-xs flex-1"
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Texto cabecera</Label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={(c.headerColor as string) || '#ffffff'}
+                onChange={(e) => onChange('headerColor', e.target.value)}
+                className="h-8 w-8 cursor-pointer rounded border"
+              />
+              <Input
+                value={(c.headerColor as string) || '#ffffff'}
+                onChange={(e) => onChange('headerColor', e.target.value)}
+                className="h-8 font-mono text-xs flex-1"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id={`compact-${block.id}`}
+            checked={!!c.compact}
+            onChange={(e) => onChange('compact', e.target.checked)}
+            className="h-4 w-4 rounded"
+          />
+          <Label htmlFor={`compact-${block.id}`} className="text-xs cursor-pointer">
+            Compacta (padding reducido)
+          </Label>
+        </div>
+      </div>
+
+      {/* Obligatorio */}
+      <div className="border-t pt-3">
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id={`required-${block.id}`}
+            checked={!!c.required}
+            onChange={(e) => onChange('required', e.target.checked)}
+            className="h-4 w-4 rounded"
+          />
+          <Label htmlFor={`required-${block.id}`} className="text-xs cursor-pointer">
+            Obligatorio
+          </Label>
+        </div>
       </div>
     </div>
   );
