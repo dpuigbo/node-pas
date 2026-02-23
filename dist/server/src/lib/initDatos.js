@@ -17,6 +17,10 @@ const DATA_BLOCKS = new Set([
     'table',
     'image',
     'signature',
+    'equipment_exchange',
+    'reducer_oils',
+    'battery_manipulator',
+    'battery_controller',
 ]);
 function initDatos(schema) {
     const datos = {};
@@ -40,6 +44,18 @@ function initDatos(schema) {
             }
             case 'image':
                 datos[key] = [];
+                break;
+            case 'equipment_exchange':
+                datos[key] = [];
+                break;
+            case 'reducer_oils':
+                datos[key] = [];
+                break;
+            case 'battery_manipulator':
+                datos[key] = { consumibleId: null, consumibleNombre: '', cantidad: 1, notas: '' };
+                break;
+            case 'battery_controller':
+                datos[key] = { consumibleId: null, consumibleNombre: '', cantidad: 1, notas: '' };
                 break;
             default:
                 // text_field, number_field, date_field, text_area, select_field, signature

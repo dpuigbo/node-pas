@@ -52,10 +52,15 @@ router.delete('/aceites/:id', (0, role_middleware_1.requireRole)('admin'), async
     }
 });
 // ===== CONSUMIBLES =====
-// GET /api/v1/catalogos/consumibles
-router.get('/consumibles', async (_req, res, next) => {
+// GET /api/v1/catalogos/consumibles?tipo=bateria&compatibleCon=mechanical_unit
+router.get('/consumibles', async (req, res, next) => {
     try {
-        const consumibles = await database_1.prisma.consumible.findMany({ orderBy: { nombre: 'asc' } });
+        const where = {};
+        if (req.query.tipo)
+            where.tipo = String(req.query.tipo);
+        if (req.query.compatibleCon)
+            where.compatibleCon = String(req.query.compatibleCon);
+        const consumibles = await database_1.prisma.consumible.findMany({ where, orderBy: { nombre: 'asc' } });
         res.json(consumibles);
     }
     catch (err) {
