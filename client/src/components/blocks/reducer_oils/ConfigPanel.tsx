@@ -12,6 +12,7 @@ interface FixedRow {
   eje: number | string;
   tipoSuministro: string;
   aceiteId: number | null;
+  unidad: string;
   volumen: string;
   niveles: string[];
 }
@@ -20,7 +21,7 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
   const c = block.config;
   const fixedRows = (c.fixedRows as FixedRow[]) || [];
   const { data: aceites } = useAceites();
-  const activeAceites = (aceites as { id: number; nombre: string; activo: boolean }[] || [])
+  const activeAceites = (aceites as { id: number; nombre: string; unidad?: string; activo: boolean }[] || [])
     .filter((a) => a.activo);
 
   const updateFixedRows = (rows: FixedRow[]) => {
@@ -37,7 +38,7 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
     const aceite = activeAceites.find((a) => a.id === id);
     const next = fixedRows.map((r, i) =>
       i === idx
-        ? { ...r, aceiteId: id, tipoSuministro: aceite?.nombre || '' }
+        ? { ...r, aceiteId: id, tipoSuministro: aceite?.nombre || '', unidad: aceite?.unidad || '' }
         : r,
     );
     updateFixedRows(next);
@@ -55,7 +56,7 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
 
   const addRow = () => {
     const nextEje = fixedRows.length > 0 ? Math.max(...fixedRows.map((r) => Number(r.eje) || 0)) + 1 : 1;
-    updateFixedRows([...fixedRows, { eje: nextEje, tipoSuministro: '', aceiteId: null, volumen: '', niveles: [] }]);
+    updateFixedRows([...fixedRows, { eje: nextEje, tipoSuministro: '', aceiteId: null, unidad: '', volumen: '', niveles: [] }]);
   };
 
   const removeRow = (idx: number) => {

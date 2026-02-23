@@ -302,6 +302,7 @@ model Aceite {
   id         Int      @id @default(autoincrement())
   nombre     String
   fabricante String?
+  unidad     String?  // unidad de medida: litros, kg, ml…
   coste      Decimal? @db.Decimal(10, 2)
   precio     Decimal? @db.Decimal(10, 2)
   activo     Boolean  @default(true)

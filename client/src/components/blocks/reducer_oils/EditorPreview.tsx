@@ -4,6 +4,7 @@ import { resolveWithExamples } from '@/lib/placeholders';
 interface FixedRow {
   eje: number | string;
   tipoSuministro: string;
+  unidad: string;
   volumen: string;
 }
 
@@ -39,9 +40,10 @@ export function EditorPreview({ block }: EditorPreviewProps) {
         <table className="w-full text-[10px] border-collapse">
           <thead>
             <tr style={{ backgroundColor: headerBg }}>
-              <th className={`font-medium ${cellPad} text-left`} style={{ color: headerColor, width: '7%' }}>Eje</th>
-              <th className={`font-medium ${cellPad} text-left`} style={{ color: headerColor, width: '30%' }}>Tipo suministro</th>
-              <th className={`font-medium ${cellPad} text-left`} style={{ color: headerColor, width: '15%' }}>Volumen</th>
+              <th className={`font-medium ${cellPad} text-left`} style={{ color: headerColor, width: '6%' }}>Eje</th>
+              <th className={`font-medium ${cellPad} text-left`} style={{ color: headerColor, width: '26%' }}>Tipo suministro</th>
+              <th className={`font-medium ${cellPad} text-left`} style={{ color: headerColor, width: '10%' }}>Unidad</th>
+              <th className={`font-medium ${cellPad} text-left`} style={{ color: headerColor, width: '10%' }}>Volumen</th>
               <th className={`font-medium ${cellPad} text-center`} style={{ color: headerColor, width: '12%' }}>Control</th>
               <th className={`font-medium ${cellPad} text-center`} style={{ color: headerColor, width: '12%' }}>Cambio</th>
               <th className={`font-medium ${cellPad} text-left`} style={{ color: headerColor, width: '24%' }}>Observaciones</th>
@@ -53,6 +55,7 @@ export function EditorPreview({ block }: EditorPreviewProps) {
                 <tr key={ri} className={ri % 2 === 1 ? 'bg-gray-50' : ''}>
                   <td className={`${cellPad} text-gray-500 border-t border-gray-100`}>{row.eje}</td>
                   <td className={`${cellPad} text-gray-500 border-t border-gray-100`}>{row.tipoSuministro || '—'}</td>
+                  <td className={`${cellPad} text-gray-500 border-t border-gray-100`}>{row.unidad || '-'}</td>
                   <td className={`${cellPad} text-gray-500 border-t border-gray-100`}>{row.volumen || '-'}</td>
                   <td className={`${cellPad} border-t border-gray-100 text-center`}>
                     <div className="flex justify-center"><div className="h-2.5 w-2.5 rounded-sm border border-gray-300" /></div>
@@ -65,7 +68,7 @@ export function EditorPreview({ block }: EditorPreviewProps) {
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="px-3 py-3 text-center text-gray-300 italic">
+                <td colSpan={7} className="px-3 py-3 text-center text-gray-300 italic">
                   Sin filas definidas. Configura las filas en el panel de propiedades.
                 </td>
               </tr>

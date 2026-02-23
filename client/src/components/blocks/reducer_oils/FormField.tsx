@@ -6,6 +6,7 @@ interface OilRow {
   eje: number | string;
   tipoSuministro: string;
   aceiteId: number | null;
+  unidad: string;
   volumen: string;
   niveles: string[];
   control: boolean;
@@ -54,9 +55,10 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
         <table className="w-full text-xs">
           <thead>
             <tr style={{ backgroundColor: headerBg }}>
-              <th className={`font-medium text-xs ${cellPad} text-left`} style={{ color: headerColor, width: '7%' }}>Eje</th>
-              <th className={`font-medium text-xs ${cellPad} text-left`} style={{ color: headerColor, width: '28%' }}>Tipo suministro</th>
-              <th className={`font-medium text-xs ${cellPad} text-left`} style={{ color: headerColor, width: '13%' }}>Volumen</th>
+              <th className={`font-medium text-xs ${cellPad} text-left`} style={{ color: headerColor, width: '6%' }}>Eje</th>
+              <th className={`font-medium text-xs ${cellPad} text-left`} style={{ color: headerColor, width: '24%' }}>Tipo suministro</th>
+              <th className={`font-medium text-xs ${cellPad} text-left`} style={{ color: headerColor, width: '8%' }}>Unidad</th>
+              <th className={`font-medium text-xs ${cellPad} text-left`} style={{ color: headerColor, width: '10%' }}>Volumen</th>
               <th className={`font-medium text-xs ${cellPad} text-center`} style={{ color: headerColor, width: '10%' }}>Control</th>
               <th className={`font-medium text-xs ${cellPad} text-center`} style={{ color: headerColor, width: '10%' }}>Cambio</th>
               <th className={`font-medium text-xs ${cellPad} text-left`} style={{ color: headerColor, width: '32%' }}>Observaciones</th>
@@ -65,7 +67,7 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-3 py-4 text-center text-xs text-gray-400 italic">
+                <td colSpan={7} className="px-3 py-4 text-center text-xs text-gray-400 italic">
                   Sin filas definidas en la plantilla.
                 </td>
               </tr>
@@ -75,6 +77,7 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
                   {/* Template data — read-only always */}
                   <td className={`${cellPad} text-gray-600 border-t border-gray-100 text-center`}>{row.eje}</td>
                   <td className={`${cellPad} text-gray-600 border-t border-gray-100`}>{row.tipoSuministro}</td>
+                  <td className={`${cellPad} text-gray-600 border-t border-gray-100`}>{row.unidad || '-'}</td>
                   <td className={`${cellPad} text-gray-600 border-t border-gray-100`}>{row.volumen || '-'}</td>
                   {/* User-editable columns */}
                   <td className="px-2 py-1 border-t border-gray-100 text-center">
