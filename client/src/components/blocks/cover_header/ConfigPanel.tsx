@@ -190,7 +190,7 @@ export function ConfigPanel({ block, onChange }: ConfigPanelProps) {
             {c.showAccentLine ? 'Activada' : 'Desactivada'}
           </button>
         </div>
-        {c.showAccentLine && (
+        {!!c.showAccentLine && (
           <div className="space-y-2">
             <ColorPicker
               label="Color de la linea"
