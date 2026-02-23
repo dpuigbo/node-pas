@@ -313,16 +313,20 @@ model Aceite {
 }
 
 model Consumible {
-  id            Int      @id @default(autoincrement())
-  nombre        String
-  fabricante    String?
-  tipo          String   @default("general") // 'general' | 'bateria'
-  compatibleCon String?  @map("compatible_con") // 'mechanical_unit' | 'controller' | null (null=ambos)
-  coste         Decimal? @db.Decimal(10, 2)
-  precio        Decimal? @db.Decimal(10, 2)
-  activo        Boolean  @default(true)
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  id               Int      @id @default(autoincrement())
+  nombre           String
+  fabricante       String?
+  tipo             String   @default("general") // 'general' | 'bateria'
+  compatibleCon    String?  @map("compatible_con") // 'mechanical_unit' | 'controller' | null (null=ambos)
+  refOriginal      String?  @map("ref_original")      // referencia original del fabricante
+  refProveedor     String?  @map("ref_proveedor")      // referencia del proveedor
+  denominacion     String?                              // denominacion descriptiva
+  fabricanteRobot  String?  @map("fabricante_robot")   // fabricante del robot compatible
+  coste            Decimal? @db.Decimal(10, 2)
+  precio           Decimal? @db.Decimal(10, 2)
+  activo           Boolean  @default(true)
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
   @@map("consumibles")
 }
