@@ -44,11 +44,18 @@ model Cliente {
   telefono            String?
   email               String?
   personaContacto     String?   @map("persona_contacto")
+  // Tarifas
   tarifaHoraTrabajo   Decimal?  @map("tarifa_hora_trabajo") @db.Decimal(10, 2)
   tarifaHoraViaje     Decimal?  @map("tarifa_hora_viaje") @db.Decimal(10, 2)
   dietas              Decimal?  @db.Decimal(10, 2)
-  peajes              Decimal?  @db.Decimal(10, 2)
+  gestionAccesos      Decimal?  @map("gestion_accesos") @db.Decimal(10, 2)
+  // Logistica viaje
+  horasTrayecto       Decimal?  @map("horas_trayecto") @db.Decimal(8, 2)
+  diasViaje           Decimal?  @map("dias_viaje") @db.Decimal(8, 2)
   km                  Decimal?  @db.Decimal(10, 2)
+  peajes              Decimal?  @db.Decimal(10, 2)
+  precioHotel         Decimal?  @map("precio_hotel") @db.Decimal(10, 2)
+  precioKm            Decimal?  @map("precio_km") @db.Decimal(10, 2)
   activo              Boolean   @default(true)
   createdAt           DateTime  @default(now()) @map("created_at")
   updatedAt           DateTime  @updatedAt @map("updated_at")
@@ -219,8 +226,28 @@ model Intervencion {
   fechaInicio DateTime?          @map("fecha_inicio")
   fechaFin    DateTime?          @map("fecha_fin")
   notas       String?            @db.Text
-  createdAt   DateTime           @default(now()) @map("created_at")
-  updatedAt   DateTime           @updatedAt @map("updated_at")
+  // Tarifas (snapshot del cliente, editables)
+  tarifaHoraTrabajo   Decimal?   @map("tarifa_hora_trabajo") @db.Decimal(10, 2)
+  tarifaHoraViaje     Decimal?   @map("tarifa_hora_viaje") @db.Decimal(10, 2)
+  dietas              Decimal?   @db.Decimal(10, 2)
+  gestionAccesos      Decimal?   @map("gestion_accesos") @db.Decimal(10, 2)
+  // Logistica viaje (snapshot del cliente, editables)
+  horasTrayecto       Decimal?   @map("horas_trayecto") @db.Decimal(8, 2)
+  diasViaje           Decimal?   @map("dias_viaje") @db.Decimal(8, 2)
+  km                  Decimal?   @db.Decimal(10, 2)
+  peajes              Decimal?   @db.Decimal(10, 2)
+  precioHotel         Decimal?   @map("precio_hotel") @db.Decimal(10, 2)
+  precioKm            Decimal?   @map("precio_km") @db.Decimal(10, 2)
+  // Campos especificos de intervencion
+  gestionAccesosNueva Boolean    @default(false) @map("gestion_accesos_nueva")
+  numeroTecnicos      Int        @default(1) @map("numero_tecnicos")
+  viajesIdaVuelta     Int        @default(1) @map("viajes_ida_vuelta")
+  incluyeConsumibles  Boolean    @default(true) @map("incluye_consumibles")
+  horasDia            Decimal?   @map("horas_dia") @db.Decimal(8, 2)
+  dietasExtra         Decimal?   @map("dietas_extra") @db.Decimal(10, 2)
+  diasTrabajo         String?    @map("dias_trabajo") // JSON: "1,2,3,4,5" (lun-vie)
+  createdAt           DateTime   @default(now()) @map("created_at")
+  updatedAt           DateTime   @updatedAt @map("updated_at")
 
   cliente      Cliente              @relation(fields: [clienteId], references: [id], onDelete: Cascade)
   sistemas     IntervencionSistema[]

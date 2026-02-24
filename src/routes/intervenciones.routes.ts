@@ -80,6 +80,35 @@ router.post('/', requireRole('admin'), async (req: Request, res: Response, next:
   try {
     const { sistemaIds, sistemas, ...data } = createIntervencionSchema.parse(req.body);
     const rows = buildSistemaRows({ sistemas, sistemaIds });
+
+    // If logistics fields not provided, copy from client (snapshot pattern)
+    const logisticsFields = [
+      'tarifaHoraTrabajo', 'tarifaHoraViaje', 'dietas', 'gestionAccesos',
+      'horasTrayecto', 'diasViaje', 'km', 'peajes', 'precioHotel', 'precioKm',
+    ] as const;
+
+    let logisticsData: any = {};
+    const hasAnyLogistics = logisticsFields.some((f) => (data as any)[f] !== undefined && (data as any)[f] !== null);
+    if (!hasAnyLogistics) {
+      // Auto-copy from client
+      const cliente = await prisma.cliente.findUnique({
+        where: { id: data.clienteId },
+        select: {
+          tarifaHoraTrabajo: true, tarifaHoraViaje: true, dietas: true, gestionAccesos: true,
+          horasTrayecto: true, diasViaje: true, km: true, peajes: true, precioHotel: true, precioKm: true,
+        },
+      });
+      if (cliente) {
+        for (const f of logisticsFields) {
+          logisticsData[f] = (cliente as any)[f] ?? null;
+        }
+      }
+    } else {
+      for (const f of logisticsFields) {
+        if ((data as any)[f] !== undefined) logisticsData[f] = (data as any)[f] ?? null;
+      }
+    }
+
     const intervencion = await prisma.intervencion.create({
       data: {
         clienteId: data.clienteId,
@@ -89,6 +118,14 @@ router.post('/', requireRole('admin'), async (req: Request, res: Response, next:
         fechaInicio: data.fechaInicio ? new Date(data.fechaInicio) : null,
         fechaFin: data.fechaFin ? new Date(data.fechaFin) : null,
         notas: data.notas ?? null,
+        ...logisticsData,
+        gestionAccesosNueva: data.gestionAccesosNueva ?? false,
+        numeroTecnicos: data.numeroTecnicos ?? 1,
+        viajesIdaVuelta: data.viajesIdaVuelta ?? 1,
+        incluyeConsumibles: data.incluyeConsumibles ?? true,
+        horasDia: data.horasDia ?? null,
+        dietasExtra: data.dietasExtra ?? null,
+        diasTrabajo: data.diasTrabajo ?? '1,2,3,4,5',
         sistemas: {
           create: rows,
         },

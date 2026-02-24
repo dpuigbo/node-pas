@@ -16,6 +16,13 @@ import {
 } from '@/hooks/useClientes';
 import { useAuth } from '@/hooks/useAuth';
 
+const EMPTY_FORM = {
+  nombre: '', sede: '', direccion: '', ciudad: '',
+  codigoPostal: '', provincia: '', telefono: '', email: '', personaContacto: '',
+  tarifaHoraTrabajo: '', tarifaHoraViaje: '', dietas: '', gestionAccesos: '',
+  horasTrayecto: '', diasViaje: '', km: '', peajes: '', precioHotel: '', precioKm: '',
+};
+
 export default function ClientesPage() {
   const { isAdmin } = useAuth();
   const { data: clientes, isLoading } = useClientes();
@@ -28,17 +35,11 @@ export default function ClientesPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [deleting, setDeleting] = useState<any>(null);
-  const [form, setForm] = useState({
-    nombre: '', sede: '', direccion: '', ciudad: '',
-    codigoPostal: '', provincia: '', telefono: '', email: '', personaContacto: '',
-  });
+  const [form, setForm] = useState({ ...EMPTY_FORM });
 
   const openCreate = () => {
     setEditing(null);
-    setForm({
-      nombre: '', sede: '', direccion: '', ciudad: '',
-      codigoPostal: '', provincia: '', telefono: '', email: '', personaContacto: '',
-    });
+    setForm({ ...EMPTY_FORM });
     setFormOpen(true);
   };
 
@@ -50,9 +51,21 @@ export default function ClientesPage() {
       codigoPostal: cli.codigoPostal || '', provincia: cli.provincia || '',
       telefono: cli.telefono || '', email: cli.email || '',
       personaContacto: cli.personaContacto || '',
+      tarifaHoraTrabajo: cli.tarifaHoraTrabajo != null ? String(cli.tarifaHoraTrabajo) : '',
+      tarifaHoraViaje: cli.tarifaHoraViaje != null ? String(cli.tarifaHoraViaje) : '',
+      dietas: cli.dietas != null ? String(cli.dietas) : '',
+      gestionAccesos: cli.gestionAccesos != null ? String(cli.gestionAccesos) : '',
+      horasTrayecto: cli.horasTrayecto != null ? String(cli.horasTrayecto) : '',
+      diasViaje: cli.diasViaje != null ? String(cli.diasViaje) : '',
+      km: cli.km != null ? String(cli.km) : '',
+      peajes: cli.peajes != null ? String(cli.peajes) : '',
+      precioHotel: cli.precioHotel != null ? String(cli.precioHotel) : '',
+      precioKm: cli.precioKm != null ? String(cli.precioKm) : '',
     });
     setFormOpen(true);
   };
+
+  const toNum = (v: string) => v.trim() ? Number(v) : null;
 
   const handleSubmit = async () => {
     const body = {
@@ -65,6 +78,16 @@ export default function ClientesPage() {
       telefono: form.telefono || null,
       email: form.email || null,
       personaContacto: form.personaContacto || null,
+      tarifaHoraTrabajo: toNum(form.tarifaHoraTrabajo),
+      tarifaHoraViaje: toNum(form.tarifaHoraViaje),
+      dietas: toNum(form.dietas),
+      gestionAccesos: toNum(form.gestionAccesos),
+      horasTrayecto: toNum(form.horasTrayecto),
+      diasViaje: toNum(form.diasViaje),
+      km: toNum(form.km),
+      peajes: toNum(form.peajes),
+      precioHotel: toNum(form.precioHotel),
+      precioKm: toNum(form.precioKm),
     };
     if (editing) {
       await updateMutation.mutateAsync({ id: editing.id, ...body });
@@ -144,11 +167,12 @@ export default function ClientesPage() {
       />
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editing ? 'Editar cliente' : 'Nuevo cliente'}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+          <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+            {/* Datos basicos */}
             <div>
               <Label>Nombre</Label>
               <Input value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} placeholder="Nombre del cliente" />
@@ -187,6 +211,60 @@ export default function ClientesPage() {
               <div>
                 <Label>Provincia</Label>
                 <Input value={form.provincia} onChange={(e) => setForm({ ...form, provincia: e.target.value })} placeholder="Provincia" />
+              </div>
+            </div>
+
+            {/* Separator */}
+            <div className="border-t pt-4">
+              <p className="text-sm font-medium text-muted-foreground mb-3">Tarifas</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>€/hora trabajo</Label>
+                  <Input type="number" step="0.01" value={form.tarifaHoraTrabajo} onChange={(e) => setForm({ ...form, tarifaHoraTrabajo: e.target.value })} placeholder="0.00" />
+                </div>
+                <div>
+                  <Label>€/hora desplazamiento</Label>
+                  <Input type="number" step="0.01" value={form.tarifaHoraViaje} onChange={(e) => setForm({ ...form, tarifaHoraViaje: e.target.value })} placeholder="0.00" />
+                </div>
+                <div>
+                  <Label>€ dieta</Label>
+                  <Input type="number" step="0.01" value={form.dietas} onChange={(e) => setForm({ ...form, dietas: e.target.value })} placeholder="0.00" />
+                </div>
+                <div>
+                  <Label>€ gestion accesos</Label>
+                  <Input type="number" step="0.01" value={form.gestionAccesos} onChange={(e) => setForm({ ...form, gestionAccesos: e.target.value })} placeholder="0.00" />
+                </div>
+              </div>
+            </div>
+
+            {/* Logistica */}
+            <div className="border-t pt-4">
+              <p className="text-sm font-medium text-muted-foreground mb-3">Logistica viaje</p>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <Label>Horas trayecto</Label>
+                  <Input type="number" step="0.1" value={form.horasTrayecto} onChange={(e) => setForm({ ...form, horasTrayecto: e.target.value })} placeholder="0" />
+                </div>
+                <div>
+                  <Label>Dias viaje</Label>
+                  <Input type="number" step="0.1" value={form.diasViaje} onChange={(e) => setForm({ ...form, diasViaje: e.target.value })} placeholder="0" />
+                </div>
+                <div>
+                  <Label>Kilometros</Label>
+                  <Input type="number" step="1" value={form.km} onChange={(e) => setForm({ ...form, km: e.target.value })} placeholder="0" />
+                </div>
+                <div>
+                  <Label>Peajes (€)</Label>
+                  <Input type="number" step="0.01" value={form.peajes} onChange={(e) => setForm({ ...form, peajes: e.target.value })} placeholder="0.00" />
+                </div>
+                <div>
+                  <Label>Precio hotel (€)</Label>
+                  <Input type="number" step="0.01" value={form.precioHotel} onChange={(e) => setForm({ ...form, precioHotel: e.target.value })} placeholder="0.00" />
+                </div>
+                <div>
+                  <Label>Precio/km (€)</Label>
+                  <Input type="number" step="0.01" value={form.precioKm} onChange={(e) => setForm({ ...form, precioKm: e.target.value })} placeholder="0.00" />
+                </div>
               </div>
             </div>
           </div>

@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Building2, Cog } from 'lucide-react';
+import { ArrowLeft, Plus, Building2, Cog, DollarSign, Truck, Save, X } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, Column } from '@/components/shared/DataTable';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useCliente, usePlantas, useCreatePlanta, useMaquinas, useCreateMaquina } from '@/hooks/useClientes';
+import { useCliente, useUpdateCliente, usePlantas, useCreatePlanta, useMaquinas, useCreateMaquina } from '@/hooks/useClientes';
 import { useSistemas, useCreateSistema } from '@/hooks/useSistemas';
 import { useFabricantes } from '@/hooks/useFabricantes';
 import { useAuth } from '@/hooks/useAuth';
@@ -32,6 +32,50 @@ export default function ClienteDetailPage() {
   const createPlanta = useCreatePlanta(clienteId);
   const createMaquina = useCreateMaquina(clienteId);
   const createSistema = useCreateSistema();
+  const updateCliente = useUpdateCliente();
+
+  // Logistics editing state
+  const [editingLogistics, setEditingLogistics] = useState(false);
+  const [logForm, setLogForm] = useState({
+    tarifaHoraTrabajo: '', tarifaHoraViaje: '', dietas: '', gestionAccesos: '',
+    horasTrayecto: '', diasViaje: '', km: '', peajes: '', precioHotel: '', precioKm: '',
+  });
+
+  // Sync logistics form with client data
+  useEffect(() => {
+    if (cliente) {
+      setLogForm({
+        tarifaHoraTrabajo: cliente.tarifaHoraTrabajo != null ? String(cliente.tarifaHoraTrabajo) : '',
+        tarifaHoraViaje: cliente.tarifaHoraViaje != null ? String(cliente.tarifaHoraViaje) : '',
+        dietas: cliente.dietas != null ? String(cliente.dietas) : '',
+        gestionAccesos: cliente.gestionAccesos != null ? String(cliente.gestionAccesos) : '',
+        horasTrayecto: cliente.horasTrayecto != null ? String(cliente.horasTrayecto) : '',
+        diasViaje: cliente.diasViaje != null ? String(cliente.diasViaje) : '',
+        km: cliente.km != null ? String(cliente.km) : '',
+        peajes: cliente.peajes != null ? String(cliente.peajes) : '',
+        precioHotel: cliente.precioHotel != null ? String(cliente.precioHotel) : '',
+        precioKm: cliente.precioKm != null ? String(cliente.precioKm) : '',
+      });
+    }
+  }, [cliente]);
+
+  const handleSaveLogistics = async () => {
+    const toNum = (v: string) => v.trim() ? Number(v) : null;
+    await updateCliente.mutateAsync({
+      id: clienteId,
+      tarifaHoraTrabajo: toNum(logForm.tarifaHoraTrabajo),
+      tarifaHoraViaje: toNum(logForm.tarifaHoraViaje),
+      dietas: toNum(logForm.dietas),
+      gestionAccesos: toNum(logForm.gestionAccesos),
+      horasTrayecto: toNum(logForm.horasTrayecto),
+      diasViaje: toNum(logForm.diasViaje),
+      km: toNum(logForm.km),
+      peajes: toNum(logForm.peajes),
+      precioHotel: toNum(logForm.precioHotel),
+      precioKm: toNum(logForm.precioKm),
+    });
+    setEditingLogistics(false);
+  };
 
   const [plantaOpen, setPlantaOpen] = useState(false);
   const [maquinaOpen, setMaquinaOpen] = useState(false);
@@ -141,6 +185,105 @@ export default function ClienteDetailPage() {
             <div className="text-2xl font-bold">{sistemas?.length ?? 0}</div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Tarifas y logistica */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <DollarSign className="h-5 w-5" /> Tarifas y logistica
+          </h2>
+          {isAdmin && !editingLogistics && (
+            <Button variant="outline" size="sm" onClick={() => setEditingLogistics(true)}>
+              Editar
+            </Button>
+          )}
+          {editingLogistics && (
+            <div className="flex gap-2">
+              <Button size="sm" onClick={handleSaveLogistics} disabled={updateCliente.isPending}>
+                <Save className="h-4 w-4 mr-1" />
+                {updateCliente.isPending ? 'Guardando...' : 'Guardar'}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setEditingLogistics(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Tarifas */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                <DollarSign className="h-4 w-4" /> Tarifas
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {[
+                { key: 'tarifaHoraTrabajo' as const, label: '€/hora trabajo' },
+                { key: 'tarifaHoraViaje' as const, label: '€/hora desplazamiento' },
+                { key: 'dietas' as const, label: '€ dieta' },
+                { key: 'gestionAccesos' as const, label: '€ gestion accesos' },
+              ].map((field) => (
+                <div key={field.key} className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-muted-foreground min-w-[160px]">{field.label}</span>
+                  {editingLogistics ? (
+                    <Input
+                      type="number"
+                      step="0.01"
+                      className="w-32 h-8 text-right"
+                      value={logForm[field.key]}
+                      onChange={(e) => setLogForm({ ...logForm, [field.key]: e.target.value })}
+                      placeholder="0.00"
+                    />
+                  ) : (
+                    <span className="text-sm font-mono">
+                      {cliente[field.key] != null ? `${Number(cliente[field.key]).toFixed(2)} €` : '-'}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Logistica viaje */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                <Truck className="h-4 w-4" /> Logistica viaje
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {[
+                { key: 'horasTrayecto' as const, label: 'Horas trayecto', suffix: 'h' },
+                { key: 'diasViaje' as const, label: 'Dias viaje', suffix: 'd' },
+                { key: 'km' as const, label: 'Kilometros', suffix: 'km' },
+                { key: 'peajes' as const, label: 'Peajes', suffix: '€' },
+                { key: 'precioHotel' as const, label: 'Precio hotel', suffix: '€' },
+                { key: 'precioKm' as const, label: 'Precio por km', suffix: '€' },
+              ].map((field) => (
+                <div key={field.key} className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-muted-foreground min-w-[140px]">{field.label}</span>
+                  {editingLogistics ? (
+                    <Input
+                      type="number"
+                      step="0.01"
+                      className="w-32 h-8 text-right"
+                      value={logForm[field.key]}
+                      onChange={(e) => setLogForm({ ...logForm, [field.key]: e.target.value })}
+                      placeholder="0.00"
+                    />
+                  ) : (
+                    <span className="text-sm font-mono">
+                      {cliente[field.key] != null ? `${Number(cliente[field.key]).toFixed(2)} ${field.suffix}` : '-'}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Plantas */}
