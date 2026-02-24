@@ -18,7 +18,6 @@ exports.createComponenteSchema = zod_1.z.object({
     etiqueta: zod_1.z.string().min(1, 'La etiqueta es obligatoria').max(100),
     numeroSerie: zod_1.z.string().max(100).optional().nullable(),
     numEjes: zod_1.z.number().int().positive().optional().nullable(),
-    niveles: zod_1.z.string().max(100).optional().nullable(), // CSV: "1,2_inferior,2_superior,3"
     metadata: zod_1.z.any().optional().nullable(),
     orden: zod_1.z.number().int().optional().default(0),
 });

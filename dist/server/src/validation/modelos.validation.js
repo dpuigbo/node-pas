@@ -9,6 +9,7 @@ exports.createModeloSchema = zod_1.z.object({
     nombre: zod_1.z.string().min(1, 'El nombre es obligatorio').max(200),
     notas: zod_1.z.string().optional().nullable(),
     aceitesConfig: zod_1.z.any().optional().nullable(),
+    niveles: zod_1.z.string().max(100).optional().nullable(), // CSV: "1,2_inferior,2_superior,3"
 });
 exports.updateModeloSchema = exports.createModeloSchema.partial().omit({ fabricanteId: true });
 exports.createVersionSchema = zod_1.z.object({
