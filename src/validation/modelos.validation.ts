@@ -8,6 +8,7 @@ export const createModeloSchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio').max(200),
   notas: z.string().optional().nullable(),
   aceitesConfig: z.any().optional().nullable(),
+  niveles: z.string().max(100).optional().nullable(), // CSV: "1,2_inferior,2_superior,3"
 });
 
 export const updateModeloSchema = createModeloSchema.partial().omit({ fabricanteId: true });

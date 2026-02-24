@@ -23,20 +23,6 @@ const TIPO_LABELS: Record<string, string> = {
   external_axis: 'Eje externo',
 };
 
-const NIVELES_OPTIONS = [
-  { value: '1', label: 'Nivel 1' },
-  { value: '2_inferior', label: 'Nivel 2 Inferior' },
-  { value: '2_superior', label: 'Nivel 2 Superior' },
-  { value: '3', label: 'Nivel 3' },
-];
-
-const NIVEL_SHORT: Record<string, string> = {
-  '1': 'N1',
-  '2_inferior': 'N2 Inf',
-  '2_superior': 'N2 Sup',
-  '3': 'N3',
-};
-
 export default function SistemaDetailPage() {
   const { id } = useParams<{ id: string }>();
   const sistemaId = Number(id);
@@ -56,7 +42,6 @@ export default function SistemaDetailPage() {
     etiqueta: '',
     numeroSerie: '',
     numEjes: '',
-    niveles: ['1', '2_inferior', '2_superior', '3'] as string[],
   });
 
   // Modelos filtered by fabricante of this sistema + selected tipo
@@ -87,7 +72,7 @@ export default function SistemaDetailPage() {
   const componentes: any[] = sistema.componentes ?? [];
 
   const resetForm = () => {
-    setCompForm({ tipo: '', modeloComponenteId: 0, etiqueta: '', numeroSerie: '', numEjes: '', niveles: ['1', '2_inferior', '2_superior', '3'] });
+    setCompForm({ tipo: '', modeloComponenteId: 0, etiqueta: '', numeroSerie: '', numEjes: '' });
     setEditingComp(null);
   };
 
@@ -97,9 +82,6 @@ export default function SistemaDetailPage() {
   };
 
   const openEdit = (comp: any) => {
-    const nivelesArr = comp.niveles
-      ? comp.niveles.split(',').filter(Boolean)
-      : ['1', '2_inferior', '2_superior', '3'];
     setEditingComp(comp);
     setCompForm({
       tipo: comp.tipo,
@@ -107,30 +89,17 @@ export default function SistemaDetailPage() {
       etiqueta: comp.etiqueta,
       numeroSerie: comp.numeroSerie || '',
       numEjes: comp.numEjes ? String(comp.numEjes) : '',
-      niveles: nivelesArr,
     });
     setCompOpen(true);
   };
 
-  const toggleNivel = (nivel: string) => {
-    setCompForm((prev) => {
-      const has = prev.niveles.includes(nivel);
-      const updated = has
-        ? prev.niveles.filter((n) => n !== nivel)
-        : [...prev.niveles, nivel];
-      return { ...prev, niveles: updated };
-    });
-  };
-
   const handleSubmitComp = async () => {
-    const nivelesStr = compForm.niveles.length > 0 ? compForm.niveles.join(',') : null;
     if (editingComp) {
       await updateComponente.mutateAsync({
         id: editingComp.id,
         etiqueta: compForm.etiqueta,
         numeroSerie: compForm.numeroSerie || null,
         numEjes: compForm.numEjes ? Number(compForm.numEjes) : null,
-        niveles: nivelesStr,
       });
     } else {
       await createComponente.mutateAsync({
@@ -139,7 +108,6 @@ export default function SistemaDetailPage() {
         etiqueta: compForm.etiqueta,
         numeroSerie: compForm.numeroSerie || null,
         numEjes: compForm.numEjes ? Number(compForm.numEjes) : null,
-        niveles: nivelesStr,
         orden: componentes.length,
       });
     }
@@ -171,23 +139,6 @@ export default function SistemaDetailPage() {
       key: 'numEjes',
       header: 'Ejes',
       render: (c) => c.numEjes ?? '-',
-    },
-    {
-      key: 'niveles',
-      header: 'Niveles',
-      render: (c) => {
-        const niv = c.niveles ? c.niveles.split(',').filter(Boolean) : [];
-        if (niv.length === 0) return <span className="text-muted-foreground text-xs">-</span>;
-        return (
-          <div className="flex flex-wrap gap-0.5">
-            {niv.map((n: string) => (
-              <Badge key={n} variant="outline" className="text-[10px] px-1 py-0">
-                {NIVEL_SHORT[n] ?? n}
-              </Badge>
-            ))}
-          </div>
-        );
-      },
     },
     ...(isAdmin
       ? [
@@ -352,38 +303,6 @@ export default function SistemaDetailPage() {
                 />
               </div>
             )}
-
-            {/* Niveles de mantenimiento */}
-            <div>
-              <Label>Niveles de mantenimiento</Label>
-              <p className="text-xs text-muted-foreground mb-2">
-                Selecciona los niveles aplicables a este componente.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {NIVELES_OPTIONS.map((niv) => {
-                  const selected = compForm.niveles.includes(niv.value);
-                  return (
-                    <button
-                      key={niv.value}
-                      type="button"
-                      className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
-                        selected
-                          ? 'bg-primary text-primary-foreground border-primary'
-                          : 'bg-background border-input text-muted-foreground hover:bg-muted'
-                      }`}
-                      onClick={() => toggleNivel(niv.value)}
-                    >
-                      {niv.label}
-                    </button>
-                  );
-                })}
-              </div>
-              {compForm.niveles.length === 0 && (
-                <p className="text-xs text-orange-500 mt-1">
-                  Sin niveles seleccionados. Este componente no aparecera en ninguna oferta.
-                </p>
-              )}
-            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => { setCompOpen(false); resetForm(); }}>Cancelar</Button>

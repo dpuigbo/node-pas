@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Plus, FileText, Play, Pause,
-  AlertCircle, Loader2, Pencil,
+  AlertCircle, Loader2, Pencil, Save, X,
 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, Column } from '@/components/shared/DataTable';
@@ -10,12 +10,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  useModelo, useVersiones, useCreateVersion, useActivateVersion,
+  useModelo, useUpdateModelo, useVersiones, useCreateVersion, useActivateVersion,
 } from '@/hooks/useModelos';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -38,6 +39,20 @@ const ESTADO_LABELS: Record<string, string> = {
   obsoleto: 'Obsoleto',
 };
 
+const NIVELES_OPTIONS = [
+  { value: '1', label: 'Nivel 1' },
+  { value: '2_inferior', label: 'Nivel 2 Inferior' },
+  { value: '2_superior', label: 'Nivel 2 Superior' },
+  { value: '3', label: 'Nivel 3' },
+];
+
+const NIVEL_SHORT: Record<string, string> = {
+  '1': 'N1',
+  '2_inferior': 'N2 Inf',
+  '2_superior': 'N2 Sup',
+  '3': 'N3',
+};
+
 export default function ModeloDetailPage() {
   const { modeloId: mId } = useParams<{ modeloId: string }>();
   const modeloId = Number(mId);
@@ -48,11 +63,35 @@ export default function ModeloDetailPage() {
   const { data: versiones, isLoading: loadingVersiones } = useVersiones(modeloId || undefined);
   const createVersion = useCreateVersion(modeloId);
   const activateVersion = useActivateVersion(modeloId);
+  const updateModelo = useUpdateModelo();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [createNotas, setCreateNotas] = useState('');
   const [activateTarget, setActivateTarget] = useState<any>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  // Niveles editing
+  const [editingNiveles, setEditingNiveles] = useState(false);
+  const [nivelesForm, setNivelesForm] = useState<string[]>([]);
+
+  const startEditNiveles = () => {
+    const current = modelo?.niveles ? modelo.niveles.split(',').filter(Boolean) : [];
+    setNivelesForm(current);
+    setEditingNiveles(true);
+  };
+
+  const toggleNivel = (nivel: string) => {
+    setNivelesForm((prev) => {
+      const has = prev.includes(nivel);
+      return has ? prev.filter((n) => n !== nivel) : [...prev, nivel];
+    });
+  };
+
+  const handleSaveNiveles = async () => {
+    const nivelesStr = nivelesForm.length > 0 ? nivelesForm.join(',') : null;
+    await updateModelo.mutateAsync({ id: modeloId, niveles: nivelesStr });
+    setEditingNiveles(false);
+  };
 
   if (loadingModelo) {
     return (
@@ -73,6 +112,7 @@ export default function ModeloDetailPage() {
   }
 
   const versionList: any[] = versiones ?? [];
+  const currentNiveles = modelo.niveles ? modelo.niveles.split(',').filter(Boolean) : [];
 
   const handleCreateVersion = async () => {
     const res = await createVersion.mutateAsync({
@@ -211,6 +251,76 @@ export default function ModeloDetailPage() {
       {modelo.notas && (
         <p className="text-sm text-muted-foreground">{modelo.notas}</p>
       )}
+
+      {/* Niveles de mantenimiento */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">Niveles de mantenimiento</CardTitle>
+            {isAdmin && !editingNiveles && (
+              <Button variant="outline" size="sm" onClick={startEditNiveles}>
+                <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
+              </Button>
+            )}
+            {editingNiveles && (
+              <div className="flex gap-2">
+                <Button size="sm" onClick={handleSaveNiveles} disabled={updateModelo.isPending}>
+                  <Save className="h-3.5 w-3.5 mr-1" />
+                  {updateModelo.isPending ? 'Guardando...' : 'Guardar'}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setEditingNiveles(false)}>
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {editingNiveles ? (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">
+                Selecciona los niveles de mantenimiento aplicables a este modelo.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {NIVELES_OPTIONS.map((niv) => {
+                  const selected = nivelesForm.includes(niv.value);
+                  return (
+                    <button
+                      key={niv.value}
+                      type="button"
+                      className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                        selected
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-background border-input text-muted-foreground hover:bg-muted'
+                      }`}
+                      onClick={() => toggleNivel(niv.value)}
+                    >
+                      {niv.label}
+                    </button>
+                  );
+                })}
+              </div>
+              {nivelesForm.length === 0 && (
+                <p className="text-xs text-orange-500">
+                  Sin niveles seleccionados. Este modelo no aparecera en ofertas.
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {currentNiveles.length > 0 ? (
+                currentNiveles.map((n) => (
+                  <Badge key={n} variant="secondary">
+                    {NIVEL_SHORT[n] ?? n}
+                  </Badge>
+                ))
+              ) : (
+                <span className="text-sm text-muted-foreground">Sin niveles configurados</span>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Versions */}
       <div className="space-y-3">
