@@ -4,6 +4,7 @@ export const createAceiteSchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio').max(200),
   fabricante: z.string().max(200).optional().nullable(),
   unidad: z.string().max(50).optional().nullable(),
+  fabricanteRobot: z.string().max(500).optional().nullable(), // CSV: "ABB,KUKA"
   coste: z.number().positive().optional().nullable(),
   precio: z.number().positive().optional().nullable(),
   activo: z.boolean().optional().default(true),

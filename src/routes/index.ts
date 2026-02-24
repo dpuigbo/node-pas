@@ -10,6 +10,7 @@ import intervencionesRoutes from './intervenciones.routes';
 import catalogosRoutes from './catalogos.routes';
 import informesRoutes from './informes.routes';
 import documentTemplatesRoutes from './document-templates.routes';
+import consumiblesNivelRoutes from './consumiblesNivel.routes';
 
 const router = Router();
 
@@ -26,5 +27,6 @@ router.use('/v1/intervenciones', authMiddleware, intervencionesRoutes);
 router.use('/v1/catalogos', authMiddleware, catalogosRoutes);
 router.use('/v1', authMiddleware, informesRoutes);
 router.use('/v1/document-templates', authMiddleware, documentTemplatesRoutes);
+router.use('/v1/consumibles-nivel', authMiddleware, consumiblesNivelRoutes);
 
 export default router;

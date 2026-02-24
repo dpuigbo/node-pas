@@ -11,6 +11,7 @@ import {
   Zap,
   Move3d,
   FileText,
+  ClipboardList,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppLogo } from '@/hooks/useCatalogos';
@@ -45,6 +46,7 @@ const navGroups: NavGroup[] = [
       { name: 'Clientes', href: '/clientes', icon: Users },
       { name: 'Fabricantes', href: '/fabricantes', icon: Factory },
       { name: 'Consumibles', href: '/catalogos', icon: Droplets },
+      { name: 'Consumibles/Nivel', href: '/consumibles-nivel', icon: ClipboardList },
       { name: 'Intervenciones', href: '/intervenciones', icon: Wrench },
     ],
   },

@@ -11,6 +11,7 @@ import ClienteDetailPage from './pages/ClienteDetailPage';
 import ModelosPage from './pages/ModelosPage';
 import IntervencionesPage from './pages/IntervencionesPage';
 import CatalogosPage from './pages/CatalogosPage';
+import ConsumiblesNivelPage from './pages/ConsumiblesNivelPage';
 import ConfiguracionPage from './pages/ConfiguracionPage';
 import OfertasPage from './pages/OfertasPage';
 import PlantillasPage from './pages/PlantillasPage';
@@ -112,6 +113,7 @@ export default function App() {
           />
           <Route path="/ofertas" element={<OfertasPage />} />
           <Route path="/catalogos" element={<CatalogosPage />} />
+          <Route path="/consumibles-nivel" element={<ConsumiblesNivelPage />} />
           <Route path="/configuracion" element={<ConfiguracionPage />} />
           <Route path="/configuracion/plantillas" element={<PlantillasPage />} />
         </Route>

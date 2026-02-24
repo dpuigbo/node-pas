@@ -120,9 +120,10 @@ model ModeloComponente {
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
 
-  fabricante  Fabricante        @relation(fields: [fabricanteId], references: [id], onDelete: Cascade)
-  versiones   VersionTemplate[]
-  componentes ComponenteSistema[]
+  fabricante        Fabricante         @relation(fields: [fabricanteId], references: [id], onDelete: Cascade)
+  versiones         VersionTemplate[]
+  componentes       ComponenteSistema[]
+  consumiblesNivel  ConsumibleNivel[]
 
   @@unique([fabricanteId, tipo, nombre])
   @@map("modelos_componente")
@@ -299,15 +300,16 @@ model ComponenteInforme {
 // ===== CATALOGOS ACEITES Y CONSUMIBLES =====
 
 model Aceite {
-  id         Int      @id @default(autoincrement())
-  nombre     String
-  fabricante String?
-  unidad     String?  // unidad de medida: litros, kg, ml…
-  coste      Decimal? @db.Decimal(10, 2)
-  precio     Decimal? @db.Decimal(10, 2)
-  activo     Boolean  @default(true)
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  id              Int      @id @default(autoincrement())
+  nombre          String
+  fabricante      String?
+  unidad          String?  // unidad de medida: litros, kg, ml…
+  fabricanteRobot String?  @map("fabricante_robot") // CSV de nombres fabricante: "ABB,KUKA"
+  coste           Decimal? @db.Decimal(10, 2)
+  precio          Decimal? @db.Decimal(10, 2)
+  activo          Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   @@map("aceites")
 }
@@ -329,6 +331,24 @@ model Consumible {
   updatedAt        DateTime @updatedAt @map("updated_at")
 
   @@map("consumibles")
+}
+
+// ===== TABLA CONSUMIBLES POR NIVEL (para ofertas/pedidos) =====
+
+model ConsumibleNivel {
+  id              Int            @id @default(autoincrement())
+  modeloId        Int            @map("modelo_id")
+  nivel           String         // '1' | '2_inferior' | '2_superior' | '3'
+  horas           Decimal?       @db.Decimal(8, 2)  // horas de trabajo por nivel
+  precioOtros     Decimal?       @db.Decimal(10, 2) @map("precio_otros") // precio de otros consumibles
+  consumibles     Json?          // [{ tipo: 'aceite'|'bateria'|'consumible', id: number, cantidad: number }]
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  modelo ModeloComponente @relation(fields: [modeloId], references: [id], onDelete: Cascade)
+
+  @@unique([modeloId, nivel])
+  @@map("consumibles_nivel")
 }
 
 // ===== PLANTILLAS DE DOCUMENTO =====
