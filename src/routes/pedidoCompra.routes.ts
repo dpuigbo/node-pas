@@ -191,7 +191,7 @@ router.post('/generar/:intervencionId', requireRole('admin'), async (req: Reques
     const pedido = await prisma.pedidoCompra.create({
       data: {
         intervencionId,
-        lineas,
+        lineas: lineas as unknown as import('@prisma/client').Prisma.InputJsonValue,
         totalCoste: totalCoste || null,
         totalPrecio: totalPrecio || null,
       },
