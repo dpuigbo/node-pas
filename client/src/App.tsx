@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, type ComponentType } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -16,14 +16,34 @@ import ConfiguracionPage from './pages/ConfiguracionPage';
 import OfertasPage from './pages/OfertasPage';
 import PlantillasPage from './pages/PlantillasPage';
 
+/**
+ * Lazy import with auto-reload on chunk load failure.
+ * When a new deploy changes chunk hashes, old references break.
+ * This catches the error and does a single page reload to get fresh assets.
+ */
+function lazyRetry(factory: () => Promise<{ default: ComponentType<any> }>) {
+  return lazy(() =>
+    factory().catch(() => {
+      // Avoid infinite reload loops — only reload once per session
+      const key = 'chunk-reload-' + window.location.pathname;
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1');
+        window.location.reload();
+      }
+      // Return empty component if already tried reloading
+      return { default: () => null } as { default: ComponentType<any> };
+    }),
+  );
+}
+
 // Lazy-loaded pages (large or with heavy dependencies)
-const EditorPage = lazy(() => import('./pages/EditorPage'));
-const ModeloDetailPage = lazy(() => import('./pages/ModeloDetailPage'));
-const IntervencionDetailPage = lazy(() => import('./pages/IntervencionDetailPage'));
-const InformeFormPage = lazy(() => import('./pages/InformeFormPage'));
-const SistemaDetailPage = lazy(() => import('./pages/SistemaDetailPage'));
-const DocumentTemplateEditorPage = lazy(() => import('./pages/DocumentTemplateEditorPage'));
-const InformePreviewPage = lazy(() => import('./pages/InformePreviewPage'));
+const EditorPage = lazyRetry(() => import('./pages/EditorPage'));
+const ModeloDetailPage = lazyRetry(() => import('./pages/ModeloDetailPage'));
+const IntervencionDetailPage = lazyRetry(() => import('./pages/IntervencionDetailPage'));
+const InformeFormPage = lazyRetry(() => import('./pages/InformeFormPage'));
+const SistemaDetailPage = lazyRetry(() => import('./pages/SistemaDetailPage'));
+const DocumentTemplateEditorPage = lazyRetry(() => import('./pages/DocumentTemplateEditorPage'));
+const InformePreviewPage = lazyRetry(() => import('./pages/InformePreviewPage'));
 
 function EditorLoader() {
   return (
