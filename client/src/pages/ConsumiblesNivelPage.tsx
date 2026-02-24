@@ -76,44 +76,48 @@ export default function ConsumiblesNivelPage() {
     setDirty(false);
   }, [modelos]);
 
+  const getNd = (prev: FormData, modeloId: number, nivel: string): NivelData => {
+    return prev[modeloId]?.[nivel] ?? emptyNivel();
+  };
+
   const updateField = useCallback((modeloId: number, nivel: string, field: 'horas' | 'precioOtros', val: string) => {
-    setForm((prev) => ({
-      ...prev,
-      [modeloId]: {
-        ...prev[modeloId],
-        [nivel]: { ...prev[modeloId]?.[nivel], [field]: val },
-      },
-    }));
+    setForm((prev) => {
+      const nd: NivelData = { ...getNd(prev, modeloId, nivel), [field]: val };
+      const modeloNiveles: ModeloNiveles = { ...(prev[modeloId] ?? {}), [nivel]: nd };
+      return { ...prev, [modeloId]: modeloNiveles };
+    });
     setDirty(true);
   }, []);
 
   const addConsumible = useCallback((modeloId: number, nivel: string) => {
     setForm((prev) => {
-      const nd = { ...prev[modeloId]?.[nivel] } || emptyNivel();
-      nd.consumibles = [...(nd.consumibles || []), { tipo: 'aceite' as const, id: 0, cantidad: 1 }];
-      return { ...prev, [modeloId]: { ...prev[modeloId], [nivel]: nd } };
+      const nd = getNd(prev, modeloId, nivel);
+      const updated: NivelData = { ...nd, consumibles: [...nd.consumibles, { tipo: 'aceite', id: 0, cantidad: 1 }] };
+      const modeloNiveles: ModeloNiveles = { ...(prev[modeloId] ?? {}), [nivel]: updated };
+      return { ...prev, [modeloId]: modeloNiveles };
     });
     setDirty(true);
   }, []);
 
   const updateConsumible = useCallback((modeloId: number, nivel: string, idx: number, patch: Partial<ConsumibleItem>) => {
     setForm((prev) => {
-      const nd = { ...prev[modeloId]?.[nivel] } || emptyNivel();
-      const items = [...(nd.consumibles || [])];
-      items[idx] = { ...items[idx], ...patch };
-      // Reset id when tipo changes
+      const nd = getNd(prev, modeloId, nivel);
+      const items = [...nd.consumibles];
+      items[idx] = { ...items[idx], ...patch } as ConsumibleItem;
       if (patch.tipo !== undefined) items[idx].id = 0;
-      nd.consumibles = items;
-      return { ...prev, [modeloId]: { ...prev[modeloId], [nivel]: nd } };
+      const updated: NivelData = { ...nd, consumibles: items };
+      const modeloNiveles: ModeloNiveles = { ...(prev[modeloId] ?? {}), [nivel]: updated };
+      return { ...prev, [modeloId]: modeloNiveles };
     });
     setDirty(true);
   }, []);
 
   const removeConsumible = useCallback((modeloId: number, nivel: string, idx: number) => {
     setForm((prev) => {
-      const nd = { ...prev[modeloId]?.[nivel] } || emptyNivel();
-      nd.consumibles = (nd.consumibles || []).filter((_, i) => i !== idx);
-      return { ...prev, [modeloId]: { ...prev[modeloId], [nivel]: nd } };
+      const nd = getNd(prev, modeloId, nivel);
+      const updated: NivelData = { ...nd, consumibles: nd.consumibles.filter((_, i) => i !== idx) };
+      const modeloNiveles: ModeloNiveles = { ...(prev[modeloId] ?? {}), [nivel]: updated };
+      return { ...prev, [modeloId]: modeloNiveles };
     });
     setDirty(true);
   }, []);
