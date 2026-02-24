@@ -51,9 +51,12 @@ async function geocode(address: string): Promise<{ lat: number; lon: number } | 
     const data: NominatimResult[] = await res.json();
     if (!data || data.length === 0) return null;
 
+    const first = data[0];
+    if (!first) return null;
+
     return {
-      lat: parseFloat(data[0].lat),
-      lon: parseFloat(data[0].lon),
+      lat: parseFloat(first.lat),
+      lon: parseFloat(first.lon),
     };
   } catch {
     return null;
