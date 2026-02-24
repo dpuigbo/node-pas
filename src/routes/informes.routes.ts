@@ -84,7 +84,7 @@ router.post(
             data: {
               intervencionId,
               sistemaId: sistema.id,
-              estado: 'borrador',
+              estado: 'inactivo',
               creadoPorId: user.id,
             },
           });

@@ -21,3 +21,15 @@ export function useDashboard() {
     staleTime: 30 * 1000,
   });
 }
+
+export function useCalendario(mes: string) {
+  return useQuery<any[]>({
+    queryKey: ['dashboard', 'calendario', mes],
+    queryFn: async () => {
+      const { data } = await api.get(`/v1/dashboard/calendario?mes=${mes}`);
+      return data;
+    },
+    enabled: !!mes,
+    staleTime: 60 * 1000,
+  });
+}

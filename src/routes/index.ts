@@ -11,6 +11,8 @@ import catalogosRoutes from './catalogos.routes';
 import informesRoutes from './informes.routes';
 import documentTemplatesRoutes from './document-templates.routes';
 import consumiblesNivelRoutes from './consumiblesNivel.routes';
+import pedidoCompraRoutes from './pedidoCompra.routes';
+import ofertasRoutes from './ofertas.routes';
 
 const router = Router();
 
@@ -28,5 +30,7 @@ router.use('/v1/catalogos', authMiddleware, catalogosRoutes);
 router.use('/v1', authMiddleware, informesRoutes);
 router.use('/v1/document-templates', authMiddleware, documentTemplatesRoutes);
 router.use('/v1/consumibles-nivel', authMiddleware, consumiblesNivelRoutes);
+router.use('/v1/pedidos-compra', authMiddleware, pedidoCompraRoutes);
+router.use('/v1/ofertas', authMiddleware, ofertasRoutes);
 
 export default router;

@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Fragment } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Plus, Cog, AlertCircle, X, Settings2, Eye } from 'lucide-react';
+import { ArrowLeft, FileText, Plus, Cog, AlertCircle, X, Settings2, Eye, ShoppingCart, Trash2, RefreshCw } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,12 @@ import { useIntervencion, useUpdateIntervencion } from '@/hooks/useIntervencione
 import { useCrearInformes } from '@/hooks/useInformes';
 import { useSistemas } from '@/hooks/useSistemas';
 import { useAuth } from '@/hooks/useAuth';
+import {
+  usePedidoCompra,
+  useGenerarPedidoCompra,
+  useUpdateEstadoPedido,
+  useDeletePedidoCompra,
+} from '@/hooks/usePedidoCompra';
 
 const ESTADO_INFORME_BADGE: Record<string, string> = {
   inactivo: 'bg-gray-100 text-gray-700',
@@ -31,6 +37,100 @@ const TIPO_BADGE: Record<string, string> = {
   correctiva: 'bg-orange-100 text-orange-700',
 };
 
+const ESTADO_PEDIDO_BADGE: Record<string, string> = {
+  pendiente: 'bg-yellow-100 text-yellow-700',
+  pedido: 'bg-blue-100 text-blue-700',
+  recibido: 'bg-green-100 text-green-700',
+};
+
+const ESTADO_PEDIDO_LABEL: Record<string, string> = {
+  pendiente: 'Pendiente',
+  pedido: 'Pedido',
+  recibido: 'Recibido',
+};
+
+const NIVEL_LABEL: Record<string, string> = {
+  '1': 'N1',
+  '2_inferior': 'N2 Inf.',
+  '2_superior': 'N2 Sup.',
+  '3': 'N3',
+};
+
+const TIPO_COMP_LABEL: Record<string, string> = {
+  controller: 'Controladora',
+  mechanical_unit: 'Manipulador',
+  drive_unit: 'Drive Unit',
+  external_axis: 'Eje Externo',
+};
+
+interface LineaPedido {
+  tipo: string;
+  itemId: number;
+  nombre: string;
+  cantidad: number;
+  unidad: string | null;
+  coste: number | null;
+  precio: number | null;
+  sistemaId: number;
+  sistemaNombre: string;
+  componenteTipo: string;
+  modeloNombre: string;
+  nivel: string;
+}
+
+interface AggregatedLine {
+  tipo: string;
+  itemId: number;
+  nombre: string;
+  unidad: string | null;
+  totalCantidad: number;
+  costeUnitario: number | null;
+  precioUnitario: number | null;
+  totalCoste: number | null;
+  totalPrecio: number | null;
+  detalles: { sistemaNombre: string; componenteTipo: string; modeloNombre: string; nivel: string; cantidad: number }[];
+}
+
+function aggregateLineas(lineas: LineaPedido[]): AggregatedLine[] {
+  const map = new Map<string, AggregatedLine>();
+  for (const l of lineas) {
+    const key = `${l.tipo}-${l.itemId}`;
+    const existing = map.get(key);
+    if (existing) {
+      existing.totalCantidad += l.cantidad;
+      if (l.coste != null) existing.totalCoste = (existing.totalCoste ?? 0) + l.coste * l.cantidad;
+      if (l.precio != null) existing.totalPrecio = (existing.totalPrecio ?? 0) + l.precio * l.cantidad;
+      existing.detalles.push({
+        sistemaNombre: l.sistemaNombre,
+        componenteTipo: l.componenteTipo,
+        modeloNombre: l.modeloNombre,
+        nivel: l.nivel,
+        cantidad: l.cantidad,
+      });
+    } else {
+      map.set(key, {
+        tipo: l.tipo,
+        itemId: l.itemId,
+        nombre: l.nombre,
+        unidad: l.unidad,
+        totalCantidad: l.cantidad,
+        costeUnitario: l.coste,
+        precioUnitario: l.precio,
+        totalCoste: l.coste != null ? l.coste * l.cantidad : null,
+        totalPrecio: l.precio != null ? l.precio * l.cantidad : null,
+        detalles: [{
+          sistemaNombre: l.sistemaNombre,
+          componenteTipo: l.componenteTipo,
+          modeloNombre: l.modeloNombre,
+          nivel: l.nivel,
+          cantidad: l.cantidad,
+        }],
+      });
+    }
+  }
+  return Array.from(map.values());
+}
+
 export default function IntervencionDetailPage() {
   const { id } = useParams<{ id: string }>();
   const intervencionId = Number(id);
@@ -43,7 +143,14 @@ export default function IntervencionDetailPage() {
   const crearInformes = useCrearInformes(intervencionId);
   const updateIntervencion = useUpdateIntervencion();
 
+  // Pedido de compra hooks
+  const { data: pedido, isLoading: pedidoLoading, isError: pedidoNotFound } = usePedidoCompra(intervencionId || undefined);
+  const generarPedido = useGenerarPedidoCompra();
+  const updateEstadoPedido = useUpdateEstadoPedido();
+  const deletePedido = useDeletePedidoCompra();
+
   const [sistemasDialogOpen, setSistemasDialogOpen] = useState(false);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   if (isLoading) {
     return (
@@ -78,6 +185,49 @@ export default function IntervencionDetailPage() {
       alert(msg);
     }
   };
+
+  const handleGenerarPedido = async () => {
+    try {
+      await generarPedido.mutateAsync(intervencionId);
+    } catch (err: any) {
+      const msg = err?.response?.data?.error ?? 'Error al generar pedido';
+      alert(msg);
+    }
+  };
+
+  const handleDeletePedido = async () => {
+    if (!pedido) return;
+    if (!confirm('Eliminar el pedido de compra?')) return;
+    try {
+      await deletePedido.mutateAsync(pedido.id);
+    } catch (err: any) {
+      alert('Error al eliminar pedido');
+    }
+  };
+
+  const handleCambiarEstadoPedido = async (estado: string) => {
+    if (!pedido) return;
+    try {
+      await updateEstadoPedido.mutateAsync({ id: pedido.id, estado });
+    } catch (err: any) {
+      alert('Error al cambiar estado');
+    }
+  };
+
+  const toggleRow = (key: string) => {
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  // Aggregate pedido lineas
+  const lineas: LineaPedido[] = pedido?.lineas ?? [];
+  const aggregated = aggregateLineas(lineas);
+
+  const hasPedido = pedido && !pedidoNotFound;
 
   return (
     <div className="space-y-6">
@@ -142,9 +292,14 @@ export default function IntervencionDetailPage() {
             {sistemas.map((is: any) => (
               <Card key={is.sistemaId}>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    {is.sistema?.nombre}
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium">
+                      {is.sistema?.nombre}
+                    </CardTitle>
+                    <Badge variant="secondary" className="text-xs">
+                      {NIVEL_LABEL[is.nivel] ?? is.nivel}
+                    </Badge>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <p className="text-xs text-muted-foreground">
@@ -154,6 +309,183 @@ export default function IntervencionDetailPage() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        )}
+      </div>
+
+      {/* Pedido de Compra */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <ShoppingCart className="h-5 w-5" /> Pedido de compra
+            {hasPedido && (
+              <Badge className={ESTADO_PEDIDO_BADGE[pedido.estado] ?? 'bg-gray-100 text-gray-700'}>
+                {ESTADO_PEDIDO_LABEL[pedido.estado] ?? pedido.estado}
+              </Badge>
+            )}
+          </h2>
+          <div className="flex gap-2">
+            {isAdmin && !hasPedido && sistemas.length > 0 && (
+              <Button
+                onClick={handleGenerarPedido}
+                disabled={generarPedido.isPending}
+                size="sm"
+              >
+                <ShoppingCart className="mr-1 h-4 w-4" />
+                {generarPedido.isPending ? 'Generando...' : 'Generar pedido'}
+              </Button>
+            )}
+            {isAdmin && hasPedido && (
+              <>
+                {pedido.estado === 'pendiente' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleCambiarEstadoPedido('pedido')}
+                    disabled={updateEstadoPedido.isPending}
+                  >
+                    Marcar como pedido
+                  </Button>
+                )}
+                {pedido.estado === 'pedido' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleCambiarEstadoPedido('recibido')}
+                    disabled={updateEstadoPedido.isPending}
+                  >
+                    Marcar como recibido
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={async () => {
+                    if (!confirm('Regenerar el pedido de compra? Se perderan los cambios manuales.')) return;
+                    try {
+                      await deletePedido.mutateAsync(pedido.id);
+                      await generarPedido.mutateAsync(intervencionId);
+                    } catch (err: any) {
+                      alert('Error al regenerar pedido');
+                    }
+                  }}
+                  disabled={deletePedido.isPending || generarPedido.isPending}
+                  title="Regenerar pedido"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleDeletePedido}
+                  disabled={deletePedido.isPending}
+                  className="text-destructive hover:text-destructive"
+                  title="Eliminar pedido"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {pedidoLoading && !pedidoNotFound && (
+          <p className="text-sm text-muted-foreground">Cargando pedido...</p>
+        )}
+
+        {!hasPedido && !pedidoLoading && (
+          <p className="text-sm text-muted-foreground">
+            {sistemas.length === 0
+              ? 'Asigna sistemas primero para poder generar el pedido.'
+              : isAdmin
+                ? 'Pulsa "Generar pedido" para crear la hoja de pedido de compra basada en los consumibles por nivel.'
+                : 'No se ha generado un pedido de compra para esta intervencion.'}
+          </p>
+        )}
+
+        {hasPedido && aggregated.length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            No se encontraron consumibles configurados para los sistemas y niveles de esta intervencion.
+          </p>
+        )}
+
+        {hasPedido && aggregated.length > 0 && (
+          <div className="rounded-lg border bg-card overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="px-3 py-2 text-left w-8"></th>
+                  <th className="px-3 py-2 text-left">Tipo</th>
+                  <th className="px-3 py-2 text-left">Nombre</th>
+                  <th className="px-3 py-2 text-right">Cantidad</th>
+                  <th className="px-3 py-2 text-left">Unidad</th>
+                  <th className="px-3 py-2 text-right">Coste ud.</th>
+                  <th className="px-3 py-2 text-right">Coste total</th>
+                  <th className="px-3 py-2 text-right">Precio ud.</th>
+                  <th className="px-3 py-2 text-right">Precio total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {aggregated.map((agg) => {
+                  const key = `${agg.tipo}-${agg.itemId}`;
+                  const isExpanded = expandedRows.has(key);
+                  return (
+                    <Fragment key={key}>
+                      <tr
+                        className="border-b last:border-0 hover:bg-muted/30 cursor-pointer"
+                        onClick={() => toggleRow(key)}
+                      >
+                        <td className="px-3 py-2 text-xs text-muted-foreground">
+                          {agg.detalles.length > 1 ? (isExpanded ? '▼' : '▶') : ''}
+                        </td>
+                        <td className="px-3 py-2">
+                          <Badge variant="outline" className="text-xs">
+                            {agg.tipo === 'aceite' ? 'Aceite' : agg.tipo === 'bateria' ? 'Bateria' : 'Consumible'}
+                          </Badge>
+                        </td>
+                        <td className="px-3 py-2 font-medium">{agg.nombre}</td>
+                        <td className="px-3 py-2 text-right font-mono">{agg.totalCantidad}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{agg.unidad ?? '-'}</td>
+                        <td className="px-3 py-2 text-right font-mono">
+                          {agg.costeUnitario != null ? `${agg.costeUnitario.toFixed(2)} €` : '-'}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono">
+                          {agg.totalCoste != null ? `${agg.totalCoste.toFixed(2)} €` : '-'}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono">
+                          {agg.precioUnitario != null ? `${agg.precioUnitario.toFixed(2)} €` : '-'}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono">
+                          {agg.totalPrecio != null ? `${agg.totalPrecio.toFixed(2)} €` : '-'}
+                        </td>
+                      </tr>
+                      {isExpanded && agg.detalles.map((det, idx) => (
+                        <tr key={`${key}-${idx}`} className="bg-muted/20 border-b last:border-0">
+                          <td className="px-3 py-1.5"></td>
+                          <td colSpan={2} className="px-3 py-1.5 text-xs text-muted-foreground">
+                            {det.sistemaNombre} — {TIPO_COMP_LABEL[det.componenteTipo] ?? det.componenteTipo} ({det.modeloNombre}) — {NIVEL_LABEL[det.nivel] ?? det.nivel}
+                          </td>
+                          <td className="px-3 py-1.5 text-right text-xs font-mono">{det.cantidad}</td>
+                          <td colSpan={5}></td>
+                        </tr>
+                      ))}
+                    </Fragment>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr className="border-t bg-muted/50 font-medium">
+                  <td colSpan={6} className="px-3 py-2 text-right">Totales:</td>
+                  <td className="px-3 py-2 text-right font-mono">
+                    {pedido.totalCoste != null ? `${Number(pedido.totalCoste).toFixed(2)} €` : '-'}
+                  </td>
+                  <td className="px-3 py-2"></td>
+                  <td className="px-3 py-2 text-right font-mono">
+                    {pedido.totalPrecio != null ? `${Number(pedido.totalPrecio).toFixed(2)} €` : '-'}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
           </div>
         )}
       </div>

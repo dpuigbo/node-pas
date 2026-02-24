@@ -57,6 +57,7 @@ model Cliente {
   maquinas       Maquina[]
   sistemas       Sistema[]
   intervenciones Intervencion[]
+  ofertas        Oferta[]
 
   @@map("clientes")
 }
@@ -176,9 +177,10 @@ model Sistema {
   planta        Planta?              @relation(fields: [plantaId], references: [id], onDelete: SetNull)
   maquina       Maquina?             @relation(fields: [maquinaId], references: [id], onDelete: SetNull)
   fabricante    Fabricante           @relation(fields: [fabricanteId], references: [id], onDelete: Cascade)
-  componentes   ComponenteSistema[]
+  componentes    ComponenteSistema[]
   intervenciones IntervencionSistema[]
-  informes      Informe[]
+  informes       Informe[]
+  ofertas        OfertaSistema[]
 
   @@unique([clienteId, fabricanteId, nombre])
   @@map("sistemas")
@@ -220,9 +222,10 @@ model Intervencion {
   createdAt   DateTime           @default(now()) @map("created_at")
   updatedAt   DateTime           @updatedAt @map("updated_at")
 
-  cliente  Cliente              @relation(fields: [clienteId], references: [id], onDelete: Cascade)
-  sistemas IntervencionSistema[]
-  informes Informe[]
+  cliente      Cliente              @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  sistemas     IntervencionSistema[]
+  informes     Informe[]
+  pedidoCompra PedidoCompra?
 
   @@map("intervenciones")
 }
@@ -351,6 +354,65 @@ model ConsumibleNivel {
 
   @@unique([modeloId, nivel])
   @@map("consumibles_nivel")
+}
+
+// ===== OFERTAS =====
+
+model Oferta {
+  id            Int            @id @default(autoincrement())
+  clienteId     Int            @map("cliente_id")
+  titulo        String
+  referencia    String?
+  tipo          TipoIntervencion   // preventiva | correctiva
+  estado        String         @default("borrador") // 'borrador' | 'enviada' | 'aprobada' | 'rechazada'
+  fechaOferta   DateTime       @default(now()) @map("fecha_oferta")
+  validezDias   Int            @default(30) @map("validez_dias")
+  notas         String?        @db.Text
+  // Totals (auto-calculated)
+  totalHoras    Decimal?       @db.Decimal(8, 2) @map("total_horas")
+  totalCoste    Decimal?       @db.Decimal(10, 2) @map("total_coste")
+  totalPrecio   Decimal?       @db.Decimal(10, 2) @map("total_precio")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  cliente  Cliente         @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  sistemas OfertaSistema[]
+
+  @@map("ofertas")
+}
+
+model OfertaSistema {
+  ofertaId          Int      @map("oferta_id")
+  sistemaId         Int      @map("sistema_id")
+  nivel             String   @default("1") // '1' | '2_inferior' | '2_superior' | '3'
+  // Per-system calculated values
+  horas             Decimal? @db.Decimal(8, 2)
+  costeConsumibles  Decimal? @db.Decimal(10, 2) @map("coste_consumibles")
+  precioConsumibles Decimal? @db.Decimal(10, 2) @map("precio_consumibles")
+
+  oferta  Oferta  @relation(fields: [ofertaId], references: [id], onDelete: Cascade)
+  sistema Sistema @relation(fields: [sistemaId], references: [id], onDelete: Cascade)
+
+  @@id([ofertaId, sistemaId])
+  @@map("oferta_sistema")
+}
+
+// ===== PEDIDOS DE COMPRA =====
+
+model PedidoCompra {
+  id              Int      @id @default(autoincrement())
+  intervencionId  Int      @unique @map("intervencion_id")
+  estado          String   @default("pendiente") // 'pendiente' | 'pedido' | 'recibido'
+  notas           String?  @db.Text
+  lineas          Json     // [{tipo, itemId, nombre, cantidad, unidad, coste, precio, sistemaId, sistemaNombre, componenteTipo, modeloNombre, nivel}]
+  totalCoste      Decimal? @db.Decimal(10, 2) @map("total_coste")
+  totalPrecio     Decimal? @db.Decimal(10, 2) @map("total_precio")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  intervencion Intervencion @relation(fields: [intervencionId], references: [id], onDelete: Cascade)
+
+  @@map("pedidos_compra")
 }
 
 // ===== PLANTILLAS DE DOCUMENTO =====

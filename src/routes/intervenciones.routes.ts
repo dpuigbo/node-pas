@@ -67,6 +67,7 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
             sistema: { select: { id: true, nombre: true } },
           },
         },
+        pedidoCompra: { select: { id: true, estado: true } },
       },
     });
     if (!intervencion) { res.status(404).json({ error: 'Intervencion no encontrada' }); return; }
