@@ -19,6 +19,7 @@ export const createComponenteSchema = z.object({
   etiqueta: z.string().min(1, 'La etiqueta es obligatoria').max(100),
   numeroSerie: z.string().max(100).optional().nullable(),
   numEjes: z.number().int().positive().optional().nullable(),
+  niveles: z.string().max(100).optional().nullable(), // CSV: "1,2_inferior,2_superior,3"
   metadata: z.any().optional().nullable(),
   orden: z.number().int().optional().default(0),
 });

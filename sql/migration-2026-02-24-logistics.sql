@@ -38,3 +38,7 @@ ALTER TABLE intervenciones ADD COLUMN IF NOT EXISTS incluye_consumibles TINYINT(
 ALTER TABLE intervenciones ADD COLUMN IF NOT EXISTS horas_dia DECIMAL(8,2) NULL;
 ALTER TABLE intervenciones ADD COLUMN IF NOT EXISTS dietas_extra DECIMAL(10,2) NULL;
 ALTER TABLE intervenciones ADD COLUMN IF NOT EXISTS dias_trabajo VARCHAR(50) NULL;
+
+-- ===== COMPONENTES_SISTEMA: niveles de mantenimiento aplicables =====
+
+ALTER TABLE componentes_sistema ADD COLUMN IF NOT EXISTS niveles VARCHAR(100) NULL;

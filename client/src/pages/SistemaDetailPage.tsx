@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Cpu, Trash2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Cpu, Trash2, AlertCircle, Pencil } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, Column } from '@/components/shared/DataTable';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSistema } from '@/hooks/useSistemas';
 import { useModelos } from '@/hooks/useModelos';
-import { useCreateComponente, useDeleteComponente } from '@/hooks/useComponentes';
+import { useCreateComponente, useUpdateComponente, useDeleteComponente } from '@/hooks/useComponentes';
 import { useAuth } from '@/hooks/useAuth';
 
 const TIPO_LABELS: Record<string, string> = {
@@ -21,6 +21,20 @@ const TIPO_LABELS: Record<string, string> = {
   mechanical_unit: 'Unidad mecanica',
   drive_unit: 'Unidad de accionamiento',
   external_axis: 'Eje externo',
+};
+
+const NIVELES_OPTIONS = [
+  { value: '1', label: 'Nivel 1' },
+  { value: '2_inferior', label: 'Nivel 2 Inferior' },
+  { value: '2_superior', label: 'Nivel 2 Superior' },
+  { value: '3', label: 'Nivel 3' },
+];
+
+const NIVEL_SHORT: Record<string, string> = {
+  '1': 'N1',
+  '2_inferior': 'N2 Inf',
+  '2_superior': 'N2 Sup',
+  '3': 'N3',
 };
 
 export default function SistemaDetailPage() {
@@ -31,15 +45,18 @@ export default function SistemaDetailPage() {
 
   const { data: sistema, isLoading } = useSistema(sistemaId || undefined);
   const createComponente = useCreateComponente(sistemaId);
+  const updateComponente = useUpdateComponente(sistemaId);
   const deleteComponente = useDeleteComponente(sistemaId);
 
   const [compOpen, setCompOpen] = useState(false);
+  const [editingComp, setEditingComp] = useState<any>(null);
   const [compForm, setCompForm] = useState({
     tipo: '' as string,
     modeloComponenteId: 0,
     etiqueta: '',
     numeroSerie: '',
     numEjes: '',
+    niveles: ['1', '2_inferior', '2_superior', '3'] as string[],
   });
 
   // Modelos filtered by fabricante of this sistema + selected tipo
@@ -69,17 +86,65 @@ export default function SistemaDetailPage() {
 
   const componentes: any[] = sistema.componentes ?? [];
 
-  const handleCreateComp = async () => {
-    await createComponente.mutateAsync({
-      tipo: compForm.tipo,
-      modeloComponenteId: compForm.modeloComponenteId,
-      etiqueta: compForm.etiqueta,
-      numeroSerie: compForm.numeroSerie || null,
-      numEjes: compForm.numEjes ? Number(compForm.numEjes) : null,
-      orden: componentes.length,
+  const resetForm = () => {
+    setCompForm({ tipo: '', modeloComponenteId: 0, etiqueta: '', numeroSerie: '', numEjes: '', niveles: ['1', '2_inferior', '2_superior', '3'] });
+    setEditingComp(null);
+  };
+
+  const openCreate = () => {
+    resetForm();
+    setCompOpen(true);
+  };
+
+  const openEdit = (comp: any) => {
+    const nivelesArr = comp.niveles
+      ? comp.niveles.split(',').filter(Boolean)
+      : ['1', '2_inferior', '2_superior', '3'];
+    setEditingComp(comp);
+    setCompForm({
+      tipo: comp.tipo,
+      modeloComponenteId: comp.modeloComponenteId,
+      etiqueta: comp.etiqueta,
+      numeroSerie: comp.numeroSerie || '',
+      numEjes: comp.numEjes ? String(comp.numEjes) : '',
+      niveles: nivelesArr,
     });
+    setCompOpen(true);
+  };
+
+  const toggleNivel = (nivel: string) => {
+    setCompForm((prev) => {
+      const has = prev.niveles.includes(nivel);
+      const updated = has
+        ? prev.niveles.filter((n) => n !== nivel)
+        : [...prev.niveles, nivel];
+      return { ...prev, niveles: updated };
+    });
+  };
+
+  const handleSubmitComp = async () => {
+    const nivelesStr = compForm.niveles.length > 0 ? compForm.niveles.join(',') : null;
+    if (editingComp) {
+      await updateComponente.mutateAsync({
+        id: editingComp.id,
+        etiqueta: compForm.etiqueta,
+        numeroSerie: compForm.numeroSerie || null,
+        numEjes: compForm.numEjes ? Number(compForm.numEjes) : null,
+        niveles: nivelesStr,
+      });
+    } else {
+      await createComponente.mutateAsync({
+        tipo: compForm.tipo,
+        modeloComponenteId: compForm.modeloComponenteId,
+        etiqueta: compForm.etiqueta,
+        numeroSerie: compForm.numeroSerie || null,
+        numEjes: compForm.numEjes ? Number(compForm.numEjes) : null,
+        niveles: nivelesStr,
+        orden: componentes.length,
+      });
+    }
     setCompOpen(false);
-    setCompForm({ tipo: '', modeloComponenteId: 0, etiqueta: '', numeroSerie: '', numEjes: '' });
+    resetForm();
   };
 
   const handleDeleteComp = async (compId: number, nombre: string) => {
@@ -107,31 +172,62 @@ export default function SistemaDetailPage() {
       header: 'Ejes',
       render: (c) => c.numEjes ?? '-',
     },
+    {
+      key: 'niveles',
+      header: 'Niveles',
+      render: (c) => {
+        const niv = c.niveles ? c.niveles.split(',').filter(Boolean) : [];
+        if (niv.length === 0) return <span className="text-muted-foreground text-xs">-</span>;
+        return (
+          <div className="flex flex-wrap gap-0.5">
+            {niv.map((n: string) => (
+              <Badge key={n} variant="outline" className="text-[10px] px-1 py-0">
+                {NIVEL_SHORT[n] ?? n}
+              </Badge>
+            ))}
+          </div>
+        );
+      },
+    },
     ...(isAdmin
       ? [
           {
             key: 'acciones' as const,
             header: '',
             render: (c: any) => (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-gray-400 hover:text-red-500"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteComp(c.id, c.etiqueta);
-                }}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              <div className="flex gap-0.5">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-gray-400 hover:text-blue-500"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openEdit(c);
+                  }}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-gray-400 hover:text-red-500"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteComp(c.id, c.etiqueta);
+                  }}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
             ),
           },
         ]
       : []),
   ];
 
-  const canCreateComp =
-    compForm.tipo && compForm.modeloComponenteId && compForm.etiqueta.trim();
+  const canSubmitComp = editingComp
+    ? compForm.etiqueta.trim()
+    : compForm.tipo && compForm.modeloComponenteId && compForm.etiqueta.trim();
 
   return (
     <div className="space-y-6">
@@ -157,7 +253,7 @@ export default function SistemaDetailPage() {
             <Cpu className="h-5 w-5" /> Componentes ({componentes.length})
           </h2>
           {isAdmin && (
-            <Button size="sm" onClick={() => setCompOpen(true)}>
+            <Button size="sm" onClick={openCreate}>
               <Plus className="h-4 w-4" /> Componente
             </Button>
           )}
@@ -170,52 +266,58 @@ export default function SistemaDetailPage() {
         />
       </div>
 
-      {/* Create Componente Dialog */}
-      <Dialog open={compOpen} onOpenChange={setCompOpen}>
+      {/* Create/Edit Componente Dialog */}
+      <Dialog open={compOpen} onOpenChange={(open) => { setCompOpen(open); if (!open) resetForm(); }}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Nuevo componente</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{editingComp ? 'Editar componente' : 'Nuevo componente'}</DialogTitle>
+          </DialogHeader>
           <div className="space-y-4">
-            {/* Tipo */}
-            <div>
-              <Label>Tipo de componente</Label>
-              <Select
-                value={compForm.tipo}
-                onValueChange={(v) => setCompForm({ ...compForm, tipo: v, modeloComponenteId: 0 })}
-              >
-                <SelectTrigger><SelectValue placeholder="Seleccionar tipo..." /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="controller">Controlador</SelectItem>
-                  <SelectItem value="mechanical_unit">Unidad mecanica</SelectItem>
-                  <SelectItem value="drive_unit">Unidad de accionamiento</SelectItem>
-                  <SelectItem value="external_axis">Eje externo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Modelo (filtrado por fabricante + tipo) */}
-            <div>
-              <Label>Modelo</Label>
-              {!compForm.tipo ? (
-                <p className="text-xs text-muted-foreground mt-1">Selecciona un tipo primero.</p>
-              ) : (
+            {/* Tipo (solo en creacion) */}
+            {!editingComp && (
+              <div>
+                <Label>Tipo de componente</Label>
                 <Select
-                  value={String(compForm.modeloComponenteId || '')}
-                  onValueChange={(v) => setCompForm({ ...compForm, modeloComponenteId: Number(v) })}
+                  value={compForm.tipo}
+                  onValueChange={(v) => setCompForm({ ...compForm, tipo: v, modeloComponenteId: 0 })}
                 >
-                  <SelectTrigger><SelectValue placeholder="Seleccionar modelo..." /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Seleccionar tipo..." /></SelectTrigger>
                   <SelectContent>
-                    {(Array.isArray(modelos) ? modelos : []).map((m: any) => (
-                      <SelectItem key={m.id} value={String(m.id)}>{m.nombre}</SelectItem>
-                    ))}
+                    <SelectItem value="controller">Controlador</SelectItem>
+                    <SelectItem value="mechanical_unit">Unidad mecanica</SelectItem>
+                    <SelectItem value="drive_unit">Unidad de accionamiento</SelectItem>
+                    <SelectItem value="external_axis">Eje externo</SelectItem>
                   </SelectContent>
                 </Select>
-              )}
-              {compForm.tipo && (modelos as any[] | undefined)?.length === 0 && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  No hay modelos de este tipo para el fabricante {sistema.fabricante?.nombre}. Crea uno en Catalogos.
-                </p>
-              )}
-            </div>
+              </div>
+            )}
+
+            {/* Modelo (solo en creacion) */}
+            {!editingComp && (
+              <div>
+                <Label>Modelo</Label>
+                {!compForm.tipo ? (
+                  <p className="text-xs text-muted-foreground mt-1">Selecciona un tipo primero.</p>
+                ) : (
+                  <Select
+                    value={String(compForm.modeloComponenteId || '')}
+                    onValueChange={(v) => setCompForm({ ...compForm, modeloComponenteId: Number(v) })}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Seleccionar modelo..." /></SelectTrigger>
+                    <SelectContent>
+                      {(Array.isArray(modelos) ? modelos : []).map((m: any) => (
+                        <SelectItem key={m.id} value={String(m.id)}>{m.nombre}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {compForm.tipo && (modelos as any[] | undefined)?.length === 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    No hay modelos de este tipo para el fabricante {sistema.fabricante?.nombre}. Crea uno en Catalogos.
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Etiqueta */}
             <div>
@@ -250,11 +352,48 @@ export default function SistemaDetailPage() {
                 />
               </div>
             )}
+
+            {/* Niveles de mantenimiento */}
+            <div>
+              <Label>Niveles de mantenimiento</Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                Selecciona los niveles aplicables a este componente.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {NIVELES_OPTIONS.map((niv) => {
+                  const selected = compForm.niveles.includes(niv.value);
+                  return (
+                    <button
+                      key={niv.value}
+                      type="button"
+                      className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                        selected
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-background border-input text-muted-foreground hover:bg-muted'
+                      }`}
+                      onClick={() => toggleNivel(niv.value)}
+                    >
+                      {niv.label}
+                    </button>
+                  );
+                })}
+              </div>
+              {compForm.niveles.length === 0 && (
+                <p className="text-xs text-orange-500 mt-1">
+                  Sin niveles seleccionados. Este componente no aparecera en ninguna oferta.
+                </p>
+              )}
+            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCompOpen(false)}>Cancelar</Button>
-            <Button onClick={handleCreateComp} disabled={!canCreateComp || createComponente.isPending}>
-              {createComponente.isPending ? 'Creando...' : 'Crear'}
+            <Button variant="outline" onClick={() => { setCompOpen(false); resetForm(); }}>Cancelar</Button>
+            <Button
+              onClick={handleSubmitComp}
+              disabled={!canSubmitComp || createComponente.isPending || updateComponente.isPending}
+            >
+              {(createComponente.isPending || updateComponente.isPending)
+                ? (editingComp ? 'Guardando...' : 'Creando...')
+                : (editingComp ? 'Guardar' : 'Crear')}
             </Button>
           </DialogFooter>
         </DialogContent>

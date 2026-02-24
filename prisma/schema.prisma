@@ -201,6 +201,7 @@ model ComponenteSistema {
   etiqueta           String
   numeroSerie        String?        @map("numero_serie")
   numEjes            Int?           @map("num_ejes")
+  niveles            String?        // CSV de niveles aplicables: "1,2_inferior,2_superior,3"
   metadata           Json?
   orden              Int            @default(0)
   createdAt          DateTime       @default(now()) @map("created_at")
