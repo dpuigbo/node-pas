@@ -309,7 +309,7 @@ export default function ModeloDetailPage() {
           ) : (
             <div className="flex flex-wrap gap-1.5">
               {currentNiveles.length > 0 ? (
-                currentNiveles.map((n) => (
+                currentNiveles.map((n: string) => (
                   <Badge key={n} variant="secondary">
                     {NIVEL_SHORT[n] ?? n}
                   </Badge>
