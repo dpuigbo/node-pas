@@ -31,15 +31,15 @@ import '@/components/blocks/register-all';
 // ======================== Constants ========================
 
 const ESTADO_BADGE: Record<string, string> = {
-  borrador: 'bg-gray-100 text-gray-700',
-  finalizado: 'bg-amber-100 text-amber-700',
-  entregado: 'bg-green-100 text-green-700',
+  inactivo: 'bg-gray-100 text-gray-700',
+  activo: 'bg-blue-100 text-blue-700',
+  finalizado: 'bg-green-100 text-green-700',
 };
 
 const ESTADO_LABEL: Record<string, string> = {
-  borrador: 'Borrador',
+  inactivo: 'Inactivo',
+  activo: 'Activo',
   finalizado: 'Finalizado',
-  entregado: 'Entregado',
 };
 
 /** Blocks that always render full-width */
@@ -80,7 +80,7 @@ export default function InformeFormPage() {
   const [localDocDatos, setLocalDocDatos] = useState<Record<string, unknown>>({});
   const [isSaving, setIsSaving] = useState(false);
 
-  const readOnly = data?.informe?.estado !== 'borrador';
+  const readOnly = data?.informe?.estado === 'finalizado' || data?.informe?.estado === 'inactivo';
 
   // Check if any component has unsaved changes
   const hasCompDirty = useMemo(
@@ -275,7 +275,7 @@ export default function InformeFormPage() {
             </Button>
           )}
 
-          {isAdmin && informe.estado === 'borrador' && (
+          {isAdmin && informe.estado === 'activo' && (
             <FinalizarButton
               informeId={informeId}
               intervencionId={informe.intervencion.id}

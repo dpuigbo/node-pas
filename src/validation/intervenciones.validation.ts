@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+const sistemaNivelSchema = z.object({
+  sistemaId: z.number().int().positive(),
+  nivel: z.enum(['1', '2_inferior', '2_superior', '3']).default('1'),
+});
+
 export const createIntervencionSchema = z.object({
   clienteId: z.number().int().positive(),
   tipo: z.enum(['preventiva', 'correctiva']),
@@ -8,7 +13,10 @@ export const createIntervencionSchema = z.object({
   fechaInicio: z.string().datetime().optional().nullable(),
   fechaFin: z.string().datetime().optional().nullable(),
   notas: z.string().optional().nullable(),
+  // Legacy: array of ids (nivel defaults to '1')
   sistemaIds: z.array(z.number().int().positive()).optional().default([]),
+  // New: array of { sistemaId, nivel }
+  sistemas: z.array(sistemaNivelSchema).optional().default([]),
 });
 
 export const updateIntervencionSchema = createIntervencionSchema.partial();

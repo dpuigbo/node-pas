@@ -15,15 +15,15 @@ import { useSistemas } from '@/hooks/useSistemas';
 import { useAuth } from '@/hooks/useAuth';
 
 const ESTADO_INFORME_BADGE: Record<string, string> = {
-  borrador: 'bg-gray-100 text-gray-700',
-  finalizado: 'bg-amber-100 text-amber-700',
-  entregado: 'bg-green-100 text-green-700',
+  inactivo: 'bg-gray-100 text-gray-700',
+  activo: 'bg-blue-100 text-blue-700',
+  finalizado: 'bg-green-100 text-green-700',
 };
 
 const ESTADO_INFORME_LABEL: Record<string, string> = {
-  borrador: 'Borrador',
+  inactivo: 'Inactivo',
+  activo: 'Activo',
   finalizado: 'Finalizado',
-  entregado: 'Entregado',
 };
 
 const TIPO_BADGE: Record<string, string> = {

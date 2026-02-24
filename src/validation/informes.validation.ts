@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const updateEstadoInformeSchema = z.object({
-  estado: z.enum(['borrador', 'finalizado', 'entregado']),
+  estado: z.enum(['inactivo', 'activo', 'finalizado']),
 });
 
 export const updateDatosComponenteSchema = z.object({

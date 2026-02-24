@@ -209,6 +209,7 @@ model ComponenteSistema {
 model Intervencion {
   id          Int                @id @default(autoincrement())
   clienteId   Int                @map("cliente_id")
+  ofertaId    Int?               @map("oferta_id")  // FK a oferta origen (cuando exista)
   tipo        TipoIntervencion
   estado      EstadoIntervencion @default(borrador)
   referencia  String?
@@ -239,8 +240,9 @@ enum EstadoIntervencion {
 }
 
 model IntervencionSistema {
-  intervencionId Int @map("intervencion_id")
-  sistemaId      Int @map("sistema_id")
+  intervencionId Int    @map("intervencion_id")
+  sistemaId      Int    @map("sistema_id")
+  nivel          String @default("1")  // '1' | '2_inferior' | '2_superior' | '3'
 
   intervencion Intervencion @relation(fields: [intervencionId], references: [id], onDelete: Cascade)
   sistema      Sistema      @relation(fields: [sistemaId], references: [id], onDelete: Cascade)
@@ -253,7 +255,7 @@ model Informe {
   id               Int           @id @default(autoincrement())
   intervencionId   Int           @map("intervencion_id")
   sistemaId        Int           @map("sistema_id")
-  estado           EstadoInforme @default(borrador)
+  estado           EstadoInforme @default(inactivo)
   fechaRealizacion DateTime?     @map("fecha_realizacion")
   notas            String?       @db.Text
   datosDocumento   Json          @default("{}") @map("datos_documento")
@@ -271,9 +273,9 @@ model Informe {
 }
 
 enum EstadoInforme {
-  borrador
+  inactivo
+  activo
   finalizado
-  entregado
 }
 
 model ComponenteInforme {

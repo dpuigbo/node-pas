@@ -1,6 +1,6 @@
 import type { TemplateSchema } from './editor';
 
-export type EstadoInforme = 'borrador' | 'finalizado' | 'entregado';
+export type EstadoInforme = 'inactivo' | 'activo' | 'finalizado';
 
 export interface ComponenteInformeDetalle {
   id: number;

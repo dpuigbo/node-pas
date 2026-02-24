@@ -7,6 +7,17 @@ import {
 
 const router = Router();
 
+/** Build sistema rows from either `sistemas` (new) or `sistemaIds` (legacy) */
+function buildSistemaRows(data: { sistemas?: { sistemaId: number; nivel: string }[]; sistemaIds?: number[] }) {
+  if (data.sistemas && data.sistemas.length > 0) {
+    return data.sistemas.map((s) => ({ sistemaId: s.sistemaId, nivel: s.nivel }));
+  }
+  if (data.sistemaIds && data.sistemaIds.length > 0) {
+    return data.sistemaIds.map((id) => ({ sistemaId: id, nivel: '1' }));
+  }
+  return [];
+}
+
 // GET /api/v1/intervenciones
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -66,14 +77,19 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
 // POST /api/v1/intervenciones (admin)
 router.post('/', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { sistemaIds, ...data } = createIntervencionSchema.parse(req.body);
+    const { sistemaIds, sistemas, ...data } = createIntervencionSchema.parse(req.body);
+    const rows = buildSistemaRows({ sistemas, sistemaIds });
     const intervencion = await prisma.intervencion.create({
       data: {
-        ...data,
+        clienteId: data.clienteId,
+        tipo: data.tipo,
+        titulo: data.titulo,
+        referencia: data.referencia ?? null,
         fechaInicio: data.fechaInicio ? new Date(data.fechaInicio) : null,
         fechaFin: data.fechaFin ? new Date(data.fechaFin) : null,
+        notas: data.notas ?? null,
         sistemas: {
-          create: sistemaIds.map(sistemaId => ({ sistemaId })),
+          create: rows,
         },
       },
       include: {
@@ -88,22 +104,27 @@ router.post('/', requireRole('admin'), async (req: Request, res: Response, next:
 // PUT /api/v1/intervenciones/:id (admin)
 router.put('/:id', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { sistemaIds, ...data } = updateIntervencionSchema.parse(req.body);
+    const { sistemaIds, sistemas, ...data } = updateIntervencionSchema.parse(req.body);
     const id = Number(req.params.id);
 
     const updateData: any = { ...data };
     if (data.fechaInicio !== undefined) updateData.fechaInicio = data.fechaInicio ? new Date(data.fechaInicio) : null;
     if (data.fechaFin !== undefined) updateData.fechaFin = data.fechaFin ? new Date(data.fechaFin) : null;
+    // Remove non-Prisma fields
+    delete updateData.sistemaIds;
+    delete updateData.sistemas;
 
-    // If sistemaIds provided, replace the junction table
-    if (sistemaIds !== undefined) {
+    // If sistemas or sistemaIds provided, replace the junction table
+    const hasSistemaChanges = (sistemas && sistemas.length > 0) || (sistemaIds && sistemaIds.length > 0);
+    if (hasSistemaChanges) {
+      const rows = buildSistemaRows({ sistemas, sistemaIds });
       await prisma.$transaction([
         prisma.intervencionSistema.deleteMany({ where: { intervencionId: id } }),
         prisma.intervencion.update({
           where: { id },
           data: {
             ...updateData,
-            sistemas: { create: sistemaIds.map(sistemaId => ({ sistemaId })) },
+            sistemas: { create: rows },
           },
         }),
       ]);
