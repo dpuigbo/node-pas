@@ -33,7 +33,7 @@ export function useUpdatePedidoCompra() {
       const { data } = await api.put(`/v1/pedidos-compra/${id}`, body);
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['pedido-compra'] });
     },
   });
