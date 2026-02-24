@@ -5,6 +5,16 @@ const role_middleware_1 = require("../middleware/role.middleware");
 const database_1 = require("../config/database");
 const intervenciones_validation_1 = require("../validation/intervenciones.validation");
 const router = (0, express_1.Router)();
+/** Build sistema rows from either `sistemas` (new) or `sistemaIds` (legacy) */
+function buildSistemaRows(data) {
+    if (data.sistemas && data.sistemas.length > 0) {
+        return data.sistemas.map((s) => ({ sistemaId: s.sistemaId, nivel: s.nivel }));
+    }
+    if (data.sistemaIds && data.sistemaIds.length > 0) {
+        return data.sistemaIds.map((id) => ({ sistemaId: id, nivel: '1' }));
+    }
+    return [];
+}
 // GET /api/v1/intervenciones
 router.get('/', async (req, res, next) => {
     try {
@@ -59,6 +69,7 @@ router.get('/:id', async (req, res, next) => {
                         sistema: { select: { id: true, nombre: true } },
                     },
                 },
+                pedidoCompra: { select: { id: true, estado: true } },
             },
         });
         if (!intervencion) {
@@ -74,14 +85,55 @@ router.get('/:id', async (req, res, next) => {
 // POST /api/v1/intervenciones (admin)
 router.post('/', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
     try {
-        const { sistemaIds, ...data } = intervenciones_validation_1.createIntervencionSchema.parse(req.body);
+        const { sistemaIds, sistemas, ...data } = intervenciones_validation_1.createIntervencionSchema.parse(req.body);
+        const rows = buildSistemaRows({ sistemas, sistemaIds });
+        // If logistics fields not provided, copy from client (snapshot pattern)
+        const logisticsFields = [
+            'tarifaHoraTrabajo', 'tarifaHoraViaje', 'dietas', 'gestionAccesos',
+            'horasTrayecto', 'diasViaje', 'km', 'peajes', 'precioHotel', 'precioKm',
+        ];
+        let logisticsData = {};
+        const hasAnyLogistics = logisticsFields.some((f) => data[f] !== undefined && data[f] !== null);
+        if (!hasAnyLogistics) {
+            // Auto-copy from client
+            const cliente = await database_1.prisma.cliente.findUnique({
+                where: { id: data.clienteId },
+                select: {
+                    tarifaHoraTrabajo: true, tarifaHoraViaje: true, dietas: true, gestionAccesos: true,
+                    horasTrayecto: true, diasViaje: true, km: true, peajes: true, precioHotel: true, precioKm: true,
+                },
+            });
+            if (cliente) {
+                for (const f of logisticsFields) {
+                    logisticsData[f] = cliente[f] ?? null;
+                }
+            }
+        }
+        else {
+            for (const f of logisticsFields) {
+                if (data[f] !== undefined)
+                    logisticsData[f] = data[f] ?? null;
+            }
+        }
         const intervencion = await database_1.prisma.intervencion.create({
             data: {
-                ...data,
+                clienteId: data.clienteId,
+                tipo: data.tipo,
+                titulo: data.titulo,
+                referencia: data.referencia ?? null,
                 fechaInicio: data.fechaInicio ? new Date(data.fechaInicio) : null,
                 fechaFin: data.fechaFin ? new Date(data.fechaFin) : null,
+                notas: data.notas ?? null,
+                ...logisticsData,
+                gestionAccesosNueva: data.gestionAccesosNueva ?? false,
+                numeroTecnicos: data.numeroTecnicos ?? 1,
+                viajesIdaVuelta: data.viajesIdaVuelta ?? 1,
+                incluyeConsumibles: data.incluyeConsumibles ?? true,
+                horasDia: data.horasDia ?? null,
+                dietasExtra: data.dietasExtra ?? null,
+                diasTrabajo: data.diasTrabajo ?? '1,2,3,4,5',
                 sistemas: {
-                    create: sistemaIds.map(sistemaId => ({ sistemaId })),
+                    create: rows,
                 },
             },
             include: {
@@ -98,22 +150,27 @@ router.post('/', (0, role_middleware_1.requireRole)('admin'), async (req, res, n
 // PUT /api/v1/intervenciones/:id (admin)
 router.put('/:id', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
     try {
-        const { sistemaIds, ...data } = intervenciones_validation_1.updateIntervencionSchema.parse(req.body);
+        const { sistemaIds, sistemas, ...data } = intervenciones_validation_1.updateIntervencionSchema.parse(req.body);
         const id = Number(req.params.id);
         const updateData = { ...data };
         if (data.fechaInicio !== undefined)
             updateData.fechaInicio = data.fechaInicio ? new Date(data.fechaInicio) : null;
         if (data.fechaFin !== undefined)
             updateData.fechaFin = data.fechaFin ? new Date(data.fechaFin) : null;
-        // If sistemaIds provided, replace the junction table
-        if (sistemaIds !== undefined) {
+        // Remove non-Prisma fields
+        delete updateData.sistemaIds;
+        delete updateData.sistemas;
+        // If sistemas or sistemaIds provided, replace the junction table
+        const hasSistemaChanges = (sistemas && sistemas.length > 0) || (sistemaIds && sistemaIds.length > 0);
+        if (hasSistemaChanges) {
+            const rows = buildSistemaRows({ sistemas, sistemaIds });
             await database_1.prisma.$transaction([
                 database_1.prisma.intervencionSistema.deleteMany({ where: { intervencionId: id } }),
                 database_1.prisma.intervencion.update({
                     where: { id },
                     data: {
                         ...updateData,
-                        sistemas: { create: sistemaIds.map(sistemaId => ({ sistemaId })) },
+                        sistemas: { create: rows },
                     },
                 }),
             ]);

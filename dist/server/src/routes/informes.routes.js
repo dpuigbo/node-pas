@@ -66,7 +66,7 @@ router.post('/intervenciones/:intervencionId/informes', (0, role_middleware_1.re
                     data: {
                         intervencionId,
                         sistemaId: sistema.id,
-                        estado: 'borrador',
+                        estado: 'inactivo',
                         creadoPorId: user.id,
                     },
                 });

@@ -16,6 +16,8 @@ const catalogos_routes_1 = __importDefault(require("./catalogos.routes"));
 const informes_routes_1 = __importDefault(require("./informes.routes"));
 const document_templates_routes_1 = __importDefault(require("./document-templates.routes"));
 const consumiblesNivel_routes_1 = __importDefault(require("./consumiblesNivel.routes"));
+const pedidoCompra_routes_1 = __importDefault(require("./pedidoCompra.routes"));
+const ofertas_routes_1 = __importDefault(require("./ofertas.routes"));
 const router = (0, express_1.Router)();
 // Auth routes (public - no auth required)
 router.use('/auth', auth_routes_1.default);
@@ -30,5 +32,7 @@ router.use('/v1/catalogos', auth_middleware_1.authMiddleware, catalogos_routes_1
 router.use('/v1', auth_middleware_1.authMiddleware, informes_routes_1.default);
 router.use('/v1/document-templates', auth_middleware_1.authMiddleware, document_templates_routes_1.default);
 router.use('/v1/consumibles-nivel', auth_middleware_1.authMiddleware, consumiblesNivel_routes_1.default);
+router.use('/v1/pedidos-compra', auth_middleware_1.authMiddleware, pedidoCompra_routes_1.default);
+router.use('/v1/ofertas', auth_middleware_1.authMiddleware, ofertas_routes_1.default);
 exports.default = router;
 //# sourceMappingURL=index.js.map
