@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Building2, Cog, DollarSign, Truck, Save, X } from 'lucide-react';
+import { ArrowLeft, Plus, Building2, Cog, DollarSign, Truck, Save, X, Calculator, Loader2 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, Column } from '@/components/shared/DataTable';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import { useCliente, useUpdateCliente, usePlantas, useCreatePlanta, useMaquinas,
 import { useSistemas, useCreateSistema } from '@/hooks/useSistemas';
 import { useFabricantes } from '@/hooks/useFabricantes';
 import { useAuth } from '@/hooks/useAuth';
+import { calculateRoute, composeAddress } from '@/lib/routeCalc';
 
 export default function ClienteDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -59,6 +60,9 @@ export default function ClienteDetailPage() {
     }
   }, [cliente]);
 
+  const [calculating, setCalculating] = useState(false);
+  const [calcError, setCalcError] = useState<string | null>(null);
+
   const handleSaveLogistics = async () => {
     const toNum = (v: string) => v.trim() ? Number(v) : null;
     await updateCliente.mutateAsync({
@@ -75,6 +79,37 @@ export default function ClienteDetailPage() {
       precioKm: toNum(logForm.precioKm),
     });
     setEditingLogistics(false);
+  };
+
+  const handleCalculateRoute = async () => {
+    if (!cliente) return;
+    setCalcError(null);
+    setCalculating(true);
+    try {
+      const address = composeAddress({
+        direccion: cliente.direccion,
+        ciudad: cliente.ciudad,
+        codigoPostal: cliente.codigoPostal,
+        provincia: cliente.provincia,
+      });
+      if (!address || address === 'Spain') {
+        setCalcError('El cliente no tiene direccion configurada. Rellena la direccion primero.');
+        return;
+      }
+      const result = await calculateRoute(address);
+      setLogForm((prev) => ({
+        ...prev,
+        horasTrayecto: String(result.durationHours),
+        diasViaje: String(result.diasViaje),
+        km: String(result.distanceKm),
+      }));
+      // Auto-enter edit mode if not already editing
+      if (!editingLogistics) setEditingLogistics(true);
+    } catch (err: any) {
+      setCalcError(err.message || 'Error al calcular la ruta');
+    } finally {
+      setCalculating(false);
+    }
   };
 
   const [plantaOpen, setPlantaOpen] = useState(false);
@@ -254,11 +289,57 @@ export default function ClienteDetailPage() {
                 <Truck className="h-4 w-4" /> Logistica viaje
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-3">
+              {/* Calculable fields: Horas trayecto, Dias viaje, KM */}
+              <div className="rounded-md border border-dashed border-blue-200 bg-blue-50/30 p-3 space-y-2">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-medium text-blue-600">Ruta desde oficina PAS</span>
+                  {isAdmin && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs gap-1 border-blue-300 text-blue-600 hover:bg-blue-50"
+                      onClick={handleCalculateRoute}
+                      disabled={calculating}
+                    >
+                      {calculating ? (
+                        <><Loader2 className="h-3 w-3 animate-spin" /> Calculando...</>
+                      ) : (
+                        <><Calculator className="h-3 w-3" /> Calcular</>
+                      )}
+                    </Button>
+                  )}
+                </div>
+                {calcError && (
+                  <p className="text-xs text-red-500">{calcError}</p>
+                )}
+                {[
+                  { key: 'horasTrayecto' as const, label: 'Horas trayecto', suffix: 'h' },
+                  { key: 'diasViaje' as const, label: 'Dias viaje (8h/dia)', suffix: 'd' },
+                  { key: 'km' as const, label: 'Kilometros', suffix: 'km' },
+                ].map((field) => (
+                  <div key={field.key} className="flex items-center justify-between gap-3">
+                    <span className="text-sm text-muted-foreground min-w-[160px]">{field.label}</span>
+                    {editingLogistics ? (
+                      <Input
+                        type="number"
+                        step="0.01"
+                        className="w-32 h-8 text-right"
+                        value={logForm[field.key]}
+                        onChange={(e) => setLogForm({ ...logForm, [field.key]: e.target.value })}
+                        placeholder="0.00"
+                      />
+                    ) : (
+                      <span className="text-sm font-mono">
+                        {cliente[field.key] != null ? `${Number(cliente[field.key]).toFixed(2)} ${field.suffix}` : '-'}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Other travel fields */}
               {[
-                { key: 'horasTrayecto' as const, label: 'Horas trayecto', suffix: 'h' },
-                { key: 'diasViaje' as const, label: 'Dias viaje', suffix: 'd' },
-                { key: 'km' as const, label: 'Kilometros', suffix: 'km' },
                 { key: 'peajes' as const, label: 'Peajes', suffix: '€' },
                 { key: 'precioHotel' as const, label: 'Precio hotel', suffix: '€' },
                 { key: 'precioKm' as const, label: 'Precio por km', suffix: '€' },
