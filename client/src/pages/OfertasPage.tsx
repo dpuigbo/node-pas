@@ -165,9 +165,9 @@ function CrearOfertaDialog({ open, onOpenChange }: { open: boolean; onOpenChange
   const { data: clienteSistemas } = useSistemas(clienteId ? { clienteId } : undefined);
 
   const availableSistemas = useMemo(() => {
-    if (!clienteSistemas) return [];
+    if (!Array.isArray(clienteSistemas)) return [];
     const selectedIds = new Set(sistemas.map((s) => s.sistemaId));
-    return (clienteSistemas as any[]).filter((s: any) => !selectedIds.has(s.id));
+    return clienteSistemas.filter((s: any) => !selectedIds.has(s.id));
   }, [clienteSistemas, sistemas]);
 
   const reset = () => {
@@ -198,7 +198,7 @@ function CrearOfertaDialog({ open, onOpenChange }: { open: boolean; onOpenChange
   };
 
   const getSistemaName = (sid: number) => {
-    const s = (clienteSistemas as any[])?.find((s: any) => s.id === sid);
+    const s = (Array.isArray(clienteSistemas) ? clienteSistemas : []).find((s: any) => s.id === sid);
     return s?.nombre ?? `Sistema #${sid}`;
   };
 
@@ -223,7 +223,7 @@ function CrearOfertaDialog({ open, onOpenChange }: { open: boolean; onOpenChange
     }
   };
 
-  const activos = (clientes || []).filter((c: any) => c.activo);
+  const activos = (Array.isArray(clientes) ? clientes : []).filter((c: any) => c.activo);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>

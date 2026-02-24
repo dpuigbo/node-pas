@@ -35,7 +35,7 @@ export function FabricanteRobotSelect({ value, onChange }: Props) {
     onChange(selected.filter((n) => n !== nombre).join(','));
   };
 
-  const activos = (fabricantes || []).filter((f: any) => f.activo);
+  const activos = (Array.isArray(fabricantes) ? fabricantes : []).filter((f: any) => f.activo);
 
   return (
     <div ref={ref} className="relative">

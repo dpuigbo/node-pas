@@ -124,9 +124,9 @@ export default function ConsumiblesNivelPage() {
   }, []);
 
   const getCatalogOptions = (tipo: string) => {
-    if (tipo === 'aceite') return (aceites || []).filter((a: any) => a.activo);
-    if (tipo === 'bateria') return (baterias || []).filter((b: any) => b.activo);
-    return (consumiblesGen || []).filter((c: any) => c.activo);
+    if (tipo === 'aceite') return (Array.isArray(aceites) ? aceites : []).filter((a: any) => a.activo);
+    if (tipo === 'bateria') return (Array.isArray(baterias) ? baterias : []).filter((b: any) => b.activo);
+    return (Array.isArray(consumiblesGen) ? consumiblesGen : []).filter((c: any) => c.activo);
   };
 
   const handleSave = async () => {
@@ -151,7 +151,7 @@ export default function ConsumiblesNivelPage() {
     }
   };
 
-  const activos = (fabricantes || []).filter((f: any) => f.activo);
+  const activos = (Array.isArray(fabricantes) ? fabricantes : []).filter((f: any) => f.activo);
 
   return (
     <div className="space-y-6">

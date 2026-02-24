@@ -142,7 +142,7 @@ export default function ModelosPage() {
               <Select value={String(form.fabricanteId || '')} onValueChange={(v) => setForm({ ...form, fabricanteId: Number(v) })}>
                 <SelectTrigger><SelectValue placeholder="Seleccionar fabricante" /></SelectTrigger>
                 <SelectContent>
-                  {fabricantes?.filter((f: any) => f.activo).map((f: any) => (
+                  {(Array.isArray(fabricantes) ? fabricantes : []).filter((f: any) => f.activo).map((f: any) => (
                     <SelectItem key={f.id} value={String(f.id)}>{f.nombre}</SelectItem>
                   ))}
                 </SelectContent>

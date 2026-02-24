@@ -617,8 +617,8 @@ function GestionarSistemasDialog({
   };
 
   const availableSistemas = useMemo(() => {
-    if (!sistemas) return [];
-    return (sistemas as any[]).filter((s: any) => !selectedIds.includes(s.id));
+    if (!Array.isArray(sistemas)) return [];
+    return sistemas.filter((s: any) => !selectedIds.includes(s.id));
   }, [sistemas, selectedIds]);
 
   const addSistema = (sid: number) => {
@@ -630,7 +630,7 @@ function GestionarSistemasDialog({
   };
 
   const getSistemaName = (sid: number) => {
-    const s = (sistemas as any[])?.find((s: any) => s.id === sid);
+    const s = (Array.isArray(sistemas) ? sistemas : []).find((s: any) => s.id === sid);
     return s?.nombre ?? `Sistema #${sid}`;
   };
 

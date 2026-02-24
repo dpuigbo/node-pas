@@ -156,9 +156,10 @@ function CalendarioIntervenciones() {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
+  const safeIntervenciones = Array.isArray(intervenciones) ? intervenciones : [];
   const days = useMemo(
-    () => buildCalendarDays(year, month, intervenciones ?? []),
-    [year, month, intervenciones],
+    () => buildCalendarDays(year, month, safeIntervenciones),
+    [year, month, safeIntervenciones],
   );
 
   const prevMonth = () => {

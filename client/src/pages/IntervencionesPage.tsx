@@ -56,8 +56,8 @@ export default function IntervencionesPage() {
 
   // Available sistemas (not yet selected)
   const availableSistemas = useMemo(() => {
-    if (!sistemas) return [];
-    return (sistemas as any[]).filter((s: any) => !form.sistemaIds.includes(s.id));
+    if (!Array.isArray(sistemas)) return [];
+    return sistemas.filter((s: any) => !form.sistemaIds.includes(s.id));
   }, [sistemas, form.sistemaIds]);
 
   const handleClienteChange = (clienteId: number) => {
@@ -114,7 +114,7 @@ export default function IntervencionesPage() {
 
   // Helper to get sistema name by ID
   const getSistemaName = (id: number) => {
-    const s = (sistemas as any[])?.find((s: any) => s.id === id);
+    const s = (Array.isArray(sistemas) ? sistemas : []).find((s: any) => s.id === id);
     return s?.nombre ?? `Sistema #${id}`;
   };
 
@@ -153,7 +153,7 @@ export default function IntervencionesPage() {
               >
                 <SelectTrigger><SelectValue placeholder="Seleccionar cliente" /></SelectTrigger>
                 <SelectContent>
-                  {clientes?.filter((c: any) => c.activo).map((c: any) => (
+                  {(Array.isArray(clientes) ? clientes : []).filter((c: any) => c.activo).map((c: any) => (
                     <SelectItem key={c.id} value={String(c.id)}>{c.nombre}</SelectItem>
                   ))}
                 </SelectContent>
