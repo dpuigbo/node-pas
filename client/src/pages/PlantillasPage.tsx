@@ -36,7 +36,7 @@ export default function PlantillasPage() {
               <Loader2 className="h-4 w-4 animate-spin" />
               Cargando plantillas...
             </div>
-          ) : !templates || templates.length === 0 ? (
+          ) : !Array.isArray(templates) || templates.length === 0 ? (
             <p className="text-sm text-muted-foreground italic">
               No hay plantillas de documento. Ejecuta el SQL de migracion para crearlas.
             </p>

@@ -55,9 +55,9 @@ export default function ConsumiblesNivelPage() {
 
   // Build form data from fetched modelos
   useEffect(() => {
-    if (!modelos) return;
+    if (!Array.isArray(modelos)) return;
     const fd: FormData = {};
-    for (const m of modelos as any[]) {
+    for (const m of modelos) {
       const modeloNiveles: ModeloNiveles = {};
       for (const n of NIVELES) {
         const existing = (m.consumiblesNivel || []).find((cn: any) => cn.nivel === n.value);
@@ -183,11 +183,11 @@ export default function ConsumiblesNivelPage() {
 
       {!fabId && <p className="text-sm text-muted-foreground">Selecciona un fabricante para ver sus modelos.</p>}
 
-      {fabId && modelos && (modelos as any[]).length === 0 && (
+      {fabId && Array.isArray(modelos) && modelos.length === 0 && (
         <p className="text-sm text-muted-foreground">Este fabricante no tiene modelos registrados.</p>
       )}
 
-      {fabId && modelos && (modelos as any[]).map((modelo: any) => (
+      {fabId && Array.isArray(modelos) && modelos.map((modelo: any) => (
         <div key={modelo.id} className="rounded-lg border bg-card p-4 space-y-3">
           <div className="flex items-center gap-2">
             <span className="text-xs font-medium uppercase text-muted-foreground bg-muted px-2 py-0.5 rounded">

@@ -79,9 +79,9 @@ export default function ClienteDetailPage() {
   };
 
   // Maquinas filtered by selected planta in sistema form
-  const maquinasForPlanta = (maquinas as any[] | undefined)?.filter(
+  const maquinasForPlanta = (Array.isArray(maquinas) ? maquinas : []).filter(
     (m: any) => m.plantaId === sistemaForm.plantaId,
-  ) ?? [];
+  );
 
   const plantaCols: Column<any>[] = [
     { key: 'nombre', header: 'Nombre' },
@@ -208,7 +208,7 @@ export default function ClienteDetailPage() {
               >
                 <SelectTrigger><SelectValue placeholder="Seleccionar planta..." /></SelectTrigger>
                 <SelectContent>
-                  {plantas?.map((p: any) => <SelectItem key={p.id} value={String(p.id)}>{p.nombre}</SelectItem>)}
+                  {(Array.isArray(plantas) ? plantas : []).map((p: any) => <SelectItem key={p.id} value={String(p.id)}>{p.nombre}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -235,7 +235,7 @@ export default function ClienteDetailPage() {
               >
                 <SelectTrigger><SelectValue placeholder="Seleccionar fabricante..." /></SelectTrigger>
                 <SelectContent>
-                  {(fabricantes as any[] | undefined)?.map((f: any) => (
+                  {(Array.isArray(fabricantes) ? fabricantes : []).map((f: any) => (
                     <SelectItem key={f.id} value={String(f.id)}>{f.nombre}</SelectItem>
                   ))}
                 </SelectContent>
@@ -272,7 +272,7 @@ export default function ClienteDetailPage() {
                 >
                   <SelectTrigger><SelectValue placeholder="Sin planta asignada" /></SelectTrigger>
                   <SelectContent>
-                    {plantas?.map((p: any) => <SelectItem key={p.id} value={String(p.id)}>{p.nombre}</SelectItem>)}
+                    {(Array.isArray(plantas) ? plantas : []).map((p: any) => <SelectItem key={p.id} value={String(p.id)}>{p.nombre}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>

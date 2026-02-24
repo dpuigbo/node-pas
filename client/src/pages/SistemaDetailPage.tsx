@@ -204,7 +204,7 @@ export default function SistemaDetailPage() {
                 >
                   <SelectTrigger><SelectValue placeholder="Seleccionar modelo..." /></SelectTrigger>
                   <SelectContent>
-                    {(modelos as any[] | undefined)?.map((m: any) => (
+                    {(Array.isArray(modelos) ? modelos : []).map((m: any) => (
                       <SelectItem key={m.id} value={String(m.id)}>{m.nombre}</SelectItem>
                     ))}
                   </SelectContent>

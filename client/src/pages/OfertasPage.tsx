@@ -80,16 +80,16 @@ export default function OfertasPage() {
         </div>
       )}
 
-      {!isLoading && (!ofertas || ofertas.length === 0) && (
+      {!isLoading && (!Array.isArray(ofertas) || ofertas.length === 0) && (
         <div className="flex flex-col items-center justify-center gap-4 py-24">
           <FileText className="h-16 w-16 text-muted-foreground/40" />
           <p className="text-muted-foreground">No hay ofertas registradas</p>
         </div>
       )}
 
-      {ofertas && ofertas.length > 0 && (
+      {Array.isArray(ofertas) && ofertas.length > 0 && (
         <div className="space-y-3">
-          {(ofertas as any[]).map((oferta: any) => (
+          {ofertas.map((oferta: any) => (
             <div
               key={oferta.id}
               onClick={() => setDetailId(oferta.id)}
