@@ -101,3 +101,19 @@ export function useCreateMaquina(clienteId: number) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['clientes', clienteId] }),
   });
 }
+
+export function useUpdateMaquina(clienteId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }: any) => api.put(`/v1/clientes/${clienteId}/maquinas/${id}`, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['clientes', clienteId] }),
+  });
+}
+
+export function useDeleteMaquina(clienteId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.delete(`/v1/clientes/${clienteId}/maquinas/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['clientes', clienteId] }),
+  });
+}
