@@ -6,6 +6,7 @@ exports.createAceiteSchema = zod_1.z.object({
     nombre: zod_1.z.string().min(1, 'El nombre es obligatorio').max(200),
     fabricante: zod_1.z.string().max(200).optional().nullable(),
     unidad: zod_1.z.string().max(50).optional().nullable(),
+    fabricanteRobot: zod_1.z.string().max(500).optional().nullable(), // CSV: "ABB,KUKA"
     coste: zod_1.z.number().positive().optional().nullable(),
     precio: zod_1.z.number().positive().optional().nullable(),
     activo: zod_1.z.boolean().optional().default(true),
