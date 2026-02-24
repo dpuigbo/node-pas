@@ -58,19 +58,20 @@ export default function ConsumiblesNivelPage() {
     if (!modelos) return;
     const fd: FormData = {};
     for (const m of modelos as any[]) {
-      fd[m.id] = {};
+      const modeloNiveles: ModeloNiveles = {};
       for (const n of NIVELES) {
         const existing = (m.consumiblesNivel || []).find((cn: any) => cn.nivel === n.value);
         if (existing) {
-          fd[m.id][n.value] = {
+          modeloNiveles[n.value] = {
             horas: existing.horas != null ? String(existing.horas) : '',
             precioOtros: existing.precioOtros != null ? String(existing.precioOtros) : '',
             consumibles: (existing.consumibles as ConsumibleItem[]) || [],
           };
         } else {
-          fd[m.id][n.value] = emptyNivel();
+          modeloNiveles[n.value] = emptyNivel();
         }
       }
+      fd[m.id] = modeloNiveles;
     }
     setForm(fd);
     setDirty(false);
