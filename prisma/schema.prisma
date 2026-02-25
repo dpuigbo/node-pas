@@ -380,6 +380,15 @@ model Oferta {
   totalHoras    Decimal?       @db.Decimal(8, 2) @map("total_horas")
   totalCoste    Decimal?       @db.Decimal(10, 2) @map("total_coste")
   totalPrecio   Decimal?       @db.Decimal(10, 2) @map("total_precio")
+  // Planificacion horaria
+  fechaInicio       DateTime?  @map("fecha_inicio")
+  fechaFin          DateTime?  @map("fecha_fin")
+  horaInicioJornada String?    @map("hora_inicio_jornada")  // "08:00"
+  horaFinJornada    String?    @map("hora_fin_jornada")     // "20:00"
+  diasTrabajo       String?    @map("dias_trabajo")          // "1,2,3,4,5" (lun=1..dom=7)
+  // Desglose recargos (auto-calculated)
+  desgloseRecargo   Json?      @map("desglose_recargo")
+  totalRecargo      Decimal?   @db.Decimal(10, 2) @map("total_recargo")
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
 

@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus, FileText, Trash2, Send, CheckCircle, XCircle, Calendar,
-  RefreshCw, ArrowRight, X, Loader2,
+  RefreshCw, ArrowRight, X, Loader2, Clock, ChevronDown, ChevronRight,
 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -46,6 +46,20 @@ const NIVEL_LABEL: Record<string, string> = {
 const TIPO_BADGE: Record<string, string> = {
   preventiva: 'bg-blue-100 text-blue-700',
   correctiva: 'bg-orange-100 text-orange-700',
+};
+
+const DIAS_SEMANA = [
+  { value: '1', label: 'L' },
+  { value: '2', label: 'M' },
+  { value: '3', label: 'X' },
+  { value: '4', label: 'J' },
+  { value: '5', label: 'V' },
+  { value: '6', label: 'S' },
+  { value: '7', label: 'D' },
+];
+
+const DIAS_LABEL: Record<string, string> = {
+  '1': 'Lun', '2': 'Mar', '3': 'Mie', '4': 'Jue', '5': 'Vie', '6': 'Sab', '7': 'Dom',
 };
 
 interface SistemaOferta {
@@ -161,6 +175,13 @@ function CrearOfertaDialog({ open, onOpenChange }: { open: boolean; onOpenChange
   const [validezDias, setValidezDias] = useState(30);
   const [notas, setNotas] = useState('');
   const [sistemas, setSistemas] = useState<SistemaOferta[]>([]);
+  // Schedule fields
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [fechaInicio, setFechaInicio] = useState('');
+  const [fechaFin, setFechaFin] = useState('');
+  const [horaInicio, setHoraInicio] = useState('08:00');
+  const [horaFin, setHoraFin] = useState('18:00');
+  const [diasTrabajo, setDiasTrabajo] = useState<Set<string>>(new Set(['1', '2', '3', '4', '5']));
 
   const { data: clienteSistemas } = useSistemas(clienteId ? { clienteId } : undefined);
 
@@ -178,6 +199,12 @@ function CrearOfertaDialog({ open, onOpenChange }: { open: boolean; onOpenChange
     setValidezDias(30);
     setNotas('');
     setSistemas([]);
+    setShowSchedule(false);
+    setFechaInicio('');
+    setFechaFin('');
+    setHoraInicio('08:00');
+    setHoraFin('18:00');
+    setDiasTrabajo(new Set(['1', '2', '3', '4', '5']));
   };
 
   const handleClose = (v: boolean) => {
@@ -202,13 +229,22 @@ function CrearOfertaDialog({ open, onOpenChange }: { open: boolean; onOpenChange
     return s?.nombre ?? `Sistema #${sid}`;
   };
 
+  const toggleDia = (dia: string) => {
+    setDiasTrabajo((prev) => {
+      const next = new Set(prev);
+      if (next.has(dia)) next.delete(dia);
+      else next.add(dia);
+      return next;
+    });
+  };
+
   const handleSubmit = async () => {
     if (!clienteId || !titulo || sistemas.length === 0) {
       alert('Rellena todos los campos obligatorios y selecciona al menos un sistema');
       return;
     }
     try {
-      await createOferta.mutateAsync({
+      const body: any = {
         clienteId,
         titulo,
         referencia: referencia || null,
@@ -216,7 +252,16 @@ function CrearOfertaDialog({ open, onOpenChange }: { open: boolean; onOpenChange
         validezDias,
         notas: notas || null,
         sistemas,
-      });
+      };
+      // Include schedule if filled
+      if (showSchedule && fechaInicio && fechaFin && horaInicio && horaFin && diasTrabajo.size > 0) {
+        body.fechaInicio = new Date(fechaInicio).toISOString();
+        body.fechaFin = new Date(fechaFin).toISOString();
+        body.horaInicioJornada = horaInicio;
+        body.horaFinJornada = horaFin;
+        body.diasTrabajo = Array.from(diasTrabajo).sort().join(',');
+      }
+      await createOferta.mutateAsync(body);
       handleClose(false);
     } catch (err: any) {
       alert(err?.response?.data?.error ?? 'Error al crear oferta');
@@ -334,6 +379,80 @@ function CrearOfertaDialog({ open, onOpenChange }: { open: boolean; onOpenChange
               <p className="text-xs text-muted-foreground mt-2">Selecciona un cliente primero</p>
             )}
           </div>
+
+          {/* Schedule section (collapsible) */}
+          <div className="border rounded-lg">
+            <button
+              type="button"
+              className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium hover:bg-muted/50 transition-colors"
+              onClick={() => setShowSchedule(!showSchedule)}
+            >
+              {showSchedule ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              <Clock className="h-4 w-4" />
+              Planificacion horaria
+              <span className="text-xs text-muted-foreground font-normal ml-1">(opcional - para calculo de recargos)</span>
+            </button>
+
+            {showSchedule && (
+              <div className="px-3 pb-3 space-y-3 border-t pt-3">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs">Fecha inicio</Label>
+                    <Input
+                      type="date"
+                      value={fechaInicio}
+                      onChange={(e) => setFechaInicio(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Fecha fin</Label>
+                    <Input
+                      type="date"
+                      value={fechaFin}
+                      onChange={(e) => setFechaFin(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs">Hora inicio jornada</Label>
+                    <Input
+                      type="time"
+                      value={horaInicio}
+                      onChange={(e) => setHoraInicio(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Hora fin jornada</Label>
+                    <Input
+                      type="time"
+                      value={horaFin}
+                      onChange={(e) => setHoraFin(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">Dias de trabajo</Label>
+                  <div className="flex gap-1 mt-1">
+                    {DIAS_SEMANA.map((d) => (
+                      <button
+                        key={d.value}
+                        type="button"
+                        onClick={() => toggleDia(d.value)}
+                        className={`w-9 h-9 rounded-md text-xs font-medium border transition-colors ${
+                          diasTrabajo.has(d.value)
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : 'bg-background text-muted-foreground border-input hover:bg-muted/50'
+                        }`}
+                      >
+                        {d.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         <DialogFooter>
@@ -379,6 +498,9 @@ function OfertaDetailDialog({ ofertaId, open, onOpenChange }: {
   }
 
   if (!oferta) return null;
+
+  const desglose = oferta.desgloseRecargo as any;
+  const hasRecargos = desglose && desglose.resumen && desglose.resumen.length > 0;
 
   const handleEstado = async (estado: string) => {
     try {
@@ -458,6 +580,33 @@ function OfertaDetailDialog({ ofertaId, open, onOpenChange }: {
               </div>
             </div>
 
+            {/* Schedule info */}
+            {oferta.horaInicioJornada && oferta.horaFinJornada && (
+              <div className="flex flex-wrap gap-3 text-sm bg-muted/30 rounded-lg px-3 py-2">
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>
+                    {oferta.fechaInicio ? new Date(oferta.fechaInicio).toLocaleDateString('es-ES') : '?'}
+                    {' - '}
+                    {oferta.fechaFin ? new Date(oferta.fechaFin).toLocaleDateString('es-ES') : '?'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>{oferta.horaInicioJornada} - {oferta.horaFinJornada}</span>
+                </div>
+                {oferta.diasTrabajo && (
+                  <div className="flex items-center gap-1">
+                    {oferta.diasTrabajo.split(',').map((d: string) => (
+                      <span key={d} className="bg-primary/10 text-primary text-xs px-1.5 py-0.5 rounded font-medium">
+                        {DIAS_LABEL[d] ?? d}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {oferta.notas && (
               <p className="text-sm text-muted-foreground border-l-2 pl-3">{oferta.notas}</p>
             )}
@@ -499,7 +648,7 @@ function OfertaDetailDialog({ ofertaId, open, onOpenChange }: {
                   </tbody>
                   <tfoot>
                     <tr className="border-t bg-muted/50 font-medium">
-                      <td colSpan={2} className="px-3 py-2 text-right">Totales:</td>
+                      <td colSpan={2} className="px-3 py-2 text-right">Totales consumibles:</td>
                       <td className="px-3 py-2 text-right font-mono">
                         {oferta.totalHoras != null ? Number(oferta.totalHoras).toFixed(1) : '-'}
                       </td>
@@ -514,6 +663,72 @@ function OfertaDetailDialog({ ofertaId, open, onOpenChange }: {
                 </table>
               </div>
             </div>
+
+            {/* Surcharge breakdown */}
+            {hasRecargos && (
+              <div>
+                <h4 className="font-medium mb-2 flex items-center gap-1.5">
+                  <Clock className="h-4 w-4" />
+                  Recargos por horario
+                </h4>
+                <div className="text-xs text-muted-foreground mb-2">
+                  {desglose.diasTotales} dia(s) de trabajo: {desglose.diasNormales} normal(es)
+                  {desglose.diasDomFestivos > 0 && `, ${desglose.diasDomFestivos} dom/festivo(s)`}
+                  {desglose.diasEspeciales > 0 && `, ${desglose.diasEspeciales} especial(es)`}
+                  {' | '}Tarifa base: {desglose.tarifaBase?.toFixed(2)} €/h
+                </div>
+                <div className="rounded-lg border overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-muted/50 border-b">
+                        <th className="px-3 py-2 text-left">Franja</th>
+                        <th className="px-3 py-2 text-right">Horas</th>
+                        <th className="px-3 py-2 text-right">Recargo</th>
+                        <th className="px-3 py-2 text-right">Importe</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {desglose.resumen.map((r: any, i: number) => (
+                        <tr key={i} className={`border-b last:border-0 ${r.recargoPct === 0 ? 'text-muted-foreground' : ''}`}>
+                          <td className="px-3 py-1.5">{r.tipo}</td>
+                          <td className="px-3 py-1.5 text-right font-mono">{r.horas.toFixed(1)} h</td>
+                          <td className="px-3 py-1.5 text-right font-mono">
+                            {r.recargoPct > 0 ? (
+                              <span className="text-amber-600 font-medium">+{r.recargoPct}%</span>
+                            ) : (
+                              <span>0%</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-1.5 text-right font-mono">
+                            {r.importe > 0 ? `${r.importe.toFixed(2)} €` : '-'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="border-t bg-amber-50 font-medium text-amber-800">
+                        <td colSpan={3} className="px-3 py-2 text-right">Total recargos:</td>
+                        <td className="px-3 py-2 text-right font-mono">
+                          {desglose.totalRecargo.toFixed(2)} €
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+
+                {/* Grand total with surcharges */}
+                {oferta.totalPrecio != null && (
+                  <div className="mt-2 flex justify-end">
+                    <div className="bg-muted rounded-lg px-4 py-2 text-sm">
+                      <span className="text-muted-foreground">Precio consumibles + recargos: </span>
+                      <span className="font-bold font-mono">
+                        {(Number(oferta.totalPrecio) + (Number(oferta.totalRecargo) || 0)).toFixed(2)} €
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Actions */}

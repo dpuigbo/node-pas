@@ -13,6 +13,12 @@ export const createOfertaSchema = z.object({
   validezDias: z.number().int().min(1).default(30),
   notas: z.string().optional().nullable(),
   sistemas: z.array(ofertaSistemaSchema).min(1, 'Debe incluir al menos un sistema'),
+  // Planificacion horaria (opcional)
+  fechaInicio: z.string().datetime().optional().nullable(),
+  fechaFin: z.string().datetime().optional().nullable(),
+  horaInicioJornada: z.string().regex(/^\d{2}:\d{2}$/, 'Formato HH:MM').optional().nullable(),
+  horaFinJornada: z.string().regex(/^\d{2}:\d{2}$/, 'Formato HH:MM').optional().nullable(),
+  diasTrabajo: z.string().optional().nullable(), // "1,2,3,4,5"
 });
 
 export const updateOfertaSchema = z.object({
@@ -22,6 +28,12 @@ export const updateOfertaSchema = z.object({
   validezDias: z.number().int().min(1).optional(),
   notas: z.string().optional().nullable(),
   sistemas: z.array(ofertaSistemaSchema).optional(),
+  // Planificacion horaria (opcional)
+  fechaInicio: z.string().datetime().optional().nullable(),
+  fechaFin: z.string().datetime().optional().nullable(),
+  horaInicioJornada: z.string().regex(/^\d{2}:\d{2}$/, 'Formato HH:MM').optional().nullable(),
+  horaFinJornada: z.string().regex(/^\d{2}:\d{2}$/, 'Formato HH:MM').optional().nullable(),
+  diasTrabajo: z.string().optional().nullable(),
 });
 
 export const updateEstadoOfertaSchema = z.object({
