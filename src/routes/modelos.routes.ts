@@ -35,7 +35,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 router.get('/compatible', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const sistemaId = Number(req.query.sistemaId);
-    const tipo = req.query.tipo as string;
+    const tipo = req.query.tipo as 'controller' | 'mechanical_unit' | 'drive_unit' | 'external_axis';
     if (!sistemaId || !tipo) {
       res.status(400).json({ error: 'sistemaId y tipo son obligatorios' });
       return;
@@ -43,7 +43,7 @@ router.get('/compatible', async (req: Request, res: Response, next: NextFunction
 
     // For controllers: return all controllers of the system's fabricante (no compatibility filter)
     if (tipo === 'controller') {
-      const sistema = await prisma.sistemaRobot.findUnique({
+      const sistema = await prisma.sistema.findUnique({
         where: { id: sistemaId },
         select: { fabricanteId: true },
       });
@@ -58,14 +58,14 @@ router.get('/compatible', async (req: Request, res: Response, next: NextFunction
     }
 
     // For non-controllers: find controllers in this system, then get compatible models
-    const controladores = await prisma.componente.findMany({
-      where: { sistemaRobotId: sistemaId, tipo: 'controller' },
+    const controladores = await prisma.componenteSistema.findMany({
+      where: { sistemaId, tipo: 'controller' },
       select: { modeloComponenteId: true },
     });
 
     if (controladores.length === 0) {
       // No controllers yet: return all models of this tipo + warning
-      const sistema = await prisma.sistemaRobot.findUnique({
+      const sistema = await prisma.sistema.findUnique({
         where: { id: sistemaId },
         select: { fabricanteId: true },
       });
@@ -79,7 +79,7 @@ router.get('/compatible', async (req: Request, res: Response, next: NextFunction
       return;
     }
 
-    const controllerModelIds = [...new Set(controladores.map((c) => c.modeloComponenteId))];
+    const controllerModelIds = [...new Set(controladores.map((c: { modeloComponenteId: number }) => c.modeloComponenteId))];
 
     // Get models that are compatible with ANY of the controllers in the system
     const compatibles = await prisma.compatibilidadControlador.findMany({
@@ -89,12 +89,13 @@ router.get('/compatible', async (req: Request, res: Response, next: NextFunction
       },
       select: { componenteId: true },
     });
-    const compatibleIds = [...new Set(compatibles.map((c) => c.componenteId))];
+    const compatibleIds = [...new Set(compatibles.map((c: { componenteId: number }) => c.componenteId))];
 
     if (compatibleIds.length === 0) {
       // No compatibility configured: return empty with warning
+      const sistema = await prisma.sistema.findUnique({ where: { id: sistemaId }, select: { fabricanteId: true } });
       const totalSinConfig = await prisma.modeloComponente.count({
-        where: { tipo, fabricanteId: (await prisma.sistemaRobot.findUnique({ where: { id: sistemaId }, select: { fabricanteId: true } }))?.fabricanteId },
+        where: { tipo, fabricanteId: sistema?.fabricanteId },
       });
       res.json({
         modelos: [],
