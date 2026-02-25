@@ -1,18 +1,42 @@
 import { useState, useEffect, useRef } from 'react';
-import { Save, Upload, X, Bot, Image as ImageIcon, Plus, Clock, CalendarDays } from 'lucide-react';
+import { Save, Upload, X, Bot, Image as ImageIcon, Plus, Clock, CalendarDays, Download, Loader2 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useConfiguracion, useUpdateConfiguracion } from '@/hooks/useCatalogos';
 import { useAuth } from '@/hooks/useAuth';
 
-const CONFIG_KEYS = [
+const COMUNIDADES_AUTONOMAS: Record<string, string> = {
+  'ES-AN': 'Andalucia',
+  'ES-AR': 'Aragon',
+  'ES-AS': 'Asturias',
+  'ES-CN': 'Canarias',
+  'ES-CB': 'Cantabria',
+  'ES-CL': 'Castilla y Leon',
+  'ES-CM': 'Castilla-La Mancha',
+  'ES-CT': 'Cataluna',
+  'ES-CE': 'Ceuta',
+  'ES-EX': 'Extremadura',
+  'ES-GA': 'Galicia',
+  'ES-IB': 'Islas Baleares',
+  'ES-RI': 'La Rioja',
+  'ES-MD': 'Madrid',
+  'ES-ML': 'Melilla',
+  'ES-MC': 'Murcia',
+  'ES-NC': 'Navarra',
+  'ES-PV': 'Pais Vasco',
+  'ES-VC': 'Comunidad Valenciana',
+};
+
+const CONFIG_KEYS: { clave: string; label: string; type: string; options?: Record<string, string> }[] = [
   { clave: 'empresa_nombre', label: 'Nombre de la empresa', type: 'text' },
   { clave: 'empresa_cif', label: 'CIF', type: 'text' },
   { clave: 'empresa_direccion', label: 'Direccion', type: 'text' },
+  { clave: 'empresa_comunidad_autonoma', label: 'Comunidad Autonoma', type: 'select', options: COMUNIDADES_AUTONOMAS },
   { clave: 'empresa_telefono', label: 'Telefono', type: 'text' },
   { clave: 'empresa_email', label: 'Email', type: 'text' },
   { clave: 'empresa_web', label: 'Web', type: 'text' },
@@ -27,7 +51,7 @@ const RECARGO_KEYS = [
   { clave: 'recargo_navidad_pct', label: 'Navidad + Ano Nuevo', defaultVal: '200' },
 ];
 
-// All config keys including the logos and surcharges (for saving)
+// All config keys including the logos, surcharges and holidays (for saving)
 const ALL_KEYS = [
   ...CONFIG_KEYS.map((k) => k.clave),
   'empresa_logo', 'empresa_logo_app',
@@ -228,6 +252,64 @@ export default function ConfiguracionPage() {
     handleChange(key, JSON.stringify(dates));
   };
 
+  // Auto-load holidays state
+  const [festivosYear, setFestivosYear] = useState(String(new Date().getFullYear()));
+  const [loadingFestivos, setLoadingFestivos] = useState(false);
+  const [festivosMsg, setFestivosMsg] = useState('');
+
+  const handleCargarFestivos = async () => {
+    const ccaa = values.empresa_comunidad_autonoma;
+    if (!ccaa) {
+      setFestivosMsg('Selecciona una Comunidad Autonoma en "Datos de empresa" primero.');
+      return;
+    }
+    setLoadingFestivos(true);
+    setFestivosMsg('');
+    try {
+      const res = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${festivosYear}/ES`);
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      const holidays: { date: string; localName: string; global: boolean; counties: string[] | null }[] = await res.json();
+
+      // Filter: national (global) + regional (counties includes our CCAA)
+      const relevant = holidays.filter(
+        (h) => h.global || (h.counties && h.counties.includes(ccaa)),
+      );
+
+      // Classify: Dec 25 and Jan 1 → festivos_especiales, rest → festivos
+      const especiales: string[] = [];
+      const normales: string[] = [];
+      for (const h of relevant) {
+        const [, mm, dd] = h.date.split('-');
+        if ((mm === '12' && dd === '25') || (mm === '01' && dd === '01')) {
+          especiales.push(h.date);
+        } else {
+          normales.push(h.date);
+        }
+      }
+
+      // Merge with existing (don't replace, add new ones)
+      const existingFestivos = getDateArray('festivos');
+      const existingEspeciales = getDateArray('festivos_especiales');
+      const mergedFestivos = [...new Set([...existingFestivos, ...normales])].sort();
+      const mergedEspeciales = [...new Set([...existingEspeciales, ...especiales])].sort();
+
+      setDateArray('festivos', mergedFestivos);
+      setDateArray('festivos_especiales', mergedEspeciales);
+
+      const added = (mergedFestivos.length - existingFestivos.length) + (mergedEspeciales.length - existingEspeciales.length);
+      const ccaaName = COMUNIDADES_AUTONOMAS[ccaa] || ccaa;
+      setFestivosMsg(
+        added > 0
+          ? `Se han anadido ${added} festivos para ${ccaaName} en ${festivosYear} (${normales.length} nacionales/autonomicos + ${especiales.length} especiales).`
+          : `Todos los festivos de ${ccaaName} para ${festivosYear} ya estaban cargados.`,
+      );
+    } catch (err) {
+      setFestivosMsg(`Error al cargar festivos: ${(err as Error).message}`);
+    } finally {
+      setLoadingFestivos(false);
+    }
+  };
+
   const handleSave = async () => {
     const items = ALL_KEYS.map((clave) => ({
       clave,
@@ -293,6 +375,21 @@ export default function ConfiguracionPage() {
                   disabled={!isAdmin}
                   rows={3}
                 />
+              ) : k.type === 'select' && k.options ? (
+                <Select
+                  value={values[k.clave] || ''}
+                  onValueChange={(v) => handleChange(k.clave, v)}
+                  disabled={!isAdmin}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(k.options).map(([code, name]) => (
+                      <SelectItem key={code} value={code}>{name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               ) : (
                 <Input
                   value={values[k.clave] || ''}
@@ -352,6 +449,48 @@ export default function ConfiguracionPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Auto-load holidays */}
+          {isAdmin && (
+            <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+              <p className="text-sm font-medium">Carga automatica de festivos</p>
+              <p className="text-xs text-muted-foreground">
+                Carga los festivos nacionales y autonomicos desde la API publica de Nager.Date
+                segun la Comunidad Autonoma configurada en "Datos de empresa".
+              </p>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Input
+                  type="number"
+                  min={2020}
+                  max={2050}
+                  value={festivosYear}
+                  onChange={(e) => setFestivosYear(e.target.value)}
+                  className="w-24 h-8 text-sm"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCargarFestivos}
+                  disabled={loadingFestivos}
+                >
+                  {loadingFestivos ? (
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  ) : (
+                    <Download className="h-3 w-3 mr-1" />
+                  )}
+                  {loadingFestivos ? 'Cargando...' : `Cargar festivos ${festivosYear}`}
+                </Button>
+              </div>
+              {festivosMsg && (
+                <p className={`text-xs ${festivosMsg.startsWith('Error') || festivosMsg.startsWith('Selecciona') ? 'text-orange-500' : 'text-green-600'}`}>
+                  {festivosMsg}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground italic">
+                Los festivos locales (2 por municipio) no estan disponibles en la API. Anadelos manualmente.
+              </p>
+            </div>
+          )}
+
           <FestivosEditor
             configKey="festivos"
             label="Festivos nacionales y locales"
