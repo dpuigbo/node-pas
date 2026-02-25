@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Save, Upload, X, Bot, Image as ImageIcon, Plus, Trash2, Clock, CalendarDays } from 'lucide-react';
+import { Save, Upload, X, Bot, Image as ImageIcon, Plus, Clock, CalendarDays } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
