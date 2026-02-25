@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.activateVersionSchema = exports.updateVersionSchema = exports.createVersionSchema = exports.updateModeloSchema = exports.createModeloSchema = void 0;
+exports.compatibilidadSchema = exports.activateVersionSchema = exports.updateVersionSchema = exports.createVersionSchema = exports.updateModeloSchema = exports.createModeloSchema = void 0;
 const zod_1 = require("zod");
 const tipoComponenteEnum = zod_1.z.enum(['controller', 'mechanical_unit', 'drive_unit', 'external_axis']);
 exports.createModeloSchema = zod_1.z.object({
@@ -22,5 +22,8 @@ exports.updateVersionSchema = zod_1.z.object({
 });
 exports.activateVersionSchema = zod_1.z.object({
     estado: zod_1.z.enum(['borrador', 'activo', 'obsoleto']),
+});
+exports.compatibilidadSchema = zod_1.z.object({
+    ids: zod_1.z.array(zod_1.z.number().int().positive()),
 });
 //# sourceMappingURL=modelos.validation.js.map
