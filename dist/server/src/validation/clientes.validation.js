@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateMaquinaSchema = exports.createMaquinaSchema = exports.updatePlantaSchema = exports.createPlantaSchema = exports.updateClienteSchema = exports.createClienteSchema = void 0;
+exports.updateMaquinaSchema = exports.createMaquinaSchema = exports.updateClienteSchema = exports.createClienteSchema = void 0;
 const zod_1 = require("zod");
 exports.createClienteSchema = zod_1.z.object({
     nombre: zod_1.z.string().min(1, 'El nombre es obligatorio').max(200),
@@ -26,13 +26,7 @@ exports.createClienteSchema = zod_1.z.object({
     activo: zod_1.z.boolean().optional().default(true),
 });
 exports.updateClienteSchema = exports.createClienteSchema.partial();
-exports.createPlantaSchema = zod_1.z.object({
-    nombre: zod_1.z.string().min(1, 'El nombre es obligatorio').max(200),
-    direccion: zod_1.z.string().max(500).optional().nullable(),
-});
-exports.updatePlantaSchema = exports.createPlantaSchema.partial();
 exports.createMaquinaSchema = zod_1.z.object({
-    plantaId: zod_1.z.number().int().positive(),
     nombre: zod_1.z.string().min(1, 'El nombre es obligatorio').max(200),
     descripcion: zod_1.z.string().max(500).optional().nullable(),
 });

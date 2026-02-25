@@ -5,7 +5,6 @@ const zod_1 = require("zod");
 const tipoComponenteEnum = zod_1.z.enum(['controller', 'mechanical_unit', 'drive_unit', 'external_axis']);
 exports.createSistemaSchema = zod_1.z.object({
     clienteId: zod_1.z.number().int().positive(),
-    plantaId: zod_1.z.number().int().positive().optional().nullable(),
     maquinaId: zod_1.z.number().int().positive().optional().nullable(),
     fabricanteId: zod_1.z.number().int().positive(),
     nombre: zod_1.z.string().min(1, 'El nombre es obligatorio').max(200),

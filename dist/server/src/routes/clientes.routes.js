@@ -44,7 +44,7 @@ router.get('/', async (req, res, next) => {
             where: includeInactive ? {} : { activo: true },
             orderBy: { nombre: 'asc' },
             include: {
-                _count: { select: { plantas: true, sistemas: true, intervenciones: true } },
+                _count: { select: { maquinas: true, sistemas: true, intervenciones: true } },
             },
         });
         res.json(clientes);
@@ -59,8 +59,7 @@ router.get('/:id', async (req, res, next) => {
         const cliente = await database_1.prisma.cliente.findUnique({
             where: { id: Number(req.params.id) },
             include: {
-                plantas: { orderBy: { nombre: 'asc' } },
-                _count: { select: { sistemas: true, intervenciones: true } },
+                _count: { select: { maquinas: true, sistemas: true, intervenciones: true } },
             },
         });
         if (!cliente) {
@@ -156,69 +155,13 @@ router.delete('/:id/logo', (0, role_middleware_1.requireRole)('admin'), async (r
         next(err);
     }
 });
-// ===== PLANTAS (nested under cliente) =====
-// GET /api/v1/clientes/:clienteId/plantas
-router.get('/:clienteId/plantas', async (req, res, next) => {
-    try {
-        const plantas = await database_1.prisma.planta.findMany({
-            where: { clienteId: Number(req.params.clienteId) },
-            orderBy: { nombre: 'asc' },
-            include: { _count: { select: { maquinas: true, sistemas: true } } },
-        });
-        res.json(plantas);
-    }
-    catch (err) {
-        next(err);
-    }
-});
-// POST /api/v1/clientes/:clienteId/plantas (admin)
-router.post('/:clienteId/plantas', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
-    try {
-        const data = clientes_validation_1.createPlantaSchema.parse(req.body);
-        const planta = await database_1.prisma.planta.create({
-            data: { ...data, clienteId: Number(req.params.clienteId) },
-        });
-        res.status(201).json(planta);
-    }
-    catch (err) {
-        next(err);
-    }
-});
-// PUT /api/v1/clientes/:clienteId/plantas/:plantaId (admin)
-router.put('/:clienteId/plantas/:plantaId', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
-    try {
-        const data = clientes_validation_1.updatePlantaSchema.parse(req.body);
-        const planta = await database_1.prisma.planta.update({
-            where: { id: Number(req.params.plantaId) },
-            data,
-        });
-        res.json(planta);
-    }
-    catch (err) {
-        next(err);
-    }
-});
-// DELETE /api/v1/clientes/:clienteId/plantas/:plantaId (admin)
-router.delete('/:clienteId/plantas/:plantaId', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
-    try {
-        await database_1.prisma.planta.delete({ where: { id: Number(req.params.plantaId) } });
-        res.json({ message: 'Planta eliminada' });
-    }
-    catch (err) {
-        next(err);
-    }
-});
 // ===== MAQUINAS (nested under cliente) =====
 // GET /api/v1/clientes/:clienteId/maquinas
 router.get('/:clienteId/maquinas', async (req, res, next) => {
     try {
-        const where = { clienteId: Number(req.params.clienteId) };
-        if (req.query.plantaId)
-            where.plantaId = Number(req.query.plantaId);
         const maquinas = await database_1.prisma.maquina.findMany({
-            where,
+            where: { clienteId: Number(req.params.clienteId) },
             orderBy: { nombre: 'asc' },
-            include: { planta: { select: { id: true, nombre: true } } },
         });
         res.json(maquinas);
     }

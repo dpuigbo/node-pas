@@ -12,8 +12,6 @@ router.get('/', async (req, res, next) => {
         const where = {};
         if (req.query.clienteId)
             where.clienteId = Number(req.query.clienteId);
-        if (req.query.plantaId)
-            where.plantaId = Number(req.query.plantaId);
         if (req.query.maquinaId)
             where.maquinaId = Number(req.query.maquinaId);
         const sistemas = await database_1.prisma.sistema.findMany({
@@ -21,7 +19,6 @@ router.get('/', async (req, res, next) => {
             orderBy: { nombre: 'asc' },
             include: {
                 cliente: { select: { id: true, nombre: true } },
-                planta: { select: { id: true, nombre: true } },
                 maquina: { select: { id: true, nombre: true } },
                 fabricante: { select: { id: true, nombre: true } },
                 _count: { select: { componentes: true } },
@@ -40,7 +37,6 @@ router.get('/:id', async (req, res, next) => {
             where: { id: Number(req.params.id) },
             include: {
                 cliente: { select: { id: true, nombre: true } },
-                planta: { select: { id: true, nombre: true } },
                 maquina: { select: { id: true, nombre: true } },
                 fabricante: { select: { id: true, nombre: true } },
                 componentes: {

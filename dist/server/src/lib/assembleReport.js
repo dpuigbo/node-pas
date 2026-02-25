@@ -96,7 +96,6 @@ function buildPlaceholderContext(informe) {
         'cliente.telefono': cli?.telefono ?? undefined,
         'cliente.email': cli?.email ?? undefined,
         'cliente.personaContacto': cli?.personaContacto ?? undefined,
-        'cliente.planta': informe.sistema.planta?.nombre ?? undefined,
         'cliente.maquina': informe.sistema.maquina?.nombre ?? undefined,
         'intervencion.actividad': informe.intervencion.titulo,
         'intervencion.fecha': informe.intervencion.fechaInicio
