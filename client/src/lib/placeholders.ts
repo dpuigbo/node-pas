@@ -36,7 +36,6 @@ export const PLACEHOLDER_DEFINITIONS: PlaceholderDef[] = [
 
   // Cliente
   { key: 'cliente.nombre', label: 'Nombre del cliente', example: 'Empresa S.A.', category: 'cliente' },
-  { key: 'cliente.planta', label: 'Planta', example: 'Planta Barcelona', category: 'cliente' },
   { key: 'cliente.maquina', label: 'Maquina', example: 'Maquina 3', category: 'cliente' },
 
   // Intervencion
@@ -127,7 +126,6 @@ export function buildFormContext(
       nombre: string;
       descripcion?: string | null;
       fabricante: { nombre: string };
-      planta?: { nombre: string } | null;
       maquina?: { nombre: string } | null;
     };
   },
@@ -147,7 +145,6 @@ export function buildFormContext(
     'sistema.descripcion': informe.sistema.descripcion ?? undefined,
     'sistema.fabricante': informe.sistema.fabricante.nombre,
     'cliente.nombre': informe.intervencion.cliente?.nombre ?? undefined,
-    'cliente.planta': informe.sistema.planta?.nombre ?? undefined,
     'cliente.maquina': informe.sistema.maquina?.nombre ?? undefined,
     'intervencion.actividad': informe.intervencion.titulo,
     'intervencion.fecha': informe.intervencion.fechaInicio

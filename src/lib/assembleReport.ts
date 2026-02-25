@@ -182,7 +182,6 @@ export function buildPlaceholderContext(informe: {
     nombre: string;
     descripcion?: string | null;
     fabricante: { nombre: string };
-    planta?: { nombre: string } | null;
     maquina?: { nombre: string } | null;
   };
 }): Record<string, string | undefined> {
@@ -200,7 +199,6 @@ export function buildPlaceholderContext(informe: {
     'cliente.telefono': cli?.telefono ?? undefined,
     'cliente.email': cli?.email ?? undefined,
     'cliente.personaContacto': cli?.personaContacto ?? undefined,
-    'cliente.planta': informe.sistema.planta?.nombre ?? undefined,
     'cliente.maquina': informe.sistema.maquina?.nombre ?? undefined,
     'intervencion.actividad': informe.intervencion.titulo,
     'intervencion.fecha': informe.intervencion.fechaInicio

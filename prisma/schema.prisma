@@ -61,7 +61,6 @@ model Cliente {
   createdAt           DateTime  @default(now()) @map("created_at")
   updatedAt           DateTime  @updatedAt @map("updated_at")
 
-  plantas        Planta[]
   maquinas       Maquina[]
   sistemas       Sistema[]
   intervenciones Intervencion[]
@@ -70,36 +69,18 @@ model Cliente {
   @@map("clientes")
 }
 
-model Planta {
-  id        Int      @id @default(autoincrement())
-  clienteId Int      @map("cliente_id")
-  nombre    String
-  direccion String?
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  cliente  Cliente   @relation(fields: [clienteId], references: [id], onDelete: Cascade)
-  maquinas Maquina[]
-  sistemas Sistema[]
-
-  @@unique([clienteId, nombre])
-  @@map("plantas")
-}
-
 model Maquina {
   id          Int      @id @default(autoincrement())
   clienteId   Int      @map("cliente_id")
-  plantaId    Int      @map("planta_id")
   nombre      String
   descripcion String?
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   cliente  Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
-  planta   Planta   @relation(fields: [plantaId], references: [id], onDelete: Cascade)
   sistemas Sistema[]
 
-  @@unique([clienteId, plantaId, nombre])
+  @@unique([clienteId, nombre])
   @@map("maquinas")
 }
 
@@ -174,7 +155,6 @@ enum EstadoTemplate {
 model Sistema {
   id           Int      @id @default(autoincrement())
   clienteId    Int      @map("cliente_id")
-  plantaId     Int?     @map("planta_id")
   maquinaId    Int?     @map("maquina_id")
   fabricanteId Int      @map("fabricante_id")
   nombre       String
@@ -183,7 +163,6 @@ model Sistema {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   cliente       Cliente              @relation(fields: [clienteId], references: [id], onDelete: Cascade)
-  planta        Planta?              @relation(fields: [plantaId], references: [id], onDelete: SetNull)
   maquina       Maquina?             @relation(fields: [maquinaId], references: [id], onDelete: SetNull)
   fabricante    Fabricante           @relation(fields: [fabricanteId], references: [id], onDelete: Cascade)
   componentes    ComponenteSistema[]

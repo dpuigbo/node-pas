@@ -189,7 +189,7 @@ export default function SistemaDetailPage() {
         </Button>
         <PageHeader
           title={sistema.nombre}
-          description={[sistema.fabricante?.nombre, sistema.planta?.nombre, sistema.maquina?.nombre].filter(Boolean).join(' — ')}
+          description={[sistema.fabricante?.nombre, sistema.maquina?.nombre].filter(Boolean).join(' — ')}
         />
       </div>
 

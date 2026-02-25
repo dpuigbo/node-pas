@@ -109,9 +109,9 @@ export default function ClientesPage() {
     { key: 'nombre', header: 'Nombre' },
     { key: 'sede', header: 'Sede', render: (cli) => cli.sede || '-' },
     {
-      key: 'plantas',
-      header: 'Plantas',
-      render: (cli) => <Badge variant="secondary">{cli._count?.plantas ?? 0}</Badge>,
+      key: 'maquinas',
+      header: 'Maquinas',
+      render: (cli) => <Badge variant="secondary">{cli._count?.maquinas ?? 0}</Badge>,
     },
     {
       key: 'sistemas',

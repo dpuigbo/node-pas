@@ -68,42 +68,6 @@ export function useDeleteLogo(clienteId: number) {
   });
 }
 
-// Plantas
-export function usePlantas(clienteId: number | undefined) {
-  return useQuery({
-    queryKey: ['clientes', clienteId, 'plantas'],
-    queryFn: async () => {
-      const { data } = await api.get(`/v1/clientes/${clienteId}/plantas`);
-      return data;
-    },
-    enabled: !!clienteId,
-  });
-}
-
-export function useCreatePlanta(clienteId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (body: any) => api.post(`/v1/clientes/${clienteId}/plantas`, body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['clientes', clienteId] }),
-  });
-}
-
-export function useUpdatePlanta(clienteId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, ...body }: any) => api.put(`/v1/clientes/${clienteId}/plantas/${id}`, body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['clientes', clienteId] }),
-  });
-}
-
-export function useDeletePlanta(clienteId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: number) => api.delete(`/v1/clientes/${clienteId}/plantas/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['clientes', clienteId] }),
-  });
-}
-
 // Maquinas
 export function useMaquinas(clienteId: number | undefined) {
   return useQuery({

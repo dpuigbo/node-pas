@@ -47,7 +47,6 @@ export interface InformeDetalle {
     nombre: string;
     descripcion: string | null;
     fabricante: { id: number; nombre: string };
-    planta: { id: number; nombre: string } | null;
     maquina: { id: number; nombre: string } | null;
   };
   creadoPor: { id: number; nombre: string } | null;
@@ -92,7 +91,6 @@ export interface AssembledReportResponse {
       id: number;
       nombre: string;
       fabricante: { id: number; nombre: string };
-      planta: { id: number; nombre: string } | null;
       maquina: { id: number; nombre: string } | null;
     };
   };
