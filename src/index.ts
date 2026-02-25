@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import path from 'path';
+import fs from 'fs';
 import { configureAuth } from './config/auth';
 import { errorMiddleware } from './middleware/error.middleware';
 import apiRoutes from './routes';
@@ -14,7 +15,7 @@ const isDev = process.env.NODE_ENV !== 'production';
 // Project root: find it by looking for package.json
 // Works with tsx (__dirname=src/) and tsc (__dirname=dist/server/src/)
 const PROJECT_ROOT = [__dirname, path.join(__dirname, '..'), path.join(__dirname, '..', '..', '..')]
-  .find(d => require('fs').existsSync(path.join(d, 'package.json'))) || path.join(__dirname, '..');
+  .find(d => fs.existsSync(path.join(d, 'package.json'))) || path.join(__dirname, '..');
 
 // Middleware
 app.use(helmet({ contentSecurityPolicy: false }));
@@ -59,7 +60,6 @@ app.post('/api/deploy', (req, res) => {
   }
   try {
     const tmpDir = path.join(PROJECT_ROOT, 'tmp');
-    const fs = require('fs');
     if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
     res.json({ status: 'restart scheduled' });
     // Touch restart.txt after response is sent
@@ -73,7 +73,7 @@ app.post('/api/deploy', (req, res) => {
 
 // Serve uploaded files (logos, etc.)
 const uploadsDir = path.join(PROJECT_ROOT, 'uploads');
-require('fs').mkdirSync(path.join(uploadsDir, 'logos'), { recursive: true });
+fs.mkdirSync(path.join(uploadsDir, 'logos'), { recursive: true });
 app.use('/uploads', express.static(uploadsDir));
 
 // API routes
