@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useDashboard, useCalendario } from '@/hooks/useDashboard';
+import { useConfiguracion } from '@/hooks/useCatalogos';
 
 interface StatCardProps {
   title: string;
@@ -147,14 +148,27 @@ function buildCalendarDays(year: number, month: number, intervenciones: any[]): 
   return days;
 }
 
+function formatDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function CalendarioIntervenciones() {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const mes = formatMes(currentDate);
   const { data: intervenciones, isLoading } = useCalendario(mes);
+  const { data: config } = useConfiguracion();
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
+
+  // Parse festivos from config
+  const festivosSet = useMemo(() => {
+    try { return new Set(JSON.parse(config?.festivos || '[]') as string[]); } catch { return new Set<string>(); }
+  }, [config?.festivos]);
+  const especialesSet = useMemo(() => {
+    try { return new Set(JSON.parse(config?.festivos_especiales || '[]') as string[]); } catch { return new Set<string>(); }
+  }, [config?.festivos_especiales]);
 
   const safeIntervenciones = Array.isArray(intervenciones) ? intervenciones : [];
   const days = useMemo(
@@ -208,12 +222,25 @@ function CalendarioIntervenciones() {
 
       {/* Calendar grid */}
       <div className="grid grid-cols-7">
-        {days.map((day, idx) => (
+        {days.map((day, idx) => {
+          const dateStr = formatDateStr(day.date);
+          const isFestivo = festivosSet.has(dateStr);
+          const isEspecial = especialesSet.has(dateStr);
+          const isSunday = day.date.getDay() === 0;
+          return (
           <div
             key={idx}
             className={`min-h-[100px] border-b border-r p-1 ${
-              !day.isCurrentMonth ? 'bg-muted/30' : ''
-            } ${day.isToday ? 'bg-blue-50/50' : ''} ${
+              !day.isCurrentMonth
+                ? 'bg-muted/30'
+                : isEspecial
+                  ? 'bg-red-50'
+                  : isFestivo
+                    ? 'bg-orange-50'
+                    : isSunday
+                      ? 'bg-muted/20'
+                      : ''
+            } ${day.isToday ? 'ring-2 ring-inset ring-blue-400/50' : ''} ${
               idx % 7 === 6 ? 'border-r-0' : ''
             }`}
           >
@@ -250,11 +277,12 @@ function CalendarioIntervenciones() {
               )}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 px-6 py-3 border-t text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-4 px-6 py-3 border-t text-xs text-muted-foreground">
         <div className="flex items-center gap-1">
           <span className="h-2 w-2 rounded-full bg-blue-400" />
           Preventiva
@@ -280,6 +308,23 @@ function CalendarioIntervenciones() {
           <span className={`h-2 w-2 rounded-full ${ESTADO_DOT.facturada}`} />
           Facturada
         </div>
+        {(festivosSet.size > 0 || especialesSet.size > 0) && (
+          <>
+            <span className="mx-2">|</span>
+            {festivosSet.size > 0 && (
+              <div className="flex items-center gap-1">
+                <span className="h-2 w-4 rounded-sm bg-orange-100 border border-orange-200" />
+                Festivo
+              </div>
+            )}
+            {especialesSet.size > 0 && (
+              <div className="flex items-center gap-1">
+                <span className="h-2 w-4 rounded-sm bg-red-100 border border-red-200" />
+                Especial
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
