@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Cpu, Trash2, AlertCircle, Pencil } from 'lucide-react';
+import { ArrowLeft, Plus, Cpu, Trash2, AlertCircle, Pencil, AlertTriangle } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, Column } from '@/components/shared/DataTable';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSistema } from '@/hooks/useSistemas';
-import { useModelos } from '@/hooks/useModelos';
+import { useModelos, useModelosCompatibles } from '@/hooks/useModelos';
 import { useCreateComponente, useUpdateComponente, useDeleteComponente } from '@/hooks/useComponentes';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -46,10 +46,30 @@ export default function SistemaDetailPage() {
 
   // Modelos filtered by fabricante of this sistema + selected tipo
   const { data: modelos } = useModelos(
-    sistema?.fabricanteId
-      ? { fabricanteId: sistema.fabricanteId, tipo: compForm.tipo || undefined }
+    sistema?.fabricanteId && compForm.tipo
+      ? { fabricanteId: sistema.fabricanteId, tipo: compForm.tipo }
       : undefined,
   );
+
+  // For non-controller types, use compatibility-filtered models
+  const { data: compatData } = useModelosCompatibles(
+    sistemaId || undefined,
+    compForm.tipo || undefined,
+  );
+
+  // Determine which models to show in the dropdown
+  const effectiveModelos: any[] = (() => {
+    if (!compForm.tipo) return [];
+    if (compForm.tipo === 'controller') {
+      // Controllers: show all from fabricante (no compatibility filter)
+      return Array.isArray(modelos) ? modelos : [];
+    }
+    // Non-controllers: use compatibility-filtered list if available
+    if (compatData) return compatData.modelos;
+    return Array.isArray(modelos) ? modelos : [];
+  })();
+
+  const compatWarning = compForm.tipo && compForm.tipo !== 'controller' ? compatData?.warning : null;
 
   if (isLoading) {
     return (
@@ -256,13 +276,19 @@ export default function SistemaDetailPage() {
                   >
                     <SelectTrigger><SelectValue placeholder="Seleccionar modelo..." /></SelectTrigger>
                     <SelectContent>
-                      {(Array.isArray(modelos) ? modelos : []).map((m: any) => (
+                      {effectiveModelos.map((m: any) => (
                         <SelectItem key={m.id} value={String(m.id)}>{m.nombre}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 )}
-                {compForm.tipo && (modelos as any[] | undefined)?.length === 0 && (
+                {compatWarning && (
+                  <p className="text-xs text-orange-500 mt-1 flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3 shrink-0" />
+                    {compatWarning}
+                  </p>
+                )}
+                {compForm.tipo && effectiveModelos.length === 0 && !compatWarning && (
                   <p className="text-xs text-muted-foreground mt-1">
                     No hay modelos de este tipo para el fabricante {sistema.fabricante?.nombre}. Crea uno en Catalogos.
                   </p>

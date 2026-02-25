@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Plus, FileText, Play, Pause,
-  AlertCircle, Loader2, Pencil, Save, X,
+  AlertCircle, Loader2, Pencil, Save, X, Link2,
 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, Column } from '@/components/shared/DataTable';
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   useModelo, useUpdateModelo, useVersiones, useCreateVersion, useActivateVersion,
+  useModelos, useCompatibilidad, useUpdateCompatibilidad,
 } from '@/hooks/useModelos';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -91,6 +92,43 @@ export default function ModeloDetailPage() {
     const nivelesStr = nivelesForm.length > 0 ? nivelesForm.join(',') : null;
     await updateModelo.mutateAsync({ id: modeloId, niveles: nivelesStr });
     setEditingNiveles(false);
+  };
+
+  // Compatibilidad editing
+  const [editingCompat, setEditingCompat] = useState(false);
+  const [compatForm, setCompatForm] = useState<number[]>([]);
+  const { data: compatList } = useCompatibilidad(modeloId || undefined);
+  const updateCompat = useUpdateCompatibilidad(modeloId);
+
+  // Load candidate models for the compatibility editor
+  // For controllers: load non-controllers of the same fabricante
+  // For non-controllers: load controllers of the same fabricante
+  const candidateTipo = modelo?.tipo === 'controller' ? undefined : 'controller';
+  const { data: candidateModelos } = useModelos(
+    modelo?.fabricante?.id
+      ? { fabricanteId: modelo.fabricante.id, ...(candidateTipo ? { tipo: candidateTipo } : {}) }
+      : undefined,
+  );
+  // If controller, filter out other controllers from candidates
+  const candidates: any[] = modelo?.tipo === 'controller'
+    ? (Array.isArray(candidateModelos) ? candidateModelos : []).filter((m: any) => m.tipo !== 'controller')
+    : (Array.isArray(candidateModelos) ? candidateModelos : []);
+
+  const startEditCompat = () => {
+    const currentIds = (compatList as any[] || []).map((c: any) => c.id);
+    setCompatForm(currentIds);
+    setEditingCompat(true);
+  };
+
+  const toggleCompat = (id: number) => {
+    setCompatForm((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
+
+  const handleSaveCompat = async () => {
+    await updateCompat.mutateAsync(compatForm);
+    setEditingCompat(false);
   };
 
   if (loadingModelo) {
@@ -316,6 +354,145 @@ export default function ModeloDetailPage() {
                 ))
               ) : (
                 <span className="text-sm text-muted-foreground">Sin niveles configurados</span>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Compatibilidad controlador */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Link2 className="h-4 w-4" />
+              {modelo.tipo === 'controller' ? 'Componentes compatibles' : 'Controladores compatibles'}
+            </CardTitle>
+            {isAdmin && !editingCompat && (
+              <Button variant="outline" size="sm" onClick={startEditCompat}>
+                <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
+              </Button>
+            )}
+            {editingCompat && (
+              <div className="flex gap-2">
+                <Button size="sm" onClick={handleSaveCompat} disabled={updateCompat.isPending}>
+                  <Save className="h-3.5 w-3.5 mr-1" />
+                  {updateCompat.isPending ? 'Guardando...' : 'Guardar'}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setEditingCompat(false)}>
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {editingCompat ? (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">
+                {modelo.tipo === 'controller'
+                  ? 'Selecciona los componentes compatibles con este controlador.'
+                  : 'Selecciona los controladores compatibles con este componente.'}
+              </p>
+              {modelo.tipo === 'controller' ? (
+                // Group candidates by tipo for controllers
+                (['mechanical_unit', 'drive_unit', 'external_axis'] as const).map((tipo) => {
+                  const ofType = candidates.filter((c) => c.tipo === tipo);
+                  if (ofType.length === 0) return null;
+                  return (
+                    <div key={tipo} className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground mt-2">
+                        {TIPO_LABELS[tipo] ?? tipo}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {ofType.map((m: any) => {
+                          const selected = compatForm.includes(m.id);
+                          return (
+                            <button
+                              key={m.id}
+                              type="button"
+                              className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                                selected
+                                  ? 'bg-primary text-primary-foreground border-primary'
+                                  : 'bg-background border-input text-muted-foreground hover:bg-muted'
+                              }`}
+                              onClick={() => toggleCompat(m.id)}
+                            >
+                              {m.nombre}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {candidates.map((m: any) => {
+                    const selected = compatForm.includes(m.id);
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                          selected
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : 'bg-background border-input text-muted-foreground hover:bg-muted'
+                        }`}
+                        onClick={() => toggleCompat(m.id)}
+                      >
+                        {m.nombre}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {candidates.length === 0 && (
+                <p className="text-xs text-muted-foreground italic">
+                  No hay modelos candidatos del mismo fabricante.
+                </p>
+              )}
+            </div>
+          ) : (
+            <div>
+              {modelo.tipo === 'controller' ? (
+                // Show compatible components grouped by tipo
+                (() => {
+                  const list = (compatList as any[]) ?? [];
+                  if (list.length === 0) {
+                    return <span className="text-sm text-muted-foreground">Sin compatibilidad configurada</span>;
+                  }
+                  return (
+                    <div className="space-y-2">
+                      {(['mechanical_unit', 'drive_unit', 'external_axis'] as const).map((tipo) => {
+                        const ofType = list.filter((c: any) => c.tipo === tipo);
+                        if (ofType.length === 0) return null;
+                        return (
+                          <div key={tipo}>
+                            <p className="text-xs font-medium text-muted-foreground mb-1">
+                              {TIPO_LABELS[tipo] ?? tipo}
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {ofType.map((c: any) => (
+                                <Badge key={c.id} variant="secondary">{c.nombre}</Badge>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {(compatList as any[] ?? []).length > 0 ? (
+                    (compatList as any[]).map((c: any) => (
+                      <Badge key={c.id} variant="secondary">{c.nombre}</Badge>
+                    ))
+                  ) : (
+                    <span className="text-sm text-muted-foreground">Sin compatibilidad configurada</span>
+                  )}
+                </div>
               )}
             </div>
           )}

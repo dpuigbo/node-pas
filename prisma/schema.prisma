@@ -115,9 +115,23 @@ model ModeloComponente {
   versiones         VersionTemplate[]
   componentes       ComponenteSistema[]
   consumiblesNivel  ConsumibleNivel[]
+  // Compatibilidad controlador ↔ componentes (self-referential M:N)
+  compatibleConControladores CompatibilidadControlador[] @relation("ComponenteCompatible")
+  componentesCompatibles     CompatibilidadControlador[] @relation("ControladorCompatible")
 
   @@unique([fabricanteId, tipo, nombre])
   @@map("modelos_componente")
+}
+
+model CompatibilidadControlador {
+  controladorId  Int @map("controlador_id")
+  componenteId   Int @map("componente_id")
+
+  controlador ModeloComponente @relation("ControladorCompatible", fields: [controladorId], references: [id], onDelete: Cascade)
+  componente  ModeloComponente @relation("ComponenteCompatible", fields: [componenteId], references: [id], onDelete: Cascade)
+
+  @@id([controladorId, componenteId])
+  @@map("compatibilidad_controlador")
 }
 
 enum TipoComponente {

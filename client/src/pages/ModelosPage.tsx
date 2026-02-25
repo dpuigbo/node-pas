@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Link2 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, Column } from '@/components/shared/DataTable';
 import { Button } from '@/components/ui/button';
@@ -89,6 +89,21 @@ export default function ModelosPage() {
       header: 'Tipo',
       render: (m: any) => <Badge variant="secondary">{TIPO_LABELS[m.tipo] || m.tipo}</Badge>,
     }] : []),
+    {
+      key: 'compatibilidad',
+      header: 'Compat.',
+      render: (m) => {
+        const count = m.tipo === 'controller'
+          ? (m._count?.componentesCompatibles ?? 0)
+          : (m._count?.compatibleConControladores ?? 0);
+        return (
+          <Badge variant={count > 0 ? 'secondary' : 'outline'} className="gap-1">
+            <Link2 className="h-3 w-3" />
+            {count}
+          </Badge>
+        );
+      },
+    },
     {
       key: 'versiones',
       header: 'Versiones',

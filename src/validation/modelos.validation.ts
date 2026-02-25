@@ -27,6 +27,10 @@ export const activateVersionSchema = z.object({
   estado: z.enum(['borrador', 'activo', 'obsoleto']),
 });
 
+export const compatibilidadSchema = z.object({
+  ids: z.array(z.number().int().positive()),
+});
+
 export type CreateModeloInput = z.infer<typeof createModeloSchema>;
 export type UpdateModeloInput = z.infer<typeof updateModeloSchema>;
 export type CreateVersionInput = z.infer<typeof createVersionSchema>;
