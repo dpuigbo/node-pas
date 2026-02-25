@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { Save, Upload, X, Bot, Image as ImageIcon, Plus, Clock, CalendarDays, Download, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { Save, Upload, X, Bot, Image as ImageIcon, Plus, Clock, CalendarDays, Download, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -220,6 +220,180 @@ function FestivosEditor({
           </Button>
         </div>
       )}
+    </div>
+  );
+}
+
+const MES_NOMBRES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+];
+const DIAS_CAL = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+
+function FestivosCalendar({
+  festivos,
+  festivosEspeciales,
+}: {
+  festivos: string[];
+  festivosEspeciales: string[];
+}) {
+  const [currentDate, setCurrentDate] = useState(() => new Date());
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  const festivosSet = useMemo(() => new Set(festivos), [festivos]);
+  const especialesSet = useMemo(() => new Set(festivosEspeciales), [festivosEspeciales]);
+
+  const days = useMemo(() => {
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const today = new Date();
+
+    // Monday=0, Sunday=6
+    let startOffset = firstDay.getDay() - 1;
+    if (startOffset < 0) startOffset = 6;
+
+    const result: { date: Date; day: number; isCurrentMonth: boolean; isToday: boolean; dateStr: string }[] = [];
+
+    // Previous month
+    for (let i = startOffset - 1; i >= 0; i--) {
+      const d = new Date(year, month, -i);
+      result.push({
+        date: d,
+        day: d.getDate(),
+        isCurrentMonth: false,
+        isToday: false,
+        dateStr: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
+      });
+    }
+
+    // Current month
+    for (let i = 1; i <= lastDay.getDate(); i++) {
+      const d = new Date(year, month, i);
+      const isToday = d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate();
+      result.push({
+        date: d,
+        day: i,
+        isCurrentMonth: true,
+        isToday,
+        dateStr: `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`,
+      });
+    }
+
+    // Fill to 42
+    const remaining = 42 - result.length;
+    for (let i = 1; i <= remaining; i++) {
+      const d = new Date(year, month + 1, i);
+      result.push({
+        date: d,
+        day: d.getDate(),
+        isCurrentMonth: false,
+        isToday: false,
+        dateStr: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
+      });
+    }
+
+    return result;
+  }, [year, month]);
+
+  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
+  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+  const goToToday = () => setCurrentDate(new Date());
+
+  return (
+    <div className="rounded-lg border">
+      {/* Header */}
+      <div className="flex items-center justify-between px-3 py-2 border-b">
+        <span className="text-sm font-medium">
+          {MES_NOMBRES[month]} {year}
+        </span>
+        <div className="flex items-center gap-0.5">
+          <Button variant="ghost" size="sm" className="h-7 text-xs px-2" onClick={goToToday}>
+            Hoy
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={prevMonth}>
+            <ChevronLeft className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={nextMonth}>
+            <ChevronRight className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Day headers */}
+      <div className="grid grid-cols-7">
+        {DIAS_CAL.map((d, i) => (
+          <div
+            key={d}
+            className={`text-center text-[10px] font-medium py-1 ${
+              i === 6 ? 'text-muted-foreground/60' : 'text-muted-foreground'
+            }`}
+          >
+            {d}
+          </div>
+        ))}
+      </div>
+
+      {/* Calendar grid */}
+      <div className="grid grid-cols-7">
+        {days.map((day, idx) => {
+          const isSunday = day.date.getDay() === 0;
+          const isFestivo = festivosSet.has(day.dateStr);
+          const isEspecial = especialesSet.has(day.dateStr);
+
+          let bgClass = '';
+          if (!day.isCurrentMonth) {
+            bgClass = '';
+          } else if (isEspecial) {
+            bgClass = 'bg-red-100';
+          } else if (isFestivo) {
+            bgClass = 'bg-orange-100';
+          } else if (isSunday) {
+            bgClass = 'bg-muted/40';
+          }
+
+          return (
+            <div
+              key={idx}
+              className={`h-8 flex items-center justify-center text-xs border-t ${bgClass}`}
+              title={
+                isEspecial ? 'Festivo especial'
+                  : isFestivo ? 'Festivo'
+                    : isSunday && day.isCurrentMonth ? 'Domingo'
+                      : undefined
+              }
+            >
+              <span
+                className={`w-6 h-6 flex items-center justify-center rounded-full ${
+                  day.isToday
+                    ? 'bg-primary text-primary-foreground font-bold text-[11px]'
+                    : day.isCurrentMonth
+                      ? isEspecial ? 'text-red-700 font-medium' : isFestivo ? 'text-orange-700 font-medium' : 'text-foreground'
+                      : 'text-muted-foreground/30'
+                }`}
+              >
+                {day.day}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-4 px-3 py-2 border-t text-[10px] text-muted-foreground">
+        <div className="flex items-center gap-1">
+          <span className="h-2.5 w-2.5 rounded bg-orange-100 border border-orange-200" />
+          Festivo
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="h-2.5 w-2.5 rounded bg-red-100 border border-red-200" />
+          Especial
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="h-2.5 w-2.5 rounded bg-muted/60 border" />
+          Domingo
+        </div>
+      </div>
     </div>
   );
 }
@@ -490,6 +664,12 @@ export default function ConfiguracionPage() {
               </p>
             </div>
           )}
+
+          {/* Visual calendar */}
+          <FestivosCalendar
+            festivos={getDateArray('festivos')}
+            festivosEspeciales={getDateArray('festivos_especiales')}
+          />
 
           <FestivosEditor
             configKey="festivos"
