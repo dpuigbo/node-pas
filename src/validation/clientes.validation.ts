@@ -10,6 +10,7 @@ export const createClienteSchema = z.object({
   telefono: z.string().max(50).optional().nullable(),
   email: z.string().max(200).optional().nullable(),
   personaContacto: z.string().max(200).optional().nullable(),
+  logo: z.string().max(500).optional().nullable(),
   tarifaHoraTrabajo: z.number().min(0).optional().nullable(),
   tarifaHoraViaje: z.number().min(0).optional().nullable(),
   dietas: z.number().min(0).optional().nullable(),

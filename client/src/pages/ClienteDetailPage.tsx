@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Building2, Cog, DollarSign, Truck, Save, X, Calculator, Loader2, Pencil, Trash2, User, Phone, Mail, MapPin, FileText } from 'lucide-react';
+import { ArrowLeft, Plus, Building2, Cog, DollarSign, Truck, Save, X, Calculator, Loader2, Pencil, Trash2, User, Phone, Mail, MapPin, FileText, ImagePlus, Trash } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, Column } from '@/components/shared/DataTable';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import {
   useCliente, useUpdateCliente,
   usePlantas, useCreatePlanta, useUpdatePlanta, useDeletePlanta,
   useMaquinas, useCreateMaquina, useUpdateMaquina, useDeleteMaquina,
+  useUploadLogo, useDeleteLogo,
 } from '@/hooks/useClientes';
 import { useSistemas, useCreateSistema } from '@/hooks/useSistemas';
 import { useFabricantes } from '@/hooks/useFabricantes';
@@ -42,6 +43,9 @@ export default function ClienteDetailPage() {
   const deleteMaquina = useDeleteMaquina(clienteId);
   const createSistema = useCreateSistema();
   const updateCliente = useUpdateCliente();
+  const uploadLogo = useUploadLogo(clienteId);
+  const deleteLogo = useDeleteLogo(clienteId);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   // General info editing state
   const [editingGeneral, setEditingGeneral] = useState(false);
@@ -103,6 +107,18 @@ export default function ClienteDetailPage() {
       personaContacto: genForm.personaContacto || null,
     });
     setEditingGeneral(false);
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await uploadLogo.mutateAsync(file);
+    if (logoInputRef.current) logoInputRef.current.value = '';
+  };
+
+  const handleLogoDelete = async () => {
+    if (!window.confirm('Eliminar el logo del cliente?')) return;
+    await deleteLogo.mutateAsync();
   };
 
   const handleSaveLogistics = async () => {
@@ -310,12 +326,62 @@ export default function ClienteDetailPage() {
     sistemaForm.nombre.trim() &&
     sistemaForm.fabricanteId;
 
+  const logoUrl = cliente.logo ? `/uploads/logos/${cliente.logo}` : null;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate('/clientes')}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
+
+        {/* Logo */}
+        <div className="relative group shrink-0">
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt={`Logo ${cliente.nombre}`}
+              className="h-14 w-14 rounded-lg object-contain border bg-white p-1"
+            />
+          ) : (
+            <div className="h-14 w-14 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center">
+              <Building2 className="h-6 w-6 text-gray-300" />
+            </div>
+          )}
+          {isAdmin && (
+            <div className="absolute inset-0 rounded-lg bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+              <button
+                className="p-1 text-white hover:text-blue-300"
+                onClick={() => logoInputRef.current?.click()}
+                title="Subir logo"
+              >
+                <ImagePlus className="h-4 w-4" />
+              </button>
+              {logoUrl && (
+                <button
+                  className="p-1 text-white hover:text-red-300"
+                  onClick={handleLogoDelete}
+                  title="Eliminar logo"
+                >
+                  <Trash className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          )}
+          <input
+            ref={logoInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleLogoUpload}
+          />
+          {uploadLogo.isPending && (
+            <div className="absolute inset-0 rounded-lg bg-white/80 flex items-center justify-center">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            </div>
+          )}
+        </div>
+
         <PageHeader title={cliente.nombre} description={cliente.sede || 'Sin sede'} />
       </div>
 

@@ -71,6 +71,11 @@ app.post('/api/deploy', (req, res) => {
   }
 });
 
+// Serve uploaded files (logos, etc.)
+const uploadsDir = path.join(PROJECT_ROOT, 'uploads');
+require('fs').mkdirSync(path.join(uploadsDir, 'logos'), { recursive: true });
+app.use('/uploads', express.static(uploadsDir));
+
 // API routes
 app.use('/api', apiRoutes);
 

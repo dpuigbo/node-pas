@@ -1,4 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import { requireRole } from '../middleware/role.middleware';
 import { prisma } from '../config/database';
 import {
@@ -8,6 +11,30 @@ import {
 } from '../validation/clientes.validation';
 
 const router = Router();
+
+// Multer config for logo uploads
+const PROJECT_ROOT = [__dirname, path.join(__dirname, '..'), path.join(__dirname, '..', '..', '..')]
+  .find(d => fs.existsSync(path.join(d, 'package.json'))) || path.join(__dirname, '..');
+const logosDir = path.join(PROJECT_ROOT, 'uploads', 'logos');
+fs.mkdirSync(logosDir, { recursive: true });
+
+const logoStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, logosDir),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.png';
+    cb(null, `logo-${req.params.id}-${Date.now()}${ext}`);
+  },
+});
+const uploadLogo = multer({
+  storage: logoStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowed.includes(ext)) cb(null, true);
+    else cb(new Error('Solo se permiten imagenes (jpg, png, gif, webp, svg)'));
+  },
+});
 
 // ===== CLIENTES =====
 
@@ -68,6 +95,42 @@ router.delete('/:id', requireRole('admin'), async (req: Request, res: Response, 
     const cliente = await prisma.cliente.update({
       where: { id: Number(req.params.id) },
       data: { activo: false },
+    });
+    res.json(cliente);
+  } catch (err) { next(err); }
+});
+
+// POST /api/v1/clientes/:id/logo (admin) - upload logo image
+router.post('/:id/logo', requireRole('admin'), uploadLogo.single('logo'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.file) { res.status(400).json({ error: 'No se ha enviado ningun archivo' }); return; }
+    const clienteId = Number(req.params.id);
+    // Delete old logo file if exists
+    const existing = await prisma.cliente.findUnique({ where: { id: clienteId }, select: { logo: true } });
+    if (existing?.logo) {
+      const oldPath = path.join(logosDir, existing.logo);
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    }
+    const cliente = await prisma.cliente.update({
+      where: { id: clienteId },
+      data: { logo: req.file.filename },
+    });
+    res.json(cliente);
+  } catch (err) { next(err); }
+});
+
+// DELETE /api/v1/clientes/:id/logo (admin) - remove logo
+router.delete('/:id/logo', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const clienteId = Number(req.params.id);
+    const existing = await prisma.cliente.findUnique({ where: { id: clienteId }, select: { logo: true } });
+    if (existing?.logo) {
+      const oldPath = path.join(logosDir, existing.logo);
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    }
+    const cliente = await prisma.cliente.update({
+      where: { id: clienteId },
+      data: { logo: null },
     });
     res.json(cliente);
   } catch (err) { next(err); }

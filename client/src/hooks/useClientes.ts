@@ -46,6 +46,28 @@ export function useDeleteCliente() {
   });
 }
 
+export function useUploadLogo(clienteId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => {
+      const fd = new FormData();
+      fd.append('logo', file);
+      return api.post(`/v1/clientes/${clienteId}/logo`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['clientes'] }),
+  });
+}
+
+export function useDeleteLogo(clienteId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.delete(`/v1/clientes/${clienteId}/logo`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['clientes'] }),
+  });
+}
+
 // Plantas
 export function usePlantas(clienteId: number | undefined) {
   return useQuery({

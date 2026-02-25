@@ -44,6 +44,7 @@ model Cliente {
   telefono            String?
   email               String?
   personaContacto     String?   @map("persona_contacto")
+  logo                String?   // filename of uploaded logo image
   // Tarifas
   tarifaHoraTrabajo   Decimal?  @map("tarifa_hora_trabajo") @db.Decimal(10, 2)
   tarifaHoraViaje     Decimal?  @map("tarifa_hora_viaje") @db.Decimal(10, 2)
