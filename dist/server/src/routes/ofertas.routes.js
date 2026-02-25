@@ -11,6 +11,215 @@ function dec(v) {
         return null;
     return Number(v);
 }
+// ===== SURCHARGE TIME BANDS (fixed hours) =====
+const FRANJAS = [
+    { nombre: 'Madrugada (6-8h)', inicio: 6, fin: 8, key: 'recargo_madrugada_pct' },
+    { nombre: 'Diurno (8-18h)', inicio: 8, fin: 18, key: 'recargo_diurno_pct' },
+    { nombre: 'Tarde (18-22h)', inicio: 18, fin: 22, key: 'recargo_tarde_pct' },
+    { nombre: 'Nocturno (22-6h)', inicio: 22, fin: 30, key: 'recargo_nocturno_pct' }, // 30 = 6 next day
+];
+/** Load surcharge config from ConfiguracionApp table */
+async function loadRecargosConfig() {
+    const rows = await database_1.prisma.configuracionApp.findMany({
+        where: {
+            clave: {
+                in: [
+                    'recargo_tarde_pct', 'recargo_nocturno_pct', 'recargo_madrugada_pct',
+                    'recargo_domingo_festivo_pct', 'recargo_navidad_pct',
+                    'festivos', 'festivos_especiales',
+                ],
+            },
+        },
+    });
+    const cfg = {};
+    for (const r of rows)
+        cfg[r.clave] = r.valor;
+    const parseNum = (key, def) => {
+        const v = parseFloat(cfg[key] ?? '');
+        return isNaN(v) ? def : v;
+    };
+    const parseJsonArray = (key) => {
+        try {
+            return JSON.parse(cfg[key] || '[]');
+        }
+        catch {
+            return [];
+        }
+    };
+    return {
+        recargo_diurno_pct: 0, // always 0
+        recargo_tarde_pct: parseNum('recargo_tarde_pct', 25),
+        recargo_nocturno_pct: parseNum('recargo_nocturno_pct', 100),
+        recargo_madrugada_pct: parseNum('recargo_madrugada_pct', 25),
+        recargo_domingo_festivo_pct: parseNum('recargo_domingo_festivo_pct', 100),
+        recargo_navidad_pct: parseNum('recargo_navidad_pct', 200),
+        festivos: parseJsonArray('festivos'),
+        festivos_especiales: parseJsonArray('festivos_especiales'),
+    };
+}
+/**
+ * Calculate hours overlap between a work shift and a time band.
+ * Handles overnight bands (e.g., Nocturno 22-30 means 22:00-06:00 next day).
+ * shiftStart/shiftEnd and bandStart/bandEnd are in hours (0-30 scale).
+ */
+function hoursInBand(shiftStart, shiftEnd, bandStart, bandEnd) {
+    const overlapStart = Math.max(shiftStart, bandStart);
+    const overlapEnd = Math.min(shiftEnd, bandEnd);
+    return Math.max(0, overlapEnd - overlapStart);
+}
+/**
+ * Distribute shift hours across time bands.
+ * Returns hours per band key.
+ */
+function distributeShiftHours(horaInicio, // "HH:MM"
+horaFin) {
+    const [hi, mi] = horaInicio.split(':').map(Number);
+    const [hf, mf] = horaFin.split(':').map(Number);
+    let start = hi + mi / 60;
+    let end = hf + mf / 60;
+    // If shift crosses midnight (e.g., 22:00 - 06:00), extend to next-day scale
+    if (end <= start)
+        end += 24;
+    const result = {};
+    for (const franja of FRANJAS) {
+        let hours = hoursInBand(start, end, franja.inicio, franja.fin);
+        // Also check the band shifted by +24 (for shifts crossing midnight)
+        if (end > 24) {
+            hours += hoursInBand(start, end, franja.inicio + 24, franja.fin + 24);
+        }
+        // And check the band shifted by -24 (start in previous day's nocturno range)
+        if (start < 6) {
+            hours += hoursInBand(start, end, franja.inicio - 24, franja.fin - 24);
+        }
+        if (hours > 0)
+            result[franja.key] = (result[franja.key] || 0) + hours;
+    }
+    return result;
+}
+/**
+ * Format date as YYYY-MM-DD for comparison with festivos lists.
+ */
+function formatDateStr(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+}
+/**
+ * Calculate surcharges for an offer based on schedule and config.
+ */
+async function calculateRecargos(params) {
+    const config = await loadRecargosConfig();
+    const { fechaInicio, fechaFin, horaInicioJornada, horaFinJornada, diasTrabajo, totalHoras, tarifaHoraTrabajo } = params;
+    const workDays = new Set(diasTrabajo.split(',').map(Number)); // 1=Lun..7=Dom
+    const festivosSet = new Set(config.festivos);
+    const especialesSet = new Set(config.festivos_especiales);
+    // Calculate hours per shift using time band distribution
+    const shiftBands = distributeShiftHours(horaInicioJornada, horaFinJornada);
+    const horasJornada = Object.values(shiftBands).reduce((a, b) => a + b, 0);
+    if (horasJornada <= 0) {
+        return {
+            diasTotales: 0, horasJornada: 0, diasNormales: 0, diasDomFestivos: 0, diasEspeciales: 0,
+            resumen: [], totalHorasTrabajo: totalHoras, totalRecargo: 0, tarifaBase: tarifaHoraTrabajo,
+        };
+    }
+    // Classify each working day
+    let diasNormales = 0;
+    let diasDomFestivos = 0;
+    let diasEspeciales = 0;
+    const current = new Date(fechaInicio);
+    current.setHours(0, 0, 0, 0);
+    const end = new Date(fechaFin);
+    end.setHours(23, 59, 59, 999);
+    while (current <= end) {
+        // JS getDay(): 0=Sun,1=Mon..6=Sat → convert to 1=Lun..7=Dom
+        const jsDay = current.getDay();
+        const isoDay = jsDay === 0 ? 7 : jsDay;
+        const dateStr = formatDateStr(current);
+        if (workDays.has(isoDay)) {
+            if (especialesSet.has(dateStr)) {
+                diasEspeciales++;
+            }
+            else if (isoDay === 7 || festivosSet.has(dateStr)) {
+                diasDomFestivos++;
+            }
+            else {
+                diasNormales++;
+            }
+        }
+        current.setDate(current.getDate() + 1);
+    }
+    const diasTotales = diasNormales + diasDomFestivos + diasEspeciales;
+    if (diasTotales <= 0) {
+        return {
+            diasTotales: 0, horasJornada, diasNormales: 0, diasDomFestivos: 0, diasEspeciales: 0,
+            resumen: [], totalHorasTrabajo: totalHoras, totalRecargo: 0, tarifaBase: tarifaHoraTrabajo,
+        };
+    }
+    // Build surcharge breakdown
+    // For each combination of (day type) × (time band), calculate proportional hours
+    const resumen = [];
+    const franjaNames = {
+        recargo_diurno_pct: 'Diurno (8-18h)',
+        recargo_tarde_pct: 'Tarde (18-22h)',
+        recargo_nocturno_pct: 'Nocturno (22-6h)',
+        recargo_madrugada_pct: 'Madrugada (6-8h)',
+    };
+    // Proportion of totalHoras per calendar day
+    // totalHoras is the work needed; diasTotales × horasJornada is the calendar capacity
+    // We distribute totalHoras proportionally across the schedule
+    const horasCalendarioTotal = diasTotales * horasJornada;
+    const ratio = totalHoras / horasCalendarioTotal; // usually <= 1
+    for (const [bandKey, bandHoursPerDay] of Object.entries(shiftBands)) {
+        const bandName = franjaNames[bandKey] || bandKey;
+        const bandRecargo = config[bandKey] || 0;
+        // Normal days
+        if (diasNormales > 0) {
+            const horas = +(diasNormales * bandHoursPerDay * ratio).toFixed(2);
+            const recargoPct = bandRecargo;
+            const importe = +(horas * (recargoPct / 100) * tarifaHoraTrabajo).toFixed(2);
+            if (horas > 0) {
+                resumen.push({ tipo: bandName, horas, recargoPct, importe });
+            }
+        }
+        // Sundays + holidays (day surcharge + band surcharge, additive)
+        if (diasDomFestivos > 0) {
+            const horas = +(diasDomFestivos * bandHoursPerDay * ratio).toFixed(2);
+            const recargoPct = config.recargo_domingo_festivo_pct + bandRecargo;
+            const importe = +(horas * (recargoPct / 100) * tarifaHoraTrabajo).toFixed(2);
+            if (horas > 0) {
+                resumen.push({
+                    tipo: `Dom/Festivo + ${bandName}`,
+                    horas, recargoPct, importe,
+                });
+            }
+        }
+        // Special days (Christmas/NY) (day surcharge + band surcharge, additive)
+        if (diasEspeciales > 0) {
+            const horas = +(diasEspeciales * bandHoursPerDay * ratio).toFixed(2);
+            const recargoPct = config.recargo_navidad_pct + bandRecargo;
+            const importe = +(horas * (recargoPct / 100) * tarifaHoraTrabajo).toFixed(2);
+            if (horas > 0) {
+                resumen.push({
+                    tipo: `Navidad/AñoNuevo + ${bandName}`,
+                    horas, recargoPct, importe,
+                });
+            }
+        }
+    }
+    const totalRecargo = +resumen.reduce((sum, r) => sum + r.importe, 0).toFixed(2);
+    return {
+        diasTotales,
+        horasJornada: +horasJornada.toFixed(2),
+        diasNormales,
+        diasDomFestivos,
+        diasEspeciales,
+        resumen,
+        totalHorasTrabajo: totalHoras,
+        totalRecargo,
+        tarifaBase: tarifaHoraTrabajo,
+    };
+}
 /**
  * Calculate totals for an oferta's sistemas based on ConsumibleNivel data.
  * Returns per-system costs and overall totals.
@@ -176,6 +385,29 @@ router.post('/', (0, role_middleware_1.requireRole)('admin'), async (req, res, n
         const data = ofertas_validation_1.createOfertaSchema.parse(req.body);
         // Calculate totals
         const { sistemaTotals, totalHoras, totalCoste, totalPrecio } = await calculateOfertaTotals(data.sistemas);
+        // Calculate surcharges if schedule is provided
+        let desgloseRecargo = null;
+        let totalRecargo = null;
+        if (data.fechaInicio && data.fechaFin && data.horaInicioJornada && data.horaFinJornada && data.diasTrabajo) {
+            const cliente = await database_1.prisma.cliente.findUnique({
+                where: { id: data.clienteId },
+                select: { tarifaHoraTrabajo: true },
+            });
+            const tarifa = Number(cliente?.tarifaHoraTrabajo) || 0;
+            if (tarifa > 0 && totalHoras > 0) {
+                const desglose = await calculateRecargos({
+                    fechaInicio: new Date(data.fechaInicio),
+                    fechaFin: new Date(data.fechaFin),
+                    horaInicioJornada: data.horaInicioJornada,
+                    horaFinJornada: data.horaFinJornada,
+                    diasTrabajo: data.diasTrabajo,
+                    totalHoras,
+                    tarifaHoraTrabajo: tarifa,
+                });
+                desgloseRecargo = desglose;
+                totalRecargo = desglose.totalRecargo;
+            }
+        }
         const oferta = await database_1.prisma.oferta.create({
             data: {
                 clienteId: data.clienteId,
@@ -187,6 +419,13 @@ router.post('/', (0, role_middleware_1.requireRole)('admin'), async (req, res, n
                 totalHoras: totalHoras || null,
                 totalCoste: totalCoste || null,
                 totalPrecio: totalPrecio || null,
+                fechaInicio: data.fechaInicio ? new Date(data.fechaInicio) : null,
+                fechaFin: data.fechaFin ? new Date(data.fechaFin) : null,
+                horaInicioJornada: data.horaInicioJornada ?? null,
+                horaFinJornada: data.horaFinJornada ?? null,
+                diasTrabajo: data.diasTrabajo ?? null,
+                desgloseRecargo: desgloseRecargo,
+                totalRecargo: totalRecargo,
                 sistemas: {
                     create: data.sistemas.map((s) => {
                         const totals = sistemaTotals.get(s.sistemaId);
@@ -241,12 +480,51 @@ router.put('/:id', (0, role_middleware_1.requireRole)('admin'), async (req, res,
             updateData.validezDias = data.validezDias;
         if (data.notas !== undefined)
             updateData.notas = data.notas;
+        // Schedule fields
+        if (data.fechaInicio !== undefined)
+            updateData.fechaInicio = data.fechaInicio ? new Date(data.fechaInicio) : null;
+        if (data.fechaFin !== undefined)
+            updateData.fechaFin = data.fechaFin ? new Date(data.fechaFin) : null;
+        if (data.horaInicioJornada !== undefined)
+            updateData.horaInicioJornada = data.horaInicioJornada;
+        if (data.horaFinJornada !== undefined)
+            updateData.horaFinJornada = data.horaFinJornada;
+        if (data.diasTrabajo !== undefined)
+            updateData.diasTrabajo = data.diasTrabajo;
         if (data.sistemas) {
             // Recalculate totals
             const { sistemaTotals, totalHoras, totalCoste, totalPrecio } = await calculateOfertaTotals(data.sistemas);
             updateData.totalHoras = totalHoras || null;
             updateData.totalCoste = totalCoste || null;
             updateData.totalPrecio = totalPrecio || null;
+            // Recalculate surcharges using updated or existing schedule data
+            const mergedSchedule = {
+                fechaInicio: updateData.fechaInicio ?? existing.fechaInicio,
+                fechaFin: updateData.fechaFin ?? existing.fechaFin,
+                horaInicioJornada: updateData.horaInicioJornada ?? existing.horaInicioJornada,
+                horaFinJornada: updateData.horaFinJornada ?? existing.horaFinJornada,
+                diasTrabajo: updateData.diasTrabajo ?? existing.diasTrabajo,
+            };
+            if (mergedSchedule.fechaInicio && mergedSchedule.fechaFin && mergedSchedule.horaInicioJornada && mergedSchedule.horaFinJornada && mergedSchedule.diasTrabajo) {
+                const cliente = await database_1.prisma.cliente.findUnique({
+                    where: { id: existing.clienteId },
+                    select: { tarifaHoraTrabajo: true },
+                });
+                const tarifa = Number(cliente?.tarifaHoraTrabajo) || 0;
+                if (tarifa > 0 && totalHoras > 0) {
+                    const desglose = await calculateRecargos({
+                        fechaInicio: new Date(mergedSchedule.fechaInicio),
+                        fechaFin: new Date(mergedSchedule.fechaFin),
+                        horaInicioJornada: mergedSchedule.horaInicioJornada,
+                        horaFinJornada: mergedSchedule.horaFinJornada,
+                        diasTrabajo: mergedSchedule.diasTrabajo,
+                        totalHoras,
+                        tarifaHoraTrabajo: tarifa,
+                    });
+                    updateData.desgloseRecargo = desglose;
+                    updateData.totalRecargo = desglose.totalRecargo;
+                }
+            }
             // Replace junction rows
             await database_1.prisma.$transaction([
                 database_1.prisma.ofertaSistema.deleteMany({ where: { ofertaId: id } }),
@@ -271,6 +549,37 @@ router.put('/:id', (0, role_middleware_1.requireRole)('admin'), async (req, res,
             ]);
         }
         else {
+            // If only schedule changed (no systems change), recalculate surcharges
+            const mergedSchedule = {
+                fechaInicio: updateData.fechaInicio ?? existing.fechaInicio,
+                fechaFin: updateData.fechaFin ?? existing.fechaFin,
+                horaInicioJornada: updateData.horaInicioJornada ?? existing.horaInicioJornada,
+                horaFinJornada: updateData.horaFinJornada ?? existing.horaFinJornada,
+                diasTrabajo: updateData.diasTrabajo ?? existing.diasTrabajo,
+            };
+            if (mergedSchedule.fechaInicio && mergedSchedule.fechaFin && mergedSchedule.horaInicioJornada && mergedSchedule.horaFinJornada && mergedSchedule.diasTrabajo) {
+                const totalHoras = Number(existing.totalHoras) || 0;
+                if (totalHoras > 0) {
+                    const cliente = await database_1.prisma.cliente.findUnique({
+                        where: { id: existing.clienteId },
+                        select: { tarifaHoraTrabajo: true },
+                    });
+                    const tarifa = Number(cliente?.tarifaHoraTrabajo) || 0;
+                    if (tarifa > 0) {
+                        const desglose = await calculateRecargos({
+                            fechaInicio: new Date(mergedSchedule.fechaInicio),
+                            fechaFin: new Date(mergedSchedule.fechaFin),
+                            horaInicioJornada: mergedSchedule.horaInicioJornada,
+                            horaFinJornada: mergedSchedule.horaFinJornada,
+                            diasTrabajo: mergedSchedule.diasTrabajo,
+                            totalHoras,
+                            tarifaHoraTrabajo: tarifa,
+                        });
+                        updateData.desgloseRecargo = desglose;
+                        updateData.totalRecargo = desglose.totalRecargo;
+                    }
+                }
+            }
             await database_1.prisma.oferta.update({ where: { id }, data: updateData });
         }
         const oferta = await database_1.prisma.oferta.findUnique({
@@ -373,6 +682,29 @@ router.post('/:id/recalcular', (0, role_middleware_1.requireRole)('admin'), asyn
         }
         const sistemas = oferta.sistemas.map((s) => ({ sistemaId: s.sistemaId, nivel: s.nivel }));
         const { sistemaTotals, totalHoras, totalCoste, totalPrecio } = await calculateOfertaTotals(sistemas);
+        // Recalculate surcharges if schedule exists
+        let desgloseRecargo = null;
+        let totalRecargo = null;
+        if (oferta.fechaInicio && oferta.fechaFin && oferta.horaInicioJornada && oferta.horaFinJornada && oferta.diasTrabajo) {
+            const cliente = await database_1.prisma.cliente.findUnique({
+                where: { id: oferta.clienteId },
+                select: { tarifaHoraTrabajo: true },
+            });
+            const tarifa = Number(cliente?.tarifaHoraTrabajo) || 0;
+            if (tarifa > 0 && totalHoras > 0) {
+                const desglose = await calculateRecargos({
+                    fechaInicio: new Date(oferta.fechaInicio),
+                    fechaFin: new Date(oferta.fechaFin),
+                    horaInicioJornada: oferta.horaInicioJornada,
+                    horaFinJornada: oferta.horaFinJornada,
+                    diasTrabajo: oferta.diasTrabajo,
+                    totalHoras,
+                    tarifaHoraTrabajo: tarifa,
+                });
+                desgloseRecargo = desglose;
+                totalRecargo = desglose.totalRecargo;
+            }
+        }
         // Update oferta totals
         await database_1.prisma.oferta.update({
             where: { id },
@@ -380,6 +712,8 @@ router.post('/:id/recalcular', (0, role_middleware_1.requireRole)('admin'), asyn
                 totalHoras: totalHoras || null,
                 totalCoste: totalCoste || null,
                 totalPrecio: totalPrecio || null,
+                desgloseRecargo: desgloseRecargo,
+                totalRecargo: totalRecargo,
             },
         });
         // Update per-system totals
