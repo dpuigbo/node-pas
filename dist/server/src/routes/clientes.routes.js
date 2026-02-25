@@ -1,10 +1,40 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
+const multer_1 = __importDefault(require("multer"));
+const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
 const role_middleware_1 = require("../middleware/role.middleware");
 const database_1 = require("../config/database");
 const clientes_validation_1 = require("../validation/clientes.validation");
 const router = (0, express_1.Router)();
+// Multer config for logo uploads
+const PROJECT_ROOT = [__dirname, path_1.default.join(__dirname, '..'), path_1.default.join(__dirname, '..', '..', '..')]
+    .find(d => fs_1.default.existsSync(path_1.default.join(d, 'package.json'))) || path_1.default.join(__dirname, '..');
+const logosDir = path_1.default.join(PROJECT_ROOT, 'uploads', 'logos');
+fs_1.default.mkdirSync(logosDir, { recursive: true });
+const logoStorage = multer_1.default.diskStorage({
+    destination: (_req, _file, cb) => cb(null, logosDir),
+    filename: (req, file, cb) => {
+        const ext = path_1.default.extname(file.originalname).toLowerCase() || '.png';
+        cb(null, `logo-${req.params.id}-${Date.now()}${ext}`);
+    },
+});
+const uploadLogo = (0, multer_1.default)({
+    storage: logoStorage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+    fileFilter: (_req, file, cb) => {
+        const allowed = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+        const ext = path_1.default.extname(file.originalname).toLowerCase();
+        if (allowed.includes(ext))
+            cb(null, true);
+        else
+            cb(new Error('Solo se permiten imagenes (jpg, png, gif, webp, svg)'));
+    },
+});
 // ===== CLIENTES =====
 // GET /api/v1/clientes
 router.get('/', async (req, res, next) => {
@@ -74,6 +104,51 @@ router.delete('/:id', (0, role_middleware_1.requireRole)('admin'), async (req, r
         const cliente = await database_1.prisma.cliente.update({
             where: { id: Number(req.params.id) },
             data: { activo: false },
+        });
+        res.json(cliente);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// POST /api/v1/clientes/:id/logo (admin) - upload logo image
+router.post('/:id/logo', (0, role_middleware_1.requireRole)('admin'), uploadLogo.single('logo'), async (req, res, next) => {
+    try {
+        if (!req.file) {
+            res.status(400).json({ error: 'No se ha enviado ningun archivo' });
+            return;
+        }
+        const clienteId = Number(req.params.id);
+        // Delete old logo file if exists
+        const existing = await database_1.prisma.cliente.findUnique({ where: { id: clienteId }, select: { logo: true } });
+        if (existing?.logo) {
+            const oldPath = path_1.default.join(logosDir, existing.logo);
+            if (fs_1.default.existsSync(oldPath))
+                fs_1.default.unlinkSync(oldPath);
+        }
+        const cliente = await database_1.prisma.cliente.update({
+            where: { id: clienteId },
+            data: { logo: req.file.filename },
+        });
+        res.json(cliente);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// DELETE /api/v1/clientes/:id/logo (admin) - remove logo
+router.delete('/:id/logo', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
+    try {
+        const clienteId = Number(req.params.id);
+        const existing = await database_1.prisma.cliente.findUnique({ where: { id: clienteId }, select: { logo: true } });
+        if (existing?.logo) {
+            const oldPath = path_1.default.join(logosDir, existing.logo);
+            if (fs_1.default.existsSync(oldPath))
+                fs_1.default.unlinkSync(oldPath);
+        }
+        const cliente = await database_1.prisma.cliente.update({
+            where: { id: clienteId },
+            data: { logo: null },
         });
         res.json(cliente);
     }

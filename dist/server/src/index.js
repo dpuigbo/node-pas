@@ -108,6 +108,10 @@ app.post('/api/deploy', (req, res) => {
         res.status(500).json({ error: 'Deploy failed', details: err.message });
     }
 });
+// Serve uploaded files (logos, etc.)
+const uploadsDir = path_1.default.join(PROJECT_ROOT, 'uploads');
+require('fs').mkdirSync(path_1.default.join(uploadsDir, 'logos'), { recursive: true });
+app.use('/uploads', express_1.default.static(uploadsDir));
 // API routes
 app.use('/api', routes_1.default);
 // Error handler

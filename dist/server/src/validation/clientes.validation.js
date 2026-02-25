@@ -12,6 +12,7 @@ exports.createClienteSchema = zod_1.z.object({
     telefono: zod_1.z.string().max(50).optional().nullable(),
     email: zod_1.z.string().max(200).optional().nullable(),
     personaContacto: zod_1.z.string().max(200).optional().nullable(),
+    logo: zod_1.z.string().max(500).optional().nullable(),
     tarifaHoraTrabajo: zod_1.z.number().min(0).optional().nullable(),
     tarifaHoraViaje: zod_1.z.number().min(0).optional().nullable(),
     dietas: zod_1.z.number().min(0).optional().nullable(),
