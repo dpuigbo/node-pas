@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Building2, Cog, DollarSign, Truck, Save, X, Calculator, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Building2, Cog, DollarSign, Truck, Save, X, Calculator, Loader2, Pencil, Trash2, User, Phone, Mail, MapPin, FileText } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, Column } from '@/components/shared/DataTable';
 import { Button } from '@/components/ui/button';
@@ -43,6 +43,13 @@ export default function ClienteDetailPage() {
   const createSistema = useCreateSistema();
   const updateCliente = useUpdateCliente();
 
+  // General info editing state
+  const [editingGeneral, setEditingGeneral] = useState(false);
+  const [genForm, setGenForm] = useState({
+    nombre: '', sede: '', direccion: '', ciudad: '', codigoPostal: '', provincia: '',
+    telefono: '', email: '', personaContacto: '',
+  });
+
   // Logistics editing state
   const [editingLogistics, setEditingLogistics] = useState(false);
   const [logForm, setLogForm] = useState({
@@ -50,9 +57,20 @@ export default function ClienteDetailPage() {
     horasTrayecto: '', diasViaje: '', km: '', peajes: '', precioHotel: '', precioKm: '',
   });
 
-  // Sync logistics form with client data
+  // Sync forms with client data
   useEffect(() => {
     if (cliente) {
+      setGenForm({
+        nombre: cliente.nombre || '',
+        sede: cliente.sede || '',
+        direccion: cliente.direccion || '',
+        ciudad: cliente.ciudad || '',
+        codigoPostal: cliente.codigoPostal || '',
+        provincia: cliente.provincia || '',
+        telefono: cliente.telefono || '',
+        email: cliente.email || '',
+        personaContacto: cliente.personaContacto || '',
+      });
       setLogForm({
         tarifaHoraTrabajo: cliente.tarifaHoraTrabajo != null ? String(cliente.tarifaHoraTrabajo) : '',
         tarifaHoraViaje: cliente.tarifaHoraViaje != null ? String(cliente.tarifaHoraViaje) : '',
@@ -70,6 +88,22 @@ export default function ClienteDetailPage() {
 
   const [calculating, setCalculating] = useState(false);
   const [calcError, setCalcError] = useState<string | null>(null);
+
+  const handleSaveGeneral = async () => {
+    await updateCliente.mutateAsync({
+      id: clienteId,
+      nombre: genForm.nombre,
+      sede: genForm.sede || null,
+      direccion: genForm.direccion || null,
+      ciudad: genForm.ciudad || null,
+      codigoPostal: genForm.codigoPostal || null,
+      provincia: genForm.provincia || null,
+      telefono: genForm.telefono || null,
+      email: genForm.email || null,
+      personaContacto: genForm.personaContacto || null,
+    });
+    setEditingGeneral(false);
+  };
 
   const handleSaveLogistics = async () => {
     const toNum = (v: string) => v.trim() ? Number(v) : null;
@@ -311,6 +345,139 @@ export default function ClienteDetailPage() {
             <div className="text-2xl font-bold">{sistemas?.length ?? 0}</div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Datos generales */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <FileText className="h-5 w-5" /> Datos generales
+          </h2>
+          {isAdmin && !editingGeneral && (
+            <Button variant="outline" size="sm" onClick={() => setEditingGeneral(true)}>
+              Editar
+            </Button>
+          )}
+          {editingGeneral && (
+            <div className="flex gap-2">
+              <Button size="sm" onClick={handleSaveGeneral} disabled={updateCliente.isPending || !genForm.nombre.trim()}>
+                <Save className="h-4 w-4 mr-1" />
+                {updateCliente.isPending ? 'Guardando...' : 'Guardar'}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setEditingGeneral(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Identificacion */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                <Building2 className="h-4 w-4" /> Identificacion
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {[
+                { key: 'nombre' as const, label: 'Nombre', placeholder: 'Nombre del cliente' },
+                { key: 'sede' as const, label: 'Sede', placeholder: 'Ciudad o ubicacion' },
+              ].map((field) => (
+                <div key={field.key} className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-muted-foreground min-w-[120px]">{field.label}</span>
+                  {editingGeneral ? (
+                    <Input
+                      className="h-8 flex-1"
+                      value={genForm[field.key]}
+                      onChange={(e) => setGenForm({ ...genForm, [field.key]: e.target.value })}
+                      placeholder={field.placeholder}
+                    />
+                  ) : (
+                    <span className="text-sm">{cliente[field.key] || '-'}</span>
+                  )}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Contacto */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                <User className="h-4 w-4" /> Contacto
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {[
+                { key: 'personaContacto' as const, label: 'Persona', placeholder: 'Nombre contacto', icon: User },
+                { key: 'telefono' as const, label: 'Telefono', placeholder: '+34 XXX XX XX XX', icon: Phone },
+                { key: 'email' as const, label: 'Email', placeholder: 'email@cliente.com', icon: Mail },
+              ].map((field) => (
+                <div key={field.key} className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-muted-foreground min-w-[120px]">{field.label}</span>
+                  {editingGeneral ? (
+                    <Input
+                      className="h-8 flex-1"
+                      value={genForm[field.key]}
+                      onChange={(e) => setGenForm({ ...genForm, [field.key]: e.target.value })}
+                      placeholder={field.placeholder}
+                    />
+                  ) : (
+                    <span className="text-sm">{cliente[field.key] || '-'}</span>
+                  )}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Direccion */}
+          <Card className="md:col-span-2">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                <MapPin className="h-4 w-4" /> Direccion
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {editingGeneral ? (
+                <div className="space-y-2">
+                  <Input
+                    className="h-8"
+                    value={genForm.direccion}
+                    onChange={(e) => setGenForm({ ...genForm, direccion: e.target.value })}
+                    placeholder="Calle, numero..."
+                  />
+                  <div className="grid grid-cols-3 gap-3">
+                    <Input
+                      className="h-8"
+                      value={genForm.ciudad}
+                      onChange={(e) => setGenForm({ ...genForm, ciudad: e.target.value })}
+                      placeholder="Ciudad"
+                    />
+                    <Input
+                      className="h-8"
+                      value={genForm.codigoPostal}
+                      onChange={(e) => setGenForm({ ...genForm, codigoPostal: e.target.value })}
+                      placeholder="CP"
+                    />
+                    <Input
+                      className="h-8"
+                      value={genForm.provincia}
+                      onChange={(e) => setGenForm({ ...genForm, provincia: e.target.value })}
+                      placeholder="Provincia"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <span className="text-sm">
+                  {[cliente.direccion, cliente.codigoPostal, cliente.ciudad, cliente.provincia]
+                    .filter(Boolean)
+                    .join(', ') || '-'}
+                </span>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Tarifas y logistica */}
