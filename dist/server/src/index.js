@@ -42,6 +42,7 @@ const helmet_1 = __importDefault(require("helmet"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const passport_1 = __importDefault(require("passport"));
 const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
 const auth_1 = require("./config/auth");
 const error_middleware_1 = require("./middleware/error.middleware");
 const routes_1 = __importDefault(require("./routes"));
@@ -51,7 +52,7 @@ const isDev = process.env.NODE_ENV !== 'production';
 // Project root: find it by looking for package.json
 // Works with tsx (__dirname=src/) and tsc (__dirname=dist/server/src/)
 const PROJECT_ROOT = [__dirname, path_1.default.join(__dirname, '..'), path_1.default.join(__dirname, '..', '..', '..')]
-    .find(d => require('fs').existsSync(path_1.default.join(d, 'package.json'))) || path_1.default.join(__dirname, '..');
+    .find(d => fs_1.default.existsSync(path_1.default.join(d, 'package.json'))) || path_1.default.join(__dirname, '..');
 // Middleware
 app.use((0, helmet_1.default)({ contentSecurityPolicy: false }));
 app.use((0, cors_1.default)({
@@ -92,14 +93,13 @@ app.post('/api/deploy', (req, res) => {
     }
     try {
         const tmpDir = path_1.default.join(PROJECT_ROOT, 'tmp');
-        const fs = require('fs');
-        if (!fs.existsSync(tmpDir))
-            fs.mkdirSync(tmpDir, { recursive: true });
+        if (!fs_1.default.existsSync(tmpDir))
+            fs_1.default.mkdirSync(tmpDir, { recursive: true });
         res.json({ status: 'restart scheduled' });
         // Touch restart.txt after response is sent
         setTimeout(() => {
             try {
-                fs.writeFileSync(path_1.default.join(tmpDir, 'restart.txt'), String(Date.now()));
+                fs_1.default.writeFileSync(path_1.default.join(tmpDir, 'restart.txt'), String(Date.now()));
             }
             catch (_) { }
         }, 500);
@@ -110,7 +110,7 @@ app.post('/api/deploy', (req, res) => {
 });
 // Serve uploaded files (logos, etc.)
 const uploadsDir = path_1.default.join(PROJECT_ROOT, 'uploads');
-require('fs').mkdirSync(path_1.default.join(uploadsDir, 'logos'), { recursive: true });
+fs_1.default.mkdirSync(path_1.default.join(uploadsDir, 'logos'), { recursive: true });
 app.use('/uploads', express_1.default.static(uploadsDir));
 // API routes
 app.use('/api', routes_1.default);
