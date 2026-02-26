@@ -7,6 +7,7 @@ import {
   compatibilidadSchema,
 } from '../validation/modelos.validation';
 import { getSeedTemplate } from '../lib/templateSeeds';
+import { ensureNivelesFijos, getNivelesFijos } from '../lib/niveles';
 
 const router = Router();
 
@@ -138,6 +139,8 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
 router.post('/', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = createModeloSchema.parse(req.body);
+    // Auto-assign fixed levels based on component type
+    data.niveles = ensureNivelesFijos(data.tipo, data.niveles);
     const modelo = await prisma.modeloComponente.create({
       data,
       include: { fabricante: { select: { id: true, nombre: true } } },
@@ -150,6 +153,17 @@ router.post('/', requireRole('admin'), async (req: Request, res: Response, next:
 router.put('/:id', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = updateModeloSchema.parse(req.body);
+    // If niveles is being updated, ensure fixed levels are included
+    if (data.niveles !== undefined) {
+      // Need to know the tipo — either from body or from existing record
+      const existing = await prisma.modeloComponente.findUnique({
+        where: { id: Number(req.params.id) },
+        select: { tipo: true },
+      });
+      if (existing) {
+        data.niveles = ensureNivelesFijos(existing.tipo, data.niveles);
+      }
+    }
     const modelo = await prisma.modeloComponente.update({
       where: { id: Number(req.params.id) },
       data,

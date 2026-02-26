@@ -20,6 +20,7 @@ import {
   useModelos, useCompatibilidad, useUpdateCompatibilidad,
 } from '@/hooks/useModelos';
 import { useAuth } from '@/hooks/useAuth';
+import { getNivelesForTipo, getNivelesFijos, tieneNivelesEditables, NIVEL_SHORT } from '@/lib/niveles';
 
 const TIPO_LABELS: Record<string, string> = {
   controller: 'Controlador',
@@ -38,20 +39,6 @@ const ESTADO_LABELS: Record<string, string> = {
   borrador: 'Borrador',
   activo: 'Activo',
   obsoleto: 'Obsoleto',
-};
-
-const NIVELES_OPTIONS = [
-  { value: '1', label: 'Nivel 1' },
-  { value: '2_inferior', label: 'Nivel 2 Inferior' },
-  { value: '2_superior', label: 'Nivel 2 Superior' },
-  { value: '3', label: 'Nivel 3' },
-];
-
-const NIVEL_SHORT: Record<string, string> = {
-  '1': 'N1',
-  '2_inferior': 'N2 Inf',
-  '2_superior': 'N2 Sup',
-  '3': 'N3',
 };
 
 export default function ModeloDetailPage() {
@@ -77,11 +64,17 @@ export default function ModeloDetailPage() {
 
   const startEditNiveles = () => {
     const current = modelo?.niveles ? modelo.niveles.split(',').filter(Boolean) : [];
-    setNivelesForm(current);
+    // Ensure fixed levels are always included
+    const fijos = modelo ? getNivelesFijos(modelo.tipo) : [];
+    const merged = [...new Set([...fijos, ...current])];
+    setNivelesForm(merged);
     setEditingNiveles(true);
   };
 
   const toggleNivel = (nivel: string) => {
+    // Don't allow toggling off fixed levels
+    const fijos = modelo ? getNivelesFijos(modelo.tipo) : [];
+    if (fijos.includes(nivel)) return;
     setNivelesForm((prev) => {
       const has = prev.includes(nivel);
       return has ? prev.filter((n) => n !== nivel) : [...prev, nivel];
@@ -295,7 +288,7 @@ export default function ModeloDetailPage() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base">Niveles de mantenimiento</CardTitle>
-            {isAdmin && !editingNiveles && (
+            {isAdmin && !editingNiveles && tieneNivelesEditables(modelo.tipo) && (
               <Button variant="outline" size="sm" onClick={startEditNiveles}>
                 <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
               </Button>
@@ -318,17 +311,22 @@ export default function ModeloDetailPage() {
             <div className="space-y-2">
               <p className="text-xs text-muted-foreground">
                 Selecciona los niveles de mantenimiento aplicables a este modelo.
+                Los niveles obligatorios no se pueden deseleccionar.
               </p>
               <div className="flex flex-wrap gap-2">
-                {NIVELES_OPTIONS.map((niv) => {
+                {getNivelesForTipo(modelo.tipo).map((niv) => {
                   const selected = nivelesForm.includes(niv.value);
+                  const isFixed = niv.fixed;
                   return (
                     <button
                       key={niv.value}
                       type="button"
+                      disabled={isFixed}
                       className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
                         selected
-                          ? 'bg-primary text-primary-foreground border-primary'
+                          ? isFixed
+                            ? 'bg-primary/70 text-primary-foreground border-primary cursor-not-allowed'
+                            : 'bg-primary text-primary-foreground border-primary'
                           : 'bg-background border-input text-muted-foreground hover:bg-muted'
                       }`}
                       onClick={() => toggleNivel(niv.value)}

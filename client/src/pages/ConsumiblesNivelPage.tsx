@@ -7,13 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useFabricantes } from '@/hooks/useFabricantes';
 import { useConsumiblesNivelByFabricante, useBatchUpsertConsumibleNivel } from '@/hooks/useConsumiblesNivel';
 import { useAceites, useConsumibles } from '@/hooks/useCatalogos';
-
-const NIVELES = [
-  { value: '1', label: 'Nivel 1' },
-  { value: '2_inferior', label: 'Nivel 2 Inf.' },
-  { value: '2_superior', label: 'Nivel 2 Sup.' },
-  { value: '3', label: 'Nivel 3' },
-] as const;
+import { getNivelesValidos, NIVEL_SHORT, NIVELES_ALL } from '@/lib/niveles';
 
 const TIPO_COMP_LABELS: Record<string, string> = {
   controller: 'Controladora',
@@ -53,22 +47,23 @@ export default function ConsumiblesNivelPage() {
   const [form, setForm] = useState<FormData>({});
   const [dirty, setDirty] = useState(false);
 
-  // Build form data from fetched modelos
+  // Build form data from fetched modelos (only valid niveles per tipo)
   useEffect(() => {
     if (!Array.isArray(modelos)) return;
     const fd: FormData = {};
     for (const m of modelos) {
       const modeloNiveles: ModeloNiveles = {};
-      for (const n of NIVELES) {
-        const existing = (m.consumiblesNivel || []).find((cn: any) => cn.nivel === n.value);
+      const validos = getNivelesValidos(m.tipo, m.niveles);
+      for (const nv of validos) {
+        const existing = (m.consumiblesNivel || []).find((cn: any) => cn.nivel === nv);
         if (existing) {
-          modeloNiveles[n.value] = {
+          modeloNiveles[nv] = {
             horas: existing.horas != null ? String(existing.horas) : '',
             precioOtros: existing.precioOtros != null ? String(existing.precioOtros) : '',
             consumibles: (existing.consumibles as ConsumibleItem[]) || [],
           };
         } else {
-          modeloNiveles[n.value] = emptyNivel();
+          modeloNiveles[nv] = emptyNivel();
         }
       }
       fd[m.id] = modeloNiveles;
@@ -207,17 +202,18 @@ export default function ConsumiblesNivelPage() {
                 </tr>
               </thead>
               <tbody>
-                {NIVELES.map((n) => {
-                  const nd = form[modelo.id]?.[n.value] || emptyNivel();
+                {getNivelesValidos(modelo.tipo, modelo.niveles).map((nv) => {
+                  const nd = form[modelo.id]?.[nv] || emptyNivel();
+                  const nivelLabel = NIVELES_ALL.find((n) => n.value === nv)?.label ?? NIVEL_SHORT[nv] ?? nv;
                   return (
-                    <tr key={n.value} className="border-b last:border-0">
-                      <td className="px-2 py-2 font-medium">{n.label}</td>
+                    <tr key={nv} className="border-b last:border-0">
+                      <td className="px-2 py-2 font-medium">{nivelLabel}</td>
                       <td className="px-2 py-2">
                         <Input
                           type="number" step="0.5" min="0"
                           className="h-7 text-xs w-16"
                           value={nd.horas}
-                          onChange={(e) => updateField(modelo.id, n.value, 'horas', e.target.value)}
+                          onChange={(e) => updateField(modelo.id, nv, 'horas', e.target.value)}
                         />
                       </td>
                       <td className="px-2 py-2">
@@ -225,7 +221,7 @@ export default function ConsumiblesNivelPage() {
                           type="number" step="0.01" min="0"
                           className="h-7 text-xs w-20"
                           value={nd.precioOtros}
-                          onChange={(e) => updateField(modelo.id, n.value, 'precioOtros', e.target.value)}
+                          onChange={(e) => updateField(modelo.id, nv, 'precioOtros', e.target.value)}
                         />
                       </td>
                       <td className="px-2 py-2">
@@ -234,7 +230,7 @@ export default function ConsumiblesNivelPage() {
                             <div key={idx} className="flex items-center gap-1">
                               <select
                                 value={c.tipo}
-                                onChange={(e) => updateConsumible(modelo.id, n.value, idx, { tipo: e.target.value as any })}
+                                onChange={(e) => updateConsumible(modelo.id, nv, idx, { tipo: e.target.value as any })}
                                 className="h-7 rounded border border-input bg-transparent px-1 text-xs w-24"
                               >
                                 <option value="aceite">Aceite</option>
@@ -243,7 +239,7 @@ export default function ConsumiblesNivelPage() {
                               </select>
                               <select
                                 value={c.id}
-                                onChange={(e) => updateConsumible(modelo.id, n.value, idx, { id: Number(e.target.value) })}
+                                onChange={(e) => updateConsumible(modelo.id, nv, idx, { id: Number(e.target.value) })}
                                 className="h-7 rounded border border-input bg-transparent px-1 text-xs flex-1 min-w-0"
                               >
                                 <option value={0}>Seleccionar...</option>
@@ -255,18 +251,18 @@ export default function ConsumiblesNivelPage() {
                                 type="number" min="1" step="1"
                                 className="h-7 text-xs w-14"
                                 value={c.cantidad}
-                                onChange={(e) => updateConsumible(modelo.id, n.value, idx, { cantidad: Number(e.target.value) || 1 })}
+                                onChange={(e) => updateConsumible(modelo.id, nv, idx, { cantidad: Number(e.target.value) || 1 })}
                               />
                               <button
                                 type="button"
-                                onClick={() => removeConsumible(modelo.id, n.value, idx)}
+                                onClick={() => removeConsumible(modelo.id, nv, idx)}
                                 className="text-destructive hover:text-destructive/80 text-xs px-1"
                               >✕</button>
                             </div>
                           ))}
                           <button
                             type="button"
-                            onClick={() => addConsumible(modelo.id, n.value)}
+                            onClick={() => addConsumible(modelo.id, nv)}
                             className="text-xs text-primary hover:underline"
                           >+ Añadir consumible</button>
                         </div>
