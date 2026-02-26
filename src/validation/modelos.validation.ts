@@ -9,10 +9,14 @@ export const createModeloSchema = z.object({
   notas: z.string().optional().nullable(),
   aceitesConfig: z.any().optional().nullable(),
   niveles: z.string().max(100).optional().nullable(), // CSV: "1,2,2_inferior,2_superior,3"
-  controladorId: z.number().int().positive().optional().nullable(),
+  controladorIds: z.array(z.number().int().positive()).optional().default([]),
 });
 
-export const updateModeloSchema = createModeloSchema.partial().omit({ fabricanteId: true });
+export const updateModeloSchema = createModeloSchema.partial().omit({ fabricanteId: true, controladorIds: true });
+
+export const updateCompatibilidadSchema = z.object({
+  controladorIds: z.array(z.number().int().positive()),
+});
 
 export const createVersionSchema = z.object({
   schema: z.any().default({ pageConfig: {}, blocks: [] }),

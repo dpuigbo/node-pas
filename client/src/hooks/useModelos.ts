@@ -97,6 +97,19 @@ export function useActivateVersion(modeloId: number) {
   });
 }
 
+// Compatibilidad M:N
+export function useUpdateCompatibilidad() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, controladorIds }: { id: number; controladorIds: number[] }) =>
+      api.put(`/v1/modelos/${id}/compatibilidad`, { controladorIds }),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['modelos'] });
+      qc.invalidateQueries({ queryKey: ['modelos', variables.id] });
+    },
+  });
+}
+
 export function useModelosCompatibles(sistemaId: number | undefined, tipo: string | undefined) {
   return useQuery({
     queryKey: ['modelos', 'compatible', sistemaId, tipo],

@@ -108,19 +108,28 @@ model ModeloComponente {
   notas          String?        @db.Text
   aceitesConfig  Json?          @map("aceites_config")
   niveles        String?        // CSV de niveles aplicables: "1,2,2_inferior,2_superior,3"
-  controladorId  Int?           @map("controlador_id") // Controladora asociada (solo non-controllers)
   createdAt      DateTime       @default(now()) @map("created_at")
   updatedAt      DateTime       @updatedAt @map("updated_at")
 
-  fabricante           Fabricante         @relation(fields: [fabricanteId], references: [id], onDelete: Cascade)
-  controlador          ModeloComponente?  @relation("ControladorComponentes", fields: [controladorId], references: [id], onDelete: SetNull)
-  componentesAsociados ModeloComponente[] @relation("ControladorComponentes")
-  versiones            VersionTemplate[]
-  componentes          ComponenteSistema[]
-  consumiblesNivel     ConsumibleNivel[]
+  fabricante               Fabricante                 @relation(fields: [fabricanteId], references: [id], onDelete: Cascade)
+  controladoresCompatibles CompatibilidadControlador[] @relation("ComponenteCompat")
+  componentesCompatibles   CompatibilidadControlador[] @relation("ControladorCompat")
+  versiones                VersionTemplate[]
+  componentes              ComponenteSistema[]
+  consumiblesNivel         ConsumibleNivel[]
 
-  @@unique([fabricanteId, tipo, nombre, controladorId])
   @@map("modelos_componente")
+}
+
+model CompatibilidadControlador {
+  controladorId Int @map("controlador_id")
+  componenteId  Int @map("componente_id")
+
+  controlador ModeloComponente @relation("ControladorCompat", fields: [controladorId], references: [id], onDelete: Cascade)
+  componente  ModeloComponente @relation("ComponenteCompat", fields: [componenteId], references: [id], onDelete: Cascade)
+
+  @@id([controladorId, componenteId])
+  @@map("compatibilidad_controlador")
 }
 
 enum TipoComponente {

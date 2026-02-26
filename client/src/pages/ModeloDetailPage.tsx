@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   useModelo, useUpdateModelo, useVersiones, useCreateVersion, useActivateVersion,
-  useModelos,
+  useModelos, useUpdateCompatibilidad,
 } from '@/hooks/useModelos';
 import { useAuth } from '@/hooks/useAuth';
 import { getNivelesForTipo, getNivelesFijos, tieneNivelesEditables, NIVEL_SHORT } from '@/lib/niveles';
@@ -87,15 +87,30 @@ export default function ModeloDetailPage() {
     setEditingNiveles(false);
   };
 
-  // Controladora selector (for non-controllers only)
+  // Compatibilidad M:N (for non-controllers only)
   const { data: controladoras } = useModelos(
     modelo?.fabricante?.id && modelo?.tipo !== 'controller'
       ? { fabricanteId: modelo.fabricante.id, tipo: 'controller' }
       : undefined,
   );
+  const updateCompatibilidad = useUpdateCompatibilidad();
 
-  const handleChangeControlador = async (controladorId: number | null) => {
-    await updateModelo.mutateAsync({ id: modeloId, controladorId });
+  const [editingCompat, setEditingCompat] = useState(false);
+  const [compatForm, setCompatForm] = useState<number[]>([]);
+
+  const startEditCompat = () => {
+    const current = (modelo?.controladoresCompatibles ?? []).map((c: any) => c.controlador.id);
+    setCompatForm(current);
+    setEditingCompat(true);
+  };
+
+  const toggleCompat = (id: number) => {
+    setCompatForm((prev) => prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]);
+  };
+
+  const handleSaveCompat = async () => {
+    await updateCompatibilidad.mutateAsync({ id: modeloId, controladorIds: compatForm });
+    setEditingCompat(false);
   };
 
   if (loadingModelo) {
@@ -332,46 +347,86 @@ export default function ModeloDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Controladora asociada (only for non-controllers) */}
+      {/* Controladoras asociadas (only for non-controllers) */}
       {modelo.tipo !== 'controller' && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Controladora asociada</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">Controladoras asociadas</CardTitle>
+              {isAdmin && !editingCompat && (
+                <Button variant="outline" size="sm" onClick={startEditCompat}>
+                  <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
+                </Button>
+              )}
+              {editingCompat && (
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={handleSaveCompat} disabled={updateCompatibilidad.isPending}>
+                    <Save className="h-3.5 w-3.5 mr-1" />
+                    {updateCompatibilidad.isPending ? 'Guardando...' : 'Guardar'}
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setEditingCompat(false)}>
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
-            {isAdmin ? (
-              <div className="flex items-center gap-3">
-                <select
-                  value={modelo.controladorId ?? ''}
-                  onChange={(e) => handleChangeControlador(e.target.value ? Number(e.target.value) : null)}
-                  className="flex h-9 w-64 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                >
-                  <option value="">Sin controladora</option>
-                  {(Array.isArray(controladoras) ? controladoras : []).map((c: any) => (
-                    <option key={c.id} value={c.id}>{c.nombre}</option>
-                  ))}
-                </select>
-                {updateModelo.isPending && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+            {editingCompat ? (
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  Selecciona las controladoras compatibles con este modelo.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {(Array.isArray(controladoras) ? controladoras : []).map((c: any) => {
+                    const selected = compatForm.includes(c.id);
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                          selected
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : 'bg-background border-input text-muted-foreground hover:bg-muted'
+                        }`}
+                        onClick={() => toggleCompat(c.id)}
+                      >
+                        {c.nombre}
+                      </button>
+                    );
+                  })}
+                </div>
+                {compatForm.length === 0 && (
+                  <p className="text-xs text-orange-500">
+                    Sin controladoras seleccionadas. Este componente no aparecera como compatible.
+                  </p>
+                )}
               </div>
             ) : (
-              <Badge variant="secondary">
-                {modelo.controlador?.nombre ?? 'Sin controladora'}
-              </Badge>
+              <div className="flex flex-wrap gap-1.5">
+                {(modelo.controladoresCompatibles ?? []).length > 0 ? (
+                  (modelo.controladoresCompatibles ?? []).map((c: any) => (
+                    <Badge key={c.controlador.id} variant="secondary">{c.controlador.nombre}</Badge>
+                  ))
+                ) : (
+                  <span className="text-sm text-muted-foreground">Sin controladoras asociadas</span>
+                )}
+              </div>
             )}
           </CardContent>
         </Card>
       )}
 
       {/* Componentes asociados (only for controllers) */}
-      {modelo.tipo === 'controller' && modelo.componentesAsociados?.length > 0 && (
+      {modelo.tipo === 'controller' && (modelo.componentesCompatibles ?? []).length > 0 && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Componentes asociados</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-1.5">
-              {modelo.componentesAsociados.map((c: any) => (
-                <Badge key={c.id} variant="secondary">{c.nombre}</Badge>
+              {(modelo.componentesCompatibles ?? []).map((c: any) => (
+                <Badge key={c.componente.id} variant="secondary">{c.componente.nombre}</Badge>
               ))}
             </div>
           </CardContent>

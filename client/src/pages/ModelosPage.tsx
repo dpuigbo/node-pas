@@ -70,13 +70,13 @@ export default function ModelosPage() {
     nombre: '',
     notas: '',
     niveles: [] as string[],
-    controladorId: null as number | null,
+    controladorIds: [] as number[],
   });
 
   // When dialog opens, initialize niveles with fixed levels for current tipo
   const openCreateDialog = () => {
     const fijos = tipoFilter ? getNivelesFijos(tipoFilter) : [];
-    setForm({ fabricanteId: 0, nombre: '', notas: '', niveles: fijos, controladorId: null });
+    setForm({ fabricanteId: 0, nombre: '', notas: '', niveles: fijos, controladorIds: [] });
     setFormOpen(true);
   };
 
@@ -96,6 +96,13 @@ export default function ModelosPage() {
     });
   };
 
+  const toggleFormControlador = (id: number) => {
+    setForm((prev) => {
+      const has = prev.controladorIds.includes(id);
+      return { ...prev, controladorIds: has ? prev.controladorIds.filter((c) => c !== id) : [...prev.controladorIds, id] };
+    });
+  };
+
   const handleSubmit = async () => {
     const nivelesStr = form.niveles.length > 0 ? form.niveles.join(',') : null;
     const res = await createMutation.mutateAsync({
@@ -104,7 +111,7 @@ export default function ModelosPage() {
       nombre: form.nombre,
       notas: form.notas || null,
       niveles: nivelesStr,
-      controladorId: form.controladorId,
+      controladorIds: form.controladorIds,
     });
     setFormOpen(false);
     // Navigate to the new modelo's detail page
@@ -125,11 +132,11 @@ export default function ModelosPage() {
     }] : []),
     {
       key: 'controladora',
-      header: 'Controladora',
+      header: 'Controladoras',
       render: (m) => {
         if (m.tipo === 'controller') {
-          // Controller: show associated components
-          const items = m.componentesAsociados ?? [];
+          // Controller: show associated components (via junction)
+          const items = (m.componentesCompatibles ?? []).map((c: any) => c.componente);
           if (items.length === 0) return <span className="text-xs text-muted-foreground">—</span>;
           return (
             <div className="flex flex-wrap gap-1">
@@ -141,13 +148,18 @@ export default function ModelosPage() {
             </div>
           );
         } else {
-          // Non-controller: show linked controller
-          if (!m.controlador) return <span className="text-xs text-muted-foreground">—</span>;
+          // Non-controller: show linked controllers (via junction)
+          const controllers = (m.controladoresCompatibles ?? []).map((c: any) => c.controlador);
+          if (controllers.length === 0) return <span className="text-xs text-muted-foreground">—</span>;
           return (
-            <Badge variant="secondary" className="text-[10px] py-0 gap-0.5">
-              <Link2 className="h-2.5 w-2.5" />
-              {m.controlador.nombre}
-            </Badge>
+            <div className="flex flex-wrap gap-1">
+              {controllers.map((c: any) => (
+                <Badge key={c.id} variant="secondary" className="text-[10px] py-0 gap-0.5">
+                  <Link2 className="h-2.5 w-2.5" />
+                  {c.nombre}
+                </Badge>
+              ))}
+            </div>
           );
         }
       },
@@ -205,7 +217,7 @@ export default function ModelosPage() {
               <Label>Fabricante</Label>
               <Select
                 value={String(form.fabricanteId || '')}
-                onValueChange={(v) => setForm({ ...form, fabricanteId: Number(v), controladorId: null })}
+                onValueChange={(v) => setForm({ ...form, fabricanteId: Number(v), controladorIds: [] })}
               >
                 <SelectTrigger><SelectValue placeholder="Seleccionar fabricante" /></SelectTrigger>
                 <SelectContent>
@@ -226,25 +238,38 @@ export default function ModelosPage() {
               />
             </div>
 
-            {/* Controladora (solo non-controllers) */}
+            {/* Controladoras asociadas (solo non-controllers) */}
             {tipoFilter && tipoFilter !== 'controller' && (
               <div>
-                <Label>Controladora asociada</Label>
-                <Select
-                  value={form.controladorId ? String(form.controladorId) : '__none__'}
-                  onValueChange={(v) => setForm({ ...form, controladorId: v === '__none__' ? null : Number(v) })}
-                  disabled={!form.fabricanteId}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={form.fabricanteId ? 'Seleccionar controladora' : 'Selecciona fabricante primero'} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">Sin controladora</SelectItem>
-                    {(Array.isArray(controladorasCreate) ? controladorasCreate : []).map((c: any) => (
-                      <SelectItem key={c.id} value={String(c.id)}>{c.nombre}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Controladoras asociadas</Label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Selecciona las controladoras compatibles con este modelo.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {!form.fabricanteId ? (
+                    <span className="text-xs text-muted-foreground">Selecciona fabricante primero</span>
+                  ) : (Array.isArray(controladorasCreate) ? controladorasCreate : []).length === 0 ? (
+                    <span className="text-xs text-muted-foreground">No hay controladoras para este fabricante</span>
+                  ) : (
+                    (Array.isArray(controladorasCreate) ? controladorasCreate : []).map((c: any) => {
+                      const selected = form.controladorIds.includes(c.id);
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                            selected
+                              ? 'bg-primary text-primary-foreground border-primary'
+                              : 'bg-background border-input text-muted-foreground hover:bg-muted'
+                          }`}
+                          onClick={() => toggleFormControlador(c.id)}
+                        >
+                          {c.nombre}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
               </div>
             )}
 

@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { requireRole } from '../middleware/role.middleware';
 import { prisma } from '../config/database';
 import {
-  createModeloSchema, updateModeloSchema,
+  createModeloSchema, updateModeloSchema, updateCompatibilidadSchema,
   createVersionSchema, updateVersionSchema, activateVersionSchema,
 } from '../validation/modelos.validation';
 import { getSeedTemplate } from '../lib/templateSeeds';
@@ -23,8 +23,12 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
       orderBy: [{ fabricanteId: 'asc' }, { tipo: 'asc' }, { nombre: 'asc' }],
       include: {
         fabricante: { select: { id: true, nombre: true } },
-        controlador: { select: { id: true, nombre: true } },
-        componentesAsociados: { select: { id: true, nombre: true, tipo: true } },
+        controladoresCompatibles: {
+          include: { controlador: { select: { id: true, nombre: true } } },
+        },
+        componentesCompatibles: {
+          include: { componente: { select: { id: true, nombre: true, tipo: true } } },
+        },
         _count: { select: { versiones: true } },
       },
     });
@@ -78,11 +82,13 @@ router.get('/compatible', async (req: Request, res: Response, next: NextFunction
 
     const controllerModelIds = [...new Set(controladores.map((c: { modeloComponenteId: number }) => c.modeloComponenteId))];
 
-    // Direct query: models whose controladorId is one of the system's controllers
+    // Query through junction table: models compatible with any controller in the system
     const modelos = await prisma.modeloComponente.findMany({
       where: {
         tipo,
-        controladorId: { in: controllerModelIds },
+        controladoresCompatibles: {
+          some: { controladorId: { in: controllerModelIds } },
+        },
       },
       orderBy: { nombre: 'asc' },
       include: { fabricante: { select: { id: true, nombre: true } } },
@@ -94,7 +100,7 @@ router.get('/compatible', async (req: Request, res: Response, next: NextFunction
       });
       res.json({
         modelos: [],
-        warning: `Ninguno de los ${totalSinConfig} modelos de este tipo tiene controladora asignada entre las del sistema.`,
+        warning: `Ninguno de los ${totalSinConfig} modelos de este tipo tiene compatibilidad con las controladoras del sistema.`,
       });
       return;
     }
@@ -111,8 +117,12 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
       include: {
         fabricante: { select: { id: true, nombre: true } },
         versiones: { orderBy: { version: 'desc' } },
-        controlador: { select: { id: true, nombre: true } },
-        componentesAsociados: { select: { id: true, nombre: true, tipo: true } },
+        controladoresCompatibles: {
+          include: { controlador: { select: { id: true, nombre: true } } },
+        },
+        componentesCompatibles: {
+          include: { componente: { select: { id: true, nombre: true, tipo: true } } },
+        },
       },
     });
     if (!modelo) { res.status(404).json({ error: 'Modelo no encontrado' }); return; }
@@ -123,12 +133,38 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
 // POST /api/v1/modelos (admin)
 router.post('/', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = createModeloSchema.parse(req.body);
+    const { controladorIds, ...modelData } = createModeloSchema.parse(req.body);
     // Auto-assign fixed levels based on component type
-    data.niveles = ensureNivelesFijos(data.tipo, data.niveles);
+    modelData.niveles = ensureNivelesFijos(modelData.tipo, modelData.niveles);
+
+    // Application-level duplicate check: same (fabricanteId, tipo, nombre) + same controller set
+    const existing = await prisma.modeloComponente.findMany({
+      where: { fabricanteId: modelData.fabricanteId, tipo: modelData.tipo, nombre: modelData.nombre },
+      include: { controladoresCompatibles: { select: { controladorId: true } } },
+    });
+    const sortedNew = [...(controladorIds ?? [])].sort((a, b) => a - b);
+    const isDuplicate = existing.some((e) => {
+      const sortedExisting = e.controladoresCompatibles.map((c) => c.controladorId).sort((a, b) => a - b);
+      return JSON.stringify(sortedExisting) === JSON.stringify(sortedNew);
+    });
+    if (isDuplicate) {
+      res.status(409).json({ error: 'Ya existe un modelo identico con las mismas controladoras asociadas.' });
+      return;
+    }
+
     const modelo = await prisma.modeloComponente.create({
-      data,
-      include: { fabricante: { select: { id: true, nombre: true } } },
+      data: {
+        ...modelData,
+        controladoresCompatibles: {
+          create: (controladorIds ?? []).map((cId: number) => ({ controladorId: cId })),
+        },
+      },
+      include: {
+        fabricante: { select: { id: true, nombre: true } },
+        controladoresCompatibles: {
+          include: { controlador: { select: { id: true, nombre: true } } },
+        },
+      },
     });
     res.status(201).json(modelo);
   } catch (err) { next(err); }
@@ -154,6 +190,61 @@ router.put('/:id', requireRole('admin'), async (req: Request, res: Response, nex
       data,
     });
     res.json(modelo);
+  } catch (err) { next(err); }
+});
+
+// PUT /api/v1/modelos/:id/compatibilidad (admin) — sync controller associations
+router.put('/:id/compatibilidad', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { controladorIds } = updateCompatibilidadSchema.parse(req.body);
+    const id = Number(req.params.id);
+
+    // Get current model info for duplicate check
+    const modelo = await prisma.modeloComponente.findUnique({
+      where: { id },
+      select: { fabricanteId: true, tipo: true, nombre: true },
+    });
+    if (!modelo) { res.status(404).json({ error: 'Modelo no encontrado' }); return; }
+
+    // Duplicate check: another model with same name + same controller set
+    const existing = await prisma.modeloComponente.findMany({
+      where: { fabricanteId: modelo.fabricanteId, tipo: modelo.tipo, nombre: modelo.nombre, id: { not: id } },
+      include: { controladoresCompatibles: { select: { controladorId: true } } },
+    });
+    const sortedNew = [...controladorIds].sort((a, b) => a - b);
+    const isDuplicate = existing.some((e) => {
+      const sortedExisting = e.controladoresCompatibles.map((c) => c.controladorId).sort((a, b) => a - b);
+      return JSON.stringify(sortedExisting) === JSON.stringify(sortedNew);
+    });
+    if (isDuplicate) {
+      res.status(409).json({ error: 'Ya existe otro modelo identico con las mismas controladoras.' });
+      return;
+    }
+
+    // Delete-and-recreate junction records
+    await prisma.$transaction([
+      prisma.compatibilidadControlador.deleteMany({ where: { componenteId: id } }),
+      ...(controladorIds.length > 0
+        ? [prisma.modeloComponente.update({
+            where: { id },
+            data: {
+              controladoresCompatibles: {
+                create: controladorIds.map((cId) => ({ controladorId: cId })),
+              },
+            },
+          })]
+        : []),
+    ]);
+
+    const updated = await prisma.modeloComponente.findUnique({
+      where: { id },
+      include: {
+        controladoresCompatibles: {
+          include: { controlador: { select: { id: true, nombre: true } } },
+        },
+      },
+    });
+    res.json(updated);
   } catch (err) { next(err); }
 });
 
