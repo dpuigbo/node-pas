@@ -91,17 +91,36 @@ export default function ModelosPage() {
     }] : []),
     {
       key: 'compatibilidad',
-      header: 'Compat.',
+      header: 'Compatibilidad',
       render: (m) => {
-        const count = m.tipo === 'controller'
-          ? (m._count?.componentesCompatibles ?? 0)
-          : (m._count?.compatibleConControladores ?? 0);
-        return (
-          <Badge variant={count > 0 ? 'secondary' : 'outline'} className="gap-1">
-            <Link2 className="h-3 w-3" />
-            {count}
-          </Badge>
-        );
+        if (m.tipo === 'controller') {
+          // Controller: show compatible components
+          const items = (m.componentesCompatibles ?? []).map((r: any) => r.componente);
+          if (items.length === 0) return <span className="text-xs text-muted-foreground">—</span>;
+          return (
+            <div className="flex flex-wrap gap-1">
+              {items.map((c: any) => (
+                <Badge key={c.id} variant="secondary" className="text-[10px] py-0">
+                  {c.nombre}
+                </Badge>
+              ))}
+            </div>
+          );
+        } else {
+          // Non-controller: show compatible controllers
+          const items = (m.compatibleConControladores ?? []).map((r: any) => r.controlador);
+          if (items.length === 0) return <span className="text-xs text-muted-foreground">—</span>;
+          return (
+            <div className="flex flex-wrap gap-1">
+              {items.map((c: any) => (
+                <Badge key={c.id} variant="secondary" className="text-[10px] py-0 gap-0.5">
+                  <Link2 className="h-2.5 w-2.5" />
+                  {c.nombre}
+                </Badge>
+              ))}
+            </div>
+          );
+        }
       },
     },
     {

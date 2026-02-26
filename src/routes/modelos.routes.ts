@@ -25,6 +25,14 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
       include: {
         fabricante: { select: { id: true, nombre: true } },
         _count: { select: { versiones: true, compatibleConControladores: true, componentesCompatibles: true } },
+        // For non-controllers: which controllers they're compatible with
+        compatibleConControladores: {
+          select: { controlador: { select: { id: true, nombre: true } } },
+        },
+        // For controllers: which components they're compatible with
+        componentesCompatibles: {
+          select: { componente: { select: { id: true, nombre: true, tipo: true } } },
+        },
       },
     });
     res.json(modelos);
