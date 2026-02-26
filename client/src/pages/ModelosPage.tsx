@@ -104,20 +104,24 @@ export default function ModelosPage() {
   };
 
   const handleSubmit = async () => {
-    const nivelesStr = form.niveles.length > 0 ? form.niveles.join(',') : null;
-    const res = await createMutation.mutateAsync({
-      fabricanteId: form.fabricanteId,
-      tipo: tipoFilter!, // tipo is set from the URL
-      nombre: form.nombre,
-      notas: form.notas || null,
-      niveles: nivelesStr,
-      controladorIds: form.controladorIds,
-    });
-    setFormOpen(false);
-    // Navigate to the new modelo's detail page
-    const newModelo = res?.data ?? res;
-    if (newModelo?.id) {
-      navigate(`/modelos/${newModelo.id}`);
+    try {
+      const nivelesStr = form.niveles.length > 0 ? form.niveles.join(',') : null;
+      const res = await createMutation.mutateAsync({
+        fabricanteId: form.fabricanteId,
+        tipo: tipoFilter!, // tipo is set from the URL
+        nombre: form.nombre,
+        notas: form.notas || null,
+        niveles: nivelesStr,
+        controladorIds: form.controladorIds,
+      });
+      setFormOpen(false);
+      // Navigate to the new modelo's detail page
+      const newModelo = res?.data ?? res;
+      if (newModelo?.id) {
+        navigate(`/modelos/${newModelo.id}`);
+      }
+    } catch (err: any) {
+      alert(err?.response?.data?.error ?? 'Error al crear modelo');
     }
   };
 

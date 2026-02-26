@@ -82,9 +82,13 @@ export default function ModeloDetailPage() {
   };
 
   const handleSaveNiveles = async () => {
-    const nivelesStr = nivelesForm.length > 0 ? nivelesForm.join(',') : null;
-    await updateModelo.mutateAsync({ id: modeloId, niveles: nivelesStr });
-    setEditingNiveles(false);
+    try {
+      const nivelesStr = nivelesForm.length > 0 ? nivelesForm.join(',') : null;
+      await updateModelo.mutateAsync({ id: modeloId, niveles: nivelesStr });
+      setEditingNiveles(false);
+    } catch (err: any) {
+      alert(err?.response?.data?.error ?? 'Error al guardar niveles');
+    }
   };
 
   // Compatibilidad M:N (for non-controllers only)
@@ -109,8 +113,12 @@ export default function ModeloDetailPage() {
   };
 
   const handleSaveCompat = async () => {
-    await updateCompatibilidad.mutateAsync({ id: modeloId, controladorIds: compatForm });
-    setEditingCompat(false);
+    try {
+      await updateCompatibilidad.mutateAsync({ id: modeloId, controladorIds: compatForm });
+      setEditingCompat(false);
+    } catch (err: any) {
+      alert(err?.response?.data?.error ?? 'Error al guardar compatibilidad');
+    }
   };
 
   if (loadingModelo) {
@@ -135,25 +143,33 @@ export default function ModeloDetailPage() {
   const currentNiveles = modelo.niveles ? modelo.niveles.split(',').filter(Boolean) : [];
 
   const handleCreateVersion = async () => {
-    const res = await createVersion.mutateAsync({
-      schema: { blocks: [], pageConfig: undefined },
-      notas: createNotas || null,
-    });
-    setCreateOpen(false);
-    setCreateNotas('');
-    // Navigate directly to the editor with the new version
-    const newVersion = res?.data ?? res;
-    if (newVersion?.id) {
-      navigate(`/modelos/${modeloId}/versiones/${newVersion.id}/editor`);
+    try {
+      const res = await createVersion.mutateAsync({
+        schema: { blocks: [], pageConfig: undefined },
+        notas: createNotas || null,
+      });
+      setCreateOpen(false);
+      setCreateNotas('');
+      // Navigate directly to the editor with the new version
+      const newVersion = res?.data ?? res;
+      if (newVersion?.id) {
+        navigate(`/modelos/${modeloId}/versiones/${newVersion.id}/editor`);
+      }
+    } catch (err: any) {
+      alert(err?.response?.data?.error ?? 'Error al crear version');
     }
   };
 
   const handleActivate = async () => {
-    if (!activateTarget) return;
-    const newEstado = activateTarget.estado === 'activo' ? 'obsoleto' : 'activo';
-    await activateVersion.mutateAsync({ id: activateTarget.id, estado: newEstado });
-    setConfirmOpen(false);
-    setActivateTarget(null);
+    try {
+      if (!activateTarget) return;
+      const newEstado = activateTarget.estado === 'activo' ? 'obsoleto' : 'activo';
+      await activateVersion.mutateAsync({ id: activateTarget.id, estado: newEstado });
+      setConfirmOpen(false);
+      setActivateTarget(null);
+    } catch (err: any) {
+      alert(err?.response?.data?.error ?? 'Error al cambiar estado');
+    }
   };
 
   const versionCols: Column<any>[] = [
