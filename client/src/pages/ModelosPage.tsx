@@ -90,12 +90,12 @@ export default function ModelosPage() {
       render: (m: any) => <Badge variant="secondary">{TIPO_LABELS[m.tipo] || m.tipo}</Badge>,
     }] : []),
     {
-      key: 'compatibilidad',
-      header: 'Compatibilidad',
+      key: 'controladora',
+      header: 'Controladora',
       render: (m) => {
         if (m.tipo === 'controller') {
-          // Controller: show compatible components
-          const items = (m.componentesCompatibles ?? []).map((r: any) => r.componente);
+          // Controller: show associated components
+          const items = m.componentesAsociados ?? [];
           if (items.length === 0) return <span className="text-xs text-muted-foreground">—</span>;
           return (
             <div className="flex flex-wrap gap-1">
@@ -107,18 +107,13 @@ export default function ModelosPage() {
             </div>
           );
         } else {
-          // Non-controller: show compatible controllers
-          const items = (m.compatibleConControladores ?? []).map((r: any) => r.controlador);
-          if (items.length === 0) return <span className="text-xs text-muted-foreground">—</span>;
+          // Non-controller: show linked controller
+          if (!m.controlador) return <span className="text-xs text-muted-foreground">—</span>;
           return (
-            <div className="flex flex-wrap gap-1">
-              {items.map((c: any) => (
-                <Badge key={c.id} variant="secondary" className="text-[10px] py-0 gap-0.5">
-                  <Link2 className="h-2.5 w-2.5" />
-                  {c.nombre}
-                </Badge>
-              ))}
-            </div>
+            <Badge variant="secondary" className="text-[10px] py-0 gap-0.5">
+              <Link2 className="h-2.5 w-2.5" />
+              {m.controlador.nombre}
+            </Badge>
           );
         }
       },

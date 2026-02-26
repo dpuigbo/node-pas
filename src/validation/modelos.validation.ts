@@ -8,7 +8,8 @@ export const createModeloSchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio').max(200),
   notas: z.string().optional().nullable(),
   aceitesConfig: z.any().optional().nullable(),
-  niveles: z.string().max(100).optional().nullable(), // CSV: "1,2_inferior,2_superior,3"
+  niveles: z.string().max(100).optional().nullable(), // CSV: "1,2,2_inferior,2_superior,3"
+  controladorId: z.number().int().positive().optional().nullable(),
 });
 
 export const updateModeloSchema = createModeloSchema.partial().omit({ fabricanteId: true });
@@ -25,10 +26,6 @@ export const updateVersionSchema = z.object({
 
 export const activateVersionSchema = z.object({
   estado: z.enum(['borrador', 'activo', 'obsoleto']),
-});
-
-export const compatibilidadSchema = z.object({
-  ids: z.array(z.number().int().positive()),
 });
 
 export type CreateModeloInput = z.infer<typeof createModeloSchema>;

@@ -97,30 +97,6 @@ export function useActivateVersion(modeloId: number) {
   });
 }
 
-// Compatibilidad
-export function useCompatibilidad(modeloId: number | undefined) {
-  return useQuery({
-    queryKey: ['modelos', modeloId, 'compatibilidad'],
-    queryFn: async () => {
-      const { data } = await api.get(`/v1/modelos/${modeloId}/compatibilidad`);
-      return data;
-    },
-    enabled: !!modeloId,
-  });
-}
-
-export function useUpdateCompatibilidad(modeloId: number) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (ids: number[]) => api.put(`/v1/modelos/${modeloId}/compatibilidad`, { ids }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['modelos', modeloId, 'compatibilidad'] });
-      qc.invalidateQueries({ queryKey: ['modelos', modeloId] });
-      qc.invalidateQueries({ queryKey: ['modelos'] });
-    },
-  });
-}
-
 export function useModelosCompatibles(sistemaId: number | undefined, tipo: string | undefined) {
   return useQuery({
     queryKey: ['modelos', 'compatible', sistemaId, tipo],
