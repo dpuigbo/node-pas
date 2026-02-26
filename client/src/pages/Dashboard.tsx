@@ -240,7 +240,7 @@ function CalendarioIntervenciones() {
                     : isSunday
                       ? 'bg-muted/20'
                       : ''
-            } ${day.isToday ? 'ring-2 ring-inset ring-blue-400/50' : ''} ${
+            } ${
               idx % 7 === 6 ? 'border-r-0' : ''
             }`}
           >
