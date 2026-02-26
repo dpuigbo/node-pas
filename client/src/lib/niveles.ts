@@ -47,7 +47,7 @@ export const NIVELES_ALL = [
 
 /** Devuelve las opciones de nivel permitidas para un tipo de componente */
 export function getNivelesForTipo(tipo: string): NivelOption[] {
-  return NIVELES_POR_TIPO[tipo] ?? NIVELES_POR_TIPO.mechanical_unit;
+  return NIVELES_POR_TIPO[tipo] ?? NIVELES_POR_TIPO['mechanical_unit']!;
 }
 
 /** Devuelve los niveles fijos (obligatorios) para un tipo de componente */
