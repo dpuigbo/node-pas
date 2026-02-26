@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -15,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useModelos, useCreateModelo, useDeleteModelo } from '@/hooks/useModelos';
 import { useFabricantes } from '@/hooks/useFabricantes';
 import { useAuth } from '@/hooks/useAuth';
+import { getNivelesForTipo, getNivelesFijos, tieneNivelesEditables } from '@/lib/niveles';
 
 const TIPO_LABELS: Record<string, string> = {
   controller: 'Controlador',
@@ -63,16 +65,48 @@ export default function ModelosPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState<any>(null);
-  const [form, setForm] = useState({ fabricanteId: 0, nombre: '' });
+  const [form, setForm] = useState({
+    fabricanteId: 0,
+    nombre: '',
+    notas: '',
+    niveles: [] as string[],
+    controladorId: null as number | null,
+  });
+
+  // When dialog opens, initialize niveles with fixed levels for current tipo
+  const openCreateDialog = () => {
+    const fijos = tipoFilter ? getNivelesFijos(tipoFilter) : [];
+    setForm({ fabricanteId: 0, nombre: '', notas: '', niveles: fijos, controladorId: null });
+    setFormOpen(true);
+  };
+
+  // Fetch controllers for selected fabricante (for non-controller types)
+  const { data: controladorasCreate } = useModelos(
+    form.fabricanteId && tipoFilter && tipoFilter !== 'controller'
+      ? { fabricanteId: form.fabricanteId, tipo: 'controller' }
+      : undefined,
+  );
+
+  const toggleFormNivel = (nivel: string) => {
+    const fijos = tipoFilter ? getNivelesFijos(tipoFilter) : [];
+    if (fijos.includes(nivel)) return;
+    setForm((prev) => {
+      const has = prev.niveles.includes(nivel);
+      return { ...prev, niveles: has ? prev.niveles.filter((n) => n !== nivel) : [...prev.niveles, nivel] };
+    });
+  };
 
   const handleSubmit = async () => {
+    const nivelesStr = form.niveles.length > 0 ? form.niveles.join(',') : null;
     const res = await createMutation.mutateAsync({
       fabricanteId: form.fabricanteId,
       tipo: tipoFilter!, // tipo is set from the URL
       nombre: form.nombre,
+      notas: form.notas || null,
+      niveles: nivelesStr,
+      controladorId: form.controladorId,
     });
     setFormOpen(false);
-    setForm({ fabricanteId: 0, nombre: '' });
     // Navigate to the new modelo's detail page
     const newModelo = res?.data ?? res;
     if (newModelo?.id) {
@@ -142,7 +176,7 @@ export default function ModelosPage() {
         description={config?.description ?? 'Todos los modelos del catalogo'}
         actions={
           isAdmin && tipoFilter && (
-            <Button onClick={() => setFormOpen(true)}>
+            <Button onClick={openCreateDialog}>
               <Plus className="h-4 w-4" /> Nuevo modelo
             </Button>
           )
@@ -159,16 +193,20 @@ export default function ModelosPage() {
 
       {/* Create Dialog — tipo auto-set from URL */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
               Nuevo modelo: {TIPO_LABELS[tipoFilter!] ?? tipoFilter}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            {/* Fabricante */}
             <div>
               <Label>Fabricante</Label>
-              <Select value={String(form.fabricanteId || '')} onValueChange={(v) => setForm({ ...form, fabricanteId: Number(v) })}>
+              <Select
+                value={String(form.fabricanteId || '')}
+                onValueChange={(v) => setForm({ ...form, fabricanteId: Number(v), controladorId: null })}
+              >
                 <SelectTrigger><SelectValue placeholder="Seleccionar fabricante" /></SelectTrigger>
                 <SelectContent>
                   {(Array.isArray(fabricantes) ? fabricantes : []).filter((f: any) => f.activo).map((f: any) => (
@@ -177,12 +215,80 @@ export default function ModelosPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Nombre */}
             <div>
               <Label>Nombre</Label>
               <Input
                 value={form.nombre}
                 onChange={(e) => setForm({ ...form, nombre: e.target.value })}
                 placeholder={config?.placeholder ?? 'Ej: IRC5, IRB 6700...'}
+              />
+            </div>
+
+            {/* Controladora (solo non-controllers) */}
+            {tipoFilter && tipoFilter !== 'controller' && (
+              <div>
+                <Label>Controladora asociada</Label>
+                <Select
+                  value={form.controladorId ? String(form.controladorId) : '__none__'}
+                  onValueChange={(v) => setForm({ ...form, controladorId: v === '__none__' ? null : Number(v) })}
+                  disabled={!form.fabricanteId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={form.fabricanteId ? 'Seleccionar controladora' : 'Selecciona fabricante primero'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Sin controladora</SelectItem>
+                    {(Array.isArray(controladorasCreate) ? controladorasCreate : []).map((c: any) => (
+                      <SelectItem key={c.id} value={String(c.id)}>{c.nombre}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Niveles de mantenimiento */}
+            {tipoFilter && tieneNivelesEditables(tipoFilter) && (
+              <div>
+                <Label>Niveles de mantenimiento</Label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Los niveles obligatorios vienen preseleccionados.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {getNivelesForTipo(tipoFilter).map((niv) => {
+                    const selected = form.niveles.includes(niv.value);
+                    const isFixed = niv.fixed;
+                    return (
+                      <button
+                        key={niv.value}
+                        type="button"
+                        disabled={isFixed}
+                        className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                          selected
+                            ? isFixed
+                              ? 'bg-primary/70 text-primary-foreground border-primary cursor-not-allowed'
+                              : 'bg-primary text-primary-foreground border-primary'
+                            : 'bg-background border-input text-muted-foreground hover:bg-muted'
+                        }`}
+                        onClick={() => toggleFormNivel(niv.value)}
+                      >
+                        {niv.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Notas */}
+            <div>
+              <Label>Notas <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+              <Textarea
+                value={form.notas}
+                onChange={(e) => setForm({ ...form, notas: e.target.value })}
+                placeholder="Observaciones sobre este modelo..."
+                rows={2}
               />
             </div>
           </div>
