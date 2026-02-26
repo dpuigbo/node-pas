@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.activateVersionSchema = exports.updateVersionSchema = exports.createVersionSchema = exports.updateModeloSchema = exports.createModeloSchema = void 0;
+exports.activateVersionSchema = exports.updateVersionSchema = exports.createVersionSchema = exports.updateCompatibilidadSchema = exports.updateModeloSchema = exports.createModeloSchema = void 0;
 const zod_1 = require("zod");
 const tipoComponenteEnum = zod_1.z.enum(['controller', 'mechanical_unit', 'drive_unit', 'external_axis']);
 exports.createModeloSchema = zod_1.z.object({
@@ -10,9 +10,12 @@ exports.createModeloSchema = zod_1.z.object({
     notas: zod_1.z.string().optional().nullable(),
     aceitesConfig: zod_1.z.any().optional().nullable(),
     niveles: zod_1.z.string().max(100).optional().nullable(), // CSV: "1,2,2_inferior,2_superior,3"
-    controladorId: zod_1.z.number().int().positive().optional().nullable(),
+    controladorIds: zod_1.z.array(zod_1.z.number().int().positive()).optional().default([]),
 });
-exports.updateModeloSchema = exports.createModeloSchema.partial().omit({ fabricanteId: true });
+exports.updateModeloSchema = exports.createModeloSchema.partial().omit({ fabricanteId: true, controladorIds: true });
+exports.updateCompatibilidadSchema = zod_1.z.object({
+    controladorIds: zod_1.z.array(zod_1.z.number().int().positive()),
+});
 exports.createVersionSchema = zod_1.z.object({
     schema: zod_1.z.any().default({ pageConfig: {}, blocks: [] }),
     notas: zod_1.z.string().optional().nullable(),
