@@ -5,6 +5,7 @@ const role_middleware_1 = require("../middleware/role.middleware");
 const database_1 = require("../config/database");
 const modelos_validation_1 = require("../validation/modelos.validation");
 const templateSeeds_1 = require("../lib/templateSeeds");
+const niveles_1 = require("../lib/niveles");
 const router = (0, express_1.Router)();
 // ===== MODELOS COMPONENTE =====
 // GET /api/v1/modelos
@@ -143,6 +144,8 @@ router.get('/:id', async (req, res, next) => {
 router.post('/', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
     try {
         const data = modelos_validation_1.createModeloSchema.parse(req.body);
+        // Auto-assign fixed levels based on component type
+        data.niveles = (0, niveles_1.ensureNivelesFijos)(data.tipo, data.niveles);
         const modelo = await database_1.prisma.modeloComponente.create({
             data,
             include: { fabricante: { select: { id: true, nombre: true } } },
@@ -157,6 +160,17 @@ router.post('/', (0, role_middleware_1.requireRole)('admin'), async (req, res, n
 router.put('/:id', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
     try {
         const data = modelos_validation_1.updateModeloSchema.parse(req.body);
+        // If niveles is being updated, ensure fixed levels are included
+        if (data.niveles !== undefined) {
+            // Need to know the tipo — either from body or from existing record
+            const existing = await database_1.prisma.modeloComponente.findUnique({
+                where: { id: Number(req.params.id) },
+                select: { tipo: true },
+            });
+            if (existing) {
+                data.niveles = (0, niveles_1.ensureNivelesFijos)(existing.tipo, data.niveles);
+            }
+        }
         const modelo = await database_1.prisma.modeloComponente.update({
             where: { id: Number(req.params.id) },
             data,
