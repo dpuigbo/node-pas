@@ -6,6 +6,7 @@ const tipoComponenteEnum = zod_1.z.enum(['controller', 'mechanical_unit', 'drive
 exports.createModeloSchema = zod_1.z.object({
     fabricanteId: zod_1.z.number().int().positive(),
     tipo: tipoComponenteEnum,
+    familia: zod_1.z.string().max(200).optional().nullable(),
     nombre: zod_1.z.string().min(1, 'El nombre es obligatorio').max(200),
     notas: zod_1.z.string().optional().nullable(),
     aceitesConfig: zod_1.z.any().optional().nullable(),

@@ -138,9 +138,9 @@ router.post('/', (0, role_middleware_1.requireRole)('admin'), async (req, res, n
         const { controladorIds, ...modelData } = modelos_validation_1.createModeloSchema.parse(req.body);
         // Auto-assign fixed levels based on component type
         modelData.niveles = (0, niveles_1.ensureNivelesFijos)(modelData.tipo, modelData.niveles);
-        // Application-level duplicate check: same (fabricanteId, tipo, nombre) + same controller set
+        // Application-level duplicate check: same (fabricanteId, tipo, familia, nombre) + same controller set
         const existing = await database_1.prisma.modeloComponente.findMany({
-            where: { fabricanteId: modelData.fabricanteId, tipo: modelData.tipo, nombre: modelData.nombre },
+            where: { fabricanteId: modelData.fabricanteId, tipo: modelData.tipo, familia: modelData.familia ?? null, nombre: modelData.nombre },
             include: { controladoresCompatibles: { select: { controladorId: true } } },
         });
         const sortedNew = [...(controladorIds ?? [])].sort((a, b) => a - b);
@@ -205,15 +205,15 @@ router.put('/:id/compatibilidad', (0, role_middleware_1.requireRole)('admin'), a
         // Get current model info for duplicate check
         const modelo = await database_1.prisma.modeloComponente.findUnique({
             where: { id },
-            select: { fabricanteId: true, tipo: true, nombre: true },
+            select: { fabricanteId: true, tipo: true, familia: true, nombre: true },
         });
         if (!modelo) {
             res.status(404).json({ error: 'Modelo no encontrado' });
             return;
         }
-        // Duplicate check: another model with same name + same controller set
+        // Duplicate check: another model with same familia+name + same controller set
         const existing = await database_1.prisma.modeloComponente.findMany({
-            where: { fabricanteId: modelo.fabricanteId, tipo: modelo.tipo, nombre: modelo.nombre, id: { not: id } },
+            where: { fabricanteId: modelo.fabricanteId, tipo: modelo.tipo, familia: modelo.familia, nombre: modelo.nombre, id: { not: id } },
             include: { controladoresCompatibles: { select: { controladorId: true } } },
         });
         const sortedNew = [...controladorIds].sort((a, b) => a - b);
