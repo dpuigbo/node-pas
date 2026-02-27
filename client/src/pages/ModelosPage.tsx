@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, Trash2, Link2 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -103,6 +103,16 @@ export default function ModelosPage() {
       return { ...prev, controladorIds: has ? prev.controladorIds.filter((c) => c !== id) : [...prev.controladorIds, id] };
     });
   };
+
+  // Derive existing families from loaded modelos for the selected fabricante
+  const existingFamilias = useMemo(() => {
+    if (!modelos || !form.fabricanteId) return [];
+    const familias = new Set<string>();
+    (Array.isArray(modelos) ? modelos : [])
+      .filter((m: any) => m.fabricanteId === form.fabricanteId && m.familia)
+      .forEach((m: any) => familias.add(m.familia));
+    return [...familias].sort();
+  }, [modelos, form.fabricanteId]);
 
   const handleSubmit = async () => {
     try {
@@ -239,10 +249,22 @@ export default function ModelosPage() {
             <div>
               <Label>Familia <span className="text-muted-foreground font-normal">(opcional)</span></Label>
               <Input
+                list="familias-list"
                 value={form.familia}
                 onChange={(e) => setForm({ ...form, familia: e.target.value })}
-                placeholder="Ej: IRB 6700, IRC5, IRBT 4004..."
+                placeholder={form.fabricanteId ? 'Escribe nueva o selecciona existente...' : 'Selecciona fabricante primero'}
+                disabled={!form.fabricanteId}
               />
+              <datalist id="familias-list">
+                {existingFamilias.map((f) => (
+                  <option key={f} value={f} />
+                ))}
+              </datalist>
+              {existingFamilias.length > 0 && form.fabricanteId > 0 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {existingFamilias.length} familia{existingFamilias.length > 1 ? 's' : ''} existente{existingFamilias.length > 1 ? 's' : ''} para este fabricante
+                </p>
+              )}
             </div>
 
             {/* Nombre */}
