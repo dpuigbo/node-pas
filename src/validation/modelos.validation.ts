@@ -5,6 +5,7 @@ const tipoComponenteEnum = z.enum(['controller', 'mechanical_unit', 'drive_unit'
 export const createModeloSchema = z.object({
   fabricanteId: z.number().int().positive(),
   tipo: tipoComponenteEnum,
+  familia: z.string().max(200).optional().nullable(),
   nombre: z.string().min(1, 'El nombre es obligatorio').max(200),
   notas: z.string().optional().nullable(),
   aceitesConfig: z.any().optional().nullable(),

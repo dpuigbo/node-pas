@@ -67,6 +67,7 @@ export default function ModelosPage() {
   const [deleting, setDeleting] = useState<any>(null);
   const [form, setForm] = useState({
     fabricanteId: 0,
+    familia: '',
     nombre: '',
     notas: '',
     niveles: [] as string[],
@@ -76,7 +77,7 @@ export default function ModelosPage() {
   // When dialog opens, initialize niveles with fixed levels for current tipo
   const openCreateDialog = () => {
     const fijos = tipoFilter ? getNivelesFijos(tipoFilter) : [];
-    setForm({ fabricanteId: 0, nombre: '', notas: '', niveles: fijos, controladorIds: [] });
+    setForm({ fabricanteId: 0, familia: '', nombre: '', notas: '', niveles: fijos, controladorIds: [] });
     setFormOpen(true);
   };
 
@@ -109,6 +110,7 @@ export default function ModelosPage() {
       const res = await createMutation.mutateAsync({
         fabricanteId: form.fabricanteId,
         tipo: tipoFilter!, // tipo is set from the URL
+        familia: form.familia || null,
         nombre: form.nombre,
         notas: form.notas || null,
         niveles: nivelesStr,
@@ -127,6 +129,7 @@ export default function ModelosPage() {
 
   // Show tipo column only when not filtered
   const columns: Column<any>[] = [
+    { key: 'familia', header: 'Familia', render: (m) => m.familia || <span className="text-muted-foreground">—</span> },
     { key: 'nombre', header: 'Nombre' },
     { key: 'fabricante', header: 'Fabricante', render: (m) => m.fabricante?.nombre },
     ...(!tipoFilter ? [{
@@ -232,13 +235,23 @@ export default function ModelosPage() {
               </Select>
             </div>
 
+            {/* Familia */}
+            <div>
+              <Label>Familia <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+              <Input
+                value={form.familia}
+                onChange={(e) => setForm({ ...form, familia: e.target.value })}
+                placeholder="Ej: IRB 6700, IRC5, IRBT 4004..."
+              />
+            </div>
+
             {/* Nombre */}
             <div>
-              <Label>Nombre</Label>
+              <Label>Nombre (variante)</Label>
               <Input
                 value={form.nombre}
                 onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-                placeholder={config?.placeholder ?? 'Ej: IRC5, IRB 6700...'}
+                placeholder={config?.placeholder ?? 'Ej: IRB 6700-150/3.2, IRC5 Single...'}
               />
             </div>
 

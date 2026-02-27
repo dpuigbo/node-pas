@@ -277,7 +277,7 @@ export default function ModeloDetailPage() {
         <PageHeader
           title={modelo.nombre}
           description={
-            [modelo.fabricante?.nombre, TIPO_LABELS[modelo.tipo] ?? modelo.tipo]
+            [modelo.fabricante?.nombre, TIPO_LABELS[modelo.tipo] ?? modelo.tipo, modelo.familia]
               .filter(Boolean)
               .join(' — ')
           }

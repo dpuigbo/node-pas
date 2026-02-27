@@ -137,9 +137,9 @@ router.post('/', requireRole('admin'), async (req: Request, res: Response, next:
     // Auto-assign fixed levels based on component type
     modelData.niveles = ensureNivelesFijos(modelData.tipo, modelData.niveles);
 
-    // Application-level duplicate check: same (fabricanteId, tipo, nombre) + same controller set
+    // Application-level duplicate check: same (fabricanteId, tipo, familia, nombre) + same controller set
     const existing = await prisma.modeloComponente.findMany({
-      where: { fabricanteId: modelData.fabricanteId, tipo: modelData.tipo, nombre: modelData.nombre },
+      where: { fabricanteId: modelData.fabricanteId, tipo: modelData.tipo, familia: modelData.familia ?? null, nombre: modelData.nombre },
       include: { controladoresCompatibles: { select: { controladorId: true } } },
     });
     const sortedNew = [...(controladorIds ?? [])].sort((a, b) => a - b);
@@ -202,13 +202,13 @@ router.put('/:id/compatibilidad', requireRole('admin'), async (req: Request, res
     // Get current model info for duplicate check
     const modelo = await prisma.modeloComponente.findUnique({
       where: { id },
-      select: { fabricanteId: true, tipo: true, nombre: true },
+      select: { fabricanteId: true, tipo: true, familia: true, nombre: true },
     });
     if (!modelo) { res.status(404).json({ error: 'Modelo no encontrado' }); return; }
 
-    // Duplicate check: another model with same name + same controller set
+    // Duplicate check: another model with same familia+name + same controller set
     const existing = await prisma.modeloComponente.findMany({
-      where: { fabricanteId: modelo.fabricanteId, tipo: modelo.tipo, nombre: modelo.nombre, id: { not: id } },
+      where: { fabricanteId: modelo.fabricanteId, tipo: modelo.tipo, familia: modelo.familia, nombre: modelo.nombre, id: { not: id } },
       include: { controladoresCompatibles: { select: { controladorId: true } } },
     });
     const sortedNew = [...controladorIds].sort((a, b) => a - b);
