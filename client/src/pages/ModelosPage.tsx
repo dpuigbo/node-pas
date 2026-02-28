@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Trash2, Link2 } from 'lucide-react';
+import { Plus, Trash2, Link2, ChevronRight, ChevronDown, Loader2 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, Column } from '@/components/shared/DataTable';
 import { Button } from '@/components/ui/button';
@@ -61,6 +61,67 @@ export default function ModelosPage() {
   const { data: fabricantes } = useFabricantes();
   const createMutation = useCreateModelo();
   const deleteMutation = useDeleteModelo();
+
+  // Grouped view state (for mechanical_unit / external_axis)
+  const useGroupedView = tipoFilter === 'mechanical_unit' || tipoFilter === 'external_axis';
+  const [expandedFamilias, setExpandedFamilias] = useState<Set<string>>(new Set());
+  const [expandedGeneraciones, setExpandedGeneraciones] = useState<Set<string>>(new Set());
+
+  const toggleFamilia = (familia: string) => {
+    setExpandedFamilias((prev) => {
+      const next = new Set(prev);
+      if (next.has(familia)) next.delete(familia);
+      else next.add(familia);
+      return next;
+    });
+  };
+  const toggleGeneracion = (key: string) => {
+    setExpandedGeneraciones((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  // Group modelos by familia → generación (controller familia)
+  const groupedData = useMemo(() => {
+    if (!useGroupedView || !modelos || !Array.isArray(modelos)) return [];
+
+    const familiaMap = new Map<string, Map<string, any[]>>();
+
+    for (const modelo of modelos) {
+      const familiaKey = modelo.familia || 'Sin familia';
+
+      // Generación = unique controller familias
+      const ctrlFamilias = new Set<string>();
+      for (const cc of (modelo.controladoresCompatibles ?? [])) {
+        const fam = cc.controlador?.familia;
+        if (fam) ctrlFamilias.add(fam);
+      }
+      const generacionKey = ctrlFamilias.size > 0
+        ? [...ctrlFamilias].sort().join(' / ')
+        : 'Sin generación';
+
+      if (!familiaMap.has(familiaKey)) familiaMap.set(familiaKey, new Map());
+      const genMap = familiaMap.get(familiaKey)!;
+      if (!genMap.has(generacionKey)) genMap.set(generacionKey, []);
+      genMap.get(generacionKey)!.push(modelo);
+    }
+
+    return [...familiaMap.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([familia, genMap]) => ({
+        familia,
+        totalModelos: [...genMap.values()].reduce((sum, arr) => sum + arr.length, 0),
+        generaciones: [...genMap.entries()]
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([generacion, items]) => ({
+            generacion,
+            modelos: items.sort((a: any, b: any) => a.nombre.localeCompare(b.nombre)),
+          })),
+      }));
+  }, [modelos, useGroupedView]);
 
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -211,14 +272,128 @@ export default function ModelosPage() {
           )
         }
       />
-      <DataTable
-        columns={columns}
-        data={modelos || []}
-        isLoading={isLoading}
-        emptyMessage={tipoFilter ? `No hay modelos de ${TIPO_LABELS[tipoFilter]?.toLowerCase() ?? tipoFilter}. Crea uno nuevo.` : 'No hay modelos'}
-        onRowClick={(m) => navigate(`/modelos/${m.id}`)}
-        rowKey={(m) => m.id}
-      />
+      {/* Grouped view for mechanical_unit / external_axis */}
+      {useGroupedView ? (
+        isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : groupedData.length === 0 ? (
+          <div className="flex items-center justify-center py-12 text-muted-foreground">
+            No hay modelos de {TIPO_LABELS[tipoFilter!]?.toLowerCase() ?? tipoFilter}. Crea uno nuevo.
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {groupedData.map((fg) => {
+              const famExpanded = expandedFamilias.has(fg.familia);
+              return (
+                <div key={fg.familia} className="rounded-lg border overflow-hidden">
+                  {/* Familia header */}
+                  <button
+                    type="button"
+                    className="flex items-center gap-2 w-full px-4 py-3 text-left font-medium bg-muted/30 hover:bg-muted/60 transition-colors"
+                    onClick={() => toggleFamilia(fg.familia)}
+                  >
+                    {famExpanded ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
+                    <span className="font-semibold">{fg.familia}</span>
+                    <Badge variant="secondary" className="ml-auto text-xs">
+                      {fg.totalModelos} variante{fg.totalModelos !== 1 ? 's' : ''}
+                    </Badge>
+                  </button>
+
+                  {/* Generaciones inside this familia */}
+                  {famExpanded && (
+                    <div className="border-t">
+                      {fg.generaciones.map((gg) => {
+                        const genKey = `${fg.familia}::${gg.generacion}`;
+                        const genExpanded = expandedGeneraciones.has(genKey);
+                        return (
+                          <div key={genKey}>
+                            {/* Generación sub-header */}
+                            <button
+                              type="button"
+                              className="flex items-center gap-2 w-full px-6 py-2 text-left text-sm hover:bg-muted/40 transition-colors border-b"
+                              onClick={() => toggleGeneracion(genKey)}
+                            >
+                              {genExpanded ? <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+                              <span className="font-medium text-muted-foreground">{gg.generacion}</span>
+                              <Badge variant="outline" className="ml-2 text-[10px] py-0">
+                                {gg.modelos.length}
+                              </Badge>
+                            </button>
+
+                            {/* Variantes table */}
+                            {genExpanded && (
+                              <table className="w-full text-sm">
+                                <thead>
+                                  <tr className="bg-muted/20 text-xs text-muted-foreground">
+                                    <th className="px-8 py-2 text-left font-medium">Nombre</th>
+                                    <th className="px-4 py-2 text-left font-medium">Notas</th>
+                                    <th className="px-4 py-2 text-left font-medium">Controladoras</th>
+                                    <th className="px-4 py-2 text-left font-medium w-24">Versiones</th>
+                                    {isAdmin && <th className="px-4 py-2 w-12" />}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {gg.modelos.map((m: any) => (
+                                    <tr
+                                      key={m.id}
+                                      className="border-b last:border-b-0 hover:bg-muted/30 cursor-pointer transition-colors"
+                                      onClick={() => navigate(`/modelos/${m.id}`)}
+                                    >
+                                      <td className="px-8 py-2">{m.nombre}</td>
+                                      <td className="px-4 py-2 text-muted-foreground">{m.notas || '—'}</td>
+                                      <td className="px-4 py-2">
+                                        <div className="flex flex-wrap gap-1">
+                                          {(m.controladoresCompatibles ?? []).map((cc: any) => (
+                                            <Badge key={cc.controlador.id} variant="secondary" className="text-[10px] py-0 gap-0.5">
+                                              <Link2 className="h-2.5 w-2.5" />
+                                              {cc.controlador.nombre}
+                                            </Badge>
+                                          ))}
+                                        </div>
+                                      </td>
+                                      <td className="px-4 py-2">
+                                        <Badge variant="outline">{m._count?.versiones ?? 0}</Badge>
+                                      </td>
+                                      {isAdmin && (
+                                        <td className="px-4 py-2">
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7"
+                                            onClick={(e) => { e.stopPropagation(); setDeleting(m); setDeleteOpen(true); }}
+                                          >
+                                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                          </Button>
+                                        </td>
+                                      )}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )
+      ) : (
+        /* Flat DataTable for controller / drive_unit / unfiltered */
+        <DataTable
+          columns={columns}
+          data={modelos || []}
+          isLoading={isLoading}
+          emptyMessage={tipoFilter ? `No hay modelos de ${TIPO_LABELS[tipoFilter]?.toLowerCase() ?? tipoFilter}. Crea uno nuevo.` : 'No hay modelos'}
+          onRowClick={(m) => navigate(`/modelos/${m.id}`)}
+          rowKey={(m) => m.id}
+        />
+      )}
 
       {/* Create Dialog — tipo auto-set from URL */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
