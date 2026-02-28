@@ -22,7 +22,7 @@ router.get('/', async (req, res, next) => {
             include: {
                 fabricante: { select: { id: true, nombre: true } },
                 controladoresCompatibles: {
-                    include: { controlador: { select: { id: true, nombre: true } } },
+                    include: { controlador: { select: { id: true, nombre: true, familia: true } } },
                 },
                 componentesCompatibles: {
                     include: { componente: { select: { id: true, nombre: true, tipo: true } } },
