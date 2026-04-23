@@ -1,8 +1,38 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { config } from 'dotenv';
 
-const prisma = new PrismaClient();
+// Load .env
+config();
+
+function createPrismaClient(): PrismaClient {
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    console.log('No DATABASE_URL — using default PrismaClient');
+    return new PrismaClient();
+  }
+  try {
+    const parsed = new URL(url);
+    const adapter = new PrismaMariaDb({
+      host: parsed.hostname,
+      port: Number(parsed.port) || 3306,
+      user: decodeURIComponent(parsed.username),
+      password: decodeURIComponent(parsed.password),
+      database: parsed.pathname.slice(1),
+      connectionLimit: 5,
+      connectTimeout: 10000,
+      acquireTimeout: 10000,
+      idleTimeout: 60000,
+    });
+    return new PrismaClient({ adapter } as any);
+  } catch {
+    return new PrismaClient();
+  }
+}
+
+const prisma = createPrismaClient();
 
 function loadJSON<T>(filename: string): T {
   // Try relative to this file first, then from project root
