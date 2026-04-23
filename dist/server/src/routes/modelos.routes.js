@@ -263,6 +263,59 @@ router.delete('/:id', (0, role_middleware_1.requireRole)('admin'), async (req, r
         next(err);
     }
 });
+// ===== LUBRICACIÓN Y MANTENIMIENTO (nested under modelo) =====
+// GET /api/v1/modelos/:id/lubricacion
+// Returns lubrication data matching the model's familia
+router.get('/:id/lubricacion', async (req, res, next) => {
+    try {
+        const modelo = await database_1.prisma.modeloComponente.findUnique({
+            where: { id: Number(req.params.id) },
+            select: { familia: true, fabricanteId: true, nombre: true },
+        });
+        if (!modelo) {
+            res.status(404).json({ error: 'Modelo no encontrado' });
+            return;
+        }
+        // Search by familia name within varianteTrm
+        const familiaSearch = modelo.familia || modelo.nombre;
+        const records = await database_1.prisma.lubricacionReductora.findMany({
+            where: {
+                fabricanteId: modelo.fabricanteId,
+                varianteTrm: { contains: familiaSearch },
+            },
+            orderBy: [{ varianteTrm: 'asc' }, { eje: 'asc' }],
+        });
+        res.json(records);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// GET /api/v1/modelos/:id/mantenimiento
+// Returns maintenance activities for the model's familia
+router.get('/:id/mantenimiento', async (req, res, next) => {
+    try {
+        const modelo = await database_1.prisma.modeloComponente.findUnique({
+            where: { id: Number(req.params.id) },
+            select: { familia: true, fabricanteId: true },
+        });
+        if (!modelo) {
+            res.status(404).json({ error: 'Modelo no encontrado' });
+            return;
+        }
+        const records = await database_1.prisma.actividadMantenimiento.findMany({
+            where: {
+                fabricanteId: modelo.fabricanteId,
+                familiaRobot: modelo.familia ?? '',
+            },
+            orderBy: [{ tipoActividad: 'asc' }, { componente: 'asc' }],
+        });
+        res.json(records);
+    }
+    catch (err) {
+        next(err);
+    }
+});
 // ===== VERSIONES TEMPLATE (nested under modelo) =====
 // GET /api/v1/modelos/:modeloId/versiones
 router.get('/:modeloId/versiones', async (req, res, next) => {
