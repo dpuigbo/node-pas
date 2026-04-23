@@ -94,8 +94,10 @@ model Fabricante {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  modelos  ModeloComponente[]
-  sistemas Sistema[]
+  modelos                ModeloComponente[]
+  sistemas               Sistema[]
+  lubricacionReductoras  LubricacionReductora[]
+  actividadesMantenimiento ActividadMantenimiento[]
 
   @@map("fabricantes")
 }
@@ -119,6 +121,7 @@ model ModeloComponente {
   componentes              ComponenteSistema[]
   consumiblesNivel         ConsumibleNivel[]
 
+  @@unique([fabricanteId, tipo, nombre], map: "modelos_componente_fab_tipo_nombre")
   @@map("modelos_componente")
 }
 
@@ -443,6 +446,42 @@ model PedidoCompra {
   intervencion Intervencion @relation(fields: [intervencionId], references: [id], onDelete: Cascade)
 
   @@map("pedidos_compra")
+}
+
+// ===== LUBRICACIÓN Y MANTENIMIENTO =====
+
+model LubricacionReductora {
+  id             Int      @id @default(autoincrement())
+  fabricanteId   Int      @map("fabricante_id")
+  varianteTrm    String   @map("variante_trm") @db.VarChar(300)
+  eje            String   @db.VarChar(20) // "1", "2", "3", "4", "5-6", etc.
+  tipoLubricante String   @map("tipo_lubricante") @db.VarChar(200)
+  cantidad       String   @db.VarChar(50)  // "6,400 ml", "N/A"
+  webConfig      String?  @map("web_config") @db.VarChar(100)
+
+  fabricante Fabricante @relation(fields: [fabricanteId], references: [id], onDelete: Cascade)
+
+  @@index([fabricanteId])
+  @@index([varianteTrm])
+  @@map("lubricacion_reductora")
+}
+
+model ActividadMantenimiento {
+  id                Int      @id @default(autoincrement())
+  fabricanteId      Int      @map("fabricante_id")
+  familiaRobot      String   @map("familia_robot") @db.VarChar(100)
+  documento         String?  @db.VarChar(100)
+  tipoActividad     String   @map("tipo_actividad") @db.VarChar(100)
+  componente        String   @db.VarChar(300)
+  intervaloEstandar String?  @map("intervalo_estandar") @db.VarChar(300)
+  intervaloFoundry  String?  @map("intervalo_foundry") @db.VarChar(300)
+  notas             String?  @db.Text
+
+  fabricante Fabricante @relation(fields: [fabricanteId], references: [id], onDelete: Cascade)
+
+  @@index([fabricanteId])
+  @@index([familiaRobot])
+  @@map("actividades_mantenimiento")
 }
 
 // ===== PLANTILLAS DE DOCUMENTO =====

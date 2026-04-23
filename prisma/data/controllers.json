@@ -1,0 +1,67 @@
+[
+  {
+    "familia": "S4",
+    "nombre": "S4",
+    "notas": "Drive System: M94, Años: 1994-1998"
+  },
+  {
+    "familia": "S4C",
+    "nombre": "S4C",
+    "notas": "Drive System: M98, Años: 1998-2001"
+  },
+  {
+    "familia": "S4C+",
+    "nombre": "S4C+",
+    "notas": "Drive System: M2000/M2000A, Años: 2001-2004"
+  },
+  {
+    "familia": "IRC5",
+    "nombre": "IRC5 Single",
+    "notas": "Drive System: M2004, Años: 2004-2018+"
+  },
+  {
+    "familia": "IRC5",
+    "nombre": "IRC5 Dual",
+    "notas": "Drive System: M2004, Años: 2004-2018+"
+  },
+  {
+    "familia": "IRC5",
+    "nombre": "IRC5 Compact",
+    "notas": "Drive System: M2004, Años: 2004-2018+"
+  },
+  {
+    "familia": "IRC5",
+    "nombre": "IRC5 Panel",
+    "notas": "Drive System: M2004, Años: 2004-2018+"
+  },
+  {
+    "familia": "IRC5",
+    "nombre": "IRC5 Paint",
+    "notas": "Drive System: M2004, Años: 2004-2018+"
+  },
+  {
+    "familia": "OmniCore",
+    "nombre": "OmniCore E10",
+    "notas": "Drive System: OmniCore, Años: 2018+"
+  },
+  {
+    "familia": "OmniCore",
+    "nombre": "OmniCore C30",
+    "notas": "Drive System: OmniCore, Años: 2018+"
+  },
+  {
+    "familia": "OmniCore",
+    "nombre": "OmniCore C90XT",
+    "notas": "Drive System: OmniCore, Años: 2018+"
+  },
+  {
+    "familia": "OmniCore",
+    "nombre": "OmniCore V250XT",
+    "notas": "Drive System: OmniCore, Años: 2018+"
+  },
+  {
+    "familia": "OmniCore",
+    "nombre": "OmniCore V400XT",
+    "notas": "Drive System: OmniCore, Años: 2018+"
+  }
+]

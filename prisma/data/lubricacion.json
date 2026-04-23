@@ -1,0 +1,4762 @@
+[
+  {
+    "varianteTrm": "IRB 260 - all variants, M2004",
+    "eje": "1",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "6,400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 260 - all variants, M2004",
+    "eje": "2",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "4,500 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 260 - all variants, M2004",
+    "eje": "3",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "3,800 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 260 - all variants, M2004",
+    "eje": "4",
+    "tipoLubricante": "N/A",
+    "cantidad": "N/A",
+    "webConfig": null
+  },
+  {
+    "varianteTrm": "IRB 260 - all variants, M2004",
+    "eje": "5",
+    "tipoLubricante": "N/A",
+    "cantidad": "N/A",
+    "webConfig": null
+  },
+  {
+    "varianteTrm": "IRB 260 - all variants, M2004",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "70 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 460-110/2.4, M2004",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5,900 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 460-110/2.4, M2004",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3,200 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 460-110/2.4, M2004",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3,200 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 460-110/2.4, M2004",
+    "eje": "4",
+    "tipoLubricante": "N/A",
+    "cantidad": "N/A",
+    "webConfig": null
+  },
+  {
+    "varianteTrm": "IRB 460-110/2.4, M2004",
+    "eje": "5",
+    "tipoLubricante": "N/A",
+    "cantidad": "N/A",
+    "webConfig": null
+  },
+  {
+    "varianteTrm": "IRB 460-110/2.4, M2004",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 660-180/3.15, -250/3.15, M2004",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "8,000 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 660-180/3.15, -250/3.15, M2004",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5,000 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 660-180/3.15, -250/3.15, M2004",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5,000 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 660-180/3.15, -250/3.15, M2004",
+    "eje": "4",
+    "tipoLubricante": "N/A",
+    "cantidad": "N/A",
+    "webConfig": null
+  },
+  {
+    "varianteTrm": "IRB 660-180/3.15, -250/3.15, M2004",
+    "eje": "5",
+    "tipoLubricante": "N/A",
+    "cantidad": "N/A",
+    "webConfig": null
+  },
+  {
+    "varianteTrm": "IRB 660-180/3.15, -250/3.15, M2004",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 760-450/3.2, M2004",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "8,000 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 760-450/3.2, M2004",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5,000 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 760-450/3.2, M2004",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5,000 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 760-450/3.2, M2004",
+    "eje": "4",
+    "tipoLubricante": "N/A",
+    "cantidad": "N/A",
+    "webConfig": null
+  },
+  {
+    "varianteTrm": "IRB 760-450/3.2, M2004",
+    "eje": "5",
+    "tipoLubricante": "N/A",
+    "cantidad": "N/A",
+    "webConfig": null
+  },
+  {
+    "varianteTrm": "IRB 760-450/3.2, M2004",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "850 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6, M2004",
+    "eje": "1",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "58 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6, M2004",
+    "eje": "2",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "40 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6, M2004",
+    "eje": "3",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "11 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6, M2004",
+    "eje": "4",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "3.5 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6, M2004",
+    "eje": "5",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "5 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6, M2004",
+    "eje": "6",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "3.5 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6, food grade lubrication, M2004",
+    "eje": "1",
+    "tipoLubricante": "LUBRIPLATE SYNXTREME FG-0",
+    "cantidad": "66 g",
+    "webConfig": "3HAC043771-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6, food grade lubrication, M2004",
+    "eje": "2",
+    "tipoLubricante": "LUBRIPLATE SYNXTREME FG-0",
+    "cantidad": "40 g",
+    "webConfig": "3HAC043771-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6, food grade lubrication, M2004",
+    "eje": "3",
+    "tipoLubricante": "LUBRIPLATE SYNXTREME FG-0",
+    "cantidad": "11 g",
+    "webConfig": "3HAC043771-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6, food grade lubrication, M2004",
+    "eje": "4",
+    "tipoLubricante": "LUBRIPLATE SYNXTREME FG-0",
+    "cantidad": "3.5 g",
+    "webConfig": "3HAC043771-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6, food grade lubrication, M2004",
+    "eje": "5",
+    "tipoLubricante": "LUBRIPLATE SYNXTREME FG-0",
+    "cantidad": "5 g",
+    "webConfig": "3HAC043771-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6, food grade lubrication, M2004",
+    "eje": "6",
+    "tipoLubricante": "LUBRIPLATE SYNXTREME FG-0",
+    "cantidad": "3.5 g",
+    "webConfig": "3HAC043771-001"
+  },
+  {
+    "varianteTrm": "IRB 140-6/0.8 & IRB 140T-6/0.8, M2004",
+    "eje": "1",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP",
+    "cantidad": "1,200 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 140-6/0.8 & IRB 140T-6/0.8, M2004",
+    "eje": "2",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP",
+    "cantidad": "1,000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 140-6/0.8 & IRB 140T-6/0.8, M2004",
+    "eje": "3",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP",
+    "cantidad": "300 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 140-6/0.8 & IRB 140T-6/0.8, M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP",
+    "cantidad": "200 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 140-6/0.8 & IRB 140T-6/0.8, M2004",
+    "eje": "5-6",
+    "tipoLubricante": "Optimol Optigear BM 100      New wrist:",
+    "cantidad": "350 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 1010 all variants, OmniCore",
+    "eje": "1",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "15.7 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 1010 all variants, OmniCore",
+    "eje": "2",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "12.4 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 1010 all variants, OmniCore",
+    "eje": "3",
+    "tipoLubricante": "Harmonic Grease Flexolub-1A",
+    "cantidad": "12.5 g",
+    "webConfig": "3HAC038379-001"
+  },
+  {
+    "varianteTrm": "IRB 1010 all variants, OmniCore",
+    "eje": "4",
+    "tipoLubricante": "Harmonic Grease Flexolub-1A",
+    "cantidad": "4.2 g",
+    "webConfig": "3HAC038379-001"
+  },
+  {
+    "varianteTrm": "IRB 1010 all variants, OmniCore",
+    "eje": "5",
+    "tipoLubricante": "Harmonic Grease Flexolub-1A",
+    "cantidad": "4.2 g",
+    "webConfig": "3HAC038379-001"
+  },
+  {
+    "varianteTrm": "IRB 1010 all variants, OmniCore",
+    "eje": "6",
+    "tipoLubricante": "Harmonic Grease Flexolub-1A",
+    "cantidad": "4.2 g",
+    "webConfig": "3HAC038379-001"
+  },
+  {
+    "varianteTrm": "IRB 1090 all variants, OmniCore",
+    "eje": "1",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "11.1 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 1090 all variants, OmniCore",
+    "eje": "2",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "12.6 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 1090 all variants, OmniCore",
+    "eje": "3",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "9.1 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 1090 all variants, OmniCore",
+    "eje": "4",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "7.3 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 1090 all variants, OmniCore",
+    "eje": "5",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "4.5 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 1090 all variants, OmniCore",
+    "eje": "6",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "1 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 1100 all variants, OmniCore",
+    "eje": "1",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "11.1 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 1100 all variants, OmniCore",
+    "eje": "2",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "12.6 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 1100 all variants, OmniCore",
+    "eje": "3",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "9.1 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 1100 all variants, OmniCore",
+    "eje": "4",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "7.3 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 1100 all variants, OmniCore",
+    "eje": "5",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "4.5 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 1100 all variants, OmniCore",
+    "eje": "6",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "1 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 1200 all variants, M2004 and OmniCore",
+    "eje": "1",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "80 g",
+    "webConfig": "3HAC037302-001"
+  },
+  {
+    "varianteTrm": "IRB 1200 all variants, M2004 and OmniCore",
+    "eje": "2",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "60 g",
+    "webConfig": "3HAC037302-001"
+  },
+  {
+    "varianteTrm": "IRB 1200 all variants, M2004 and OmniCore",
+    "eje": "3",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "32 g",
+    "webConfig": "3HAC037302-001"
+  },
+  {
+    "varianteTrm": "IRB 1200 all variants, M2004 and OmniCore",
+    "eje": "5",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "9 g",
+    "webConfig": "3HAC037302-001"
+  },
+  {
+    "varianteTrm": "IRB 1200 all variants, M2004 and OmniCore",
+    "eje": "6",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "8.5 g",
+    "webConfig": "3HAC037302-001"
+  },
+  {
+    "varianteTrm": "IRB 1200 all variants, food grade lubrication, M2004",
+    "eje": "1",
+    "tipoLubricante": "LUBRIPLATE SYNXTREME FG-0",
+    "cantidad": "80 g",
+    "webConfig": "3HAC043771-001"
+  },
+  {
+    "varianteTrm": "IRB 1200 all variants, food grade lubrication, M2004",
+    "eje": "2",
+    "tipoLubricante": "LUBRIPLATE SYNXTREME FG-0",
+    "cantidad": "60 g",
+    "webConfig": "3HAC043771-001"
+  },
+  {
+    "varianteTrm": "IRB 1200 all variants, food grade lubrication, M2004",
+    "eje": "3",
+    "tipoLubricante": "LUBRIPLATE SYNXTREME FG-0",
+    "cantidad": "32 g",
+    "webConfig": "3HAC043771-001"
+  },
+  {
+    "varianteTrm": "IRB 1200 all variants, food grade lubrication, M2004",
+    "eje": "5",
+    "tipoLubricante": "LUBRIPLATE SYNXTREME FG-0",
+    "cantidad": "9 g",
+    "webConfig": "3HAC043771-001"
+  },
+  {
+    "varianteTrm": "IRB 1200 all variants, food grade lubrication, M2004",
+    "eje": "6",
+    "tipoLubricante": "LUBRIPLATE SYNXTREME FG-0",
+    "cantidad": "8.5 g",
+    "webConfig": "3HAC043771-001"
+  },
+  {
+    "varianteTrm": "IRB 1300 all variants, OmniCore",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "580 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1300 all variants, OmniCore",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "245 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1300 all variants, OmniCore",
+    "eje": "3",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "35.5 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 1300 all variants, OmniCore",
+    "eje": "4",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "13.2 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 1300 all variants, OmniCore",
+    "eje": "6",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "8.2 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 1410 all variants, M2004",
+    "eje": "1",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "2,000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1410 all variants, M2004",
+    "eje": "2",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "1,700 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1410 all variants, M2004",
+    "eje": "3",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "1,700 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1410 all variants, M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "30 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1410 all variants, M2004",
+    "eje": "5-6",
+    "tipoLubricante": "Shell GADUS S2 V220AC 2",
+    "cantidad": "60 g",
+    "webConfig": "3HAC042536-001"
+  },
+  {
+    "varianteTrm": "IRB 1510ID-4/1.5 floor mounted, M2004",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "350 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1510ID-4/1.5 floor mounted, M2004",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "520 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1510ID-4/1.5 floor mounted, M2004",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "320 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1510ID-4/1.5 floor mounted, M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP",
+    "cantidad": "350 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1510ID-4/1.5 floor mounted, M2004",
+    "eje": "5-6",
+    "tipoLubricante": "Optimol Optigear BM 100      New wrist:",
+    "cantidad": "130 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 1510ID-4/1.5 suspended, M2004",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1510ID-4/1.5 suspended, M2004",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "520 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1510ID-4/1.5 suspended, M2004",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "320 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1510ID-4/1.5 suspended, M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP",
+    "cantidad": "350 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1510ID-4/1.5 suspended, M2004",
+    "eje": "5-6",
+    "tipoLubricante": "Optimol Optigear BM 100      New wrist:",
+    "cantidad": "130 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 1520ID -4/1.5 floor mounted, M2004",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "350 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1520ID -4/1.5 floor mounted, M2004",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "520 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1520ID -4/1.5 floor mounted, M2004",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "320 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1520ID -4/1.5 floor mounted, M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP",
+    "cantidad": "350 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1520ID -4/1.5 floor mounted, M2004",
+    "eje": "5-6",
+    "tipoLubricante": "Optimol Optigear BM 100      New wrist:",
+    "cantidad": "130 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 1520ID -4/1.5 suspended, M2004",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1520ID -4/1.5 suspended, M2004",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "520 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1520ID -4/1.5 suspended, M2004",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "320 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1520ID -4/1.5 suspended, M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP",
+    "cantidad": "350 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1520ID -4/1.5 suspended, M2004",
+    "eje": "5-6",
+    "tipoLubricante": "Optimol Optigear BM 100      New wrist:",
+    "cantidad": "130 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 1600, all variants, M2004",
+    "eje": "1",
+    "tipoLubricante": "Mobilgear 600 XP",
+    "cantidad": "3,400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1600, all variants, M2004",
+    "eje": "2",
+    "tipoLubricante": "Mobilgear 600 XP",
+    "cantidad": "3,400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1600, all variants, M2004",
+    "eje": "3",
+    "tipoLubricante": "Mobilgear 600 XP",
+    "cantidad": "500 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1600, all variants, M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP",
+    "cantidad": "350 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1600, all variants, M2004",
+    "eje": "5-6",
+    "tipoLubricante": "Optimol Optigear BM 100 New wrist:",
+    "cantidad": "350 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 1600 -5/1.2, -5/1.45, -6/1.2, -6/1.45, -7/1.3, -7/1.45, -8/1.2, -8/1.45, -10/1.2, -10/1.45",
+    "eje": "1",
+    "tipoLubricante": "Mobilgear 600 XP",
+    "cantidad": "3,400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1600 -5/1.2, -5/1.45, -6/1.2, -6/1.45, -7/1.3, -7/1.45, -8/1.2, -8/1.45, -10/1.2, -10/1.45",
+    "eje": "2",
+    "tipoLubricante": "Mobilgear 600 XP",
+    "cantidad": "3,400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1600 -5/1.2, -5/1.45, -6/1.2, -6/1.45, -7/1.3, -7/1.45, -8/1.2, -8/1.45, -10/1.2, -10/1.45",
+    "eje": "3",
+    "tipoLubricante": "Mobilgear 600 XP",
+    "cantidad": "500 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1600 -5/1.2, -5/1.45, -6/1.2, -6/1.45, -7/1.3, -7/1.45, -8/1.2, -8/1.45, -10/1.2, -10/1.45",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP",
+    "cantidad": "350 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1600 -5/1.2, -5/1.45, -6/1.2, -6/1.45, -7/1.3, -7/1.45, -8/1.2, -8/1.45, -10/1.2, -10/1.45",
+    "eje": "5-6",
+    "tipoLubricante": "Optimol Optigear BM 100 New wrist:",
+    "cantidad": "350 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 1600ID - 4/1.5, M2004",
+    "eje": "1",
+    "tipoLubricante": "Mobilgear 600 XP",
+    "cantidad": "3,400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1600ID - 4/1.5, M2004",
+    "eje": "2",
+    "tipoLubricante": "Mobilgear 600 XP",
+    "cantidad": "3,400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1600ID - 4/1.5, M2004",
+    "eje": "3",
+    "tipoLubricante": "Mobilgear 600 XP",
+    "cantidad": "500 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1600ID - 4/1.5, M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP",
+    "cantidad": "300 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1600ID - 4/1.5, M2004",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP",
+    "cantidad": "15 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1600ID - 4/1.5, M2004",
+    "eje": "5-6",
+    "tipoLubricante": "Optimol Optigear BM 100 New wrist:",
+    "cantidad": "130 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 1660ID - 6/1.55, - 4/1.55, M2004",
+    "eje": "1",
+    "tipoLubricante": "Mobilgear 600 XP",
+    "cantidad": "3,400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1660ID - 6/1.55, - 4/1.55, M2004",
+    "eje": "2",
+    "tipoLubricante": "Mobilgear 600 XP",
+    "cantidad": "3,400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1660ID - 6/1.55, - 4/1.55, M2004",
+    "eje": "3",
+    "tipoLubricante": "Mobilgear 600 XP",
+    "cantidad": "500 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1660ID - 6/1.55, - 4/1.55, M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP",
+    "cantidad": "350 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1660ID - 6/1.55, - 4/1.55, M2004",
+    "eje": "5",
+    "tipoLubricante": "Optimol Optigear BM 100",
+    "cantidad": "15 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 1660ID - 6/1.55, - 4/1.55, M2004",
+    "eje": "6",
+    "tipoLubricante": "Optimol Optigear BM 100",
+    "cantidad": "240 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 2400 /10, /16, M98, M2000, M2000A & M2004",
+    "eje": "1",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "6,400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 2400 /10, /16, M98, M2000, M2000A & M2004",
+    "eje": "2",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "4,500 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 2400 /10, /16, M98, M2000, M2000A & M2004",
+    "eje": "3",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "3,800 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 2400 /10, /16, M98, M2000, M2000A & M2004",
+    "eje": "4",
+    "tipoLubricante": "Optimol Optigear BM 100",
+    "cantidad": "1,500 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 2400 /10, /16, M98, M2000, M2000A & M2004",
+    "eje": "5-6",
+    "tipoLubricante": "Optimol Optigear BM 100",
+    "cantidad": "800 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 2400 /L, M98, M2000, M2000A & M2004",
+    "eje": "1",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "6,400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 2400 /L, M98, M2000, M2000A & M2004",
+    "eje": "2",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "4,500 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 2400 /L, M98, M2000, M2000A & M2004",
+    "eje": "3",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "3,800 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 2400 /L, M98, M2000, M2000A & M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "30 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 2400 /L, M98, M2000, M2000A & M2004",
+    "eje": "5-6",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "120 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 4400 -45, -60, L30, M2000 & M2004",
+    "eje": "1",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "8,200 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 4400 -45, -60, L30, M2000 & M2004",
+    "eje": "2",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "5,800 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 4400 -45, -60, L30, M2000 & M2004",
+    "eje": "3",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "5,800 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 4400 -45, -60, L30, M2000 & M2004",
+    "eje": "4",
+    "tipoLubricante": "Optimol Optigear BM 100",
+    "cantidad": "3,400 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 4400 -45, -60, L30, M2000 & M2004",
+    "eje": "5-6",
+    "tipoLubricante": "Optimol Optigear BM 100",
+    "cantidad": "3,400 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 4400 -L10, M2000 & M2004",
+    "eje": "1",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "8,200 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 4400 -L10, M2000 & M2004",
+    "eje": "2",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "5,800 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 4400 -L10, M2000 & M2004",
+    "eje": "3",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "5,800 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 4400 -L10, M2000 & M2004",
+    "eje": "4",
+    "tipoLubricante": "Optimol Optigear BM 100",
+    "cantidad": "3,400 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 4400 -L10, M2000 & M2004",
+    "eje": "5-6",
+    "tipoLubricante": "Optimol Optigear BM 100",
+    "cantidad": "800 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 4400 -S, M2000 & M2004",
+    "eje": "1",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "10,000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 4400 -S, M2000 & M2004",
+    "eje": "2",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "6,000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 4400 -S, M2000 & M2004",
+    "eje": "3",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "6,000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 4400 -S, M2000 & M2004",
+    "eje": "4",
+    "tipoLubricante": "Optimol Optigear BM 100",
+    "cantidad": "3,400 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 4400 -S, M2000 & M2004",
+    "eje": "5-6",
+    "tipoLubricante": "Optimol Optigear BM 100",
+    "cantidad": "3,400 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 4450S, M2000 & M2004",
+    "eje": "1",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "8,200 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 4450S, M2000 & M2004",
+    "eje": "2",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "5,800 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 4450S, M2000 & M2004",
+    "eje": "3",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "5,800 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 4450S, M2000 & M2004",
+    "eje": "4",
+    "tipoLubricante": "Optimol Optigear BM 100",
+    "cantidad": "3,400 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 4450S, M2000 & M2004",
+    "eje": "5-6",
+    "tipoLubricante": "Optimol Optigear BM 100",
+    "cantidad": "3,400 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 4400 Foundry Plus, M2000 & M2004",
+    "eje": "1",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "10,000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 4400 Foundry Plus, M2000 & M2004",
+    "eje": "2",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "6,000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 4400 Foundry Plus, M2000 & M2004",
+    "eje": "3",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "6,000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 4400 Foundry Plus, M2000 & M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "4,000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 4400 Foundry Plus, M2000 & M2004",
+    "eje": "5-6",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "4,000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 4600-60/2.05, -45/2.05, -40/2.55 floor and suspended mounted",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "2,060 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 4600-60/2.05, -45/2.05, -40/2.55 floor and suspended mounted",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "2,740 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 4600-60/2.05, -45/2.05, -40/2.55 floor and suspended mounted",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "850 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 4600-60/2.05, -45/2.05, -40/2.55 floor and suspended mounted",
+    "eje": "4",
+    "tipoLubricante": "Optimol Optigear BM 100 i 3,000 ml",
+    "cantidad": "3,000 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 4600-60/2.05, -45/2.05, -40/2.55 floor and suspended mounted",
+    "eje": "5-6",
+    "tipoLubricante": "Optimol Optigear BM 100",
+    "cantidad": "1,900 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 4600-20/2.50 floor and suspended mounted",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "2,060 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 4600-20/2.50 floor and suspended mounted",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "2,740 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 4600-20/2.50 floor and suspended mounted",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "850 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 4600-20/2.50 floor and suspended mounted",
+    "eje": "4",
+    "tipoLubricante": "Optimol Optigear BM 100 i 3,000 ml",
+    "cantidad": "3,000 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 4600-20/2.50 floor and suspended mounted",
+    "eje": "5-6",
+    "tipoLubricante": "Optimol Optigear BM 100",
+    "cantidad": "800 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 4600-60/2.05, -45/2.05, -40/2.55 floor and suspended mounted",
+    "eje": "1",
+    "tipoLubricante": "Shell Omala S4 WE 150",
+    "cantidad": "1,000 ml",
+    "webConfig": "3HAC021469-001"
+  },
+  {
+    "varianteTrm": "IRB 4600-60/2.05, -45/2.05, -40/2.55 floor and suspended mounted",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3,000 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 4600-60/2.05, -45/2.05, -40/2.55 floor and suspended mounted",
+    "eje": "3",
+    "tipoLubricante": "Shell Omala S4 WE 150",
+    "cantidad": "700 ml",
+    "webConfig": "3HAC021469-001"
+  },
+  {
+    "varianteTrm": "IRB 4600-60/2.05, -45/2.05, -40/2.55 floor and suspended mounted",
+    "eje": "4",
+    "tipoLubricante": "Optimol Optigear BM 100 i 3,000 ml",
+    "cantidad": "3,000 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 4600-60/2.05, -45/2.05, -40/2.55 floor and suspended mounted",
+    "eje": "5-6",
+    "tipoLubricante": "Optimol Optigear BM 100",
+    "cantidad": "1,900 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 4600-20/2.50 floor and suspended mounted",
+    "eje": "1",
+    "tipoLubricante": "Shell Omala S4 WE 150",
+    "cantidad": "1,000 ml",
+    "webConfig": "3HAC021469-001"
+  },
+  {
+    "varianteTrm": "IRB 4600-20/2.50 floor and suspended mounted",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3,000 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 4600-20/2.50 floor and suspended mounted",
+    "eje": "3",
+    "tipoLubricante": "Shell Omala S4 WE 150",
+    "cantidad": "700 ml",
+    "webConfig": "3HAC021469-001"
+  },
+  {
+    "varianteTrm": "IRB 4600-20/2.50 floor and suspended mounted",
+    "eje": "4",
+    "tipoLubricante": "Optimol Optigear BM 100 i 3,000 ml",
+    "cantidad": "3,000 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 4600-20/2.50 floor and suspended mounted",
+    "eje": "5-6",
+    "tipoLubricante": "Optimol Optigear BM 100",
+    "cantidad": "800 ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 5710-110/2.3, -90/2.3 LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3,900 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710-110/2.3, -90/2.3 LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "2,500 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710-110/2.3, -90/2.3 LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1,600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710-110/2.3, -90/2.3 LID",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "5,000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5710-110/2.3, -90/2.3 LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "1,890 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5710-110/2.3, -90/2.3 LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "370 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710-90/2.7, -70/2.7 LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3,900 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710-90/2.7, -70/2.7 LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "2,500 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710-90/2.7, -70/2.7 LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1,700 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710-90/2.7, -70/2.7 LID",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "5,000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5710-90/2.7, -70/2.7 LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "1,170 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5710-90/2.7, -70/2.7 LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "220 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720-125/3.0, -90/3.0 LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3,900 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720-125/3.0, -90/3.0 LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3,800 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720-125/3.0, -90/3.0 LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1,700 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720-125/3.0, -90/3.0 LID",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "5,000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5720-125/3.0, -90/3.0 LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "1,890 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5720-125/3.0, -90/3.0 LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "370 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720-180/2.6, -155/2.6 LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3,900 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720-180/2.6, -155/2.6 LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3,800 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720-180/2.6, -155/2.6 LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1,700 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720-180/2.6, -155/2.6 LID",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "5,000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5720-180/2.6, -155/2.6 LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "2,360 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5720-180/2.6, -155/2.6 LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "380 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6400RF -200/2.5, -200/2.8, M2004",
+    "eje": "1",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~11.2 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6400RF -200/2.5, -200/2.8, M2004",
+    "eje": "2",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~11.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6400RF -200/2.5, -200/2.8, M2004",
+    "eje": "3",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~12.0 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6400RF -200/2.5, -200/2.8, M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "6.0 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6400RF -200/2.5, -200/2.8, M2004",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "6.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6400RF -200/2.5, -200/2.8, M2004",
+    "eje": "6",
+    "tipoLubricante": "Tribol GR 100-0 PD",
+    "cantidad": "0.30 l",
+    "webConfig": "3HAA1001-294"
+  },
+  {
+    "varianteTrm": "IRB 6600 -225/2.55, 175/2.8, and IRB 6650 -200/2.75, 125/3.2 type A, M2000, M2000A & M2004",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~7.5 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6600 -225/2.55, 175/2.8, and IRB 6650 -200/2.75, 125/3.2 type A, M2000, M2000A & M2004",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~4.5 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6600 -225/2.55, 175/2.8, and IRB 6650 -200/2.75, 125/3.2 type A, M2000, M2000A & M2004",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~2.5 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6600 -225/2.55, 175/2.8, and IRB 6650 -200/2.75, 125/3.2 type A, M2000, M2000A & M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~8 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6600 -225/2.55, 175/2.8, and IRB 6650 -200/2.75, 125/3.2 type A, M2000, M2000A & M2004",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~6.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6600 -225/2.55, 175/2.8, and IRB 6650 -200/2.75, 125/3.2 type A, M2000, M2000A & M2004",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~0.4 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6600 -175/2.55 type A, M2000, M2000A & M2004",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~7.5 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6600 -175/2.55 type A, M2000, M2000A & M2004",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~4.5 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6600 -175/2.55 type A, M2000, M2000A & M2004",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~2.5 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6600 -175/2.55 type A, M2000, M2000A & M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~8 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6600 -175/2.55 type A, M2000, M2000A & M2004",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~6.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6600 -175/2.55 type A, M2000, M2000A & M2004",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~0.4 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6600 -225/2.55, 175/2.8 type B, M2000, M2000A & M2004",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~7.5 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6600 -225/2.55, 175/2.8 type B, M2000, M2000A & M2004",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~6 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6600 -225/2.55, 175/2.8 type B, M2000, M2000A & M2004",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~2.5 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6600 -225/2.55, 175/2.8 type B, M2000, M2000A & M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~8 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6600 -225/2.55, 175/2.8 type B, M2000, M2000A & M2004",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~6.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6600 -225/2.55, 175/2.8 type B, M2000, M2000A & M2004",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~0.4 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6650 -225/2.55, 175/2.8 type B, M2000, M2000A & M2004",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~7.5 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6650 -225/2.55, 175/2.8 type B, M2000, M2000A & M2004",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~6 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6650 -225/2.55, 175/2.8 type B, M2000, M2000A & M2004",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~2.5 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6650 -225/2.55, 175/2.8 type B, M2000, M2000A & M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~8 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6650 -225/2.55, 175/2.8 type B, M2000, M2000A & M2004",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6650 -225/2.55, 175/2.8 type B, M2000, M2000A & M2004",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~0.4 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6600ID -170/2.55 type B, M2000, M2000A & M2004",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~7.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6600ID -170/2.55 type B, M2000, M2000A & M2004",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~6 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6600ID -170/2.55 type B, M2000, M2000A & M2004",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~2.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6600ID -170/2.55 type B, M2000, M2000A & M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~8 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6600ID -170/2.55 type B, M2000, M2000A & M2004",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~6.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6600ID -170/2.55 type B, M2000, M2000A & M2004",
+    "eje": "6",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~5.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6650ID -185/2.55 type B, M2000, M2000A & M2004",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~7.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6650ID -185/2.55 type B, M2000, M2000A & M2004",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~6 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6650ID -185/2.55 type B, M2000, M2000A & M2004",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~2.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6650ID -185/2.55 type B, M2000, M2000A & M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~8 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6650ID -185/2.55 type B, M2000, M2000A & M2004",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6650ID -185/2.55 type B, M2000, M2000A & M2004",
+    "eje": "6",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~5.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6620 -150/2.2, M2004",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~6 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6620 -150/2.2, M2004",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~4 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6620 -150/2.2, M2004",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~2 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6620 -150/2.2, M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP",
+    "cantidad": "~5.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6620 -150/2.2, M2004",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP",
+    "cantidad": "~3 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6620LX -150/1.9, M2004",
+    "eje": "1",
+    "tipoLubricante": "Mobil Glygoyl 460",
+    "cantidad": "~7 l",
+    "webConfig": null
+  },
+  {
+    "varianteTrm": "IRB 6620LX -150/1.9, M2004",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~4 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6620LX -150/1.9, M2004",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~2 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6620LX -150/1.9, M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP",
+    "cantidad": "~5.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6620LX -150/1.9, M2004",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP",
+    "cantidad": "~3 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6620LX -150/1.9, M2004",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~0.4 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6640 -180/2.55, -235/2.55, -205/2.75, -185/2.8, -130/3.2, M2004",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~6 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6640 -180/2.55, -235/2.55, -205/2.75, -185/2.8, -130/3.2, M2004",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~6 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6640 -180/2.55, -235/2.55, -205/2.75, -185/2.8, -130/3.2, M2004",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~2.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6640 -180/2.55, -235/2.55, -205/2.75, -185/2.8, -130/3.2, M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP",
+    "cantidad": "~8 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6640 -180/2.55, -235/2.55, -205/2.75, -185/2.8, -130/3.2, M2004",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP",
+    "cantidad": "~6.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6640 -180/2.55, -235/2.55, -205/2.75, -185/2.8, -130/3.2, M2004",
+    "eje": "6",
+    "tipoLubricante": "type 1:               Kyodo Yushi TMO 150",
+    "cantidad": "~0.3 l",
+    "webConfig": "Wrist"
+  },
+  {
+    "varianteTrm": "IRB 6640 -180/2.55, -235/2.55, -205/2.75, -185/2.8, -130/3.2, M2004",
+    "eje": "6",
+    "tipoLubricante": "type 2:               Kyodo Yushi TMO 150",
+    "cantidad": "~0.4 l",
+    "webConfig": "Wrist"
+  },
+  {
+    "varianteTrm": "IRB 6640ID -200/2.55, 170/2.75, M2004",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~6 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6640ID -200/2.55, 170/2.75, M2004",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~6 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6640ID -200/2.55, 170/2.75, M2004",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~2.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6640ID -200/2.55, 170/2.75, M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP",
+    "cantidad": "~8 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6640ID -200/2.55, 170/2.75, M2004",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP",
+    "cantidad": "~5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6640ID -200/2.55, 170/2.75, M2004",
+    "eje": "6",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP",
+    "cantidad": "~6 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6650S -90/3.9, -125/3.5, -200/3.0, M2004",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~7.5 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6650S -90/3.9, -125/3.5, -200/3.0, M2004",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~6 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6650S -90/3.9, -125/3.5, -200/3.0, M2004",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~2.5 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6650S -90/3.9, -125/3.5, -200/3.0, M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~8 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6650S -90/3.9, -125/3.5, -200/3.0, M2004",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~6.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6650S -90/3.9, -125/3.5, -200/3.0, M2004",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~0.4 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6660 -130/3.1, -205/1.90, M2004",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~8 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6660 -130/3.1, -205/1.90, M2004",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~5 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6660 -130/3.1, -205/1.90, M2004",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~5 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6660 -130/3.1, -205/1.90, M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~8 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6660 -130/3.1, -205/1.90, M2004",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~6.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6660 -130/3.1, -205/1.90, M2004",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~0.4 l",
+    "webConfig": "3HAC032140-"
+  },
+  {
+    "varianteTrm": "IRB 6700 -235/2.65, -205/2.80, -175/3.05, -150/3.2",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~3.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6700 -235/2.65, -205/2.80, -175/3.05, -150/3.2",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~3.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6700 -235/2.65, -205/2.80, -175/3.05, -150/3.2",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~2.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6700 -235/2.65, -205/2.80, -175/3.05, -150/3.2",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~7.0 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6700 -235/2.65, -205/2.80, -175/3.05, -150/3.2",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~3.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6700 -235/2.65, -205/2.80, -175/3.05, -150/3.2",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~0.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6700 -200/2.60, -155/2.85",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~3.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6700 -200/2.60, -155/2.85",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~3.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6700 -200/2.60, -155/2.85",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~2.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6700 -200/2.60, -155/2.85",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~6 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6700 -200/2.60, -155/2.85",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~2.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6700 -200/2.60, -155/2.85",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~0.4 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6700 -300/2.70, -245/3.00",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~4.7 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6700 -300/2.70, -245/3.00",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~4 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6700 -300/2.70, -245/3.00",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~3.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6700 -300/2.70, -245/3.00",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~12.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6700 -300/2.70, -245/3.00",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~4.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6700 -300/2.70, -245/3.00",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~0.7 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6700Inv -300/2.60, -245/2.90",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~4.9 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6700Inv -300/2.60, -245/2.90",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~4 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6700Inv -300/2.60, -245/2.90",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~3.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6700Inv -300/2.60, -245/2.90",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~12.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6700Inv -300/2.60, -245/2.90",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~4.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6700Inv -300/2.60, -245/2.90",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~0.7 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6740-310/2.8, -260/3.0, -270/2.8 LID, -230/3.0 LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3,800 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6740-310/2.8, -260/3.0, -270/2.8 LID, -230/3.0 LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4,300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6740-310/2.8, -260/3.0, -270/2.8 LID, -230/3.0 LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "2,600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6740-310/2.8, -260/3.0, -270/2.8 LID, -230/3.0 LID",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "8,400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6740-310/2.8, -260/3.0, -270/2.8 LID, -230/3.0 LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "4,600 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6740-310/2.8, -260/3.0, -270/2.8 LID, -230/3.0 LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "400 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6740-240/3.2, -220/3.2 LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3,800 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6740-240/3.2, -220/3.2 LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4,300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6740-240/3.2, -220/3.2 LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "2,600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6740-240/3.2, -220/3.2 LID",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "8,400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6740-240/3.2, -220/3.2 LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "3,200 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6740-240/3.2, -220/3.2 LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6790 -235/2.65, -205/2.80",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~3.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6790 -235/2.65, -205/2.80",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~3.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6790 -235/2.65, -205/2.80",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~2.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6790 -235/2.65, -205/2.80",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~7.0 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6790 -235/2.65, -205/2.80",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~3.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6790 -235/2.65, -205/2.80",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~0.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7600 -500/2.55, -400/2.55, -340/2.8, -325/3.1, -150/3.5, M2004",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~7.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7600 -500/2.55, -400/2.55, -340/2.8, -325/3.1, -150/3.5, M2004",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7600 -500/2.55, -400/2.55, -340/2.8, -325/3.1, -150/3.5, M2004",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~4 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7600 -500/2.55, -400/2.55, -340/2.8, -325/3.1, -150/3.5, M2004",
+    "eje": "4 (primario)",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~1 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7600 -500/2.55, -400/2.55, -340/2.8, -325/3.1, -150/3.5, M2004",
+    "eje": "4 (secundario)",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~4 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7600 -500/2.55, -400/2.55, -340/2.8, -325/3.1, -150/3.5, M2004",
+    "eje": "5 (primario)",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~0.7 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7600 -500/2.55, -400/2.55, -340/2.8, -325/3.1, -150/3.5, M2004",
+    "eje": "5 (secundario)",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~4 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7600 -500/2.55, -400/2.55, -340/2.8, -325/3.1, -150/3.5, M2004",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~0.7 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720-620/2.9, -530/3.1, -560/2.9 LID, -480/3.1 LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5,500 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720-620/2.9, -530/3.1, -560/2.9 LID, -480/3.1 LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4,300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720-620/2.9, -530/3.1, -560/2.9 LID, -480/3.1 LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4,300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720-620/2.9, -530/3.1, -560/2.9 LID, -480/3.1 LID",
+    "eje": "4",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1,680 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720-620/2.9, -530/3.1, -560/2.9 LID, -480/3.1 LID",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "9,400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 7720-620/2.9, -530/3.1, -560/2.9 LID, -480/3.1 LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "10,000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 7720-620/2.9, -530/3.1, -560/2.9 LID, -480/3.1 LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1,300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720-510/3.3, -450/3.5, -400/3.3 LID, -400/3.3 LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5,500 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720-510/3.3, -450/3.5, -400/3.3 LID, -400/3.3 LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4,300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720-510/3.3, -450/3.5, -400/3.3 LID, -400/3.3 LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4,300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720-510/3.3, -450/3.5, -400/3.3 LID, -400/3.3 LID",
+    "eje": "4",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1,680 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720-510/3.3, -450/3.5, -400/3.3 LID, -400/3.3 LID",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "9,400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 7720-510/3.3, -450/3.5, -400/3.3 LID, -400/3.3 LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "7,500 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 7720-510/3.3, -450/3.5, -400/3.3 LID, -400/3.3 LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "900 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "CRB 1100 all variants, OmniCore",
+    "eje": "1",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "11.1 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "CRB 1100 all variants, OmniCore",
+    "eje": "2",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "12.6 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "CRB 1100 all variants, OmniCore",
+    "eje": "3",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "9.1 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "CRB 1100 all variants, OmniCore",
+    "eje": "4",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "7.3 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "CRB 1100 all variants, OmniCore",
+    "eje": "5",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "4.5 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "CRB 1100 all variants, OmniCore",
+    "eje": "6",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "1 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "CRB 1300 all variants, OmniCore",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "580 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "CRB 1300 all variants, OmniCore",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "245 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "CRB 1300 all variants, OmniCore",
+    "eje": "3",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "35.5 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "CRB 1300 all variants, OmniCore",
+    "eje": "4",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "13.2 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "CRB 1300 all variants, OmniCore",
+    "eje": "6",
+    "tipoLubricante": "Harmonic grease 4B No. 2",
+    "cantidad": "8.2 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 360 -1/1130, -3/1130, -1/800, -1/1600, -6/1600, 8/1130, M2004",
+    "eje": "1",
+    "tipoLubricante": "Mobil SHC Cibus 220",
+    "cantidad": "820 ml",
+    "webConfig": "3HAC6450-2"
+  },
+  {
+    "varianteTrm": "IRB 360 -1/1130, -3/1130, -1/800, -1/1600, -6/1600, 8/1130, M2004",
+    "eje": "2",
+    "tipoLubricante": "Mobil SHC Cibus 220",
+    "cantidad": "820 ml",
+    "webConfig": "3HAC6450-2"
+  },
+  {
+    "varianteTrm": "IRB 360 -1/1130, -3/1130, -1/800, -1/1600, -6/1600, 8/1130, M2004",
+    "eje": "3",
+    "tipoLubricante": "Mobil SHC Cibus 220",
+    "cantidad": "820 ml",
+    "webConfig": "3HAC6450-2"
+  },
+  {
+    "varianteTrm": "IRB 360 -1/1130, -3/1130, -1/800, -1/1600, -6/1600, 8/1130, M2004",
+    "eje": "4",
+    "tipoLubricante": "Mobil SHC Cibus 220",
+    "cantidad": "80 ml",
+    "webConfig": "3HAC6450-2"
+  },
+  {
+    "varianteTrm": "IRB 390 -15/1,300",
+    "eje": "1",
+    "tipoLubricante": "SHC Cibus 220",
+    "cantidad": "2.600 ml",
+    "webConfig": "3HAC6450-5"
+  },
+  {
+    "varianteTrm": "IRB 390 -15/1,300",
+    "eje": "2",
+    "tipoLubricante": "SHC Cibus 220",
+    "cantidad": "2.600 ml",
+    "webConfig": "3HAC6450-5"
+  },
+  {
+    "varianteTrm": "IRB 390 -15/1,300",
+    "eje": "3",
+    "tipoLubricante": "SHC Cibus 220",
+    "cantidad": "2.600 ml",
+    "webConfig": "3HAC6450-5"
+  },
+  {
+    "varianteTrm": "IRB 390 -15/1,300",
+    "eje": "4",
+    "tipoLubricante": "SHC Cibus 220",
+    "cantidad": "105 ml",
+    "webConfig": "3HAC6450-5"
+  },
+  {
+    "varianteTrm": "IRB 390 -10/1,300",
+    "eje": "1",
+    "tipoLubricante": "SHC Cibus 220",
+    "cantidad": "2.600 ml",
+    "webConfig": "3HAC6450-5"
+  },
+  {
+    "varianteTrm": "IRB 390 -10/1,300",
+    "eje": "2",
+    "tipoLubricante": "SHC Cibus 220",
+    "cantidad": "2.600 ml",
+    "webConfig": "3HAC6450-5"
+  },
+  {
+    "varianteTrm": "IRB 390 -10/1,300",
+    "eje": "3",
+    "tipoLubricante": "SHC Cibus 220",
+    "cantidad": "2.600 ml",
+    "webConfig": "3HAC6450-5"
+  },
+  {
+    "varianteTrm": "IRB 390 -10/1,300",
+    "eje": "4",
+    "tipoLubricante": "SHC Cibus 220",
+    "cantidad": "105 ml",
+    "webConfig": "3HAC6450-5"
+  },
+  {
+    "varianteTrm": "IRB 390 -10/1,300",
+    "eje": "5",
+    "tipoLubricante": "SHC Cibus 220",
+    "cantidad": "105 ml",
+    "webConfig": "3HAC6450-5"
+  },
+  {
+    "varianteTrm": "IRB 910SC all variants, M2004",
+    "eje": "1",
+    "tipoLubricante": "Harmonic Grease 4b No.2",
+    "cantidad": "42 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 910SC all variants, M2004",
+    "eje": "2",
+    "tipoLubricante": "Harmonic Grease 4b No.2",
+    "cantidad": "42 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 910INV all variants, OmniCore",
+    "eje": "1",
+    "tipoLubricante": "Harmonic Grease 4b No.2",
+    "cantidad": "28.2 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 910INV all variants, OmniCore",
+    "eje": "2",
+    "tipoLubricante": "Harmonic Grease 4b No.2",
+    "cantidad": "16.4 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 920 all variants, OmniCore",
+    "eje": "1",
+    "tipoLubricante": "N/A",
+    "cantidad": "N/A",
+    "webConfig": null
+  },
+  {
+    "varianteTrm": "IRB 920 all variants, OmniCore",
+    "eje": "2",
+    "tipoLubricante": "N/A",
+    "cantidad": "N/A",
+    "webConfig": null
+  },
+  {
+    "varianteTrm": "IRB 930 all variants, OmniCore",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "590 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 930 all variants, OmniCore",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "215 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7600 Gen.1 (M2000 S/N <27000, M2000A <34000, M2004 <51000)",
+    "eje": "1",
+    "tipoLubricante": "Optimol Optigear RMO150 (=Castrol Optigear RO150)",
+    "cantidad": "~7.5 l",
+    "webConfig": "—"
+  },
+  {
+    "varianteTrm": "IRB 7600 Gen.1 (M2000 S/N <27000, M2000A <34000, M2004 <51000)",
+    "eje": "2",
+    "tipoLubricante": "Optimol Optigear RMO150 (=Castrol Optigear RO150)",
+    "cantidad": "~5 l",
+    "webConfig": "—"
+  },
+  {
+    "varianteTrm": "IRB 7600 Gen.1 (M2000 S/N <27000, M2000A <34000, M2004 <51000)",
+    "eje": "3",
+    "tipoLubricante": "Optimol Optigear RMO150 (=Castrol Optigear RO150)",
+    "cantidad": "~4 l",
+    "webConfig": "—"
+  },
+  {
+    "varianteTrm": "IRB 7600 Gen.1 (M2000 S/N <27000, M2000A <34000, M2004 <51000)",
+    "eje": "4 (primario)",
+    "tipoLubricante": "Shell Tivela S150 (=Shell Omala S4 WE150)",
+    "cantidad": "~1 l",
+    "webConfig": "—"
+  },
+  {
+    "varianteTrm": "IRB 7600 Gen.1 (M2000 S/N <27000, M2000A <34000, M2004 <51000)",
+    "eje": "4 (secundario)",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "~4 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 7600 Gen.1 (M2000 S/N <27000, M2000A <34000, M2004 <51000)",
+    "eje": "5 (primario)",
+    "tipoLubricante": "Shell Tivela S150 (=Shell Omala S4 WE150)",
+    "cantidad": "~0.7 l",
+    "webConfig": "—"
+  },
+  {
+    "varianteTrm": "IRB 7600 Gen.1 (M2000 S/N <27000, M2000A <34000, M2004 <51000)",
+    "eje": "5 (secundario)",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "~4 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 7600 Gen.1 (M2000 S/N <27000, M2000A <34000, M2004 <51000)",
+    "eje": "6",
+    "tipoLubricante": "Shell Tivela S150 (=Shell Omala S4 WE150)",
+    "cantidad": "~0.7 l",
+    "webConfig": "—"
+  },
+  {
+    "varianteTrm": "IRB 7710 (todas variantes)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5.500 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7710 (todas variantes)",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7710 (todas variantes)",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7710 (todas variantes)",
+    "eje": "4 (primario)",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "820 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7710 (todas variantes)",
+    "eje": "4 (secundario)",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "7.250 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 7710 (todas variantes)",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "7.500 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 7710 (todas variantes)",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "900 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720-620/2.9,-530/3.1,-560/2.9LID,-480/3.1LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5.500 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720-620/2.9,-530/3.1,-560/2.9LID,-480/3.1LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720-620/2.9,-530/3.1,-560/2.9LID,-480/3.1LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720-620/2.9,-530/3.1,-560/2.9LID,-480/3.1LID",
+    "eje": "4 (primario)",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1.680 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720-620/2.9,-530/3.1,-560/2.9LID,-480/3.1LID",
+    "eje": "4 (secundario)",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "9.400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 7720-620/2.9,-530/3.1,-560/2.9LID,-480/3.1LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "10.000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 7720-620/2.9,-530/3.1,-560/2.9LID,-480/3.1LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1.300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720-510/3.3,-450/3.5,-400/3.3LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5.500 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720-510/3.3,-450/3.5,-400/3.3LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720-510/3.3,-450/3.5,-400/3.3LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720-510/3.3,-450/3.5,-400/3.3LID",
+    "eje": "4 (primario)",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1.680 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720-510/3.3,-450/3.5,-400/3.3LID",
+    "eje": "4 (secundario)",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "9.400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 7720-510/3.3,-450/3.5,-400/3.3LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "7.500 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 7720-510/3.3,-450/3.5,-400/3.3LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "900 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 340 (todas variantes, M98/M2004)",
+    "eje": "1",
+    "tipoLubricante": "Mobil DTE FM 220",
+    "cantidad": "0.9 L",
+    "webConfig": "3HAC 4760-1"
+  },
+  {
+    "varianteTrm": "IRB 340 (todas variantes, M98/M2004)",
+    "eje": "2",
+    "tipoLubricante": "Mobil DTE FM 220",
+    "cantidad": "0.9 L",
+    "webConfig": "3HAC 4760-1"
+  },
+  {
+    "varianteTrm": "IRB 340 (todas variantes, M98/M2004)",
+    "eje": "3",
+    "tipoLubricante": "Mobil DTE FM 220",
+    "cantidad": "0.9 L",
+    "webConfig": "3HAC 4760-1"
+  },
+  {
+    "varianteTrm": "IRB 1300 (todas variantes, OmniCore)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "580 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1300 (todas variantes, OmniCore)",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "245 ml (indicativo — verificar nivel 64-69mm)",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1300 (todas variantes, OmniCore)",
+    "eje": "3",
+    "tipoLubricante": "Harmonic Grease 4B No.2",
+    "cantidad": "35.5 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 1300 (todas variantes, OmniCore)",
+    "eje": "4",
+    "tipoLubricante": "Harmonic Grease 4B No.2",
+    "cantidad": "13.2 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 1300 (todas variantes, OmniCore)",
+    "eje": "5",
+    "tipoLubricante": "Harmonic Grease 4B No.2",
+    "cantidad": "N/D (grasa de fábrica — sin dato volumen)",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 1300 (todas variantes, OmniCore)",
+    "eje": "6",
+    "tipoLubricante": "Harmonic Grease 4B No.2",
+    "cantidad": "8.2 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 6660 (todas variantes)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~8.000 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6660 (todas variantes)",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~5.000 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6660 (todas variantes)",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~5.000 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6660 (todas variantes)",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "~8.100 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6660 (todas variantes)",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "~6.700 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6660 (todas variantes)",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~450 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6730S -270/3.1,-210/3.5,-220/3.1LID,-180/3.5LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.000 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6730S -270/3.1,-210/3.5,-220/3.1LID,-180/3.5LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.000 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6730S -270/3.1,-210/3.5,-220/3.1LID,-180/3.5LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "2.600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6730S -270/3.1,-210/3.5,-220/3.1LID,-180/3.5LID",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "7.500 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6730S -270/3.1,-210/3.5,-220/3.1LID,-180/3.5LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "3.200 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6730S -270/3.1,-210/3.5,-220/3.1LID,-180/3.5LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6730S -150/4.0,-130/4.0LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.000 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6730S -150/4.0,-130/4.0LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.000 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6730S -150/4.0,-130/4.0LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "2.600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6730S -150/4.0,-130/4.0LID",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "7.500 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6730S -150/4.0,-130/4.0LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "2.360 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6730S -150/4.0,-130/4.0LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "370 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6760 (todas variantes)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5.900 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6760 (todas variantes)",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.770 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6760 (todas variantes)",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "2.750 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6760 (todas variantes)",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "7.500 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6760 (todas variantes)",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "3.200 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6760 (todas variantes)",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "650 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6730 (todas variantes)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3.800 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6730 (todas variantes)",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3.800 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6730 (todas variantes)",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "2.600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6730 (todas variantes)",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "7.500 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6730 (todas variantes)",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "3.200 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6730 (todas variantes)",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6720 (todas variantes)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3.200 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6720 (todas variantes)",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "2.600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6720 (todas variantes)",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "2.200 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6720 (todas variantes)",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "7.600 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6720 (todas variantes)",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "3.200 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6720 (todas variantes)",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6750S -350/3.2, -270/3.2LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5.600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6750S -350/3.2, -270/3.2LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5.600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6750S -350/3.2, -270/3.2LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3.300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6750S -350/3.2, -270/3.2LID",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "8.000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6750S -350/3.2, -270/3.2LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "4.600 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6750S -350/3.2, -270/3.2LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "400 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6750S -270/3.6,-215/3.9,-220/3.6LID,-185/3.9LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5.600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6750S -270/3.6,-215/3.9,-220/3.6LID,-185/3.9LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5.600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6750S -270/3.6,-215/3.9,-220/3.6LID,-185/3.9LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3.300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6750S -270/3.6,-215/3.9,-220/3.6LID,-185/3.9LID",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "8.000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6750S -270/3.6,-215/3.9,-220/3.6LID,-185/3.9LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "3.200 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6750S -270/3.6,-215/3.9,-220/3.6LID,-185/3.9LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6740 -310/2.8,-260/3.0,-270/2.8LID,-230/3.0LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3.800 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6740 -310/2.8,-260/3.0,-270/2.8LID,-230/3.0LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6740 -310/2.8,-260/3.0,-270/2.8LID,-230/3.0LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "2.600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6740 -310/2.8,-260/3.0,-270/2.8LID,-230/3.0LID",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "8.400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6740 -310/2.8,-260/3.0,-270/2.8LID,-230/3.0LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "4.600 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6740 -310/2.8,-260/3.0,-270/2.8LID,-230/3.0LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "400 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6740 -240/3.2, -220/3.2LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3.800 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6740 -240/3.2, -220/3.2LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6740 -240/3.2, -220/3.2LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "2.600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6740 -240/3.2, -220/3.2LID",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "8.400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6740 -240/3.2, -220/3.2LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "3.200 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6740 -240/3.2, -220/3.2LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 930 (todas variantes)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "590 ml",
+    "webConfig": "3HAC032140-009"
+  },
+  {
+    "varianteTrm": "IRB 930 (todas variantes)",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "215 ml",
+    "webConfig": "3HAC032140-009"
+  },
+  {
+    "varianteTrm": "IRB 930 (ejes 3-4 ball screw)",
+    "eje": "3-4",
+    "tipoLubricante": "THK AFA Grease (ball screw spline)",
+    "cantidad": "2 g",
+    "webConfig": null
+  },
+  {
+    "varianteTrm": "IRB 5350 (3ax y 4ax)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1.400 ml",
+    "webConfig": null
+  },
+  {
+    "varianteTrm": "IRB 5350 (3ax y 4ax)",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1.000 ml",
+    "webConfig": null
+  },
+  {
+    "varianteTrm": "IRB 5350 (3ax y 4ax)",
+    "eje": "3",
+    "tipoLubricante": "Mobil Mobilgear 600 XP320",
+    "cantidad": "650 ml",
+    "webConfig": null
+  },
+  {
+    "varianteTrm": "IRB 5350 (4ax trolley)",
+    "eje": "trolley",
+    "tipoLubricante": "Mobil Mobilgear 600 XP320",
+    "cantidad": "1.500 ml",
+    "webConfig": null
+  },
+  {
+    "varianteTrm": "IRB 5710 -110/2.3, -90/2.3LID (suelo)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3.900 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710 -110/2.3, -90/2.3LID (invertido)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.350 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710 -110/2.3, -90/2.3LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "2.500 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710 -110/2.3, -90/2.3LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1.600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710 -110/2.3, -90/2.3LID",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "5.000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5710 -110/2.3, -90/2.3LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "1.890 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5710 -110/2.3, -90/2.3LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "370 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710 -90/2.7, -70/2.7LID (suelo)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3.900 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710 -90/2.7, -70/2.7LID (invertido)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.350 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710 -90/2.7, -70/2.7LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "2.500 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710 -90/2.7, -70/2.7LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1.700 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710 -90/2.7, -70/2.7LID",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "5.000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5710 -90/2.7, -70/2.7LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "1.170 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5710 -90/2.7, -70/2.7LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "220 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720 -125/3.0, -90/3.0LID (suelo)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3.900 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720 -125/3.0, -90/3.0LID (invertido)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.350 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720 -125/3.0, -90/3.0LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3.800 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720 -125/3.0, -90/3.0LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1.700 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720 -125/3.0, -90/3.0LID",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "5.000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5720 -125/3.0, -90/3.0LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "1.890 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5720 -125/3.0, -90/3.0LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "370 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720 -180/2.6, -155/2.6LID (suelo)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3.900 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720 -180/2.6, -155/2.6LID (invertido)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.350 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720 -180/2.6, -155/2.6LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3.800 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720 -180/2.6, -155/2.6LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1.700 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720 -180/2.6, -155/2.6LID",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "5.000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5720 -180/2.6, -155/2.6LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "2.360 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5720 -180/2.6, -155/2.6LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "380 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720 -620/2.9,-530/3.1,-560/2.9LID,-480/3.1LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5.500 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720 -620/2.9,-530/3.1,-560/2.9LID,-480/3.1LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720 -620/2.9,-530/3.1,-560/2.9LID,-480/3.1LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720 (todos)",
+    "eje": "4 primario",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1.680 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720 (todos)",
+    "eje": "4 secundario",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "9.400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 7720 -620/2.9,-530/3.1,-560/2.9LID,-480/3.1LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "10.000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 7720 -620/2.9,-530/3.1,-560/2.9LID,-480/3.1LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1.300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720 -510/3.3,-450/3.5,-400/3.3LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5.500 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720 -510/3.3,-450/3.5,-400/3.3LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720 -510/3.3,-450/3.5,-400/3.3LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720 -510/3.3,-450/3.5,-400/3.3LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "7.500 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 7720 -510/3.3,-450/3.5,-400/3.3LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "900 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710 -110/2.3, -90/2.3LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3.900 ml (floor) / 4.350 ml (Inv.)",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710 -110/2.3, -90/2.3LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "2.500 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710 -110/2.3, -90/2.3LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1.600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710 -110/2.3, -90/2.3LID",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "5.000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5710 -110/2.3, -90/2.3LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "1.890 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5710 -110/2.3, -90/2.3LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "370 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710 -90/2.7, -70/2.7LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3.900 ml (floor) / 4.350 ml (Inv.)",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710 -90/2.7, -70/2.7LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "2.500 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710 -90/2.7, -70/2.7LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1.700 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5710 -90/2.7, -70/2.7LID",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "5.000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5710 -90/2.7, -70/2.7LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "1.170 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5710 -90/2.7, -70/2.7LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "220 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720 -125/3.0, -90/3.0LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3.900 ml (floor) / 4.350 ml (Inv.)",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720 -125/3.0, -90/3.0LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3.800 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720 -125/3.0, -90/3.0LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1.700 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720 -125/3.0, -90/3.0LID",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "5.000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5720 -125/3.0, -90/3.0LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "1.890 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5720 -125/3.0, -90/3.0LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "370 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720 -180/2.6, -155/2.6LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3.900 ml (floor) / 4.350 ml (Inv.)",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720 -180/2.6, -155/2.6LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3.800 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720 -180/2.6, -155/2.6LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1.700 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 5720 -180/2.6, -155/2.6LID",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "5.000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5720 -180/2.6, -155/2.6LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "2.360 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 5720 -180/2.6, -155/2.6LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "380 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720 -620/2.9,-530/3.1,-560/2.9LID,-480/3.1LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5.500 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720 -620/2.9,-530/3.1,-560/2.9LID,-480/3.1LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720 -620/2.9,-530/3.1,-560/2.9LID,-480/3.1LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720 -620/2.9,-530/3.1,-560/2.9LID,-480/3.1LID",
+    "eje": "4 (primario)",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1.680 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720 -620/2.9,-530/3.1,-560/2.9LID,-480/3.1LID",
+    "eje": "4 (secundario)",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "9.400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 7720 -620/2.9,-530/3.1,-560/2.9LID,-480/3.1LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "10.000 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 7720 -620/2.9,-530/3.1,-560/2.9LID,-480/3.1LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1.300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720 -510/3.3,-450/3.5,-400/3.3LID",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5.500 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720 -510/3.3,-450/3.5,-400/3.3LID",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720 -510/3.3,-450/3.5,-400/3.3LID",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "4.300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720 -510/3.3,-450/3.5,-400/3.3LID",
+    "eje": "4 (primario)",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1.680 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 7720 -510/3.3,-450/3.5,-400/3.3LID",
+    "eje": "4 (secundario)",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "9.400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 7720 -510/3.3,-450/3.5,-400/3.3LID",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "7.500 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 7720 -510/3.3,-450/3.5,-400/3.3LID",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "900 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1520ID-4/1.5 (suelo)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "350 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1520ID-4/1.5 (suspendida)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1520ID-4/1.5",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "520 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1520ID-4/1.5",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "320 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1520ID-4/1.5",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "350 ml (NO cambio)",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1520ID-4/1.5",
+    "eje": "5-6 (ID)",
+    "tipoLubricante": "Optimol Optigear BM100",
+    "cantidad": "Nuevo: 130ml / Recarga: 110ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6 (estándar)",
+    "eje": "1",
+    "tipoLubricante": "Harmonic Grease 4B No.2",
+    "cantidad": "58 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6 (estándar)",
+    "eje": "2",
+    "tipoLubricante": "Harmonic Grease 4B No.2",
+    "cantidad": "40 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6 (estándar)",
+    "eje": "3",
+    "tipoLubricante": "Harmonic Grease 4B No.2",
+    "cantidad": "11 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6 (estándar)",
+    "eje": "4",
+    "tipoLubricante": "Harmonic Grease 4B No.2",
+    "cantidad": "3.5 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6 (estándar)",
+    "eje": "5",
+    "tipoLubricante": "Harmonic Grease 4B No.2",
+    "cantidad": "5 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6 (estándar)",
+    "eje": "6",
+    "tipoLubricante": "Harmonic Grease 4B No.2",
+    "cantidad": "3.5 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6 (food grade)",
+    "eje": "1",
+    "tipoLubricante": "LUBRIPLATE SYNXTREME FG-0",
+    "cantidad": "66 g",
+    "webConfig": "3HAC043771-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6 (food grade)",
+    "eje": "2",
+    "tipoLubricante": "LUBRIPLATE SYNXTREME FG-0",
+    "cantidad": "40 g",
+    "webConfig": "3HAC043771-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6 (food grade)",
+    "eje": "3",
+    "tipoLubricante": "LUBRIPLATE SYNXTREME FG-0",
+    "cantidad": "11 g",
+    "webConfig": "3HAC043771-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6 (food grade)",
+    "eje": "4",
+    "tipoLubricante": "LUBRIPLATE SYNXTREME FG-0",
+    "cantidad": "3.5 g",
+    "webConfig": "3HAC043771-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6 (food grade)",
+    "eje": "5",
+    "tipoLubricante": "LUBRIPLATE SYNXTREME FG-0",
+    "cantidad": "5 g",
+    "webConfig": "3HAC043771-001"
+  },
+  {
+    "varianteTrm": "IRB 120-3/0.6 (food grade)",
+    "eje": "6",
+    "tipoLubricante": "LUBRIPLATE SYNXTREME FG-0",
+    "cantidad": "3.5 g",
+    "webConfig": "3HAC043771-001"
+  },
+  {
+    "varianteTrm": "IRB 6710 (todas variantes)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3.200 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6710 (todas variantes)",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "2.600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6710 (todas variantes)",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "2.200 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6710 (todas variantes)",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "7.600 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6710 (todas variantes)",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "2.360 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6710 (todas variantes)",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "380 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6700Inv -300/2.60, -245/2.90",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~4.900 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6700Inv -300/2.60, -245/2.90",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~4.000 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6700Inv -300/2.60, -245/2.90",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~3.500 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6700Inv -300/2.60, -245/2.90",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~12.500 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6700Inv -300/2.60, -245/2.90",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~4.500 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6700Inv -300/2.60, -245/2.90",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~700 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 8700 (ambas variantes)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5.600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 8700 (ambas variantes)",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5.400 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 8700 (ambas variantes)",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5.400 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 8700 (ambas variantes)",
+    "eje": "4 primario",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1.650 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 8700 (ambas variantes)",
+    "eje": "4 secundario",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "9.400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 8700 (ambas variantes)",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "16.500 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 8700 (ambas variantes)",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "1.550 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1010-1.5/0.370",
+    "eje": "Todos los ejes",
+    "tipoLubricante": "SIN aceite/grasa en reductoras (no en TRM)",
+    "cantidad": "N/A",
+    "webConfig": "N/A"
+  },
+  {
+    "varianteTrm": "IRB 1010-1.5/0.370",
+    "eje": "Arnés/cable package",
+    "tipoLubricante": "Grasa FM222",
+    "cantidad": "Aplicación tópica (sin cantidad específica)",
+    "webConfig": "3HAC029132-001"
+  },
+  {
+    "varianteTrm": "IRB 1090-3.5/0.58",
+    "eje": "Todos los ejes",
+    "tipoLubricante": "SIN aceite/grasa en reductoras (no en TRM)",
+    "cantidad": "N/A",
+    "webConfig": "N/A"
+  },
+  {
+    "varianteTrm": "IRB 1090-3.5/0.58",
+    "eje": "Arnés/cable package (upper+lower)",
+    "tipoLubricante": "Grasa FM222",
+    "cantidad": "Aplicación tópica",
+    "webConfig": "3HAC029132-001"
+  },
+  {
+    "varianteTrm": "IRB 1100 -4/0.475, -4/0.58",
+    "eje": "Todos los ejes",
+    "tipoLubricante": "SIN aceite/grasa en reductoras (no en TRM)",
+    "cantidad": "N/A",
+    "webConfig": "N/A"
+  },
+  {
+    "varianteTrm": "IRB 1100 -4/0.475, -4/0.58",
+    "eje": "Arnés/cable package (upper+lower)",
+    "tipoLubricante": "Grasa FM222",
+    "cantidad": "Aplicación tópica",
+    "webConfig": "3HAC029132-001"
+  },
+  {
+    "varianteTrm": "IRB 1510ID-4/1.5 (suelo)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "350 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1510ID-4/1.5 (suspendida)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "600 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1510ID-4/1.5",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "520 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1510ID-4/1.5",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "320 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 1510ID-4/1.5",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320",
+    "cantidad": "350 ml (NO cambio)",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 1510ID-4/1.5",
+    "eje": "5-6 (ID)",
+    "tipoLubricante": "Optimol Optigear BM100",
+    "cantidad": "Nuevo: 130ml / Recarga: 110ml",
+    "webConfig": "3HAC0860-1"
+  },
+  {
+    "varianteTrm": "IRB 910SC (todas variantes)",
+    "eje": "1",
+    "tipoLubricante": "Harmonic Grease 4B No.2",
+    "cantidad": "42 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 910SC (todas variantes)",
+    "eje": "2",
+    "tipoLubricante": "Harmonic Grease 4B No.2",
+    "cantidad": "42 g",
+    "webConfig": "3HAC031695-001"
+  },
+  {
+    "varianteTrm": "IRB 910SC (todas variantes)",
+    "eje": "3/4 (ball screw)",
+    "tipoLubricante": "THK AFA Grease",
+    "cantidad": "4 g (total ejes 3/4)",
+    "webConfig": "3HAC058096-001"
+  },
+  {
+    "varianteTrm": "IRB 910INV-3/0.35, -6/0.55",
+    "eje": "1",
+    "tipoLubricante": "Grasa (pre-lubricada de fábrica)",
+    "cantidad": "No especificada (no re-engrasar)",
+    "webConfig": "N/A"
+  },
+  {
+    "varianteTrm": "IRB 910INV-3/0.35, -6/0.55",
+    "eje": "2",
+    "tipoLubricante": "Grasa (pre-lubricada de fábrica)",
+    "cantidad": "No especificada (no re-engrasar)",
+    "webConfig": "N/A"
+  },
+  {
+    "varianteTrm": "IRB 910INV-3/0.35, -6/0.55",
+    "eje": "3/4 (ball screw)",
+    "tipoLubricante": "THK AFA Grease",
+    "cantidad": "2 g (total ejes 3/4)",
+    "webConfig": "3HAC058096-001"
+  },
+  {
+    "varianteTrm": "IRB 910INV-3/0.35, -6/0.55",
+    "eje": "Arnés/cable",
+    "tipoLubricante": "Grasa FM222",
+    "cantidad": "Aplicación tópica",
+    "webConfig": "3HAC029132-001"
+  },
+  {
+    "varianteTrm": "IRB 260 (todas variantes)",
+    "eje": "1",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "6.400 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 260 (todas variantes)",
+    "eje": "2",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "4.500 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 260 (todas variantes)",
+    "eje": "3",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "3.800 ml",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 260 (todas variantes)",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "70 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 365-1.5/800, -1.5/1100, -1.5/1300",
+    "eje": "Gearboxes (todas)",
+    "tipoLubricante": "SIN aceite en reductoras (no en TRM)",
+    "cantidad": "N/A",
+    "webConfig": "N/A"
+  },
+  {
+    "varianteTrm": "IRB 365-1.5/800, -1.5/1100, -1.5/1300",
+    "eje": "Ball bearing cups",
+    "tipoLubricante": "Reemplazo c/12m o 3800h",
+    "cantidad": "N/A",
+    "webConfig": "Catalogo externo"
+  },
+  {
+    "varianteTrm": "IRB 365-1.5/800, -1.5/1100, -1.5/1300",
+    "eje": "Slide bearings",
+    "tipoLubricante": "Reemplazo c/12m o 3000h",
+    "cantidad": "N/A",
+    "webConfig": "Catalogo externo"
+  },
+  {
+    "varianteTrm": "IRB 390 -15/1300",
+    "eje": "1",
+    "tipoLubricante": "SHC Cibus 220 (food grade)",
+    "cantidad": "2.600 ml",
+    "webConfig": "3HAC6450-5"
+  },
+  {
+    "varianteTrm": "IRB 390 -15/1300",
+    "eje": "2",
+    "tipoLubricante": "SHC Cibus 220 (food grade)",
+    "cantidad": "2.600 ml",
+    "webConfig": "3HAC6450-5"
+  },
+  {
+    "varianteTrm": "IRB 390 -15/1300",
+    "eje": "3",
+    "tipoLubricante": "SHC Cibus 220 (food grade)",
+    "cantidad": "2.600 ml",
+    "webConfig": "3HAC6450-5"
+  },
+  {
+    "varianteTrm": "IRB 390 -15/1300",
+    "eje": "4 prestage",
+    "tipoLubricante": "SHC Cibus 220 (food grade)",
+    "cantidad": "105 ml",
+    "webConfig": "3HAC6450-5"
+  },
+  {
+    "varianteTrm": "IRB 390 -15/1300",
+    "eje": "Delta unit (eje 4)",
+    "tipoLubricante": "SHC Cibus 220 (food grade)",
+    "cantidad": "550 ml",
+    "webConfig": "3HAC6450-5"
+  },
+  {
+    "varianteTrm": "IRB 390 -10/1300",
+    "eje": "1",
+    "tipoLubricante": "SHC Cibus 220 (food grade)",
+    "cantidad": "2.600 ml",
+    "webConfig": "3HAC6450-5"
+  },
+  {
+    "varianteTrm": "IRB 390 -10/1300",
+    "eje": "2",
+    "tipoLubricante": "SHC Cibus 220 (food grade)",
+    "cantidad": "2.600 ml",
+    "webConfig": "3HAC6450-5"
+  },
+  {
+    "varianteTrm": "IRB 390 -10/1300",
+    "eje": "3",
+    "tipoLubricante": "SHC Cibus 220 (food grade)",
+    "cantidad": "2.600 ml",
+    "webConfig": "3HAC6450-5"
+  },
+  {
+    "varianteTrm": "IRB 390 -10/1300",
+    "eje": "4 prestage",
+    "tipoLubricante": "SHC Cibus 220 (food grade)",
+    "cantidad": "105 ml",
+    "webConfig": "3HAC6450-5"
+  },
+  {
+    "varianteTrm": "IRB 390 -10/1300",
+    "eje": "5 prestage",
+    "tipoLubricante": "SHC Cibus 220 (food grade)",
+    "cantidad": "105 ml",
+    "webConfig": "3HAC6450-5"
+  },
+  {
+    "varianteTrm": "IRB 390 -10/1300",
+    "eje": "Delta unit (ejes 4+5)",
+    "tipoLubricante": "SHC Cibus 220 (food grade)",
+    "cantidad": "750 ml",
+    "webConfig": "3HAC6450-5"
+  },
+  {
+    "varianteTrm": "IRB 460-110/2.4",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5.900 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 460-110/2.4",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3.200 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 460-110/2.4",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "3.200 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 460-110/2.4",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 660-180/3.15, -250/3.15",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "8.000 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 660-180/3.15, -250/3.15",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5.000 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 660-180/3.15, -250/3.15",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5.000 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 660-180/3.15, -250/3.15",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "300 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 760-450/3.2, -445/3.2",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "8.000 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 760-450/3.2, -445/3.2",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5.000 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 760-450/3.2, -445/3.2",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "5.000 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 760-450/3.2, -445/3.2",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "850 ml",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 940 Tricept",
+    "eje": "Linear bearings (2 uds)",
+    "tipoLubricante": "Kluber Isoflex NBU 15",
+    "cantidad": "2x4 ml por bearing",
+    "webConfig": "N/A (tool: 3HAC 020925-001)"
+  },
+  {
+    "varianteTrm": "IRB 940 Tricept",
+    "eje": "Actuators (3 uds)",
+    "tipoLubricante": "Kluberplex BEM 34-132",
+    "cantidad": "2x4 ml por actuator",
+    "webConfig": "N/A (tool: 3HAC 020925-001)"
+  },
+  {
+    "varianteTrm": "IRB 6620-150/2.2 (Standard)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~6 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6620-150/2.2 (Standard)",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~4 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6620-150/2.2 (Standard)",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~2 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6620-150/2.2 (Standard)",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~5.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6620-150/2.2 (Standard)",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~3 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6620-150/2.2 (Standard)",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~0.3 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6620-150/2.2 (Foundry Plus)",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~0.4 l (mayor que Standard)",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6620LX-150/1.9",
+    "eje": "1",
+    "tipoLubricante": "Mobil Glygoyl 460 (UNICO en BD)",
+    "cantidad": "~7 l",
+    "webConfig": "N/A (sin WebConfig en TRM)"
+  },
+  {
+    "varianteTrm": "IRB 6620LX-150/1.9",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~4 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6620LX-150/1.9",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~2 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6620LX-150/1.9",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~5.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6620LX-150/1.9",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~3 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6620LX-150/1.9",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~0.4 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 3400/1.95-30 (Floor)",
+    "eje": "1",
+    "tipoLubricante": "Grasa liquida ABB 1171 4016-611 (BP Energrease LS-EP00)",
+    "cantidad": "7.3 kg / 8.4 L",
+    "webConfig": "1171 4016-611"
+  },
+  {
+    "varianteTrm": "IRB 3400/1.95-30 (Floor)",
+    "eje": "2",
+    "tipoLubricante": "Grasa liquida ABB 1171 4016-611",
+    "cantidad": "4.5 kg / 5.2 L",
+    "webConfig": "1171 4016-611"
+  },
+  {
+    "varianteTrm": "IRB 3400/1.95-30 (Floor)",
+    "eje": "3",
+    "tipoLubricante": "Grasa liquida ABB 1171 4016-611",
+    "cantidad": "4.5 kg / 5.2 L",
+    "webConfig": "1171 4016-611"
+  },
+  {
+    "varianteTrm": "IRB 3400 (F) /1.95-30",
+    "eje": "4",
+    "tipoLubricante": "Aceite ABB 1171 2016-604 (BP Energol GR-XP 320)",
+    "cantidad": "~1 L",
+    "webConfig": "1171 2016-604"
+  },
+  {
+    "varianteTrm": "IRB 3400 (F) /1.95-30",
+    "eje": "5+6",
+    "tipoLubricante": "Aceite ABB 1171 2016-604",
+    "cantidad": "1.2 L (0.6 L cada lado)",
+    "webConfig": "1171 2016-604"
+  },
+  {
+    "varianteTrm": "IRB 3400 /2.5-10",
+    "eje": "4",
+    "tipoLubricante": "Aceite ABB 1171 2016-604",
+    "cantidad": "~1 L",
+    "webConfig": "1171 2016-604"
+  },
+  {
+    "varianteTrm": "IRB 3400 /2.5-10",
+    "eje": "5+6",
+    "tipoLubricante": "Aceite ABB 1171 2016-604",
+    "cantidad": "0.50 L",
+    "webConfig": "1171 2016-604"
+  },
+  {
+    "varianteTrm": "IRB 3400 (todas variantes)",
+    "eje": "Large diameter bearing eje 1",
+    "tipoLubricante": "ESSO Beacon EP 2 / ABB 1171 4013-301",
+    "cantidad": "Min 25g por nipple (2 nipples)",
+    "webConfig": "1171 4013-301"
+  },
+  {
+    "varianteTrm": "IRB 6400S (todas variantes)",
+    "eje": "1",
+    "tipoLubricante": "Grasa Optimol Longtime PD 0 (ABB 3HAA 1001-294) o Teijin Seiki Molywithe",
+    "cantidad": "1.3 L fresh / ~3.0 L change",
+    "webConfig": "3HAA 1001-294 / 3HAC 2331-1"
+  },
+  {
+    "varianteTrm": "IRB 6400S (todas variantes)",
+    "eje": "2",
+    "tipoLubricante": "Grasa Teijin Seiki Molywithe",
+    "cantidad": "1.2 L fresh / ~2.0 L change",
+    "webConfig": "3HAC 2331-1"
+  },
+  {
+    "varianteTrm": "IRB 6400S (todas variantes)",
+    "eje": "3",
+    "tipoLubricante": "Grasa Teijin Seiki Molywithe",
+    "cantidad": "1.2 L fresh / ~2.0 L change",
+    "webConfig": "3HAC 2331-1"
+  },
+  {
+    "varianteTrm": "IRB 6400S (todas variantes)",
+    "eje": "4",
+    "tipoLubricante": "Aceite ABB 1171 2016-604 (BP Energol GR-XP 320)",
+    "cantidad": "~6 L (6.5 L para 2.4-200 FHD)",
+    "webConfig": "1171 2016-604"
+  },
+  {
+    "varianteTrm": "IRB 6400S (todas variantes)",
+    "eje": "5",
+    "tipoLubricante": "Aceite ABB 1171 2016-604",
+    "cantidad": "~6 L (6.5 L para 2.4-200 FHD)",
+    "webConfig": "1171 2016-604"
+  },
+  {
+    "varianteTrm": "IRB 6400S (todas variantes)",
+    "eje": "6",
+    "tipoLubricante": "Grasa Optimol Longtime PD 0 o Teijin Seiki Molywithe",
+    "cantidad": "N/A (segun cycle time)",
+    "webConfig": "3HAA 1001-294 / 3HAC 2331-1"
+  },
+  {
+    "varianteTrm": "IRB 6400S (todas variantes)",
+    "eje": "Large diameter bearing eje 1",
+    "tipoLubricante": "ESSO Beacon EP 2 / ABB 1171 4013-301 (Foundry: Shell Retinax MS)",
+    "cantidad": "Hasta exudar por sello",
+    "webConfig": "1171 4013-301"
+  },
+  {
+    "varianteTrm": "IRB 6400S (todas variantes)",
+    "eje": "Piston rod balancing eje 2",
+    "tipoLubricante": "Castrol Spheerol SX2 / Shell 1352 CA EP2",
+    "cantidad": "Aplicacion topica",
+    "webConfig": "N/A"
+  },
+  {
+    "varianteTrm": "IRB 6790-235/2.65, -205/2.80 (FoundryPrime)",
+    "eje": "1",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~3.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6790-235/2.65, -205/2.80 (FoundryPrime)",
+    "eje": "2",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~3.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6790-235/2.65, -205/2.80 (FoundryPrime)",
+    "eje": "3",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~2.5 l",
+    "webConfig": "3HAC032140-001"
+  },
+  {
+    "varianteTrm": "IRB 6790-235/2.65, -205/2.80 (FoundryPrime)",
+    "eje": "4",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~7.0 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6790-235/2.65, -205/2.80 (FoundryPrime)",
+    "eje": "5",
+    "tipoLubricante": "Mobilgear 600 XP 320/XMP 320",
+    "cantidad": "~3.5 l",
+    "webConfig": "11712016-604"
+  },
+  {
+    "varianteTrm": "IRB 6790-235/2.65, -205/2.80 (FoundryPrime)",
+    "eje": "6",
+    "tipoLubricante": "Kyodo Yushi TMO 150",
+    "cantidad": "~0.5 l",
+    "webConfig": "3HAC032140-001"
+  }
+]

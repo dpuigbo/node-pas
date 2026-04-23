@@ -256,6 +256,52 @@ router.delete('/:id', requireRole('admin'), async (req: Request, res: Response, 
   } catch (err) { next(err); }
 });
 
+// ===== LUBRICACIÓN Y MANTENIMIENTO (nested under modelo) =====
+
+// GET /api/v1/modelos/:id/lubricacion
+// Returns lubrication data matching the model's familia
+router.get('/:id/lubricacion', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const modelo = await prisma.modeloComponente.findUnique({
+      where: { id: Number(req.params.id) },
+      select: { familia: true, fabricanteId: true, nombre: true },
+    });
+    if (!modelo) { res.status(404).json({ error: 'Modelo no encontrado' }); return; }
+
+    // Search by familia name within varianteTrm
+    const familiaSearch = modelo.familia || modelo.nombre;
+    const records = await prisma.lubricacionReductora.findMany({
+      where: {
+        fabricanteId: modelo.fabricanteId,
+        varianteTrm: { contains: familiaSearch },
+      },
+      orderBy: [{ varianteTrm: 'asc' }, { eje: 'asc' }],
+    });
+    res.json(records);
+  } catch (err) { next(err); }
+});
+
+// GET /api/v1/modelos/:id/mantenimiento
+// Returns maintenance activities for the model's familia
+router.get('/:id/mantenimiento', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const modelo = await prisma.modeloComponente.findUnique({
+      where: { id: Number(req.params.id) },
+      select: { familia: true, fabricanteId: true },
+    });
+    if (!modelo) { res.status(404).json({ error: 'Modelo no encontrado' }); return; }
+
+    const records = await prisma.actividadMantenimiento.findMany({
+      where: {
+        fabricanteId: modelo.fabricanteId,
+        familiaRobot: modelo.familia ?? '',
+      },
+      orderBy: [{ tipoActividad: 'asc' }, { componente: 'asc' }],
+    });
+    res.json(records);
+  } catch (err) { next(err); }
+});
+
 // ===== VERSIONES TEMPLATE (nested under modelo) =====
 
 // GET /api/v1/modelos/:modeloId/versiones

@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Plus, FileText, Play, Pause,
   AlertCircle, Loader2, Pencil, Save, X,
+  Droplets, Wrench,
 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, Column } from '@/components/shared/DataTable';
@@ -17,7 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   useModelo, useUpdateModelo, useVersiones, useCreateVersion, useActivateVersion,
-  useModelos, useUpdateCompatibilidad,
+  useModelos, useUpdateCompatibilidad, useLubricacion, useMantenimiento,
 } from '@/hooks/useModelos';
 import { useAuth } from '@/hooks/useAuth';
 import { getNivelesForTipo, getNivelesFijos, tieneNivelesEditables, NIVEL_SHORT } from '@/lib/niveles';
@@ -41,6 +42,8 @@ const ESTADO_LABELS: Record<string, string> = {
   obsoleto: 'Obsoleto',
 };
 
+type TabKey = 'info' | 'lubricacion' | 'mantenimiento' | 'templates';
+
 export default function ModeloDetailPage() {
   const { modeloId: mId } = useParams<{ modeloId: string }>();
   const modeloId = Number(mId);
@@ -53,6 +56,17 @@ export default function ModeloDetailPage() {
   const activateVersion = useActivateVersion(modeloId);
   const updateModelo = useUpdateModelo();
 
+  // Tab state
+  const [activeTab, setActiveTab] = useState<TabKey>('info');
+
+  // Lubricación & Mantenimiento data
+  const { data: lubricacionData, isLoading: loadingLub } = useLubricacion(
+    activeTab === 'lubricacion' ? modeloId : undefined,
+  );
+  const { data: mantenimientoData, isLoading: loadingMant } = useMantenimiento(
+    activeTab === 'mantenimiento' ? modeloId : undefined,
+  );
+
   const [createOpen, setCreateOpen] = useState(false);
   const [createNotas, setCreateNotas] = useState('');
   const [activateTarget, setActivateTarget] = useState<any>(null);
@@ -64,7 +78,6 @@ export default function ModeloDetailPage() {
 
   const startEditNiveles = () => {
     const current = modelo?.niveles ? modelo.niveles.split(',').filter(Boolean) : [];
-    // Ensure fixed levels are always included
     const fijos = modelo ? getNivelesFijos(modelo.tipo) : [];
     const merged = [...new Set([...fijos, ...current])];
     setNivelesForm(merged);
@@ -72,7 +85,6 @@ export default function ModeloDetailPage() {
   };
 
   const toggleNivel = (nivel: string) => {
-    // Don't allow toggling off fixed levels
     const fijos = modelo ? getNivelesFijos(modelo.tipo) : [];
     if (fijos.includes(nivel)) return;
     setNivelesForm((prev) => {
@@ -121,6 +133,17 @@ export default function ModeloDetailPage() {
     }
   };
 
+  // Group lubricacion by varianteTrm
+  const lubricacionGrouped = useMemo(() => {
+    if (!lubricacionData) return [];
+    const groups = new Map<string, typeof lubricacionData>();
+    for (const item of lubricacionData) {
+      if (!groups.has(item.varianteTrm)) groups.set(item.varianteTrm, []);
+      groups.get(item.varianteTrm)!.push(item);
+    }
+    return [...groups.entries()].map(([variante, items]) => ({ variante, items }));
+  }, [lubricacionData]);
+
   if (loadingModelo) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -141,6 +164,7 @@ export default function ModeloDetailPage() {
 
   const versionList: any[] = versiones ?? [];
   const currentNiveles = modelo.niveles ? modelo.niveles.split(',').filter(Boolean) : [];
+  const isNonController = modelo.tipo !== 'controller';
 
   const handleCreateVersion = async () => {
     try {
@@ -150,7 +174,6 @@ export default function ModeloDetailPage() {
       });
       setCreateOpen(false);
       setCreateNotas('');
-      // Navigate directly to the editor with the new version
       const newVersion = res?.data ?? res;
       if (newVersion?.id) {
         navigate(`/modelos/${modeloId}/versiones/${newVersion.id}/editor`);
@@ -217,7 +240,6 @@ export default function ModeloDetailPage() {
       header: '',
       render: (v: any) => (
         <div className="flex items-center gap-1">
-          {/* Open in editor */}
           <Button
             variant="ghost"
             size="icon"
@@ -230,8 +252,6 @@ export default function ModeloDetailPage() {
           >
             <Pencil className="h-3.5 w-3.5" />
           </Button>
-
-          {/* Activate / Deactivate */}
           {isAdmin && v.estado !== 'activo' && (
             <Button
               variant="ghost"
@@ -267,6 +287,16 @@ export default function ModeloDetailPage() {
     },
   ];
 
+  // Tabs config
+  const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
+    { key: 'info', label: 'Info', icon: null },
+    ...(isNonController ? [
+      { key: 'lubricacion' as TabKey, label: 'Lubricacion', icon: <Droplets className="h-3.5 w-3.5" /> },
+      { key: 'mantenimiento' as TabKey, label: 'Mant. Preventivo', icon: <Wrench className="h-3.5 w-3.5" /> },
+    ] : []),
+    { key: 'templates', label: `Templates (${versionList.length})`, icon: <FileText className="h-3.5 w-3.5" /> },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -288,194 +318,332 @@ export default function ModeloDetailPage() {
         <p className="text-sm text-muted-foreground">{modelo.notas}</p>
       )}
 
-      {/* Niveles de mantenimiento */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Niveles de mantenimiento</CardTitle>
-            {isAdmin && !editingNiveles && tieneNivelesEditables(modelo.tipo) && (
-              <Button variant="outline" size="sm" onClick={startEditNiveles}>
-                <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
-              </Button>
-            )}
-            {editingNiveles && (
-              <div className="flex gap-2">
-                <Button size="sm" onClick={handleSaveNiveles} disabled={updateModelo.isPending}>
-                  <Save className="h-3.5 w-3.5 mr-1" />
-                  {updateModelo.isPending ? 'Guardando...' : 'Guardar'}
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setEditingNiveles(false)}>
-                  <X className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          {editingNiveles ? (
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground">
-                Selecciona los niveles de mantenimiento aplicables a este modelo.
-                Los niveles obligatorios no se pueden deseleccionar.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {getNivelesForTipo(modelo.tipo).map((niv) => {
-                  const selected = nivelesForm.includes(niv.value);
-                  const isFixed = niv.fixed;
-                  return (
-                    <button
-                      key={niv.value}
-                      type="button"
-                      disabled={isFixed}
-                      className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
-                        selected
-                          ? isFixed
-                            ? 'bg-primary/70 text-primary-foreground border-primary cursor-not-allowed'
-                            : 'bg-primary text-primary-foreground border-primary'
-                          : 'bg-background border-input text-muted-foreground hover:bg-muted'
-                      }`}
-                      onClick={() => toggleNivel(niv.value)}
-                    >
-                      {niv.label}
-                    </button>
-                  );
-                })}
-              </div>
-              {nivelesForm.length === 0 && (
-                <p className="text-xs text-orange-500">
-                  Sin niveles seleccionados. Este modelo no aparecera en ofertas.
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="flex flex-wrap gap-1.5">
-              {currentNiveles.length > 0 ? (
-                currentNiveles.map((n: string) => (
-                  <Badge key={n} variant="secondary">
-                    {NIVEL_SHORT[n] ?? n}
-                  </Badge>
-                ))
-              ) : (
-                <span className="text-sm text-muted-foreground">Sin niveles configurados</span>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Tab bar */}
+      <div className="flex gap-1 border-b">
+        {tabs.map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === tab.key
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30'
+            }`}
+            onClick={() => setActiveTab(tab.key)}
+          >
+            {tab.icon}
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-      {/* Controladoras asociadas (only for non-controllers) */}
-      {modelo.tipo !== 'controller' && (
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Controladoras asociadas</CardTitle>
-              {isAdmin && !editingCompat && (
-                <Button variant="outline" size="sm" onClick={startEditCompat}>
-                  <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
-                </Button>
-              )}
-              {editingCompat && (
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={handleSaveCompat} disabled={updateCompatibilidad.isPending}>
-                    <Save className="h-3.5 w-3.5 mr-1" />
-                    {updateCompatibilidad.isPending ? 'Guardando...' : 'Guardar'}
+      {/* ===== TAB: INFO ===== */}
+      {activeTab === 'info' && (
+        <div className="space-y-6">
+          {/* Niveles de mantenimiento */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">Niveles de mantenimiento</CardTitle>
+                {isAdmin && !editingNiveles && tieneNivelesEditables(modelo.tipo) && (
+                  <Button variant="outline" size="sm" onClick={startEditNiveles}>
+                    <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => setEditingCompat(false)}>
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {editingCompat ? (
-              <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">
-                  Selecciona las controladoras compatibles con este modelo.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {(Array.isArray(controladoras) ? controladoras : []).map((c: any) => {
-                    const selected = compatForm.includes(c.id);
-                    return (
-                      <button
-                        key={c.id}
-                        type="button"
-                        className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
-                          selected
-                            ? 'bg-primary text-primary-foreground border-primary'
-                            : 'bg-background border-input text-muted-foreground hover:bg-muted'
-                        }`}
-                        onClick={() => toggleCompat(c.id)}
-                      >
-                        {c.nombre}
-                      </button>
-                    );
-                  })}
-                </div>
-                {compatForm.length === 0 && (
-                  <p className="text-xs text-orange-500">
-                    Sin controladoras seleccionadas. Este componente no aparecera como compatible.
+                )}
+                {editingNiveles && (
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={handleSaveNiveles} disabled={updateModelo.isPending}>
+                      <Save className="h-3.5 w-3.5 mr-1" />
+                      {updateModelo.isPending ? 'Guardando...' : 'Guardar'}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setEditingNiveles(false)}>
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {editingNiveles ? (
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    Selecciona los niveles de mantenimiento aplicables a este modelo.
+                    Los niveles obligatorios no se pueden deseleccionar.
                   </p>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-wrap gap-1.5">
-                {(modelo.controladoresCompatibles ?? []).length > 0 ? (
-                  (modelo.controladoresCompatibles ?? []).map((c: any) => (
-                    <Badge key={c.controlador.id} variant="secondary">{c.controlador.nombre}</Badge>
-                  ))
+                  <div className="flex flex-wrap gap-2">
+                    {getNivelesForTipo(modelo.tipo).map((niv) => {
+                      const selected = nivelesForm.includes(niv.value);
+                      const isFixed = niv.fixed;
+                      return (
+                        <button
+                          key={niv.value}
+                          type="button"
+                          disabled={isFixed}
+                          className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                            selected
+                              ? isFixed
+                                ? 'bg-primary/70 text-primary-foreground border-primary cursor-not-allowed'
+                                : 'bg-primary text-primary-foreground border-primary'
+                              : 'bg-background border-input text-muted-foreground hover:bg-muted'
+                          }`}
+                          onClick={() => toggleNivel(niv.value)}
+                        >
+                          {niv.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {nivelesForm.length === 0 && (
+                    <p className="text-xs text-orange-500">
+                      Sin niveles seleccionados. Este modelo no aparecera en ofertas.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {currentNiveles.length > 0 ? (
+                    currentNiveles.map((n: string) => (
+                      <Badge key={n} variant="secondary">
+                        {NIVEL_SHORT[n] ?? n}
+                      </Badge>
+                    ))
+                  ) : (
+                    <span className="text-sm text-muted-foreground">Sin niveles configurados</span>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Controladoras asociadas (only for non-controllers) */}
+          {isNonController && (
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base">Controladoras asociadas</CardTitle>
+                  {isAdmin && !editingCompat && (
+                    <Button variant="outline" size="sm" onClick={startEditCompat}>
+                      <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
+                    </Button>
+                  )}
+                  {editingCompat && (
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={handleSaveCompat} disabled={updateCompatibilidad.isPending}>
+                        <Save className="h-3.5 w-3.5 mr-1" />
+                        {updateCompatibilidad.isPending ? 'Guardando...' : 'Guardar'}
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setEditingCompat(false)}>
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {editingCompat ? (
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">
+                      Selecciona las controladoras compatibles con este modelo.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {(Array.isArray(controladoras) ? controladoras : []).map((c: any) => {
+                        const selected = compatForm.includes(c.id);
+                        return (
+                          <button
+                            key={c.id}
+                            type="button"
+                            className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                              selected
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : 'bg-background border-input text-muted-foreground hover:bg-muted'
+                            }`}
+                            onClick={() => toggleCompat(c.id)}
+                          >
+                            {c.nombre}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {compatForm.length === 0 && (
+                      <p className="text-xs text-orange-500">
+                        Sin controladoras seleccionadas. Este componente no aparecera como compatible.
+                      </p>
+                    )}
+                  </div>
                 ) : (
-                  <span className="text-sm text-muted-foreground">Sin controladoras asociadas</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(modelo.controladoresCompatibles ?? []).length > 0 ? (
+                      (modelo.controladoresCompatibles ?? []).map((c: any) => (
+                        <Badge key={c.controlador.id} variant="secondary">{c.controlador.nombre}</Badge>
+                      ))
+                    ) : (
+                      <span className="text-sm text-muted-foreground">Sin controladoras asociadas</span>
+                    )}
+                  </div>
                 )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Componentes asociados (only for controllers) */}
-      {modelo.tipo === 'controller' && (modelo.componentesCompatibles ?? []).length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Componentes asociados</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-1.5">
-              {(modelo.componentesCompatibles ?? []).map((c: any) => (
-                <Badge key={c.componente.id} variant="secondary">{c.componente.nombre}</Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Versions */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <FileText className="h-5 w-5" /> Versiones de Template ({versionList.length})
-          </h2>
-          {isAdmin && (
-            <Button size="sm" onClick={() => setCreateOpen(true)}>
-              <Plus className="h-4 w-4" /> Nueva version
-            </Button>
+              </CardContent>
+            </Card>
           )}
         </div>
+      )}
 
-        {loadingVersiones ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      {/* ===== TAB: LUBRICACIÓN ===== */}
+      {activeTab === 'lubricacion' && (
+        <div className="space-y-4">
+          {loadingLub ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : lubricacionGrouped.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
+              <Droplets className="h-8 w-8" />
+              <p>No hay datos de lubricacion para la familia {modelo.familia ?? modelo.nombre}</p>
+            </div>
+          ) : (
+            lubricacionGrouped.map((group) => (
+              <Card key={group.variante}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    {group.variante}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b bg-muted/30 text-xs text-muted-foreground">
+                        <th className="px-4 py-2 text-left font-medium w-20">Eje</th>
+                        <th className="px-4 py-2 text-left font-medium">Lubricante</th>
+                        <th className="px-4 py-2 text-left font-medium w-32">Cantidad</th>
+                        <th className="px-4 py-2 text-left font-medium w-36">WebConfig</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {group.items.map((item) => (
+                        <tr key={item.id} className="border-b last:border-b-0">
+                          <td className="px-4 py-2 font-mono font-medium">{item.eje}</td>
+                          <td className="px-4 py-2">
+                            {item.tipoLubricante === 'N/A' ? (
+                              <span className="text-muted-foreground">N/A</span>
+                            ) : (
+                              item.tipoLubricante
+                            )}
+                          </td>
+                          <td className="px-4 py-2">
+                            {item.cantidad === 'N/A' ? (
+                              <span className="text-muted-foreground">N/A</span>
+                            ) : (
+                              item.cantidad
+                            )}
+                          </td>
+                          <td className="px-4 py-2 text-muted-foreground font-mono text-xs">
+                            {item.webConfig || '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* ===== TAB: MANTENIMIENTO PREVENTIVO ===== */}
+      {activeTab === 'mantenimiento' && (
+        <div className="space-y-4">
+          {loadingMant ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : !mantenimientoData || mantenimientoData.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
+              <Wrench className="h-8 w-8" />
+              <p>No hay actividades de mantenimiento para la familia {modelo.familia ?? modelo.nombre}</p>
+            </div>
+          ) : (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Actividades de mantenimiento — {modelo.familia}
+                  {mantenimientoData[0]?.documento && (
+                    <span className="ml-2 text-muted-foreground font-normal">
+                      Doc: {mantenimientoData[0].documento}
+                    </span>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-muted/30 text-xs text-muted-foreground">
+                      <th className="px-4 py-2 text-left font-medium w-36">Tipo</th>
+                      <th className="px-4 py-2 text-left font-medium">Componente</th>
+                      <th className="px-4 py-2 text-left font-medium">Intervalo</th>
+                      <th className="px-4 py-2 text-left font-medium w-48">Notas</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {mantenimientoData.map((item) => (
+                      <tr key={item.id} className="border-b last:border-b-0 hover:bg-muted/20">
+                        <td className="px-4 py-2">
+                          <Badge variant="outline" className="text-[10px]">
+                            {item.tipoActividad}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-2">{item.componente}</td>
+                        <td className="px-4 py-2">
+                          <span>{item.intervaloEstandar || '—'}</span>
+                          {item.intervaloFoundry && (
+                            <span className="block text-xs text-muted-foreground mt-0.5">
+                              Foundry: {item.intervaloFoundry}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2 text-xs text-muted-foreground max-w-[200px]">
+                          {item.notas ? (
+                            <span className="line-clamp-2" title={item.notas}>{item.notas}</span>
+                          ) : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* ===== TAB: TEMPLATES ===== */}
+      {activeTab === 'templates' && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <FileText className="h-5 w-5" /> Versiones de Template ({versionList.length})
+            </h2>
+            {isAdmin && (
+              <Button size="sm" onClick={() => setCreateOpen(true)}>
+                <Plus className="h-4 w-4" /> Nueva version
+              </Button>
+            )}
           </div>
-        ) : (
-          <DataTable
-            columns={versionCols}
-            data={versionList}
-            emptyMessage="Sin versiones. Crea una nueva version para empezar a disenar el template."
-            onRowClick={(v) => navigate(`/modelos/${modeloId}/versiones/${v.id}/editor`)}
-            rowKey={(v) => v.id}
-          />
-        )}
-      </div>
+
+          {loadingVersiones ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <DataTable
+              columns={versionCols}
+              data={versionList}
+              emptyMessage="Sin versiones. Crea una nueva version para empezar a disenar el template."
+              onRowClick={(v) => navigate(`/modelos/${modeloId}/versiones/${v.id}/editor`)}
+              rowKey={(v) => v.id}
+            />
+          )}
+        </div>
+      )}
 
       {/* Create Version Dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>

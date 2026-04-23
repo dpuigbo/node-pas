@@ -62,8 +62,9 @@ export default function ModelosPage() {
   const createMutation = useCreateModelo();
   const deleteMutation = useDeleteModelo();
 
-  // Grouped view state (for mechanical_unit / external_axis)
-  const useGroupedView = tipoFilter === 'mechanical_unit' || tipoFilter === 'external_axis';
+  // Grouped view state (for mechanical_unit / external_axis / controller)
+  const useGroupedView = tipoFilter === 'mechanical_unit' || tipoFilter === 'external_axis' || tipoFilter === 'controller';
+  const useGeneracionLevel = tipoFilter === 'mechanical_unit' || tipoFilter === 'external_axis';
   const [expandedFamilias, setExpandedFamilias] = useState<Set<string>>(new Set());
   const [expandedGeneraciones, setExpandedGeneraciones] = useState<Set<string>>(new Set());
 
@@ -93,15 +94,19 @@ export default function ModelosPage() {
     for (const modelo of modelos) {
       const familiaKey = modelo.familia || 'Sin familia';
 
-      // Generación = unique controller familias
-      const ctrlFamilias = new Set<string>();
-      for (const cc of (modelo.controladoresCompatibles ?? [])) {
-        const fam = cc.controlador?.familia;
-        if (fam) ctrlFamilias.add(fam);
+      // For controllers: no sub-grouping needed (single level)
+      // For mechanical_unit / external_axis: sub-group by controller familia
+      let generacionKey = '_all';
+      if (useGeneracionLevel) {
+        const ctrlFamilias = new Set<string>();
+        for (const cc of (modelo.controladoresCompatibles ?? [])) {
+          const fam = cc.controlador?.familia;
+          if (fam) ctrlFamilias.add(fam);
+        }
+        generacionKey = ctrlFamilias.size > 0
+          ? [...ctrlFamilias].sort().join(' / ')
+          : 'Sin generación';
       }
-      const generacionKey = ctrlFamilias.size > 0
-        ? [...ctrlFamilias].sort().join(' / ')
-        : 'Sin generación';
 
       if (!familiaMap.has(familiaKey)) familiaMap.set(familiaKey, new Map());
       const genMap = familiaMap.get(familiaKey)!;
@@ -121,7 +126,7 @@ export default function ModelosPage() {
             modelos: items.sort((a: any, b: any) => a.nombre.localeCompare(b.nombre)),
           })),
       }));
-  }, [modelos, useGroupedView]);
+  }, [modelos, useGroupedView, useGeneracionLevel]);
 
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -213,33 +218,22 @@ export default function ModelosPage() {
       header: 'Controladoras',
       render: (m) => {
         if (m.tipo === 'controller') {
-          // Controller: show associated components (via junction)
-          const items = (m.componentesCompatibles ?? []).map((c: any) => c.componente);
-          if (items.length === 0) return <span className="text-xs text-muted-foreground">—</span>;
-          return (
-            <div className="flex flex-wrap gap-1">
-              {items.map((c: any) => (
-                <Badge key={c.id} variant="secondary" className="text-[10px] py-0">
-                  {c.nombre}
-                </Badge>
-              ))}
-            </div>
-          );
-        } else {
-          // Non-controller: show linked controllers (via junction)
-          const controllers = (m.controladoresCompatibles ?? []).map((c: any) => c.controlador);
-          if (controllers.length === 0) return <span className="text-xs text-muted-foreground">—</span>;
-          return (
-            <div className="flex flex-wrap gap-1">
-              {controllers.map((c: any) => (
-                <Badge key={c.id} variant="secondary" className="text-[10px] py-0 gap-0.5">
-                  <Link2 className="h-2.5 w-2.5" />
-                  {c.nombre}
-                </Badge>
-              ))}
-            </div>
-          );
+          // Controllers: don't show associated units (too noisy)
+          return <span className="text-xs text-muted-foreground">—</span>;
         }
+        // Non-controller: show linked controllers (via junction)
+        const controllers = (m.controladoresCompatibles ?? []).map((c: any) => c.controlador);
+        if (controllers.length === 0) return <span className="text-xs text-muted-foreground">—</span>;
+        return (
+          <div className="flex flex-wrap gap-1">
+            {controllers.map((c: any) => (
+              <Badge key={c.id} variant="secondary" className="text-[10px] py-0 gap-0.5">
+                <Link2 className="h-2.5 w-2.5" />
+                {c.nombre}
+              </Badge>
+            ))}
+          </div>
+        );
       },
     },
     {
@@ -301,35 +295,41 @@ export default function ModelosPage() {
                     </Badge>
                   </button>
 
-                  {/* Generaciones inside this familia */}
+                  {/* Content inside this familia */}
                   {famExpanded && (
                     <div className="border-t">
                       {fg.generaciones.map((gg) => {
                         const genKey = `${fg.familia}::${gg.generacion}`;
-                        const genExpanded = expandedGeneraciones.has(genKey);
+                        const genExpanded = !useGeneracionLevel || expandedGeneraciones.has(genKey);
+                        const showTable = useGeneracionLevel ? genExpanded : true;
+
                         return (
                           <div key={genKey}>
-                            {/* Generación sub-header */}
-                            <button
-                              type="button"
-                              className="flex items-center gap-2 w-full px-6 py-2 text-left text-sm hover:bg-muted/40 transition-colors border-b"
-                              onClick={() => toggleGeneracion(genKey)}
-                            >
-                              {genExpanded ? <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
-                              <span className="font-medium text-muted-foreground">{gg.generacion}</span>
-                              <Badge variant="outline" className="ml-2 text-[10px] py-0">
-                                {gg.modelos.length}
-                              </Badge>
-                            </button>
+                            {/* Generación sub-header (only for mechanical_unit / external_axis) */}
+                            {useGeneracionLevel && (
+                              <button
+                                type="button"
+                                className="flex items-center gap-2 w-full px-6 py-2 text-left text-sm hover:bg-muted/40 transition-colors border-b"
+                                onClick={() => toggleGeneracion(genKey)}
+                              >
+                                {genExpanded ? <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+                                <span className="font-medium text-muted-foreground">{gg.generacion}</span>
+                                <Badge variant="outline" className="ml-2 text-[10px] py-0">
+                                  {gg.modelos.length}
+                                </Badge>
+                              </button>
+                            )}
 
                             {/* Variantes table */}
-                            {genExpanded && (
+                            {showTable && (
                               <table className="w-full text-sm">
                                 <thead>
                                   <tr className="bg-muted/20 text-xs text-muted-foreground">
-                                    <th className="px-8 py-2 text-left font-medium">Nombre</th>
+                                    <th className={`${useGeneracionLevel ? 'px-8' : 'px-6'} py-2 text-left font-medium`}>Nombre</th>
                                     <th className="px-4 py-2 text-left font-medium">Notas</th>
-                                    <th className="px-4 py-2 text-left font-medium">Controladoras</th>
+                                    {useGeneracionLevel && (
+                                      <th className="px-4 py-2 text-left font-medium">Controladoras</th>
+                                    )}
                                     <th className="px-4 py-2 text-left font-medium w-24">Versiones</th>
                                     {isAdmin && <th className="px-4 py-2 w-12" />}
                                   </tr>
@@ -341,18 +341,20 @@ export default function ModelosPage() {
                                       className="border-b last:border-b-0 hover:bg-muted/30 cursor-pointer transition-colors"
                                       onClick={() => navigate(`/modelos/${m.id}`)}
                                     >
-                                      <td className="px-8 py-2">{m.nombre}</td>
+                                      <td className={`${useGeneracionLevel ? 'px-8' : 'px-6'} py-2`}>{m.nombre}</td>
                                       <td className="px-4 py-2 text-muted-foreground">{m.notas || '—'}</td>
-                                      <td className="px-4 py-2">
-                                        <div className="flex flex-wrap gap-1">
-                                          {(m.controladoresCompatibles ?? []).map((cc: any) => (
-                                            <Badge key={cc.controlador.id} variant="secondary" className="text-[10px] py-0 gap-0.5">
-                                              <Link2 className="h-2.5 w-2.5" />
-                                              {cc.controlador.nombre}
-                                            </Badge>
-                                          ))}
-                                        </div>
-                                      </td>
+                                      {useGeneracionLevel && (
+                                        <td className="px-4 py-2">
+                                          <div className="flex flex-wrap gap-1">
+                                            {(m.controladoresCompatibles ?? []).map((cc: any) => (
+                                              <Badge key={cc.controlador.id} variant="secondary" className="text-[10px] py-0 gap-0.5">
+                                                <Link2 className="h-2.5 w-2.5" />
+                                                {cc.controlador.nombre}
+                                              </Badge>
+                                            ))}
+                                          </div>
+                                        </td>
+                                      )}
                                       <td className="px-4 py-2">
                                         <Badge variant="outline">{m._count?.versiones ?? 0}</Badge>
                                       </td>

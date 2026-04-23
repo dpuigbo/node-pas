@@ -1,0 +1,8725 @@
+[
+  {
+    "tipo": "external_axis",
+    "familia": "IRB 5320",
+    "nombre": "IRB 5320, Workpiece Positioner",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRB 5330",
+    "nombre": "IRB 5330, Paint External Axis Kit",
+    "notas": "Eje Externo Pintura",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A250",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A250 D1000",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A250 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A250 D1000 x 2",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A250 D1000 x 2 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A250 x 2",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A500",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A500 D1000",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A500 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A500 D1000 x 2",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A500 D1000 x 2 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A500 D1450",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A500 D1450 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A500 D1450 x 2",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A500 D1450 x 2 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A500 x 2",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A750",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A750 D1000",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A750 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A750 D1000 x 2",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A750 D1000 x 2 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A750 D1450",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A750 D1450 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A750 D1450 x 2",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A750 D1450 x 2 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP A",
+    "nombre": "IRBP A750 x 2",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP B",
+    "nombre": "IRBP B250",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP B",
+    "nombre": "IRBP B250 D1000",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP B",
+    "nombre": "IRBP B250 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP B",
+    "nombre": "IRBP B500",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP B",
+    "nombre": "IRBP B500 D1450",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP B",
+    "nombre": "IRBP B500 D1450 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP B",
+    "nombre": "IRBP B750",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP B",
+    "nombre": "IRBP B750 D1450",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP B",
+    "nombre": "IRBP B750 D1450 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP C",
+    "nombre": "IRBP C",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP C",
+    "nombre": "IRBP C1000",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP C",
+    "nombre": "IRBP C1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP C",
+    "nombre": "IRBP C500",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP C",
+    "nombre": "IRBP C500 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP D",
+    "nombre": "IRBP D",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4",
+      "S4C"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP D",
+    "nombre": "IRBP D300",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP D",
+    "nombre": "IRBP D300 L1250 D1000",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP D",
+    "nombre": "IRBP D300 L1250 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP D",
+    "nombre": "IRBP D300 L1600 D1000",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP D",
+    "nombre": "IRBP D300 L1600 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP D",
+    "nombre": "IRBP D600",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP D",
+    "nombre": "IRBP D600 L1600 D1000",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP D",
+    "nombre": "IRBP D600 L1600 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP D",
+    "nombre": "IRBP D600 L1600 D1200",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP D",
+    "nombre": "IRBP D600 L1600 D1200 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP D",
+    "nombre": "IRBP D600 L2000 D1000",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP D",
+    "nombre": "IRBP D600 L2000 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP D",
+    "nombre": "IRBP D600 L2000 D1200",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP D",
+    "nombre": "IRBP D600 L2000 D1200 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP K",
+    "nombre": "IRBP K",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP K",
+    "nombre": "IRBP K1000",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP K",
+    "nombre": "IRBP K1000 D1200",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP K",
+    "nombre": "IRBP K1000 D1200 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP K",
+    "nombre": "IRBP K1000 D1400",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP K",
+    "nombre": "IRBP K1000 D1400 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP K",
+    "nombre": "IRBP K300",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP K",
+    "nombre": "IRBP K300 D1000",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP K",
+    "nombre": "IRBP K300 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP K",
+    "nombre": "IRBP K300 D1200",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP K",
+    "nombre": "IRBP K300 D1200 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP K",
+    "nombre": "IRBP K600",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP K",
+    "nombre": "IRBP K600 D1200",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP K",
+    "nombre": "IRBP K600 D1200 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP K",
+    "nombre": "IRBP K600 D1400",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP K",
+    "nombre": "IRBP K600 D1400 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP L",
+    "nombre": "IRBP L1000",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP L",
+    "nombre": "IRBP L1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP L",
+    "nombre": "IRBP L1000 x 2",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP L",
+    "nombre": "IRBP L1000 x 2 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP L",
+    "nombre": "IRBP L2000",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP L",
+    "nombre": "IRBP L2000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP L",
+    "nombre": "IRBP L2000 x 2",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP L",
+    "nombre": "IRBP L2000 x 2 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP L",
+    "nombre": "IRBP L300",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP L",
+    "nombre": "IRBP L300 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP L",
+    "nombre": "IRBP L300 x 2",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP L",
+    "nombre": "IRBP L300 x 2 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP L",
+    "nombre": "IRBP L5000",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP L",
+    "nombre": "IRBP L5000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP L",
+    "nombre": "IRBP L5000 x 2",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP L",
+    "nombre": "IRBP L5000 x 2 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP L",
+    "nombre": "IRBP L600",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP L",
+    "nombre": "IRBP L600 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP L",
+    "nombre": "IRBP L600 x 2",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP L",
+    "nombre": "IRBP L600 x 2 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4",
+      "S4C"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R1000",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R1000 L1600 D1000",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R1000 L1600 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R1000 L1600 D1200",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R1000 L1600 D1200 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R1000 L2000 D1000",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R1000 L2000 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R1000 L2000 D1200",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R1000 L2000 D1200 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R300",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R300 L1250 D1000",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R300 L1250 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R300 L1600 D1000",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R300 L1600 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R600",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R600 L1600 D1000",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R600 L1600 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R600 L1600 D1200",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R600 L1600 D1200 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R600 L2000 D1000",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R600 L2000 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R600 L2000 D1200",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBP R",
+    "nombre": "IRBP R600 L2000 D1200 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 2005",
+    "nombre": "IRBT 2005 Additional Carriage Plate",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 2005",
+    "nombre": "IRBT 2005 Standard Carriage",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 2005",
+    "nombre": "IRBT 2005 Transfer Track and Robot",
+    "notas": "Track (Transfer)",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 2005",
+    "nombre": "IRBT 2005 Transfer Track and Stand Alone Controller",
+    "notas": "Track (Transfer)",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4002",
+    "nombre": "IRBT 4002",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4002",
+    "nombre": "IRBT 4002S",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 1.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 10.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 11.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 12.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 13.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 14.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 15.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 16.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 17.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 18.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 19.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 2.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 3.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 4.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 5.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 6.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 7.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 8.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 9.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 Custom Travel Length",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 Type A 1.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 Type A 10.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 Type A 11.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 Type A 12.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 Type A 13.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 Type A 14.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 Type A 15.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 Type A 16.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 Type A 17.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 Type A 18.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 Type A 19.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 Type A 2.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 Type A 3.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 Type A 4.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 Type A 5.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 Type A 6.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 Type A 7.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 Type A 8.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 Type A 9.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 4004",
+    "nombre": "IRBT 4004 Type A Custom Travel Length",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6002",
+    "nombre": "IRBT 6002",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6002",
+    "nombre": "IRBT 6002S",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 1.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 10.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 11.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 12.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 13.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 14.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 15.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 16.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 17.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 18.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 19.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 2.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 3.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 4.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 5.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 6.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 7.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 8.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 9.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 Custom Travel Length",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 Type A 1.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 Type A 10.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 Type A 11.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 Type A 12.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 Type A 13.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 Type A 14.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 Type A 15.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 Type A 16.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 Type A 17.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 Type A 18.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 Type A 19.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 Type A 2.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 Type A 3.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 Type A 4.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 Type A 5.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 Type A 6.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 Type A 7.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 Type A 8.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 Type A 9.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 6004",
+    "nombre": "IRBT 6004 Type A Custom Travel Length",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 1.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 10.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 11.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 12.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 13.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 14.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 15.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 16.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 17.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 18.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 19.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 2.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 3.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 4.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 5.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 6.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 7.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 8.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 9.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 Custom Travel Length",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 Type A 1.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 Type A 10.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 Type A 11.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 Type A 12.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 Type A 13.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 Type A 14.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 Type A 15.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 Type A 16.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 Type A 17.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 Type A 18.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 Type A 19.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 Type A 2.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 Type A 3.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 Type A 4.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 Type A 5.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 Type A 6.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 Type A 7.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 Type A 8.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 Type A 9.7 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRBT 7004",
+    "nombre": "IRBT 7004 Type A Custom Travel Length",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRFT 4002",
+    "nombre": "IRFT 4002S",
+    "notas": "Track (Foundry)",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRFT 6002",
+    "nombre": "IRFT 6002S",
+    "notas": "Track (Foundry)",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP A",
+    "nombre": "IRP A250 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP A",
+    "nombre": "IRP A250 D1000 x 2 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP A",
+    "nombre": "IRP A500 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP A",
+    "nombre": "IRP A500 D1000 x 2 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP A",
+    "nombre": "IRP A500 D1450 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP A",
+    "nombre": "IRP A500 D1450 x 2 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP A",
+    "nombre": "IRP A750 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP A",
+    "nombre": "IRP A750 D1000 x 2 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP A",
+    "nombre": "IRP A750 D1450 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP A",
+    "nombre": "IRP A750 D1450 x 2 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP B",
+    "nombre": "IRP B250 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP B",
+    "nombre": "IRP B500 D1450 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP B",
+    "nombre": "IRP B750 D1450 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP C",
+    "nombre": "IRP C1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP C",
+    "nombre": "IRP C500 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP K",
+    "nombre": "IRP K1000 D1200 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP K",
+    "nombre": "IRP K1000 D1400 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP K",
+    "nombre": "IRP K300 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP K",
+    "nombre": "IRP K300 D1200 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP K",
+    "nombre": "IRP K600 D1200 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP K",
+    "nombre": "IRP K600 D1400 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP L",
+    "nombre": "IRP L1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP L",
+    "nombre": "IRP L1000 x 2 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP L",
+    "nombre": "IRP L2000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP L",
+    "nombre": "IRP L2000 x 2 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP L",
+    "nombre": "IRP L300 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP L",
+    "nombre": "IRP L300 x 2 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP L",
+    "nombre": "IRP L5000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP L",
+    "nombre": "IRP L5000 x 2 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP L",
+    "nombre": "IRP L600 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP L",
+    "nombre": "IRP L600 x 2 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP R",
+    "nombre": "IRP R1000 L1600 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP R",
+    "nombre": "IRP R1000 L1600 D1200 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP R",
+    "nombre": "IRP R1000 L2000 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP R",
+    "nombre": "IRP R1000 L2000 D1200 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP R",
+    "nombre": "IRP R300 L1250 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP R",
+    "nombre": "IRP R300 L1600 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP R",
+    "nombre": "IRP R600 L1600 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP R",
+    "nombre": "IRP R600 L1600 D1200 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP R",
+    "nombre": "IRP R600 L2000 D1000 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRP R",
+    "nombre": "IRP R600 L2000 D1200 Type A",
+    "notas": "Posicionador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 1.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 10.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 11.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 12.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 13.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 14.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 15.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 16.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 17.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 18.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 19.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 2.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 3.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 4.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 5.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 6.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 7.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 8.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 9.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 Custom Travel Length",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 Type A 1.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 Type A 10.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 Type A 11.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 Type A 12.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 Type A 13.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 Type A 14.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 Type A 15.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 Type A 16.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 Type A 17.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 Type A 18.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 Type A 19.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 Type A 2.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 Type A 3.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 Type A 4.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 Type A 5.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 Type A 6.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 Type A 7.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 Type A 8.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 Type A 9.9 m",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 104",
+    "nombre": "IRT 104 Type A Custom Travel Length",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 510",
+    "nombre": "IRT 510 Robot",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 710",
+    "nombre": "IRT 710 Robot",
+    "notas": "Track",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "IRT 710",
+    "nombre": "IRT 710 Transfer",
+    "notas": "Track (Transfer)",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MID",
+    "nombre": "MID 1000",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MID",
+    "nombre": "MID 1000 Type A",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MID",
+    "nombre": "MID 500",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MID",
+    "nombre": "MID 500 Type A",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MTD",
+    "nombre": "MTD 2000",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MTD",
+    "nombre": "MTD 2000 Type A",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MTD",
+    "nombre": "MTD 250",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MTD",
+    "nombre": "MTD 250 Type A",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MTD",
+    "nombre": "MTD 500",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MTD",
+    "nombre": "MTD 500 Type A",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MTD",
+    "nombre": "MTD 5000",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MTD",
+    "nombre": "MTD 5000 Type A",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MTD",
+    "nombre": "MTD 750",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MTD",
+    "nombre": "MTD 750 Type A",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MU",
+    "nombre": "MU 100",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "S4C+",
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MU",
+    "nombre": "MU 200",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MU",
+    "nombre": "MU 200 Type A",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MU",
+    "nombre": "MU 250",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "S4C+",
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MU",
+    "nombre": "MU 300",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MU",
+    "nombre": "MU 300 Type A",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MU",
+    "nombre": "MU 400",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "S4C+",
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MU",
+    "nombre": "MU 400XL",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "external_axis",
+    "familia": "MU",
+    "nombre": "MU 80",
+    "notas": "Motor / Mesa",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "CRB 1100",
+    "nombre": "CRB 1100-4/0.47",
+    "notas": "Colaborativo (SWIFTI)",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "CRB 1100",
+    "nombre": "CRB 1100-4/0.58",
+    "notas": "Colaborativo (SWIFTI)",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "CRB 1300",
+    "nombre": "CRB 1300-10/1.15",
+    "notas": "Colaborativo",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "CRB 1300",
+    "nombre": "CRB 1300-11/0.9",
+    "notas": "Colaborativo",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "CRB 1300",
+    "nombre": "CRB 1300-7/1.4",
+    "notas": "Colaborativo",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "CRB 15000",
+    "nombre": "CRB 15000-10/1.52",
+    "notas": "Colaborativo (GoFa)",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "CRB 15000",
+    "nombre": "CRB 15000-12/1.27",
+    "notas": "Colaborativo (GoFa)",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "CRB 15000",
+    "nombre": "CRB 15000-5/0.95",
+    "notas": "Colaborativo (GoFa)",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "CRB 1810",
+    "nombre": "CRB 1810-10/1.52",
+    "notas": "Colaborativo",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "CRB 1810",
+    "nombre": "CRB 1810-13/1.34",
+    "notas": "Colaborativo",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "CRB 1820",
+    "nombre": "CRB 1820-16/1.96",
+    "notas": "Colaborativo",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "CRB 1820",
+    "nombre": "CRB 1820-20/1.67",
+    "notas": "Colaborativo",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "CRB 1820",
+    "nombre": "CRB 1820-30/1.35",
+    "notas": "Colaborativo",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "CRB 1910",
+    "nombre": "CRB 1910-10/1.52",
+    "notas": "Colaborativo",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "CRB 1910",
+    "nombre": "CRB 1910-13/1.34",
+    "notas": "Colaborativo",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "CRB 1920",
+    "nombre": "CRB 1920-16/1.96",
+    "notas": "Colaborativo",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "CRB 1920",
+    "nombre": "CRB 1920-20/1.67",
+    "notas": "Colaborativo",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "CRB 1920",
+    "nombre": "CRB 1920-30/1.35",
+    "notas": "Colaborativo",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1010",
+    "nombre": "IRB 1010-1.5/0.37",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1090",
+    "nombre": "IRB 1090-3.5/0.58",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1100",
+    "nombre": "IRB 1100-4/0.47",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1100",
+    "nombre": "IRB 1100-4/0.58",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1100",
+    "nombre": "IRB 1100-4/0.58 LPS",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 120",
+    "nombre": "IRB 120-0.58/3",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 120",
+    "nombre": "IRB 120-3/0.6",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 120",
+    "nombre": "IRB 120T-0.58/3",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 120",
+    "nombre": "IRB 120T-3/0.6",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200",
+    "nombre": "IRB 1200-5/0.9",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200",
+    "nombre": "IRB 1200-5/0.9 Gen2",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200",
+    "nombre": "IRB 1200-5/0.9 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200",
+    "nombre": "IRB 1200-5/0.9 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200",
+    "nombre": "IRB 1200-7/0.7",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200",
+    "nombre": "IRB 1200-7/0.7 Gen2",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200",
+    "nombre": "IRB 1200-7/0.7 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200",
+    "nombre": "IRB 1200-7/0.7 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200",
+    "nombre": "IRB 1200-7/0.9 LPS",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200",
+    "nombre": "IRB 1200-7/0.9 LPS Type A",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200",
+    "nombre": "IRB 1200-7/0.9 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200",
+    "nombre": "IRB 1200-8/0.9 Gen2",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200",
+    "nombre": "IRB 1200-9/0.7 Gen2",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200",
+    "nombre": "IRB 1200F-5/0.9 Gen2",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200",
+    "nombre": "IRB 1200F-7/0.7 Gen2",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200",
+    "nombre": "IRB 1200F-8/0.9 Gen2",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200",
+    "nombre": "IRB 1200F-9/0.7 Gen2",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200",
+    "nombre": "IRB 1200H-5/0.9",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200",
+    "nombre": "IRB 1200H-7/0.7",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200FGL",
+    "nombre": "IRB 1200FGL-5/0.9",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200FGL",
+    "nombre": "IRB 1200FGL-5/0.9 Gen2",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200FGL",
+    "nombre": "IRB 1200FGL-5/0.9 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200FGL",
+    "nombre": "IRB 1200FGL-5/0.9 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200FGL",
+    "nombre": "IRB 1200FGL-7/0.7",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200FGL",
+    "nombre": "IRB 1200FGL-7/0.7 Gen2",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200FGL",
+    "nombre": "IRB 1200FGL-7/0.7 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1200FGL",
+    "nombre": "IRB 1200FGL-7/0.7 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 120FGL",
+    "nombre": "IRB 120FGL-3/0.6",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1300",
+    "nombre": "IRB 1300-10/1.15",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1300",
+    "nombre": "IRB 1300-11/0.9",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1300",
+    "nombre": "IRB 1300-12/1.4",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1300",
+    "nombre": "IRB 1300-7/1.4",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1300",
+    "nombre": "IRB 1300F-10/1.15",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1300",
+    "nombre": "IRB 1300F-11/0.9",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1300",
+    "nombre": "IRB 1300F-12/1.4",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1300",
+    "nombre": "IRB 1300F-7/1.4",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 140",
+    "nombre": "IRB 140-5/0.8 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 140",
+    "nombre": "IRB 140-5/0.8 Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 140",
+    "nombre": "IRB 140-5/0.8 Type C",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 140",
+    "nombre": "IRB 140-6/0.8",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 140",
+    "nombre": "IRB 140-6/0.81",
+    "notas": "Industrial / M98 / M99",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+",
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 140",
+    "nombre": "IRB 140T-5/0.8 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 140",
+    "nombre": "IRB 140T-5/0.8 Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 140",
+    "nombre": "IRB 140T-5/0.8 Type C",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 140",
+    "nombre": "IRB 140T-6/0.8",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 140",
+    "nombre": "IRB 140T-6/0.81",
+    "notas": "Industrial / M98 / M99",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+",
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1400",
+    "nombre": "IRB 1400-5/1.44",
+    "notas": "Industrial / M94A / M97A / M98 / M99",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1400",
+    "nombre": "IRB 1400-5/1.44 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1400",
+    "nombre": "IRB 1400-5/1.44 Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1400",
+    "nombre": "IRB 14000-0.5/0.5",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1400",
+    "nombre": "IRB 1400H-5/1.28 Hanging Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1400",
+    "nombre": "IRB 1400H-5/1.28 Hanging Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1400",
+    "nombre": "IRB 1400H-5/1.44 (Suspendido)",
+    "notas": "Industrial / M94A / M97A / M98 / M99",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1400",
+    "nombre": "IRB 1400H/5/1.28 Floor Mounted Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1400",
+    "nombre": "IRB 1400H/5/1.28 Floor Mounted Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1405",
+    "nombre": "IRB 14050-0.5/0.5",
+    "notas": "Colaborativo (YuMi)",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1410",
+    "nombre": "IRB 1410",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1410",
+    "nombre": "IRB 1410-5/1.45",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1510ID",
+    "nombre": "IRB 1510ID-4/1.5",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1520ID",
+    "nombre": "IRB 1520ID",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1520ID",
+    "nombre": "IRB 1520ID-4/1.5",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1520ID",
+    "nombre": "IRB 1520ID-4/1.5 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1520ID",
+    "nombre": "IRB 1520ID-4/1.5 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1600",
+    "nombre": "IRB 1600-10",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1600",
+    "nombre": "IRB 1600-10/1.2",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1600",
+    "nombre": "IRB 1600-10/1.45",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1600",
+    "nombre": "IRB 1600-5",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1600",
+    "nombre": "IRB 1600-6",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1600",
+    "nombre": "IRB 1600-6/1.2",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1600",
+    "nombre": "IRB 1600-6/1.45",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1600",
+    "nombre": "IRB 1600-7",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1600",
+    "nombre": "IRB 1600-8",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1600",
+    "nombre": "IRB 1600-8/1.2",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1600",
+    "nombre": "IRB 1600-8/1.45",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1600ID",
+    "nombre": "IRB 1600ID",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1600ID",
+    "nombre": "IRB 1600ID-4/1.5",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1600ID",
+    "nombre": "IRB 1600ID-4/1.5 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1660ID",
+    "nombre": "IRB 1660ID-4/1.55",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 1660ID",
+    "nombre": "IRB 1660ID-6/1.55",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400-10/1.5",
+    "notas": "Industrial / M94A / M96 / M97A / M98 / M98A",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400-10/1.5 Inverted Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400-10/1.5 Inverted Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400-10/1.5 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400-10/1.5 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400-10/1.5 WJ Inverted Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400-10/1.5 WJ Inverted Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400-10/1.5 Wall Mounted Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400-10/1.5 Wall Mounted Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400-16/1.5",
+    "notas": "Industrial / M94A / M96 / M97A / M98 / M98A",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400-16/1.5 Inverted Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400-16/1.5 Inverted Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400-16/1.5 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400-16/1.5 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400-16/1.5 Wall Mounted Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400-16/1.5 Wall Mounted Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400-5/1.8 Inverted Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400-5/1.8 Inverted Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400-5/1.8 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400-5/1.8 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400/10 Hanging Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400/10 Hanging Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400/10 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400/10 Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400/10 Wall Mounted Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400/10 Wall Mounted Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400/10WJ Hanging Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400/10WJ Hanging Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400/16 Hanging Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400/16 Inverted Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400/16 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400/16 Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400/16 Wall Mounted Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400F-10/1.5 (Foundry)",
+    "notas": "Industrial / M98 / M98A",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400F-16/1.5 (Foundry)",
+    "notas": "Industrial / M98 / M98A",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400L Hanging Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400L Hanging Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400L Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400L Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400L-10/1.8",
+    "notas": "Industrial / M98 / M98A",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400",
+    "nombre": "IRB 2400L-7/1.8",
+    "notas": "Industrial / M94A / M96 / M97A / M98 / M98A",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2400W",
+    "nombre": "IRB 2400W/16 Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 260",
+    "nombre": "IRB 260",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 260",
+    "nombre": "IRB 260-30/1.5",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2600",
+    "nombre": "IRB 2600-12/1.65",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2600",
+    "nombre": "IRB 2600-12/1.65 Type A",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2600",
+    "nombre": "IRB 2600-12/1.65 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2600",
+    "nombre": "IRB 2600-12/1.65 Type C",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2600",
+    "nombre": "IRB 2600-12/1.85",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2600",
+    "nombre": "IRB 2600-12/1.85 Type A",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2600",
+    "nombre": "IRB 2600-12/1.85 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2600",
+    "nombre": "IRB 2600-20/1.65",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2600",
+    "nombre": "IRB 2600-20/1.65 Type A",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2600",
+    "nombre": "IRB 2600-20/1.65 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2600",
+    "nombre": "IRB 2600-20/1.65 Type C",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2600ID",
+    "nombre": "IRB 2600ID-15/1.85",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2600ID",
+    "nombre": "IRB 2600ID-15/1.85 Type A",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2600ID",
+    "nombre": "IRB 2600ID-8/2.0",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 2600ID",
+    "nombre": "IRB 2600ID-8/2.0 Type A",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 340",
+    "nombre": "IRB 340 FlexPicker",
+    "notas": "M98 / M99",
+    "controladorasFamilias": [
+      "S4C"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 340",
+    "nombre": "IRB 340 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 340",
+    "nombre": "IRB 340 Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 340",
+    "nombre": "IRB 340 Type C",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 340",
+    "nombre": "IRB 340-1/0.8 FlexPicker",
+    "notas": "Delta",
+    "controladorasFamilias": [
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 340",
+    "nombre": "IRB 340-4/0.8 FlexPicker",
+    "notas": "Delta",
+    "controladorasFamilias": [
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 340",
+    "nombre": "IRB 340/2 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 340",
+    "nombre": "IRB 340/2 Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 340",
+    "nombre": "IRB 340/2 Type C",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 3400",
+    "nombre": "IRB 3400",
+    "notas": "M94A",
+    "controladorasFamilias": [
+      "S4"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 360",
+    "nombre": "IRB 360-1/1130 Stainless",
+    "notas": "Delta",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 360",
+    "nombre": "IRB 360-1/1130 Stainless No axis 4",
+    "notas": "Delta",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 360",
+    "nombre": "IRB 360-1/1130 Standard",
+    "notas": "Delta",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 360",
+    "nombre": "IRB 360-1/1130 Standard No axis 4",
+    "notas": "Delta",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 360",
+    "nombre": "IRB 360-1/1130 Wash-down",
+    "notas": "Delta",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 360",
+    "nombre": "IRB 360-1/1130 Wash-down No axis 4",
+    "notas": "Delta",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 360",
+    "nombre": "IRB 360-1/1600 Standard",
+    "notas": "Delta",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 360",
+    "nombre": "IRB 360-1/800 Standard",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 360",
+    "nombre": "IRB 360-1/800 Standard No axis 4",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 360",
+    "nombre": "IRB 360-1/800 Wash-down",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 360",
+    "nombre": "IRB 360-1/800 Wash-down No axis 4",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 360",
+    "nombre": "IRB 360-3/1130 Stainless",
+    "notas": "Delta",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 360",
+    "nombre": "IRB 360-3/1130 Standard",
+    "notas": "Delta",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 360",
+    "nombre": "IRB 360-3/1130 Standard No axis 4",
+    "notas": "Delta",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 360",
+    "nombre": "IRB 360-3/1130 Wash-down",
+    "notas": "Delta",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 360",
+    "nombre": "IRB 360-3/1130 Wash-down No axis 4",
+    "notas": "Delta",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 360",
+    "nombre": "IRB 360-3/1820",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 360",
+    "nombre": "IRB 360-3/1820 Standard",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 360",
+    "nombre": "IRB 360-6/1600 Standard",
+    "notas": "Delta",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 360",
+    "nombre": "IRB 360-8/1130 Standard",
+    "notas": "Delta",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 365",
+    "nombre": "IRB 365-1.5/1100",
+    "notas": "Delta",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 365",
+    "nombre": "IRB 365-1.5/1300",
+    "notas": "Delta",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 365",
+    "nombre": "IRB 365-1.5/800",
+    "notas": "Delta",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 369C",
+    "nombre": "IRB 369C1-1.5/1100",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 390",
+    "nombre": "IRB 390-10/1300",
+    "notas": "Delta",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 390",
+    "nombre": "IRB 390-15/1300",
+    "notas": "Delta",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400-45 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400-45 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400-45/1.95",
+    "notas": "Industrial / M94A / M97A / M98 / M99",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400-60 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400-60 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400-60/1.95",
+    "notas": "Industrial / M94A / M97A / M98 / M99",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400/45 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400/45 Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400/60 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400/60 Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400F-45/1.95 (Foundry)",
+    "notas": "Industrial / M98 / M99",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400F-60/1.95 (Foundry)",
+    "notas": "Industrial / M98 / M99",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400FL-30/2.46 (Foundry Long)",
+    "notas": "Industrial / M98 / M99",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400L-10 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400L-10 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400L-10/2.55",
+    "notas": "Industrial / M94A / M97A / M98 / M99",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400L-30 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400L-30 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400L-30/2.46",
+    "notas": "Industrial / M94A / M97A / M98 / M99",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400L/10 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400L/10 Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400L/30 Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400",
+    "nombre": "IRB 4400L/30 Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400S",
+    "nombre": "IRB 4400S Type A",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4400S",
+    "nombre": "IRB 4400S Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 460",
+    "nombre": "IRB 460-110/2.4",
+    "notas": "Paletizador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4600",
+    "nombre": "IRB 4600-20/2.5",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4600",
+    "nombre": "IRB 4600-20/2.5 Type A",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4600",
+    "nombre": "IRB 4600-20/2.5 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4600",
+    "nombre": "IRB 4600-20/2.5 Type C",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4600",
+    "nombre": "IRB 4600-20/2.5 Type D",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4600",
+    "nombre": "IRB 4600-40/2.55",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4600",
+    "nombre": "IRB 4600-40/2.55 CR",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4600",
+    "nombre": "IRB 4600-40/2.55 Type A",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4600",
+    "nombre": "IRB 4600-40/2.55 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4600",
+    "nombre": "IRB 4600-40/2.55 Type C",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4600",
+    "nombre": "IRB 4600-45/2.05",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4600",
+    "nombre": "IRB 4600-45/2.05 Type A",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4600",
+    "nombre": "IRB 4600-45/2.05 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4600",
+    "nombre": "IRB 4600-45/2.05 Type C",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4600",
+    "nombre": "IRB 4600-60/2.05",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4600",
+    "nombre": "IRB 4600-60/2.05 CR",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4600",
+    "nombre": "IRB 4600-60/2.05 Type A",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4600",
+    "nombre": "IRB 4600-60/2.05 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4600",
+    "nombre": "IRB 4600-60/2.05 Type C",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 4600CLA",
+    "nombre": "IRB 4600CLA-40/2.55",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 52",
+    "nombre": "IRB 52 (Paint)",
+    "notas": "Pintura (Compacto)",
+    "controladorasFamilias": [
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 52",
+    "nombre": "IRB 52,12_475_1005 (short vertical arm)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 52",
+    "nombre": "IRB 52,12_700_1005 (std vertical arm)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5300",
+    "nombre": "IRB 5300 (Paint)",
+    "notas": "M98 / M99",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5300",
+    "nombre": "IRB 5300,02",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5300",
+    "nombre": "IRB 5300,12_804_530",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5300",
+    "nombre": "IRB 5300,12_804_530 Left Type",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5300",
+    "nombre": "IRB 5300,12_804_530 Right Type",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5300",
+    "nombre": "IRB 5300,13_804_530",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5300",
+    "nombre": "IRB 5300,13_804_530 Left Type",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5300",
+    "nombre": "IRB 5300,13_804_530 Right Type",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5300",
+    "nombre": "IRB 5300,14_804_530",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5350",
+    "nombre": "IRB 5350,01_804_530",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5350",
+    "nombre": "IRB 5350,01_804_530 Left Type",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5350",
+    "nombre": "IRB 5350,01_804_530 Right Type",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5350",
+    "nombre": "IRB 5350,02_804_530",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5350",
+    "nombre": "IRB 5350,02_804_530 Left Type",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5350",
+    "nombre": "IRB 5350,02_804_530 Right Type",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 540",
+    "nombre": "IRB 540 (Paint)",
+    "notas": "M94A / M96 / M97A / M98 / M99",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 540",
+    "nombre": "IRB 540,12S_700_1220 (small painter)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 540",
+    "nombre": "IRB 540,12_1000_1220 (short arm w/MTB)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 540",
+    "nombre": "IRB 540,12_1000_1220 (short arm)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 540",
+    "nombre": "IRB 540,12_1000_1620 (std arm w/MTB)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 540",
+    "nombre": "IRB 540,12_1000_1620 (std arm)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 540",
+    "nombre": "IRB 540,15S_700/1220 (small painter wall)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400 (Paint)",
+    "notas": "M94A / M96 / M97A / M98 / M99",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,02,Process",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,02,Slim",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,02,Slim,H12",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,02,Slim,Large Ax2Mot",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,03,Process,Single SMB",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,03,Process,Two SMB",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,03,Slim,Single SMB",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,03,Slim,Single SMB,H12",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,03,Slim,Two SMB",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,04,Process,Single SMB",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,04,Process,Two SMB",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,04,Slim,Single SMB",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,04,Slim,Single SMB,H12",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,04,Slim,Two SMB",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,07,Slim,Two SMB",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,07,Slim,Two SMB,Left Type",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,07,Slim,Two SMB,Right Type",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,12_1200_1620",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,12_1200_1620,60+",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,13_1200_1620",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,13_1200_1620,60+",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,13_1200_1620,T10 Trolley",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,13_1200_1620,T10 Trolley,Ext.Range",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,14_1200_1620",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,14_1200_1620,60+",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,14_1200_1620,Raiser",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,14_1200_1620,T20 Trolley",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,14_1200_1620,T20 Trolley,Ext.Range",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,22_1200_1620",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,23_1200_1620",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,23_1200_1620,T10 Trolley",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,24_1200_1620",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,24_1200_1620,Raiser",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5400",
+    "nombre": "IRB 5400,24_1200_1620,T20 Trolley",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,22_A_1300_1720,b00",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,22_B_1300_1720,b00",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,23_A_1300_1720,b00",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,23_B_1300_1720,b00",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,25_A_1300_1720,b00",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,25_A_1300_1720,b180",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,25_B_1300_1720,b00",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,25_B_1300_1720,b180",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,27_A_1300_1720",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,27_B_1300_1720",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,35A_1300_1720,b00 (standing)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,35A_1300_1720,b80",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,35B_1300_1720,b00 (standing)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,35B_1300_1720,b80",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ElevatedRail_A_1300_1720,b00",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ElevatedRail_A_1300_1720,b00 (new motors)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ElevatedRail_A_1300_1720,b180",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ElevatedRail_A_1300_1720,b180 (new motors)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ElevatedRail_A_1300_1720,b80",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ElevatedRail_A_1300_1720,b80 (new motors)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ElevatedRail_B_1300_1720,b00",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ElevatedRail_B_1300_1720,b00 (new motors)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ElevatedRail_B_1300_1720,b180",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ElevatedRail_B_1300_1720,b180 (new motors)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ElevatedRail_B_1300_1720,b80",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ElevatedRail_B_1300_1720,b80 (new motors)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ProArm_A_1300_1720,b00 (new motors)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ProArm_A_1300_1720,b00 (standing)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ProArm_A_1300_1720,b180 (inverted)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ProArm_A_1300_1720,b180 (new motors)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ProArm_A_1300_1720,b80",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ProArm_A_1300_1720,b80 (new motors)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ProArm_B_1300_1720,b00 (new motors)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ProArm_B_1300_1720,b00 (standing)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ProArm_B_1300_1720,b180 (inverted)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ProArm_B_1300_1720,b180 (new motors)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ProArm_B_1300_1720,b80",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,ProArm_B_1300_1720,b80 (new motors)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,VanPainter_A_1300_1720,b80",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,VanPainter_A_1300_1720,b80 (new motors)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,VanPainter_B_1300_1720,b80",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5500",
+    "nombre": "IRB 5500,VanPainter_B_1300_1720,b80 (new motors)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5510",
+    "nombre": "IRB 5510,12_A_1100_1500,b00",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5710",
+    "nombre": "IRB 5710-110/2.3",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5710",
+    "nombre": "IRB 5710-110/2.3 Inv",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5710",
+    "nombre": "IRB 5710-70/2.7 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5710",
+    "nombre": "IRB 5710-70/2.7 LID Inv",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5710",
+    "nombre": "IRB 5710-90/2.3 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5710",
+    "nombre": "IRB 5710-90/2.3 LID Inv",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5710",
+    "nombre": "IRB 5710-90/2.7",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5710",
+    "nombre": "IRB 5710-90/2.7 Inv",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5720",
+    "nombre": "IRB 5720-125/3.0",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5720",
+    "nombre": "IRB 5720-125/3.0 Inv",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5720",
+    "nombre": "IRB 5720-155/2.6 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5720",
+    "nombre": "IRB 5720-155/2.6 LID Inv",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5720",
+    "nombre": "IRB 5720-180/2.6",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5720",
+    "nombre": "IRB 5720-180/2.6 Inv",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5720",
+    "nombre": "IRB 5720-90/3.0 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 5720",
+    "nombre": "IRB 5720-90/3.0 LID Inv",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 580",
+    "nombre": "IRB 580 (Paint)",
+    "notas": "M98 / M99",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 580",
+    "nombre": "IRB 580,12S_700_1220 (small 580)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 580",
+    "nombre": "IRB 580,12_1000_1220 (short arm w/MTB)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 580",
+    "nombre": "IRB 580,12_1000_1220 (short arm)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 580",
+    "nombre": "IRB 580,12_1000_1620 (std arm w/MTB)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 580",
+    "nombre": "IRB 580,12_1000_1620 (std arm)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 580",
+    "nombre": "IRB 580,13_1000_1220 (short arm w/MTB)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 580",
+    "nombre": "IRB 580,13_1000_1220 (short arm)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 580",
+    "nombre": "IRB 580,13_1000_1620 (standard arm w/MTB)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 580",
+    "nombre": "IRB 580,13_1000_1620 (standard arm)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 580",
+    "nombre": "IRB 580,14_1000_1220 (short arm w/MTB)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 580",
+    "nombre": "IRB 580,14_1000_1220 (short arm)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 580",
+    "nombre": "IRB 580,14_1000_1620 (standard arm w/MTB)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 580",
+    "nombre": "IRB 580,14_1000_1620 (standard arm)",
+    "notas": "Pintura",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 640",
+    "nombre": "IRB 640",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 640",
+    "nombre": "IRB 640-160/3.2",
+    "notas": "M98 / M99 / Paletizador",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6400",
+    "nombre": "IRB 6400-120/2.4",
+    "notas": "M94A / M96 / M97A / M98",
+    "controladorasFamilias": [
+      "S4",
+      "S4C"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6400",
+    "nombre": "IRB 6400-120/2.8",
+    "notas": "M96 / M97A / M98",
+    "controladorasFamilias": [
+      "S4",
+      "S4C"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6400",
+    "nombre": "IRB 6400-150/2.4",
+    "notas": "M96 / M97A / M98",
+    "controladorasFamilias": [
+      "S4",
+      "S4C"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6400",
+    "nombre": "IRB 6400-200/2.4",
+    "notas": "M97A / M98",
+    "controladorasFamilias": [
+      "S4C"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6400",
+    "nombre": "IRB 6400-75/3.0",
+    "notas": "M96 / M97A / M98",
+    "controladorasFamilias": [
+      "S4",
+      "S4C"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6400",
+    "nombre": "IRB 6400F-120/2.4 (Foundry)",
+    "notas": "M97A / M98",
+    "controladorasFamilias": [
+      "S4C"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6400",
+    "nombre": "IRB 6400F-120/2.8 (Foundry)",
+    "notas": "M97A / M98",
+    "controladorasFamilias": [
+      "S4C"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6400",
+    "nombre": "IRB 6400F-150/2.4 (Foundry)",
+    "notas": "M97A / M98",
+    "controladorasFamilias": [
+      "S4C"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6400",
+    "nombre": "IRB 6400F-200/2.4 (Foundry)",
+    "notas": "M97A / M98",
+    "controladorasFamilias": [
+      "S4C"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6400",
+    "nombre": "IRB 6400F-75/3.0 (Foundry)",
+    "notas": "M97A / M98",
+    "controladorasFamilias": [
+      "S4C"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6400PE",
+    "nombre": "IRB 6400PE-75/2.25 (Press)",
+    "notas": "Industrial (Press) / M97A / M98",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6400R",
+    "nombre": "IRB 6400R-100/3.0",
+    "notas": "Industrial (Gantry) / M99",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6400R",
+    "nombre": "IRB 6400R-120/2.5",
+    "notas": "Industrial (Gantry) / M99",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6400R",
+    "nombre": "IRB 6400R-120/2.5 balB",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6400R",
+    "nombre": "IRB 6400R-150/2.5",
+    "notas": "Industrial (Gantry) / M99",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6400R",
+    "nombre": "IRB 6400R-150/2.5 120kg",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6400R",
+    "nombre": "IRB 6400R-150/2.5 balB",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6400R",
+    "nombre": "IRB 6400R-150/2.8",
+    "notas": "Industrial (Gantry) / M99",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6400R",
+    "nombre": "IRB 6400R-200/2.5",
+    "notas": "Industrial (Gantry) / M99",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6400R",
+    "nombre": "IRB 6400R-200/2.8",
+    "notas": "Industrial (Gantry) / M99",
+    "controladorasFamilias": [
+      "S4C",
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6400S",
+    "nombre": "IRB 6400FS-120/2.9 (Foundry Shelf)",
+    "notas": "M97A / M98",
+    "controladorasFamilias": [
+      "S4C"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6400S",
+    "nombre": "IRB 6400S-120/2.9",
+    "notas": "Industrial / M96 / M97A / M98",
+    "controladorasFamilias": [
+      "S4",
+      "S4C",
+      "S4C+"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 660",
+    "nombre": "IRB 660-180/3.15",
+    "notas": "Paletizador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 660",
+    "nombre": "IRB 660-250/3.15",
+    "notas": "Paletizador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6600",
+    "nombre": "IRB 6600-175/2.55",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "S4C+",
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6600",
+    "nombre": "IRB 6600-175/2.8",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6600",
+    "nombre": "IRB 6600-175/2.8 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6600",
+    "nombre": "IRB 6600-225/2.55",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6600",
+    "nombre": "IRB 6600-225/2.55 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6600ID",
+    "nombre": "IRB 6600ID-185/2.55",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6620",
+    "nombre": "IRB 6620-150/2.2",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6620LX",
+    "nombre": "IRB 6620LX-150/1.9",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6640",
+    "nombre": "IRB 6640-130/3.2",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6640",
+    "nombre": "IRB 6640-150/2.55 DP6",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6640",
+    "nombre": "IRB 6640-150/2.55 LeanID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6640",
+    "nombre": "IRB 6640-165/2.8 DP6",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6640",
+    "nombre": "IRB 6640-165/2.8 LeanID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6640",
+    "nombre": "IRB 6640-180/2.55",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6640",
+    "nombre": "IRB 6640-185/2.75 DP6",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6640",
+    "nombre": "IRB 6640-185/2.75 LeanID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6640",
+    "nombre": "IRB 6640-185/2.8",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6640",
+    "nombre": "IRB 6640-200/2.55 DP6",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6640",
+    "nombre": "IRB 6640-200/2.55 LeanID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6640",
+    "nombre": "IRB 6640-205/2.75",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6640",
+    "nombre": "IRB 6640-210/2.55",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6640",
+    "nombre": "IRB 6640-235/2.55",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6640ID",
+    "nombre": "IRB 6640ID-170/2.75",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6640ID",
+    "nombre": "IRB 6640ID-200/2.55",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6650",
+    "nombre": "IRB 6650-125/3.2",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6650",
+    "nombre": "IRB 6650-125/3.2 Type B",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6650",
+    "nombre": "IRB 6650-200/2.75",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "S4C+",
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6650",
+    "nombre": "IRB 6650-200/2.75 Type B",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6650ID",
+    "nombre": "IRB 6650ID-170/2.75",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6650S",
+    "nombre": "IRB 6650S-100/3.5 LeanID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6650S",
+    "nombre": "IRB 6650S-125/3.5",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6650S",
+    "nombre": "IRB 6650S-190/3.0 LeanID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6650S",
+    "nombre": "IRB 6650S-200/3.0",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6650S",
+    "nombre": "IRB 6650S-90/3.9",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6660",
+    "nombre": "IRB 6660-100/3.3",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6660",
+    "nombre": "IRB 6660-130/3.1",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6660",
+    "nombre": "IRB 6660-205/1.9",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6700",
+    "nombre": "IRB 6700-140/2.85 LeanID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6700",
+    "nombre": "IRB 6700-145/3.2 LeanID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6700",
+    "nombre": "IRB 6700-150/3.2",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6700",
+    "nombre": "IRB 6700-155/2.85",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6700",
+    "nombre": "IRB 6700-155/3.05 LeanID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6700",
+    "nombre": "IRB 6700-175/2.6 LeanID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6700",
+    "nombre": "IRB 6700-175/3.05",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6700",
+    "nombre": "IRB 6700-200/2.6",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6700",
+    "nombre": "IRB 6700-200/2.8 LeanID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6700",
+    "nombre": "IRB 6700-205/2.8",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6700",
+    "nombre": "IRB 6700-220/2.65 LeanID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6700",
+    "nombre": "IRB 6700-220/3.0 LeanID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6700",
+    "nombre": "IRB 6700-235/2.65",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6700",
+    "nombre": "IRB 6700-245/3.0",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6700",
+    "nombre": "IRB 6700-270/2.7 LeanID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6700",
+    "nombre": "IRB 6700-300/2.7",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6700Inv",
+    "nombre": "IRB 6700Inv-210/2.9 LeanID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6700Inv",
+    "nombre": "IRB 6700Inv-245/2.9",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6700Inv",
+    "nombre": "IRB 6700Inv-270/2.6 LeanID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6700Inv",
+    "nombre": "IRB 6700Inv-300/2.6",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6710",
+    "nombre": "IRB 6710-175/2.65 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6710",
+    "nombre": "IRB 6710-175/2.95 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6710",
+    "nombre": "IRB 6710-200/2.95",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6710",
+    "nombre": "IRB 6710-210/2.65",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6720",
+    "nombre": "IRB 6720-150/3.1 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6720",
+    "nombre": "IRB 6720-170/3.1",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6720",
+    "nombre": "IRB 6720-200/2.8 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6720",
+    "nombre": "IRB 6720-210/2.8",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6720",
+    "nombre": "IRB 6720-215/2.5 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6720",
+    "nombre": "IRB 6720-215/2.65 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6720",
+    "nombre": "IRB 6720-240/2.65",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6730",
+    "nombre": "IRB 6730-190/3.1 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6730",
+    "nombre": "IRB 6730-210/3.1",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6730",
+    "nombre": "IRB 6730-220/2.9 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6730",
+    "nombre": "IRB 6730-240/2.9",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6730",
+    "nombre": "IRB 6730-270/2.7",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6730S",
+    "nombre": "IRB 6730S-130/4.0 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6730S",
+    "nombre": "IRB 6730S-150/4.0",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6730S",
+    "nombre": "IRB 6730S-180/3.5 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6730S",
+    "nombre": "IRB 6730S-210/3.5",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6730S",
+    "nombre": "IRB 6730S-220/3.1 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6730S",
+    "nombre": "IRB 6730S-270/3.1",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6740",
+    "nombre": "IRB 6740-220/3.2 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6740",
+    "nombre": "IRB 6740-230/3.0 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6740",
+    "nombre": "IRB 6740-240/3.2",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6740",
+    "nombre": "IRB 6740-260/3.0",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6740",
+    "nombre": "IRB 6740-270/2.8 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6740",
+    "nombre": "IRB 6740-310/2.8",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6750S",
+    "nombre": "IRB 6750S-185/3.9 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6750S",
+    "nombre": "IRB 6750S-215/3.9",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6750S",
+    "nombre": "IRB 6750S-220/3.6 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6750S",
+    "nombre": "IRB 6750S-270/3.2 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6750S",
+    "nombre": "IRB 6750S-270/3.6",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6750S",
+    "nombre": "IRB 6750S-350/3.2",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6760",
+    "nombre": "IRB 6760-150/3.5",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6760",
+    "nombre": "IRB 6760-200/3.2",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6790",
+    "nombre": "IRB 6790-205/2.8",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 6790",
+    "nombre": "IRB 6790-235/2.65",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 760",
+    "nombre": "IRB 760-445/3.2",
+    "notas": "Paletizador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 760",
+    "nombre": "IRB 760-450/3.2",
+    "notas": "Paletizador",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7600",
+    "nombre": "IRB 7600-150/3.5",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "S4C+",
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7600",
+    "nombre": "IRB 7600-290/3.1 LeanID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7600",
+    "nombre": "IRB 7600-320/2.8 LeanID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7600",
+    "nombre": "IRB 7600-325/3.1",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "S4C+",
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7600",
+    "nombre": "IRB 7600-340/2.8",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7600",
+    "nombre": "IRB 7600-390/2.55 LeanID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7600",
+    "nombre": "IRB 7600-400/2.55",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "S4C+",
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7600",
+    "nombre": "IRB 7600-500/2.3",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7600",
+    "nombre": "IRB 7600-500/2.55",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "S4C+",
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7710",
+    "nombre": "IRB 7710-280/3.5 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7710",
+    "nombre": "IRB 7710-310/3.5",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7710",
+    "nombre": "IRB 7710-325/3.3 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7710",
+    "nombre": "IRB 7710-360/3.3",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7710",
+    "nombre": "IRB 7710-390/3.1 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7710",
+    "nombre": "IRB 7710-400/2.85 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7710",
+    "nombre": "IRB 7710-430/3.1",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7710",
+    "nombre": "IRB 7710-500/2.85",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7720",
+    "nombre": "IRB 7720-400/3.3 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7720",
+    "nombre": "IRB 7720-400/3.5 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7720",
+    "nombre": "IRB 7720-450/3.5",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7720",
+    "nombre": "IRB 7720-480/3.1 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7720",
+    "nombre": "IRB 7720-510/3.3",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7720",
+    "nombre": "IRB 7720-530/3.1",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7720",
+    "nombre": "IRB 7720-560/2.9 LID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 7720",
+    "nombre": "IRB 7720-620/2.9",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 840A",
+    "nombre": "IRB 840A-150",
+    "notas": "M98",
+    "controladorasFamilias": [
+      "S4C"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 8700",
+    "nombre": "IRB 8700-475/4.2 LeanID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 8700",
+    "nombre": "IRB 8700-550/4.2",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 8700",
+    "nombre": "IRB 8700-630/3.5 LeanID",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 8700",
+    "nombre": "IRB 8700-800/3.5",
+    "notas": "Industrial",
+    "controladorasFamilias": [
+      "IRC5",
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 910INV",
+    "nombre": "IRB 910INV-3/0.35",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 910INV",
+    "nombre": "IRB 910INV-3/0.35 IP54/CR",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 910INV",
+    "nombre": "IRB 910INV-6/0.55",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 910INV",
+    "nombre": "IRB 910INV-6/0.55 IP54/CR",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 910SC",
+    "nombre": "IRB 910SC-3/0.45",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 910SC",
+    "nombre": "IRB 910SC-3/0.55",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 910SC",
+    "nombre": "IRB 910SC-3/0.65",
+    "notas": null,
+    "controladorasFamilias": [
+      "IRC5"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 920",
+    "nombre": "IRB 920-6/0.45 Type A",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 920",
+    "nombre": "IRB 920-6/0.55",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 920",
+    "nombre": "IRB 920-6/0.55 IP54",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 920",
+    "nombre": "IRB 920-6/0.55 Type A",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 920",
+    "nombre": "IRB 920-6/0.65",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 920",
+    "nombre": "IRB 920-6/0.65 IP54",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 920",
+    "nombre": "IRB 920-6/0.65 Type A",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 920",
+    "nombre": "IRB 920T-6/0.45",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 920",
+    "nombre": "IRB 920T-6/0.45 Extended Stroke",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 920",
+    "nombre": "IRB 920T-6/0.45 IP54/CR",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 920",
+    "nombre": "IRB 920T-6/0.45 IP54/CR Extended Stroke",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 920",
+    "nombre": "IRB 920T-6/0.55",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 920",
+    "nombre": "IRB 920T-6/0.55 Extended Stroke",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 920",
+    "nombre": "IRB 920T-6/0.55 IP54/CR",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 920",
+    "nombre": "IRB 920T-6/0.55 IP54/CR Extended Stroke",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 920",
+    "nombre": "IRB 920T-6/0.65",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 920",
+    "nombre": "IRB 920T-6/0.65 Extended Stroke",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 920",
+    "nombre": "IRB 920T-6/0.65 IP54/CR",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 920",
+    "nombre": "IRB 920T-6/0.65 IP54/CR Extended Stroke",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 930",
+    "nombre": "IRB 930-12/0.85",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 930",
+    "nombre": "IRB 930-12/0.85 Extended Stroke",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 930",
+    "nombre": "IRB 930-12/1.05",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 930",
+    "nombre": "IRB 930-12/1.05 Extended Stroke",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 930",
+    "nombre": "IRB 930-22/1.05",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 930",
+    "nombre": "IRB 930-22/1.05 Extended Stroke",
+    "notas": "SCARA",
+    "controladorasFamilias": [
+      "OmniCore"
+    ]
+  },
+  {
+    "tipo": "mechanical_unit",
+    "familia": "IRB 940",
+    "nombre": "IRB 940 Tricept",
+    "notas": "Paralelo",
+    "controladorasFamilias": [
+      "S4C+"
+    ]
+  }
+]
