@@ -1,12 +1,14 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
-import mariadb from 'mariadb';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
 function createPrismaClient(): PrismaClient {
+  // Use @prisma/adapter-mariadb to bypass the native Rust query engine.
+  // The Rust engine crashes with "PANIC: timer has gone away" on Hostinger
+  // shared hosting due to process/thread limits (~120 max).
   const url = process.env.DATABASE_URL;
 
   if (!url) {
@@ -14,6 +16,8 @@ function createPrismaClient(): PrismaClient {
     return new PrismaClient();
   }
 
+  // Parse DATABASE_URL into adapter config
+  // Format: mysql://user:password@host:port/database
   let parsed: URL;
   try {
     parsed = new URL(url);
@@ -22,25 +26,22 @@ function createPrismaClient(): PrismaClient {
     return new PrismaClient();
   }
 
-  // Create mariadb pool directly (proven to work on Hostinger)
-  // then pass it to PrismaMariaDb adapter
-  const pool = mariadb.createPool({
+  const adapter = new PrismaMariaDb({
     host: parsed.hostname,
     port: Number(parsed.port) || 3306,
     user: decodeURIComponent(parsed.username),
     password: decodeURIComponent(parsed.password),
-    database: parsed.pathname.slice(1),
-    connectionLimit: 2,
-    connectTimeout: 10000,
-    idleTimeout: 60000,
+    database: parsed.pathname.slice(1), // remove leading /
+    connectionLimit: 5,
+    connectTimeout: 10000,    // 10s to establish connection
+    acquireTimeout: 10000,    // 10s to acquire from pool
+    idleTimeout: 60000,       // close idle connections after 60s
   });
-
-  const adapter = new PrismaMariaDb(pool);
 
   return new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-  } as any);
+  } as any); // 'as any' needed: Prisma 6 types may not expose adapter in constructor type
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();
