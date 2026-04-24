@@ -76,6 +76,46 @@ router.post('/', (0, role_middleware_1.requireRole)('admin'), async (req, res, n
         next(err);
     }
 });
+// POST /api/v1/sistemas/completo (admin) — wizard: create sistema + all components atomically
+router.post('/completo', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
+    try {
+        const { componentes, ...sistemaData } = sistemas_validation_1.createSistemaCompletoSchema.parse(req.body);
+        const sistema = await database_1.prisma.$transaction(async (tx) => {
+            // 1. Create the sistema
+            const newSistema = await tx.sistema.create({ data: sistemaData });
+            // 2. Create all components
+            for (const comp of componentes) {
+                await tx.componenteSistema.create({
+                    data: {
+                        sistemaId: newSistema.id,
+                        modeloComponenteId: comp.modeloComponenteId,
+                        tipo: comp.tipo,
+                        etiqueta: comp.etiqueta,
+                        numeroSerie: comp.numeroSerie ?? null,
+                        numEjes: comp.numEjes ?? null,
+                        orden: comp.orden,
+                    },
+                });
+            }
+            // 3. Return with full includes
+            return tx.sistema.findUnique({
+                where: { id: newSistema.id },
+                include: {
+                    cliente: { select: { id: true, nombre: true } },
+                    fabricante: { select: { id: true, nombre: true } },
+                    componentes: {
+                        orderBy: { orden: 'asc' },
+                        include: { modeloComponente: { select: { id: true, nombre: true, tipo: true } } },
+                    },
+                },
+            });
+        });
+        res.status(201).json(sistema);
+    }
+    catch (err) {
+        next(err);
+    }
+});
 // PUT /api/v1/sistemas/:id (admin)
 router.put('/:id', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
     try {

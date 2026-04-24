@@ -103,6 +103,34 @@ router.get('/compatible', async (req, res, next) => {
         next(err);
     }
 });
+// GET /api/v1/modelos/compatible-con?controladorId=X&tipo=Y
+// Returns models compatible with a specific controller (for wizard, no sistemaId needed)
+router.get('/compatible-con', async (req, res, next) => {
+    try {
+        const controladorId = Number(req.query.controladorId);
+        const tipo = req.query.tipo;
+        if (!controladorId || !tipo) {
+            res.status(400).json({ error: 'controladorId y tipo son obligatorios' });
+            return;
+        }
+        const modelos = await database_1.prisma.modeloComponente.findMany({
+            where: {
+                tipo: tipo,
+                controladoresCompatibles: {
+                    some: { controladorId },
+                },
+            },
+            orderBy: [{ familia: 'asc' }, { nombre: 'asc' }],
+            include: {
+                fabricante: { select: { id: true, nombre: true } },
+            },
+        });
+        res.json(modelos);
+    }
+    catch (err) {
+        next(err);
+    }
+});
 // GET /api/v1/modelos/:id
 router.get('/:id', async (req, res, next) => {
     try {
