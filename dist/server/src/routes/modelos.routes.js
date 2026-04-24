@@ -138,6 +138,8 @@ router.get('/:id', async (req, res, next) => {
             where: { id: Number(req.params.id) },
             include: {
                 fabricante: { select: { id: true, nombre: true } },
+                familiaRel: { select: { id: true, codigo: true, tipo: true, descripcion: true } },
+                generacion: { select: { id: true, codigo: true, nombre: true } },
                 versiones: { orderBy: { version: 'desc' } },
                 controladoresCompatibles: {
                     include: { controlador: { select: { id: true, nombre: true } } },

@@ -1,0 +1,127 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const database_1 = require("../config/database");
+const router = (0, express_1.Router)();
+// GET /api/v1/lookups/familias?fabricanteId=1&tipo=mechanical_unit
+router.get('/familias', async (req, res, next) => {
+    try {
+        const where = { activa: true };
+        if (req.query.fabricanteId)
+            where.fabricanteId = Number(req.query.fabricanteId);
+        if (req.query.tipo)
+            where.tipo = String(req.query.tipo);
+        const familias = await database_1.prisma.luFamilia.findMany({
+            where,
+            orderBy: { codigo: 'asc' },
+            include: { fabricante: { select: { id: true, nombre: true } } },
+        });
+        res.json(familias);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// GET /api/v1/lookups/generaciones-controlador
+router.get('/generaciones-controlador', async (_req, res, next) => {
+    try {
+        const generaciones = await database_1.prisma.luGeneracionControlador.findMany({
+            where: { activo: true },
+            orderBy: { orden: 'asc' },
+        });
+        res.json(generaciones);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// GET /api/v1/lookups/tipos-actividad
+router.get('/tipos-actividad', async (_req, res, next) => {
+    try {
+        const tipos = await database_1.prisma.luTipoActividad.findMany({
+            orderBy: { orden: 'asc' },
+        });
+        res.json(tipos);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// GET /api/v1/lookups/niveles-mantenimiento
+router.get('/niveles-mantenimiento', async (_req, res, next) => {
+    try {
+        const niveles = await database_1.prisma.luNivelMantenimiento.findMany({
+            orderBy: { orden: 'asc' },
+        });
+        res.json(niveles);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// GET /api/v1/lookups/unidades-intervalo
+router.get('/unidades-intervalo', async (_req, res, next) => {
+    try {
+        const unidades = await database_1.prisma.luUnidadIntervalo.findMany({
+            orderBy: { orden: 'asc' },
+        });
+        res.json(unidades);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// GET /api/v1/lookups/aceites?q=kyodo
+router.get('/aceites', async (req, res, next) => {
+    try {
+        const q = req.query.q ? String(req.query.q) : '';
+        if (q) {
+            // Buscar por alias (incluye nombre original)
+            const aliases = await database_1.prisma.aceiteAlias.findMany({
+                where: { alias: { contains: q } },
+                include: {
+                    aceite: true,
+                },
+            });
+            // Deduplicar aceites
+            const seen = new Set();
+            const aceites = aliases
+                .map(a => a.aceite)
+                .filter(a => {
+                if (seen.has(a.id))
+                    return false;
+                seen.add(a.id);
+                return true;
+            });
+            res.json(aceites);
+        }
+        else {
+            const aceites = await database_1.prisma.aceite.findMany({
+                where: { activo: true },
+                orderBy: { nombre: 'asc' },
+            });
+            res.json(aceites);
+        }
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// GET /api/v1/lookups/puntos-control?categoria=manipulador
+router.get('/puntos-control', async (req, res, next) => {
+    try {
+        const where = {};
+        if (req.query.categoria)
+            where.categoria = String(req.query.categoria);
+        const puntos = await database_1.prisma.puntoControlGenerico.findMany({
+            where,
+            orderBy: { orden: 'asc' },
+        });
+        res.json(puntos);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+exports.default = router;
+//# sourceMappingURL=lookups.routes.js.map
