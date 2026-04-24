@@ -13,31 +13,12 @@ function createPrismaClient() {
         console.error('[PAS] DATABASE_URL not set — Prisma will fail');
         return new client_1.PrismaClient();
     }
-    // Parse DATABASE_URL into adapter config
-    // Format: mysql://user:password@host:port/database
-    let parsed;
-    try {
-        parsed = new URL(url);
-    }
-    catch {
-        console.error('[PAS] Invalid DATABASE_URL format');
-        return new client_1.PrismaClient();
-    }
-    const adapter = new adapter_mariadb_1.PrismaMariaDb({
-        host: parsed.hostname,
-        port: Number(parsed.port) || 3306,
-        user: decodeURIComponent(parsed.username),
-        password: decodeURIComponent(parsed.password),
-        database: parsed.pathname.slice(1), // remove leading /
-        connectionLimit: 5,
-        connectTimeout: 10000, // 10s to establish connection
-        acquireTimeout: 10000, // 10s to acquire from pool
-        idleTimeout: 60000, // close idle connections after 60s
-    });
+    // Pass URL string directly to adapter (config object hangs on Hostinger)
+    const adapter = new adapter_mariadb_1.PrismaMariaDb(url);
     return new client_1.PrismaClient({
         adapter,
         log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-    }); // 'as any' needed: Prisma 6 types may not expose adapter in constructor type
+    });
 }
 exports.prisma = globalForPrisma.prisma ?? createPrismaClient();
 if (process.env.NODE_ENV !== 'production')
