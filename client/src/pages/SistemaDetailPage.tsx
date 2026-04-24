@@ -1,27 +1,61 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Cpu, Trash2, AlertCircle, Pencil, AlertTriangle } from 'lucide-react';
+import {
+  ArrowLeft, Plus, Cpu, Bot, Cog, Trash2,
+  AlertCircle, Pencil, AlertTriangle,
+} from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, Column } from '@/components/shared/DataTable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSistema } from '@/hooks/useSistemas';
-import { useModelos, useModelosCompatibles } from '@/hooks/useModelos';
-import { useCreateComponente, useUpdateComponente, useDeleteComponente } from '@/hooks/useComponentes';
+import { useModelosCompatibles, useModelosCompatiblesCon } from '@/hooks/useModelos';
+import { useCreateComponente, useCreateRobotConDU, useUpdateComponente, useDeleteComponente } from '@/hooks/useComponentes';
 import { useAuth } from '@/hooks/useAuth';
 
 const TIPO_LABELS: Record<string, string> = {
   controller: 'Controlador',
   mechanical_unit: 'Unidad mecanica',
-  drive_unit: 'Unidad de accionamiento',
+  drive_unit: 'Drive Unit',
   external_axis: 'Eje externo',
 };
+
+const TIPO_ICON: Record<string, React.ReactNode> = {
+  controller: <Cpu className="h-4 w-4 text-blue-500" />,
+  mechanical_unit: <Bot className="h-4 w-4 text-green-500" />,
+  drive_unit: <Cpu className="h-4 w-4 text-purple-500" />,
+  external_axis: <Cog className="h-4 w-4 text-orange-500" />,
+};
+
+// ===== Controller capability rules =====
+type Capabilities = {
+  multimove: boolean;
+  maxRobots: number;
+  allowExternalAxes: boolean;
+  maxExternalAxesPerDU: number;
+};
+
+function getControllerCapabilities(nombre: string): Capabilities {
+  const n = nombre.toLowerCase();
+  if (n.includes('single') || n.includes('pmc')) {
+    return { multimove: true, maxRobots: 4, allowExternalAxes: true, maxExternalAxesPerDU: 3 };
+  }
+  if (n.includes('paint') || n.includes('irc5p')) {
+    return { multimove: false, maxRobots: 1, allowExternalAxes: true, maxExternalAxesPerDU: 3 };
+  }
+  if (n.includes('compact')) {
+    return { multimove: false, maxRobots: 1, allowExternalAxes: false, maxExternalAxesPerDU: 0 };
+  }
+  // OmniCore, S4, S4C, S4C+ → 1 robot + 3 ejes
+  return { multimove: false, maxRobots: 1, allowExternalAxes: true, maxExternalAxesPerDU: 3 };
+}
 
 export default function SistemaDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -31,45 +65,64 @@ export default function SistemaDetailPage() {
 
   const { data: sistema, isLoading } = useSistema(sistemaId || undefined);
   const createComponente = useCreateComponente(sistemaId);
+  const createRobotConDU = useCreateRobotConDU(sistemaId);
   const updateComponente = useUpdateComponente(sistemaId);
   const deleteComponente = useDeleteComponente(sistemaId);
 
-  const [compOpen, setCompOpen] = useState(false);
+  // Dialog state
+  const [dialogMode, setDialogMode] = useState<'robot' | 'eje' | 'edit' | null>(null);
   const [editingComp, setEditingComp] = useState<any>(null);
-  const [compForm, setCompForm] = useState({
-    tipo: '' as string,
-    modeloComponenteId: 0,
-    etiqueta: '',
-    numeroSerie: '',
-    numEjes: '',
-  });
 
-  // Modelos filtered by fabricante of this sistema + selected tipo
-  const { data: modelos } = useModelos(
-    sistema?.fabricanteId && compForm.tipo
-      ? { fabricanteId: sistema.fabricanteId, tipo: compForm.tipo }
-      : undefined,
+  // Form for adding robot / eje / editing
+  const [familia, setFamilia] = useState('');
+  const [modeloId, setModeloId] = useState(0);
+  const [modeloNombre, setModeloNombre] = useState('');
+  const [etiqueta, setEtiqueta] = useState('');
+  const [numeroSerie, setNumeroSerie] = useState('');
+  const [numEjes, setNumEjes] = useState('6');
+
+  // Derive system info
+  const componentes: any[] = sistema?.componentes ?? [];
+  const controller = componentes.find((c: any) => c.tipo === 'controller');
+  const controllerId = controller?.modeloComponenteId;
+  const controllerNombre = controller?.modeloComponente?.nombre ?? '';
+
+  const capabilities = useMemo(() => {
+    if (!controllerNombre) return null;
+    return getControllerCapabilities(controllerNombre);
+  }, [controllerNombre]);
+
+  // Count components by type
+  const robotCount = componentes.filter((c: any) => c.tipo === 'mechanical_unit').length;
+  const duCount = componentes.filter((c: any) => c.tipo === 'drive_unit').length;
+  const ejeCount = componentes.filter((c: any) => c.tipo === 'external_axis').length;
+
+  // Limits
+  const canAddRobot = capabilities?.multimove && robotCount < (capabilities?.maxRobots ?? 1);
+  const maxEjes = (duCount + 1) * (capabilities?.maxExternalAxesPerDU ?? 3); // +1 for implicit first DU
+  const canAddEje = capabilities?.allowExternalAxes && ejeCount < maxEjes;
+
+  // Fetch compatible models for dialogs
+  const { data: robotModelos } = useModelosCompatiblesCon(
+    dialogMode === 'robot' ? controllerId : undefined,
+    'mechanical_unit',
+  );
+  const { data: ejeModelos } = useModelosCompatiblesCon(
+    dialogMode === 'eje' ? controllerId : undefined,
+    'external_axis',
   );
 
-  // For non-controller types, use compatibility-filtered models
-  const { data: compatData } = useModelosCompatibles(
-    sistemaId || undefined,
-    compForm.tipo || undefined,
-  );
-
-  // Determine which models to show in the dropdown
-  const effectiveModelos: any[] = (() => {
-    if (!compForm.tipo) return [];
-    if (compForm.tipo === 'controller') {
-      // Controllers: show all from fabricante (no compatibility filter)
-      return Array.isArray(modelos) ? modelos : [];
-    }
-    // Non-controllers: use compatibility-filtered list if available
-    if (compatData) return compatData.modelos;
-    return Array.isArray(modelos) ? modelos : [];
-  })();
-
-  const compatWarning = compForm.tipo && compForm.tipo !== 'controller' ? compatData?.warning : null;
+  const activeModelos = dialogMode === 'robot' ? robotModelos : dialogMode === 'eje' ? ejeModelos : [];
+  const familias = useMemo(() => {
+    if (!activeModelos) return [];
+    const fams = new Set<string>();
+    activeModelos.forEach((m: any) => { if (m.familia) fams.add(m.familia); });
+    return [...fams].sort();
+  }, [activeModelos]);
+  const modelosInFamilia = useMemo(() => {
+    if (!activeModelos || !familia) return [];
+    return activeModelos.filter((m: any) => m.familia === familia);
+  }, [activeModelos, familia]);
 
   if (isLoading) {
     return (
@@ -89,61 +142,87 @@ export default function SistemaDetailPage() {
     );
   }
 
-  const componentes: any[] = sistema.componentes ?? [];
-
   const resetForm = () => {
-    setCompForm({ tipo: '', modeloComponenteId: 0, etiqueta: '', numeroSerie: '', numEjes: '' });
+    setFamilia('');
+    setModeloId(0);
+    setModeloNombre('');
+    setEtiqueta('');
+    setNumeroSerie('');
+    setNumEjes('6');
     setEditingComp(null);
   };
 
-  const openCreate = () => {
+  const openAddRobot = () => {
     resetForm();
-    setCompOpen(true);
+    setDialogMode('robot');
+  };
+
+  const openAddEje = () => {
+    resetForm();
+    setDialogMode('eje');
   };
 
   const openEdit = (comp: any) => {
     setEditingComp(comp);
-    setCompForm({
-      tipo: comp.tipo,
-      modeloComponenteId: comp.modeloComponenteId,
-      etiqueta: comp.etiqueta,
-      numeroSerie: comp.numeroSerie || '',
-      numEjes: comp.numEjes ? String(comp.numEjes) : '',
-    });
-    setCompOpen(true);
+    setEtiqueta(comp.etiqueta);
+    setNumeroSerie(comp.numeroSerie || '');
+    setNumEjes(comp.numEjes ? String(comp.numEjes) : '');
+    setDialogMode('edit');
   };
 
-  const handleSubmitComp = async () => {
-    if (editingComp) {
-      await updateComponente.mutateAsync({
-        id: editingComp.id,
-        etiqueta: compForm.etiqueta,
-        numeroSerie: compForm.numeroSerie || null,
-        numEjes: compForm.numEjes ? Number(compForm.numEjes) : null,
-      });
-    } else {
-      await createComponente.mutateAsync({
-        tipo: compForm.tipo,
-        modeloComponenteId: compForm.modeloComponenteId,
-        etiqueta: compForm.etiqueta,
-        numeroSerie: compForm.numeroSerie || null,
-        numEjes: compForm.numEjes ? Number(compForm.numEjes) : null,
-        orden: componentes.length,
-      });
+  const handleSubmit = async () => {
+    try {
+      if (dialogMode === 'edit' && editingComp) {
+        await updateComponente.mutateAsync({
+          id: editingComp.id,
+          etiqueta,
+          numeroSerie: numeroSerie || null,
+          numEjes: numEjes ? Number(numEjes) : null,
+        });
+      } else if (dialogMode === 'robot') {
+        // Robot adicional: create robot + DU automatically
+        await createRobotConDU.mutateAsync({
+          tipo: 'mechanical_unit',
+          modeloComponenteId: modeloId,
+          etiqueta,
+          numeroSerie: numeroSerie || null,
+          numEjes: numEjes ? Number(numEjes) : null,
+        });
+      } else if (dialogMode === 'eje') {
+        await createComponente.mutateAsync({
+          tipo: 'external_axis',
+          modeloComponenteId: modeloId,
+          etiqueta,
+          numeroSerie: numeroSerie || null,
+          orden: componentes.length,
+        });
+      }
+      setDialogMode(null);
+      resetForm();
+    } catch (err: any) {
+      alert(err?.response?.data?.error ?? 'Error');
     }
-    setCompOpen(false);
-    resetForm();
   };
 
-  const handleDeleteComp = async (compId: number, nombre: string) => {
+  const handleDelete = async (compId: number, nombre: string) => {
     if (!window.confirm(`Eliminar componente "${nombre}"?`)) return;
     await deleteComponente.mutateAsync(compId);
   };
 
+  const canSubmit = dialogMode === 'edit'
+    ? etiqueta.trim()
+    : modeloId > 0 && etiqueta.trim();
+
   const compCols: Column<any>[] = [
-    { key: 'etiqueta', header: 'Etiqueta' },
     {
       key: 'tipo',
+      header: '',
+      className: 'w-8',
+      render: (c) => TIPO_ICON[c.tipo] ?? null,
+    },
+    { key: 'etiqueta', header: 'Etiqueta' },
+    {
+      key: 'tipoLabel',
       header: 'Tipo',
       render: (c) => (
         <Badge variant="secondary">{TIPO_LABELS[c.tipo] ?? c.tipo}</Badge>
@@ -161,44 +240,22 @@ export default function SistemaDetailPage() {
       render: (c) => c.numEjes ?? '-',
     },
     ...(isAdmin
-      ? [
-          {
-            key: 'acciones' as const,
-            header: '',
-            render: (c: any) => (
-              <div className="flex gap-0.5">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-gray-400 hover:text-blue-500"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openEdit(c);
-                  }}
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-gray-400 hover:text-red-500"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteComp(c.id, c.etiqueta);
-                  }}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            ),
-          },
-        ]
+      ? [{
+          key: 'acciones' as const,
+          header: '',
+          render: (c: any) => (
+            <div className="flex gap-0.5">
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); openEdit(c); }}>
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(c.id, c.etiqueta); }}>
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ),
+        }]
       : []),
   ];
-
-  const canSubmitComp = editingComp
-    ? compForm.etiqueta.trim()
-    : compForm.tipo && compForm.modeloComponenteId && compForm.etiqueta.trim();
 
   return (
     <div className="space-y-6">
@@ -217,6 +274,32 @@ export default function SistemaDetailPage() {
         <p className="text-sm text-muted-foreground">{sistema.descripcion}</p>
       )}
 
+      {/* Capacity info */}
+      {capabilities && (
+        <Card>
+          <CardContent className="py-3 flex items-center gap-4 flex-wrap">
+            {capabilities.multimove ? (
+              <Badge>Multimove</Badge>
+            ) : (
+              <Badge variant="outline">Sistema simple</Badge>
+            )}
+            <span className="text-sm text-muted-foreground">
+              Robots: {robotCount}/{capabilities.maxRobots}
+            </span>
+            {capabilities.allowExternalAxes && (
+              <span className="text-sm text-muted-foreground">
+                Ejes: {ejeCount}/{maxEjes}
+              </span>
+            )}
+            {duCount > 0 && (
+              <span className="text-sm text-muted-foreground">
+                Drive Units: {duCount}
+              </span>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Componentes */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -224,121 +307,134 @@ export default function SistemaDetailPage() {
             <Cpu className="h-5 w-5" /> Componentes ({componentes.length})
           </h2>
           {isAdmin && (
-            <Button size="sm" onClick={openCreate}>
-              <Plus className="h-4 w-4" /> Componente
-            </Button>
+            <div className="flex gap-2">
+              {canAddRobot && (
+                <Button size="sm" variant="outline" onClick={openAddRobot}>
+                  <Bot className="h-4 w-4 mr-1" /> Robot adicional
+                </Button>
+              )}
+              {canAddEje && (
+                <Button size="sm" variant="outline" onClick={openAddEje}>
+                  <Cog className="h-4 w-4 mr-1" /> Eje externo
+                </Button>
+              )}
+            </div>
           )}
         </div>
         <DataTable
           columns={compCols}
           data={componentes}
-          emptyMessage="Sin componentes. Anade controladores, unidades mecanicas, etc."
+          emptyMessage="Sin componentes."
           rowKey={(c) => c.id}
         />
       </div>
 
-      {/* Create/Edit Componente Dialog */}
-      <Dialog open={compOpen} onOpenChange={(open) => { setCompOpen(open); if (!open) resetForm(); }}>
+      {/* Add Robot / Add Eje / Edit Dialog */}
+      <Dialog open={dialogMode !== null} onOpenChange={(open) => { if (!open) { setDialogMode(null); resetForm(); } }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editingComp ? 'Editar componente' : 'Nuevo componente'}</DialogTitle>
+            <DialogTitle>
+              {dialogMode === 'robot' && 'Anadir robot adicional'}
+              {dialogMode === 'eje' && 'Anadir eje externo'}
+              {dialogMode === 'edit' && 'Editar componente'}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {/* Tipo (solo en creacion) */}
-            {!editingComp && (
-              <div>
-                <Label>Tipo de componente</Label>
-                <Select
-                  value={compForm.tipo}
-                  onValueChange={(v) => setCompForm({ ...compForm, tipo: v, modeloComponenteId: 0 })}
-                >
-                  <SelectTrigger><SelectValue placeholder="Seleccionar tipo..." /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="controller">Controlador</SelectItem>
-                    <SelectItem value="mechanical_unit">Unidad mecanica</SelectItem>
-                    <SelectItem value="drive_unit">Unidad de accionamiento</SelectItem>
-                    <SelectItem value="external_axis">Eje externo</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            {dialogMode === 'robot' && (
+              <p className="text-sm text-muted-foreground">
+                Se creara automaticamente una Drive Unit para este robot.
+              </p>
             )}
 
-            {/* Modelo (solo en creacion) */}
-            {!editingComp && (
-              <div>
-                <Label>Modelo</Label>
-                {!compForm.tipo ? (
-                  <p className="text-xs text-muted-foreground mt-1">Selecciona un tipo primero.</p>
-                ) : (
-                  <Select
-                    value={String(compForm.modeloComponenteId || '')}
-                    onValueChange={(v) => setCompForm({ ...compForm, modeloComponenteId: Number(v) })}
-                  >
-                    <SelectTrigger><SelectValue placeholder="Seleccionar modelo..." /></SelectTrigger>
-                    <SelectContent>
-                      {effectiveModelos.map((m: any) => (
-                        <SelectItem key={m.id} value={String(m.id)}>{m.nombre}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-                {compatWarning && (
-                  <p className="text-xs text-orange-500 mt-1 flex items-center gap-1">
-                    <AlertTriangle className="h-3 w-3 shrink-0" />
-                    {compatWarning}
+            {/* Familia + Modelo (only for create) */}
+            {dialogMode !== 'edit' && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Familia</Label>
+                    <Select
+                      value={familia}
+                      onValueChange={(v) => { setFamilia(v); setModeloId(0); setModeloNombre(''); }}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Seleccionar familia" /></SelectTrigger>
+                      <SelectContent>
+                        {familias.map((f) => (
+                          <SelectItem key={f} value={f}>{f}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Modelo</Label>
+                    <Select
+                      value={String(modeloId || '')}
+                      onValueChange={(v) => {
+                        const id = Number(v);
+                        setModeloId(id);
+                        const m = modelosInFamilia.find((m: any) => m.id === id);
+                        setModeloNombre(m?.nombre ?? '');
+                        setEtiqueta(m?.nombre ?? '');
+                      }}
+                      disabled={!familia}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Seleccionar modelo" /></SelectTrigger>
+                      <SelectContent>
+                        {modelosInFamilia.map((m: any) => (
+                          <SelectItem key={m.id} value={String(m.id)}>{m.nombre}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                {!activeModelos || activeModelos.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    No hay modelos compatibles con {controllerNombre}.
                   </p>
-                )}
-                {compForm.tipo && effectiveModelos.length === 0 && !compatWarning && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    No hay modelos de este tipo para el fabricante {sistema.fabricante?.nombre}. Crea uno en Catalogos.
-                  </p>
-                )}
-              </div>
+                ) : null}
+              </>
             )}
 
             {/* Etiqueta */}
             <div>
               <Label>Etiqueta</Label>
               <Input
-                value={compForm.etiqueta}
-                onChange={(e) => setCompForm({ ...compForm, etiqueta: e.target.value })}
-                placeholder="Ej: IRC5 Principal, MU Robot 1..."
+                value={etiqueta}
+                onChange={(e) => setEtiqueta(e.target.value)}
+                placeholder={dialogMode === 'robot' ? 'Ej: Robot 2' : 'Ej: Posicionador 1'}
               />
             </div>
 
             {/* N/S */}
             <div>
-              <Label>Numero de serie (opcional)</Label>
+              <Label>Numero de serie <span className="text-muted-foreground font-normal">(opcional)</span></Label>
               <Input
-                value={compForm.numeroSerie}
-                onChange={(e) => setCompForm({ ...compForm, numeroSerie: e.target.value })}
-                placeholder="S/N..."
+                value={numeroSerie}
+                onChange={(e) => setNumeroSerie(e.target.value)}
               />
             </div>
 
-            {/* Ejes (solo para mechanical_unit) */}
-            {compForm.tipo === 'mechanical_unit' && (
+            {/* Ejes (solo para robot) */}
+            {(dialogMode === 'robot' || (dialogMode === 'edit' && editingComp?.tipo === 'mechanical_unit')) && (
               <div>
                 <Label>Numero de ejes</Label>
                 <Input
                   type="number"
-                  value={compForm.numEjes}
-                  onChange={(e) => setCompForm({ ...compForm, numEjes: e.target.value })}
-                  placeholder="6"
-                  min={1}
+                  value={numEjes}
+                  onChange={(e) => setNumEjes(e.target.value)}
+                  min={1} max={10}
                 />
               </div>
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setCompOpen(false); resetForm(); }}>Cancelar</Button>
+            <Button variant="outline" onClick={() => { setDialogMode(null); resetForm(); }}>Cancelar</Button>
             <Button
-              onClick={handleSubmitComp}
-              disabled={!canSubmitComp || createComponente.isPending || updateComponente.isPending}
+              onClick={handleSubmit}
+              disabled={!canSubmit || createComponente.isPending || createRobotConDU.isPending || updateComponente.isPending}
             >
-              {(createComponente.isPending || updateComponente.isPending)
-                ? (editingComp ? 'Guardando...' : 'Creando...')
-                : (editingComp ? 'Guardar' : 'Crear')}
+              {(createComponente.isPending || createRobotConDU.isPending || updateComponente.isPending)
+                ? 'Guardando...'
+                : dialogMode === 'edit' ? 'Guardar' : 'Crear'}
             </Button>
           </DialogFooter>
         </DialogContent>

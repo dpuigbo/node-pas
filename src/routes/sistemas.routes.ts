@@ -162,6 +162,53 @@ router.post('/:sistemaId/componentes', requireRole('admin'), async (req: Request
   } catch (err) { next(err); }
 });
 
+// POST /api/v1/sistemas/:sistemaId/componentes/robot-con-du (admin)
+// Adds a robot + auto-creates a drive unit in a single transaction
+router.post('/:sistemaId/componentes/robot-con-du', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const sistemaId = Number(req.params.sistemaId);
+    const data = createComponenteSchema.parse(req.body);
+
+    if (data.tipo !== 'mechanical_unit') {
+      res.status(400).json({ error: 'Este endpoint es solo para unidades mecanicas' });
+      return;
+    }
+
+    // Count existing components to set orden
+    const count = await prisma.componenteSistema.count({ where: { sistemaId } });
+
+    await prisma.$transaction(async (tx) => {
+      // Create the drive unit first
+      await tx.componenteSistema.create({
+        data: {
+          sistemaId,
+          modeloComponenteId: data.modeloComponenteId, // same modelo for now, DU is virtual
+          tipo: 'drive_unit',
+          etiqueta: `DU - ${data.etiqueta}`,
+          orden: count,
+        },
+      });
+
+      // Create the robot
+      await tx.componenteSistema.create({
+        data: {
+          ...data,
+          sistemaId,
+          orden: count + 1,
+        },
+      });
+    });
+
+    // Return updated component list
+    const componentes = await prisma.componenteSistema.findMany({
+      where: { sistemaId },
+      orderBy: { orden: 'asc' },
+      include: { modeloComponente: { select: { id: true, nombre: true, tipo: true } } },
+    });
+    res.status(201).json(componentes);
+  } catch (err) { next(err); }
+});
+
 // PUT /api/v1/sistemas/:sistemaId/componentes/:componenteId (admin)
 router.put('/:sistemaId/componentes/:componenteId', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {

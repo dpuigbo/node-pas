@@ -9,6 +9,14 @@ export function useCreateComponente(sistemaId: number) {
   });
 }
 
+export function useCreateRobotConDU(sistemaId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: any) => api.post(`/v1/sistemas/${sistemaId}/componentes/robot-con-du`, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['sistemas', sistemaId] }),
+  });
+}
+
 export function useUpdateComponente(sistemaId: number) {
   const qc = useQueryClient();
   return useMutation({
