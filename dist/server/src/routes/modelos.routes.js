@@ -16,20 +16,14 @@ router.get('/', async (req, res, next) => {
             where.fabricanteId = Number(req.query.fabricanteId);
         if (req.query.tipo)
             where.tipo = req.query.tipo;
-        // For list view: lightweight query
-        // controladoresCompatibles needed for grouping by generation (mechanical_unit/external_axis)
-        // For controllers: skip compatibility (not shown in UI)
-        const isController = where.tipo === 'controller';
         const modelos = await database_1.prisma.modeloComponente.findMany({
             where,
             orderBy: [{ familia: 'asc' }, { nombre: 'asc' }],
             include: {
                 fabricante: { select: { id: true, nombre: true } },
-                ...(!isController ? {
-                    controladoresCompatibles: {
-                        include: { controlador: { select: { id: true, nombre: true, familia: true } } },
-                    },
-                } : {}),
+                controladoresCompatibles: {
+                    include: { controlador: { select: { id: true, nombre: true, familia: true } } },
+                },
                 _count: { select: { versiones: true } },
             },
         });
