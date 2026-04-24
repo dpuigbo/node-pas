@@ -112,6 +112,60 @@ router.post('/completo', requireRole('admin'), async (req: Request, res: Respons
   } catch (err) { next(err); }
 });
 
+// PUT /api/v1/sistemas/:id/completo (admin) — wizard: update sistema + replace all components atomically
+router.put('/:id/completo', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const sistemaId = Number(req.params.id);
+    const { componentes, ...sistemaData } = createSistemaCompletoSchema.parse(req.body);
+
+    const sistema = await prisma.$transaction(async (tx) => {
+      // 1. Update the sistema
+      await tx.sistema.update({
+        where: { id: sistemaId },
+        data: {
+          nombre: sistemaData.nombre,
+          descripcion: sistemaData.descripcion ?? null,
+          fabricanteId: sistemaData.fabricanteId,
+        },
+      });
+
+      // 2. Delete all existing components
+      await tx.componenteSistema.deleteMany({ where: { sistemaId } });
+
+      // 3. Recreate all components
+      for (const comp of componentes) {
+        await tx.componenteSistema.create({
+          data: {
+            sistemaId,
+            modeloComponenteId: comp.modeloComponenteId,
+            tipo: comp.tipo,
+            etiqueta: comp.etiqueta,
+            numeroSerie: comp.numeroSerie ?? null,
+            numEjes: comp.numEjes ?? null,
+            orden: comp.orden,
+          },
+        });
+      }
+
+      // 4. Return with full includes
+      return tx.sistema.findUnique({
+        where: { id: sistemaId },
+        include: {
+          cliente: { select: { id: true, nombre: true } },
+          fabricante: { select: { id: true, nombre: true } },
+          componentes: {
+            orderBy: { orden: 'asc' },
+            include: { modeloComponente: { select: { id: true, nombre: true, tipo: true } } },
+          },
+        },
+      });
+    });
+
+    if (!sistema) { res.status(404).json({ error: 'Sistema no encontrado' }); return; }
+    res.json(sistema);
+  } catch (err) { next(err); }
+});
+
 // PUT /api/v1/sistemas/:id (admin)
 router.put('/:id', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {

@@ -48,6 +48,17 @@ export function useUpdateSistema() {
   });
 }
 
+export function useUpdateSistemaCompleto() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }: any) => api.put(`/v1/sistemas/${id}/completo`, body).then((r) => r.data),
+    onSuccess: (_data: any, variables: any) => {
+      qc.invalidateQueries({ queryKey: ['sistemas'] });
+      qc.invalidateQueries({ queryKey: ['sistemas', variables.id] });
+    },
+  });
+}
+
 export function useDeleteSistema() {
   const qc = useQueryClient();
   return useMutation({

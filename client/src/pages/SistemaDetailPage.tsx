@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Plus, Cpu, Bot, Cog, Trash2,
-  AlertCircle, Pencil, AlertTriangle,
+  AlertCircle, Pencil, AlertTriangle, Settings,
 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, Column } from '@/components/shared/DataTable';
@@ -19,6 +19,7 @@ import { useSistema } from '@/hooks/useSistemas';
 import { useModelosCompatibles, useModelosCompatiblesCon } from '@/hooks/useModelos';
 import { useCreateComponente, useCreateRobotConDU, useUpdateComponente, useDeleteComponente } from '@/hooks/useComponentes';
 import { useAuth } from '@/hooks/useAuth';
+import { getControllerCapabilities } from '@/lib/controller-capabilities';
 
 const TIPO_LABELS: Record<string, string> = {
   controller: 'Controlador',
@@ -33,29 +34,6 @@ const TIPO_ICON: Record<string, React.ReactNode> = {
   drive_unit: <Cpu className="h-4 w-4 text-purple-500" />,
   external_axis: <Cog className="h-4 w-4 text-orange-500" />,
 };
-
-// ===== Controller capability rules =====
-type Capabilities = {
-  multimove: boolean;
-  maxRobots: number;
-  allowExternalAxes: boolean;
-  maxExternalAxesPerDU: number;
-};
-
-function getControllerCapabilities(nombre: string): Capabilities {
-  const n = nombre.toLowerCase();
-  if (n.includes('single') || n.includes('pmc')) {
-    return { multimove: true, maxRobots: 4, allowExternalAxes: true, maxExternalAxesPerDU: 3 };
-  }
-  if (n.includes('paint') || n.includes('irc5p')) {
-    return { multimove: false, maxRobots: 1, allowExternalAxes: true, maxExternalAxesPerDU: 3 };
-  }
-  if (n.includes('compact')) {
-    return { multimove: false, maxRobots: 1, allowExternalAxes: false, maxExternalAxesPerDU: 0 };
-  }
-  // OmniCore, S4, S4C, S4C+ → 1 robot + 3 ejes
-  return { multimove: false, maxRobots: 1, allowExternalAxes: true, maxExternalAxesPerDU: 3 };
-}
 
 export default function SistemaDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -268,6 +246,13 @@ export default function SistemaDetailPage() {
           title={sistema.nombre}
           description={[sistema.fabricante?.nombre, sistema.maquina?.nombre].filter(Boolean).join(' — ')}
         />
+        <div className="ml-auto">
+          {isAdmin && (
+            <Button variant="outline" onClick={() => navigate(`/sistemas/${sistemaId}/editar`)}>
+              <Settings className="h-4 w-4 mr-2" /> Editar sistema
+            </Button>
+          )}
+        </div>
       </div>
 
       {sistema.descripcion && (

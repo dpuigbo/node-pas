@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, ChevronRight, ChevronLeft, Plus, Trash2,
-  Cpu, Bot, Cog, Check, Loader2,
+  Cpu, Bot, Cog, Check, Loader2, Zap,
 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -14,51 +14,51 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useModelos, useModelosCompatiblesCon } from '@/hooks/useModelos';
 import { useFabricantes } from '@/hooks/useFabricantes';
-import { useCreateSistemaCompleto } from '@/hooks/useSistemas';
-
-// ===== Controller capability rules =====
-type Capabilities = {
-  multimove: boolean;
-  maxRobots: number;
-  allowExternalAxes: boolean;
-  maxExternalAxesPerDU: number;
-};
-
-function getControllerCapabilities(nombre: string): Capabilities {
-  const n = nombre.toLowerCase();
-  if (n.includes('single') || n.includes('pmc')) {
-    return { multimove: true, maxRobots: 4, allowExternalAxes: true, maxExternalAxesPerDU: 3 };
-  }
-  if (n.includes('paint')) {
-    return { multimove: false, maxRobots: 1, allowExternalAxes: true, maxExternalAxesPerDU: 3 };
-  }
-  if (n.includes('compact')) {
-    return { multimove: false, maxRobots: 1, allowExternalAxes: false, maxExternalAxesPerDU: 0 };
-  }
-  // OmniCore, S4, S4C, S4C+ → 1 robot + 3 ejes
-  return { multimove: false, maxRobots: 1, allowExternalAxes: true, maxExternalAxesPerDU: 3 };
-}
+import { useCreateSistemaCompleto, useSistema, useUpdateSistemaCompleto } from '@/hooks/useSistemas';
+import { getControllerCapabilities } from '@/lib/controller-capabilities';
 
 // ===== Types =====
-type ComponenteDraft = {
+type RobotDraft = {
   modeloComponenteId: number;
   modeloNombre: string;
-  tipo: 'controller' | 'mechanical_unit' | 'drive_unit' | 'external_axis';
+  familia: string;
   etiqueta: string;
   numeroSerie: string;
   numEjes: number | null;
 };
 
-const STEP_LABELS = ['Controladora', 'Robot', 'Ejes externos', 'Resumen'];
+type EjeDraft = {
+  modeloComponenteId: number;
+  modeloNombre: string;
+  etiqueta: string;
+  numeroSerie: string;
+};
+
+const emptyRobot = (): RobotDraft => ({
+  modeloComponenteId: 0,
+  modeloNombre: '',
+  familia: '',
+  etiqueta: '',
+  numeroSerie: '',
+  numEjes: 6,
+});
+
+const STEP_LABELS = ['Controladora', 'Robots', 'Ejes externos', 'Resumen'];
 
 export default function NuevoSistemaPage() {
-  const { clienteId: cId } = useParams<{ clienteId: string }>();
-  const clienteId = Number(cId);
+  const params = useParams<{ clienteId?: string; id?: string }>();
+  const editId = params.id ? Number(params.id) : null;
+  const isEdit = editId !== null;
+  const clienteIdParam = params.clienteId ? Number(params.clienteId) : null;
   const navigate = useNavigate();
+
   const createMutation = useCreateSistemaCompleto();
+  const updateMutation = useUpdateSistemaCompleto();
+  const { data: existingSistema, isLoading: isLoadingEdit } = useSistema(editId || undefined);
 
   // Wizard step
   const [step, setStep] = useState(0);
+  const [initialized, setInitialized] = useState(!isEdit);
 
   // Step 1: Sistema info + fabricante + controladora
   const [nombre, setNombre] = useState('');
@@ -70,16 +70,11 @@ export default function NuevoSistemaPage() {
   const [controllerEtiqueta, setControllerEtiqueta] = useState('');
   const [controllerSerie, setControllerSerie] = useState('');
 
-  // Step 2: Robot principal
-  const [robotFamilia, setRobotFamilia] = useState('');
-  const [robotId, setRobotId] = useState<number>(0);
-  const [robotNombre, setRobotNombre] = useState('');
-  const [robotEtiqueta, setRobotEtiqueta] = useState('');
-  const [robotSerie, setRobotSerie] = useState('');
-  const [robotEjes, setRobotEjes] = useState<number | null>(6);
+  // Step 2: Robots (array — first = principal, rest = multimove)
+  const [robots, setRobots] = useState<RobotDraft[]>([emptyRobot()]);
 
   // Step 3: Ejes externos
-  const [ejes, setEjes] = useState<ComponenteDraft[]>([]);
+  const [ejes, setEjes] = useState<EjeDraft[]>([]);
   const [ejeFamilia, setEjeFamilia] = useState('');
   const [ejeModeloId, setEjeModeloId] = useState<number>(0);
   const [ejeNombre, setEjeNombre] = useState('');
@@ -106,6 +101,76 @@ export default function NuevoSistemaPage() {
     return getControllerCapabilities(controllerNombre);
   }, [controllerNombre]);
 
+  // === Precarga datos existentes en modo edicion ===
+  useEffect(() => {
+    if (!isEdit || !existingSistema || initialized) return;
+
+    const comps: any[] = existingSistema.componentes ?? [];
+    const ctrl = comps.find((c: any) => c.tipo === 'controller');
+    const mechs = comps.filter((c: any) => c.tipo === 'mechanical_unit');
+    const exAxes = comps.filter((c: any) => c.tipo === 'external_axis');
+
+    setNombre(existingSistema.nombre);
+    setDescripcion(existingSistema.descripcion || '');
+    setFabricanteId(existingSistema.fabricanteId);
+
+    if (ctrl) {
+      setControllerId(ctrl.modeloComponenteId);
+      setControllerNombre(ctrl.modeloComponente?.nombre ?? '');
+      setControllerFamilia(ctrl.modeloComponente?.tipo === 'controller' ? '' : ''); // will be set below
+      setControllerEtiqueta(ctrl.etiqueta);
+      setControllerSerie(ctrl.numeroSerie || '');
+    }
+
+    if (mechs.length > 0) {
+      setRobots(mechs.map((m: any) => ({
+        modeloComponenteId: m.modeloComponenteId,
+        modeloNombre: m.modeloComponente?.nombre ?? '',
+        familia: '', // will resolve from modelos list
+        etiqueta: m.etiqueta,
+        numeroSerie: m.numeroSerie || '',
+        numEjes: m.numEjes,
+      })));
+    }
+
+    if (exAxes.length > 0) {
+      setEjes(exAxes.map((e: any) => ({
+        modeloComponenteId: e.modeloComponenteId,
+        modeloNombre: e.modeloComponente?.nombre ?? '',
+        etiqueta: e.etiqueta,
+        numeroSerie: e.numeroSerie || '',
+      })));
+    }
+
+    setInitialized(true);
+  }, [isEdit, existingSistema, initialized]);
+
+  // Resolve controller familia once controllers list loads (edit mode)
+  useEffect(() => {
+    if (!isEdit || !controllers || !controllerId || controllerFamilia) return;
+    const ctrl = (controllers as any[]).find((c: any) => c.id === controllerId);
+    if (ctrl?.familia) setControllerFamilia(ctrl.familia);
+  }, [isEdit, controllers, controllerId, controllerFamilia]);
+
+  // Resolve robot familias once robotModelos loads (edit mode)
+  useEffect(() => {
+    if (!isEdit || !robotModelos || robotModelos.length === 0) return;
+    setRobots(prev => {
+      let changed = false;
+      const updated = prev.map(r => {
+        if (r.modeloComponenteId && !r.familia) {
+          const modelo = robotModelos.find((m: any) => m.id === r.modeloComponenteId);
+          if (modelo?.familia) {
+            changed = true;
+            return { ...r, familia: modelo.familia };
+          }
+        }
+        return r;
+      });
+      return changed ? updated : prev;
+    });
+  }, [isEdit, robotModelos]);
+
   // Group controllers by familia
   const controllerFamilias = useMemo(() => {
     if (!controllers || !Array.isArray(controllers)) return [];
@@ -127,10 +192,10 @@ export default function NuevoSistemaPage() {
     return [...fams].sort();
   }, [robotModelos]);
 
-  const robotsInFamilia = useMemo(() => {
-    if (!robotModelos || !robotFamilia) return [];
-    return robotModelos.filter((m: any) => m.familia === robotFamilia);
-  }, [robotModelos, robotFamilia]);
+  const robotsInFamilia = (familia: string) => {
+    if (!robotModelos || !familia) return [];
+    return robotModelos.filter((m: any) => m.familia === familia);
+  };
 
   // Group ejes by familia
   const ejeFamilias = useMemo(() => {
@@ -145,10 +210,11 @@ export default function NuevoSistemaPage() {
     return ejeModelos.filter((m: any) => m.familia === ejeFamilia);
   }, [ejeModelos, ejeFamilia]);
 
-  // Max ejes = 3 (1 DU for first robot, always present implicitly)
-  const maxEjes = capabilities?.maxExternalAxesPerDU ?? 3;
+  // Max ejes = 3 per DU (1 implicit for first robot, 1 per additional robot)
+  const duCount = robots.length > 1 ? robots.length - 1 : 0;
+  const maxEjes = (duCount + 1) * (capabilities?.maxExternalAxesPerDU ?? 3);
 
-  // Steps available (skip step 3 if controller doesn't allow external axes)
+  // Steps available (skip step 2 if controller doesn't allow external axes)
   const steps = useMemo(() => {
     if (capabilities && !capabilities.allowExternalAxes) {
       return [0, 1, 3]; // skip ejes
@@ -169,18 +235,32 @@ export default function NuevoSistemaPage() {
 
   // Validation per step
   const isStep0Valid = nombre.trim() && fabricanteId > 0 && controllerId > 0 && controllerEtiqueta.trim();
-  const isStep1Valid = robotId > 0 && robotEtiqueta.trim();
+  const isStep1Valid = robots.length > 0 && robots.every(r => r.modeloComponenteId > 0 && r.etiqueta.trim());
   const isStepValid = step === 0 ? isStep0Valid : step === 1 ? isStep1Valid : true;
 
+  // Robot CRUD
+  const updateRobot = (index: number, updates: Partial<RobotDraft>) => {
+    setRobots(prev => prev.map((r, i) => i === index ? { ...r, ...updates } : r));
+  };
+
+  const addRobot = () => {
+    if (!capabilities?.multimove || robots.length >= capabilities.maxRobots) return;
+    setRobots(prev => [...prev, emptyRobot()]);
+  };
+
+  const removeRobot = (index: number) => {
+    if (index === 0) return; // can't remove principal
+    setRobots(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Ejes CRUD
   const addEje = () => {
     if (ejeModeloId <= 0 || !ejeEtiqueta.trim() || ejes.length >= maxEjes) return;
     setEjes([...ejes, {
       modeloComponenteId: ejeModeloId,
       modeloNombre: ejeNombre,
-      tipo: 'external_axis',
       etiqueta: ejeEtiqueta,
       numeroSerie: ejeSerie,
-      numEjes: null,
     }]);
     setEjeFamilia('');
     setEjeModeloId(0);
@@ -193,47 +273,96 @@ export default function NuevoSistemaPage() {
     setEjes(ejes.filter((_, i) => i !== index));
   };
 
-  const handleCreate = async () => {
-    const componentes = [
-      {
-        modeloComponenteId: controllerId,
-        tipo: 'controller' as const,
-        etiqueta: controllerEtiqueta,
-        numeroSerie: controllerSerie || null,
-        numEjes: null,
-        orden: 0,
-      },
-      {
-        modeloComponenteId: robotId,
-        tipo: 'mechanical_unit' as const,
-        etiqueta: robotEtiqueta,
-        numeroSerie: robotSerie || null,
-        numEjes: robotEjes,
-        orden: 1,
-      },
-      ...ejes.map((eje, i) => ({
+  // Build component list for submit
+  const buildComponentes = () => {
+    let orden = 0;
+    const componentes: any[] = [];
+
+    // Controller
+    componentes.push({
+      modeloComponenteId: controllerId,
+      tipo: 'controller',
+      etiqueta: controllerEtiqueta,
+      numeroSerie: controllerSerie || null,
+      numEjes: null,
+      orden: orden++,
+    });
+
+    // Robots + DUs
+    robots.forEach((robot, i) => {
+      if (i > 0) {
+        // Drive unit for additional robots
+        componentes.push({
+          modeloComponenteId: robot.modeloComponenteId,
+          tipo: 'drive_unit',
+          etiqueta: `DU - ${robot.etiqueta}`,
+          numeroSerie: null,
+          numEjes: null,
+          orden: orden++,
+        });
+      }
+      componentes.push({
+        modeloComponenteId: robot.modeloComponenteId,
+        tipo: 'mechanical_unit',
+        etiqueta: robot.etiqueta,
+        numeroSerie: robot.numeroSerie || null,
+        numEjes: robot.numEjes,
+        orden: orden++,
+      });
+    });
+
+    // External axes
+    ejes.forEach((eje) => {
+      componentes.push({
         modeloComponenteId: eje.modeloComponenteId,
-        tipo: 'external_axis' as const,
+        tipo: 'external_axis',
         etiqueta: eje.etiqueta,
         numeroSerie: eje.numeroSerie || null,
         numEjes: null,
-        orden: 2 + i,
-      })),
-    ];
+        orden: orden++,
+      });
+    });
+
+    return componentes;
+  };
+
+  const handleSubmit = async () => {
+    const componentes = buildComponentes();
+    const clienteId = isEdit ? existingSistema?.clienteId : clienteIdParam;
+
+    if (!clienteId) return;
+
+    const payload = {
+      clienteId,
+      fabricanteId,
+      nombre,
+      descripcion: descripcion || null,
+      componentes,
+    };
 
     try {
-      const sistema = await createMutation.mutateAsync({
-        clienteId,
-        fabricanteId,
-        nombre,
-        descripcion: descripcion || null,
-        componentes,
-      });
-      navigate(`/sistemas/${sistema.id}`);
+      if (isEdit && editId) {
+        await updateMutation.mutateAsync({ id: editId, ...payload });
+        navigate(`/sistemas/${editId}`);
+      } else {
+        const sistema = await createMutation.mutateAsync(payload);
+        navigate(`/sistemas/${sistema.id}`);
+      }
     } catch (err: any) {
-      alert(err?.response?.data?.error ?? 'Error al crear sistema');
+      alert(err?.response?.data?.error ?? `Error al ${isEdit ? 'guardar' : 'crear'} sistema`);
     }
   };
+
+  const isPending = createMutation.isPending || updateMutation.isPending;
+
+  // Loading state for edit mode
+  if (isEdit && isLoadingEdit) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
@@ -243,8 +372,10 @@ export default function NuevoSistemaPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <PageHeader
-          title="Nuevo Sistema"
-          description="Configura los componentes del sistema robotico"
+          title={isEdit ? 'Editar Sistema' : 'Nuevo Sistema'}
+          description={isEdit
+            ? `Editando ${existingSistema?.nombre ?? ''}`
+            : 'Configura los componentes del sistema robotico'}
         />
       </div>
 
@@ -319,8 +450,7 @@ export default function NuevoSistemaPage() {
                     setControllerFamilia('');
                     setControllerId(0);
                     setControllerNombre('');
-                    setRobotFamilia('');
-                    setRobotId(0);
+                    setRobots([emptyRobot()]);
                     setEjes([]);
                   }}
                 >
@@ -363,10 +493,8 @@ export default function NuevoSistemaPage() {
                       const ctrl = controllersInFamilia.find((c: any) => c.id === id);
                       setControllerNombre(ctrl?.nombre ?? '');
                       setControllerEtiqueta(ctrl?.nombre ?? '');
-                      // Reset robot when controller changes
-                      setRobotFamilia('');
-                      setRobotId(0);
-                      setRobotNombre('');
+                      // Reset robots when controller changes
+                      setRobots([emptyRobot()]);
                       setEjes([]);
                     }}
                     disabled={!controllerFamilia}
@@ -384,7 +512,7 @@ export default function NuevoSistemaPage() {
               {controllerId > 0 && capabilities && (
                 <div className="mt-3 flex gap-2">
                   {capabilities.multimove && (
-                    <Badge variant="default">Multimove</Badge>
+                    <Badge variant="default">Multimove (hasta {capabilities.maxRobots} robots)</Badge>
                   )}
                   {capabilities.allowExternalAxes && (
                     <Badge variant="secondary">Ejes externos</Badge>
@@ -421,96 +549,136 @@ export default function NuevoSistemaPage() {
         </Card>
       )}
 
-      {/* ===== STEP 1: Robot principal ===== */}
+      {/* ===== STEP 1: Robots ===== */}
       {step === 1 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bot className="h-5 w-5" /> Robot principal
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {!robotModelos || robotModelos.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No hay modelos de robot compatibles con {controllerNombre}.
-              </p>
-            ) : (
-              <>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Familia</Label>
-                    <Select
-                      value={robotFamilia}
-                      onValueChange={(v) => {
-                        setRobotFamilia(v);
-                        setRobotId(0);
-                        setRobotNombre('');
-                      }}
-                    >
-                      <SelectTrigger><SelectValue placeholder="Seleccionar familia" /></SelectTrigger>
-                      <SelectContent>
-                        {robotFamilias.map((f) => (
-                          <SelectItem key={f} value={f}>{f}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Modelo</Label>
-                    <Select
-                      value={String(robotId || '')}
-                      onValueChange={(v) => {
-                        const id = Number(v);
-                        setRobotId(id);
-                        const m = robotsInFamilia.find((r: any) => r.id === id);
-                        setRobotNombre(m?.nombre ?? '');
-                        setRobotEtiqueta(m?.nombre ?? '');
-                      }}
-                      disabled={!robotFamilia}
-                    >
-                      <SelectTrigger><SelectValue placeholder="Seleccionar modelo" /></SelectTrigger>
-                      <SelectContent>
-                        {robotsInFamilia.map((m: any) => (
-                          <SelectItem key={m.id} value={String(m.id)}>{m.nombre}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+        <div className="space-y-4">
+          {!robotModelos || robotModelos.length === 0 ? (
+            <Card>
+              <CardContent className="py-6">
+                <p className="text-sm text-muted-foreground">
+                  No hay modelos de robot compatibles con {controllerNombre}.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              {robots.map((robot, index) => (
+                <Card key={index}>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-base">
+                        <Bot className="h-5 w-5" />
+                        {index === 0 ? 'Robot principal' : `Robot ${index + 1}`}
+                        {index > 0 && (
+                          <Badge variant="secondary" className="ml-1 text-xs">
+                            <Zap className="h-3 w-3 mr-0.5" /> + Drive Unit
+                          </Badge>
+                        )}
+                      </div>
+                      {index > 0 && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-destructive"
+                          onClick={() => removeRobot(index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Familia</Label>
+                        <Select
+                          value={robot.familia}
+                          onValueChange={(v) => {
+                            updateRobot(index, { familia: v, modeloComponenteId: 0, modeloNombre: '' });
+                          }}
+                        >
+                          <SelectTrigger><SelectValue placeholder="Seleccionar familia" /></SelectTrigger>
+                          <SelectContent>
+                            {robotFamilias.map((f) => (
+                              <SelectItem key={f} value={f}>{f}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Modelo</Label>
+                        <Select
+                          value={String(robot.modeloComponenteId || '')}
+                          onValueChange={(v) => {
+                            const id = Number(v);
+                            const m = robotsInFamilia(robot.familia).find((r: any) => r.id === id);
+                            updateRobot(index, {
+                              modeloComponenteId: id,
+                              modeloNombre: m?.nombre ?? '',
+                              etiqueta: robot.etiqueta || m?.nombre || '',
+                            });
+                          }}
+                          disabled={!robot.familia}
+                        >
+                          <SelectTrigger><SelectValue placeholder="Seleccionar modelo" /></SelectTrigger>
+                          <SelectContent>
+                            {robotsInFamilia(robot.familia).map((m: any) => (
+                              <SelectItem key={m.id} value={String(m.id)}>{m.nombre}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
 
-                {robotId > 0 && (
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <Label>Etiqueta</Label>
-                      <Input
-                        value={robotEtiqueta}
-                        onChange={(e) => setRobotEtiqueta(e.target.value)}
-                        placeholder="Ej: Robot Principal"
-                      />
-                    </div>
-                    <div>
-                      <Label>N. Serie <span className="text-muted-foreground font-normal">(opcional)</span></Label>
-                      <Input
-                        value={robotSerie}
-                        onChange={(e) => setRobotSerie(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label>N. Ejes</Label>
-                      <Input
-                        type="number"
-                        value={robotEjes ?? ''}
-                        onChange={(e) => setRobotEjes(e.target.value ? Number(e.target.value) : null)}
-                        min={1}
-                        max={10}
-                      />
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
+                    {robot.modeloComponenteId > 0 && (
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <Label>Etiqueta</Label>
+                          <Input
+                            value={robot.etiqueta}
+                            onChange={(e) => updateRobot(index, { etiqueta: e.target.value })}
+                            placeholder={index === 0 ? 'Ej: Robot Principal' : `Ej: Robot ${index + 1}`}
+                          />
+                        </div>
+                        <div>
+                          <Label>N. Serie <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+                          <Input
+                            value={robot.numeroSerie}
+                            onChange={(e) => updateRobot(index, { numeroSerie: e.target.value })}
+                          />
+                        </div>
+                        <div>
+                          <Label>N. Ejes</Label>
+                          <Input
+                            type="number"
+                            value={robot.numEjes ?? ''}
+                            onChange={(e) => updateRobot(index, {
+                              numEjes: e.target.value ? Number(e.target.value) : null,
+                            })}
+                            min={1}
+                            max={10}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+
+              {/* Add robot button (multimove only) */}
+              {capabilities?.multimove && robots.length < capabilities.maxRobots && (
+                <Button
+                  variant="outline"
+                  className="w-full border-dashed"
+                  onClick={addRobot}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Anadir robot ({robots.length}/{capabilities.maxRobots})
+                </Button>
+              )}
+            </>
+          )}
+        </div>
       )}
 
       {/* ===== STEP 2: Ejes externos ===== */}
@@ -667,18 +835,32 @@ export default function NuevoSistemaPage() {
                 )}
               </div>
 
-              {/* Robot */}
-              <div className="flex items-center gap-3 p-3 rounded-lg border">
-                <Bot className="h-5 w-5 text-green-500 shrink-0" />
-                <div className="flex-1">
-                  <span className="font-medium">{robotNombre}</span>
-                  <span className="text-muted-foreground ml-2">— {robotEtiqueta}</span>
+              {/* Robots + DUs */}
+              {robots.map((robot, i) => (
+                <div key={i}>
+                  {i > 0 && (
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-dashed">
+                      <Zap className="h-5 w-5 text-purple-500 shrink-0" />
+                      <div className="flex-1">
+                        <span className="font-medium text-muted-foreground">Drive Unit</span>
+                        <span className="text-muted-foreground ml-2">— DU - {robot.etiqueta}</span>
+                      </div>
+                      <Badge variant="outline" className="text-xs">Auto</Badge>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3 p-3 rounded-lg border">
+                    <Bot className="h-5 w-5 text-green-500 shrink-0" />
+                    <div className="flex-1">
+                      <span className="font-medium">{robot.modeloNombre}</span>
+                      <span className="text-muted-foreground ml-2">— {robot.etiqueta}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {robot.numEjes && <Badge variant="outline">{robot.numEjes} ejes</Badge>}
+                      {robot.numeroSerie && <span className="text-xs text-muted-foreground">S/N: {robot.numeroSerie}</span>}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {robotEjes && <Badge variant="outline">{robotEjes} ejes</Badge>}
-                  {robotSerie && <span className="text-xs text-muted-foreground">S/N: {robotSerie}</span>}
-                </div>
-              </div>
+              ))}
 
               {/* Ejes */}
               {ejes.map((eje, i) => (
@@ -696,8 +878,10 @@ export default function NuevoSistemaPage() {
             </div>
 
             <p className="text-sm text-muted-foreground">
-              Total: {2 + ejes.length} componentes
-              {capabilities?.multimove && ' — Podras anadir mas robots desde la pagina del sistema'}
+              Total: {1 + robots.length + (robots.length > 1 ? robots.length - 1 : 0) + ejes.length} componentes
+              (controladora + {robots.length} robot{robots.length > 1 ? 's' : ''}
+              {robots.length > 1 ? ` + ${robots.length - 1} DU` : ''}
+              {ejes.length > 0 ? ` + ${ejes.length} eje${ejes.length > 1 ? 's' : ''}` : ''})
             </p>
           </CardContent>
         </Card>
@@ -718,13 +902,13 @@ export default function NuevoSistemaPage() {
 
         {step === 3 ? (
           <Button
-            onClick={handleCreate}
-            disabled={createMutation.isPending}
+            onClick={handleSubmit}
+            disabled={isPending}
           >
-            {createMutation.isPending ? (
-              <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Creando...</>
+            {isPending ? (
+              <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> {isEdit ? 'Guardando...' : 'Creando...'}</>
             ) : (
-              'Crear sistema'
+              isEdit ? 'Guardar cambios' : 'Crear sistema'
             )}
           </Button>
         ) : (

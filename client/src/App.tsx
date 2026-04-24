@@ -114,6 +114,14 @@ export default function App() {
               </Suspense>
             }
           />
+          <Route
+            path="/sistemas/:id/editar"
+            element={
+              <Suspense fallback={<EditorLoader />}>
+                <NuevoSistemaPage />
+              </Suspense>
+            }
+          />
           <Route path="/modelos" element={<ModelosPage />} />
           <Route
             path="/modelos/:modeloId"
