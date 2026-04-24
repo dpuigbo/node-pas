@@ -101,8 +101,9 @@ export default function NuevoSistemaPage() {
 
   // Robot principal familiaId (para validacion compatibilidad ejes)
   const robotPrincipalFamiliaId = useMemo(() => {
-    if (!robotModelos || !robots[0]?.modeloComponenteId) return undefined;
-    const modelo = robotModelos.find((m: any) => m.id === robots[0].modeloComponenteId);
+    const principal = robots[0];
+    if (!robotModelos || !principal?.modeloComponenteId) return undefined;
+    const modelo = robotModelos.find((m: any) => m.id === principal.modeloComponenteId);
     return modelo?.familiaId as number | undefined;
   }, [robotModelos, robots]);
 
