@@ -25,6 +25,8 @@ type RobotDraft = {
   etiqueta: string;
   numeroSerie: string;
   numEjes: number | null;
+  duEtiqueta: string;
+  duSerie: string;
 };
 
 type EjeDraft = {
@@ -41,6 +43,8 @@ const emptyRobot = (): RobotDraft => ({
   etiqueta: '',
   numeroSerie: '',
   numEjes: 6,
+  duEtiqueta: '',
+  duSerie: '',
 });
 
 const STEP_LABELS = ['Controladora', 'Robots', 'Ejes externos', 'Resumen'];
@@ -108,6 +112,7 @@ export default function NuevoSistemaPage() {
     const comps: any[] = existingSistema.componentes ?? [];
     const ctrl = comps.find((c: any) => c.tipo === 'controller');
     const mechs = comps.filter((c: any) => c.tipo === 'mechanical_unit');
+    const dus = comps.filter((c: any) => c.tipo === 'drive_unit');
     const exAxes = comps.filter((c: any) => c.tipo === 'external_axis');
 
     setNombre(existingSistema.nombre);
@@ -117,20 +122,26 @@ export default function NuevoSistemaPage() {
     if (ctrl) {
       setControllerId(ctrl.modeloComponenteId);
       setControllerNombre(ctrl.modeloComponente?.nombre ?? '');
-      setControllerFamilia(ctrl.modeloComponente?.tipo === 'controller' ? '' : ''); // will be set below
+      setControllerFamilia(''); // will be set by effect below
       setControllerEtiqueta(ctrl.etiqueta);
       setControllerSerie(ctrl.numeroSerie || '');
     }
 
     if (mechs.length > 0) {
-      setRobots(mechs.map((m: any) => ({
-        modeloComponenteId: m.modeloComponenteId,
-        modeloNombre: m.modeloComponente?.nombre ?? '',
-        familia: '', // will resolve from modelos list
-        etiqueta: m.etiqueta,
-        numeroSerie: m.numeroSerie || '',
-        numEjes: m.numEjes,
-      })));
+      // Associate DUs with their robots (DU[i] matches mech[i+1], first robot has no DU)
+      setRobots(mechs.map((m: any, i: number) => {
+        const du = i > 0 && dus[i - 1] ? dus[i - 1] : null;
+        return {
+          modeloComponenteId: m.modeloComponenteId,
+          modeloNombre: m.modeloComponente?.nombre ?? '',
+          familia: '', // will resolve from modelos list
+          etiqueta: m.etiqueta,
+          numeroSerie: m.numeroSerie || '',
+          numEjes: m.numEjes,
+          duEtiqueta: du?.etiqueta || '',
+          duSerie: du?.numeroSerie || '',
+        };
+      }));
     }
 
     if (exAxes.length > 0) {
@@ -295,8 +306,8 @@ export default function NuevoSistemaPage() {
         componentes.push({
           modeloComponenteId: robot.modeloComponenteId,
           tipo: 'drive_unit',
-          etiqueta: `DU - ${robot.etiqueta}`,
-          numeroSerie: null,
+          etiqueta: robot.duEtiqueta || `DU - ${robot.etiqueta}`,
+          numeroSerie: robot.duSerie || null,
           numEjes: null,
           orden: orden++,
         });
@@ -631,35 +642,64 @@ export default function NuevoSistemaPage() {
                     </div>
 
                     {robot.modeloComponenteId > 0 && (
-                      <div className="grid grid-cols-3 gap-4">
-                        <div>
-                          <Label>Etiqueta</Label>
-                          <Input
-                            value={robot.etiqueta}
-                            onChange={(e) => updateRobot(index, { etiqueta: e.target.value })}
-                            placeholder={index === 0 ? 'Ej: Robot Principal' : `Ej: Robot ${index + 1}`}
-                          />
+                      <>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div>
+                            <Label>Etiqueta</Label>
+                            <Input
+                              value={robot.etiqueta}
+                              onChange={(e) => updateRobot(index, { etiqueta: e.target.value })}
+                              placeholder={index === 0 ? 'Ej: Robot Principal' : `Ej: Robot ${index + 1}`}
+                            />
+                          </div>
+                          <div>
+                            <Label>N. Serie <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+                            <Input
+                              value={robot.numeroSerie}
+                              onChange={(e) => updateRobot(index, { numeroSerie: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <Label>N. Ejes</Label>
+                            <Input
+                              type="number"
+                              value={robot.numEjes ?? ''}
+                              onChange={(e) => updateRobot(index, {
+                                numEjes: e.target.value ? Number(e.target.value) : null,
+                              })}
+                              min={1}
+                              max={10}
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <Label>N. Serie <span className="text-muted-foreground font-normal">(opcional)</span></Label>
-                          <Input
-                            value={robot.numeroSerie}
-                            onChange={(e) => updateRobot(index, { numeroSerie: e.target.value })}
-                          />
-                        </div>
-                        <div>
-                          <Label>N. Ejes</Label>
-                          <Input
-                            type="number"
-                            value={robot.numEjes ?? ''}
-                            onChange={(e) => updateRobot(index, {
-                              numEjes: e.target.value ? Number(e.target.value) : null,
-                            })}
-                            min={1}
-                            max={10}
-                          />
-                        </div>
-                      </div>
+
+                        {/* Drive Unit fields for additional robots */}
+                        {index > 0 && (
+                          <div className="border-t pt-3 mt-1">
+                            <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                              <Zap className="h-3 w-3" /> Drive Unit
+                            </p>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <Label>Etiqueta DU</Label>
+                                <Input
+                                  value={robot.duEtiqueta}
+                                  onChange={(e) => updateRobot(index, { duEtiqueta: e.target.value })}
+                                  placeholder={`DU - ${robot.etiqueta || `Robot ${index + 1}`}`}
+                                />
+                              </div>
+                              <div>
+                                <Label>N. Serie DU <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+                                <Input
+                                  value={robot.duSerie}
+                                  onChange={(e) => updateRobot(index, { duSerie: e.target.value })}
+                                  placeholder="Numero de serie"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </>
                     )}
                   </CardContent>
                 </Card>
@@ -843,9 +883,11 @@ export default function NuevoSistemaPage() {
                       <Zap className="h-5 w-5 text-purple-500 shrink-0" />
                       <div className="flex-1">
                         <span className="font-medium text-muted-foreground">Drive Unit</span>
-                        <span className="text-muted-foreground ml-2">— DU - {robot.etiqueta}</span>
+                        <span className="text-muted-foreground ml-2">— {robot.duEtiqueta || `DU - ${robot.etiqueta}`}</span>
                       </div>
-                      <Badge variant="outline" className="text-xs">Auto</Badge>
+                      {robot.duSerie && (
+                        <span className="text-xs text-muted-foreground">S/N: {robot.duSerie}</span>
+                      )}
                     </div>
                   )}
                   <div className="flex items-center gap-3 p-3 rounded-lg border">
