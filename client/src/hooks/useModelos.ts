@@ -153,6 +153,32 @@ export function useUpdateCompatibilidad() {
   });
 }
 
+// Compatibilidad de eje externo (tri-vía v2)
+export function useEjeCompatibilidad(
+  ejeModeloId: number | undefined,
+  robotFamiliaId: number | undefined,
+  controladorModeloId: number | undefined,
+) {
+  return useQuery({
+    queryKey: ['ejes', 'compatibilidad', ejeModeloId, robotFamiliaId, controladorModeloId],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (robotFamiliaId) params.set('robotFamiliaId', String(robotFamiliaId));
+      if (controladorModeloId) params.set('controladorModeloId', String(controladorModeloId));
+      const { data } = await api.get(`/v1/sistemas/ejes/${ejeModeloId}/compatibilidad?${params}`);
+      return data as {
+        compatible: boolean;
+        motivo?: string;
+        familiasPermitidas?: { id: number; codigo: string }[];
+        familiasExcluidas?: { id: number; codigo: string }[];
+        controladoresRequeridos?: { id: number; nombre: string }[];
+        reglas?: any;
+      };
+    },
+    enabled: !!ejeModeloId,
+  });
+}
+
 export function useModelosCompatibles(sistemaId: number | undefined, tipo: string | undefined) {
   return useQuery({
     queryKey: ['modelos', 'compatible', sistemaId, tipo],

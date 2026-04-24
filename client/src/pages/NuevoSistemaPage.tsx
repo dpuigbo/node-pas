@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, ChevronRight, ChevronLeft, Plus, Trash2,
-  Cpu, Bot, Cog, Check, Loader2, Zap,
+  Cpu, Bot, Cog, Check, Loader2, Zap, AlertTriangle,
 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useModelos, useModelosCompatiblesCon } from '@/hooks/useModelos';
+import { useModelos, useModelosCompatiblesCon, useEjeCompatibilidad } from '@/hooks/useModelos';
 import { useFabricantes } from '@/hooks/useFabricantes';
 import { useCreateSistemaCompleto, useSistema, useUpdateSistemaCompleto } from '@/hooks/useSistemas';
 import { getControllerCapabilities } from '@/lib/controller-capabilities';
@@ -97,6 +97,20 @@ export default function NuevoSistemaPage() {
   const { data: ejeModelos } = useModelosCompatiblesCon(
     controllerId || undefined,
     'external_axis',
+  );
+
+  // Robot principal familiaId (para validacion compatibilidad ejes)
+  const robotPrincipalFamiliaId = useMemo(() => {
+    if (!robotModelos || !robots[0]?.modeloComponenteId) return undefined;
+    const modelo = robotModelos.find((m: any) => m.id === robots[0].modeloComponenteId);
+    return modelo?.familiaId as number | undefined;
+  }, [robotModelos, robots]);
+
+  // Compatibilidad eje externo seleccionado
+  const { data: ejeCompat, isLoading: ejeCompatLoading } = useEjeCompatibilidad(
+    ejeModeloId || undefined,
+    robotPrincipalFamiliaId,
+    controllerId || undefined,
   );
 
   // Derive controller capabilities
@@ -815,8 +829,31 @@ export default function NuevoSistemaPage() {
                     </div>
                   </div>
                 )}
+                {ejeModeloId > 0 && ejeCompat && !ejeCompat.compatible && (
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                    <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="font-medium text-destructive">{ejeCompat.motivo}</p>
+                      {ejeCompat.familiasPermitidas && (
+                        <p className="text-muted-foreground mt-1">
+                          Familias compatibles: {ejeCompat.familiasPermitidas.map(f => f.codigo).join(', ')}
+                        </p>
+                      )}
+                      {ejeCompat.controladoresRequeridos && (
+                        <p className="text-muted-foreground mt-1">
+                          Controladores requeridos: {ejeCompat.controladoresRequeridos.map(c => c.nombre).join(', ')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
                 {ejeModeloId > 0 && ejeEtiqueta.trim() && (
-                  <Button size="sm" variant="secondary" onClick={addEje}>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={addEje}
+                    disabled={ejeCompatLoading || (ejeCompat !== undefined && !ejeCompat.compatible)}
+                  >
                     <Plus className="h-4 w-4 mr-1" /> Anadir
                   </Button>
                 )}
