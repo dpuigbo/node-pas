@@ -116,6 +116,60 @@ router.post('/completo', (0, role_middleware_1.requireRole)('admin'), async (req
         next(err);
     }
 });
+// PUT /api/v1/sistemas/:id/completo (admin) — wizard: update sistema + replace all components atomically
+router.put('/:id/completo', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
+    try {
+        const sistemaId = Number(req.params.id);
+        const { componentes, ...sistemaData } = sistemas_validation_1.createSistemaCompletoSchema.parse(req.body);
+        const sistema = await database_1.prisma.$transaction(async (tx) => {
+            // 1. Update the sistema
+            await tx.sistema.update({
+                where: { id: sistemaId },
+                data: {
+                    nombre: sistemaData.nombre,
+                    descripcion: sistemaData.descripcion ?? null,
+                    fabricanteId: sistemaData.fabricanteId,
+                },
+            });
+            // 2. Delete all existing components
+            await tx.componenteSistema.deleteMany({ where: { sistemaId } });
+            // 3. Recreate all components
+            for (const comp of componentes) {
+                await tx.componenteSistema.create({
+                    data: {
+                        sistemaId,
+                        modeloComponenteId: comp.modeloComponenteId,
+                        tipo: comp.tipo,
+                        etiqueta: comp.etiqueta,
+                        numeroSerie: comp.numeroSerie ?? null,
+                        numEjes: comp.numEjes ?? null,
+                        orden: comp.orden,
+                    },
+                });
+            }
+            // 4. Return with full includes
+            return tx.sistema.findUnique({
+                where: { id: sistemaId },
+                include: {
+                    cliente: { select: { id: true, nombre: true } },
+                    fabricante: { select: { id: true, nombre: true } },
+                    componentes: {
+                        orderBy: { orden: 'asc' },
+                        include: { modeloComponente: { select: { id: true, nombre: true, tipo: true } } },
+                    },
+                },
+            });
+        });
+        if (!sistema) {
+            res.status(404).json({ error: 'Sistema no encontrado' });
+            return;
+        }
+        res.json(sistema);
+    }
+    catch (err) {
+        next(err);
+    }
+});
 // PUT /api/v1/sistemas/:id (admin)
 router.put('/:id', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
     try {
@@ -168,6 +222,50 @@ router.post('/:sistemaId/componentes', (0, role_middleware_1.requireRole)('admin
             data: { ...data, sistemaId: Number(req.params.sistemaId) },
         });
         res.status(201).json(componente);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// POST /api/v1/sistemas/:sistemaId/componentes/robot-con-du (admin)
+// Adds a robot + auto-creates a drive unit in a single transaction
+router.post('/:sistemaId/componentes/robot-con-du', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
+    try {
+        const sistemaId = Number(req.params.sistemaId);
+        const data = sistemas_validation_1.createComponenteSchema.parse(req.body);
+        if (data.tipo !== 'mechanical_unit') {
+            res.status(400).json({ error: 'Este endpoint es solo para unidades mecanicas' });
+            return;
+        }
+        // Count existing components to set orden
+        const count = await database_1.prisma.componenteSistema.count({ where: { sistemaId } });
+        await database_1.prisma.$transaction(async (tx) => {
+            // Create the drive unit first
+            await tx.componenteSistema.create({
+                data: {
+                    sistemaId,
+                    modeloComponenteId: data.modeloComponenteId, // same modelo for now, DU is virtual
+                    tipo: 'drive_unit',
+                    etiqueta: `DU - ${data.etiqueta}`,
+                    orden: count,
+                },
+            });
+            // Create the robot
+            await tx.componenteSistema.create({
+                data: {
+                    ...data,
+                    sistemaId,
+                    orden: count + 1,
+                },
+            });
+        });
+        // Return updated component list
+        const componentes = await database_1.prisma.componenteSistema.findMany({
+            where: { sistemaId },
+            orderBy: { orden: 'asc' },
+            include: { modeloComponente: { select: { id: true, nombre: true, tipo: true } } },
+        });
+        res.status(201).json(componentes);
     }
     catch (err) {
         next(err);
