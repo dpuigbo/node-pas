@@ -29,6 +29,7 @@ exports.updateClienteSchema = exports.createClienteSchema.partial();
 exports.createMaquinaSchema = zod_1.z.object({
     nombre: zod_1.z.string().min(1, 'El nombre es obligatorio').max(200),
     descripcion: zod_1.z.string().max(500).optional().nullable(),
+    plantaId: zod_1.z.number().int().positive(),
 });
 exports.updateMaquinaSchema = exports.createMaquinaSchema.partial();
 //# sourceMappingURL=clientes.validation.js.map
