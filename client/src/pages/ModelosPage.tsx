@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useModelos, useCreateModelo, useDeleteModelo } from '@/hooks/useModelos';
 import { useFabricantes } from '@/hooks/useFabricantes';
 import { useAuth } from '@/hooks/useAuth';
+import { useFamilias, useGeneracionesControlador } from '@/hooks/useLookups';
 import { getNivelesForTipo, getNivelesFijos, tieneNivelesEditables } from '@/lib/niveles';
 
 const TIPO_LABELS: Record<string, string> = {
@@ -133,7 +134,9 @@ export default function ModelosPage() {
   const [deleting, setDeleting] = useState<any>(null);
   const [form, setForm] = useState({
     fabricanteId: 0,
+    familiaId: 0,
     familia: '',
+    generacionControladorId: 0,
     nombre: '',
     notas: '',
     niveles: [] as string[],
@@ -143,7 +146,7 @@ export default function ModelosPage() {
   // When dialog opens, initialize niveles with fixed levels for current tipo
   const openCreateDialog = () => {
     const fijos = tipoFilter ? getNivelesFijos(tipoFilter) : [];
-    setForm({ fabricanteId: 0, familia: '', nombre: '', notas: '', niveles: fijos, controladorIds: [] });
+    setForm({ fabricanteId: 0, familiaId: 0, familia: '', generacionControladorId: 0, nombre: '', notas: '', niveles: fijos, controladorIds: [] });
     setFormOpen(true);
   };
 
@@ -153,6 +156,16 @@ export default function ModelosPage() {
       ? { fabricanteId: form.fabricanteId, tipo: 'controller' }
       : undefined,
   );
+
+  // Familias desde lu_familia (filtradas por fabricante + tipo)
+  const { data: familiasLookup } = useFamilias(
+    form.fabricanteId && tipoFilter
+      ? { fabricanteId: form.fabricanteId, tipo: tipoFilter }
+      : undefined,
+  );
+
+  // Generaciones (solo para controllers)
+  const { data: generaciones } = useGeneracionesControlador();
 
   const toggleFormNivel = (nivel: string) => {
     const fijos = tipoFilter ? getNivelesFijos(tipoFilter) : [];
@@ -170,23 +183,15 @@ export default function ModelosPage() {
     });
   };
 
-  // Derive existing families from loaded modelos for the selected fabricante
-  const existingFamilias = useMemo(() => {
-    if (!modelos || !form.fabricanteId) return [];
-    const familias = new Set<string>();
-    (Array.isArray(modelos) ? modelos : [])
-      .filter((m: any) => m.fabricanteId === form.fabricanteId && m.familia)
-      .forEach((m: any) => familias.add(m.familia));
-    return [...familias].sort();
-  }, [modelos, form.fabricanteId]);
-
   const handleSubmit = async () => {
     try {
       const nivelesStr = form.niveles.length > 0 ? form.niveles.join(',') : null;
       const res = await createMutation.mutateAsync({
         fabricanteId: form.fabricanteId,
-        tipo: tipoFilter!, // tipo is set from the URL
+        tipo: tipoFilter!,
         familia: form.familia || null,
+        familiaId: form.familiaId || null,
+        generacionControladorId: form.generacionControladorId || null,
         nombre: form.nombre,
         notas: form.notas || null,
         niveles: nivelesStr,
@@ -422,27 +427,44 @@ export default function ModelosPage() {
               </Select>
             </div>
 
-            {/* Familia */}
+            {/* Familia (desde lu_familia) */}
             <div>
-              <Label>Familia <span className="text-muted-foreground font-normal">(opcional)</span></Label>
-              <Input
-                list="familias-list"
-                value={form.familia}
-                onChange={(e) => setForm({ ...form, familia: e.target.value })}
-                placeholder={form.fabricanteId ? 'Escribe nueva o selecciona existente...' : 'Selecciona fabricante primero'}
+              <Label>Familia</Label>
+              <Select
+                value={String(form.familiaId || '')}
+                onValueChange={(v) => {
+                  const id = Number(v);
+                  const fam = familiasLookup?.find(f => f.id === id);
+                  setForm({ ...form, familiaId: id, familia: fam?.codigo ?? '' });
+                }}
                 disabled={!form.fabricanteId}
-              />
-              <datalist id="familias-list">
-                {existingFamilias.map((f) => (
-                  <option key={f} value={f} />
-                ))}
-              </datalist>
-              {existingFamilias.length > 0 && form.fabricanteId > 0 && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  {existingFamilias.length} familia{existingFamilias.length > 1 ? 's' : ''} existente{existingFamilias.length > 1 ? 's' : ''} para este fabricante
-                </p>
-              )}
+              >
+                <SelectTrigger><SelectValue placeholder={form.fabricanteId ? 'Seleccionar familia' : 'Selecciona fabricante primero'} /></SelectTrigger>
+                <SelectContent>
+                  {(familiasLookup ?? []).map((f) => (
+                    <SelectItem key={f.id} value={String(f.id)}>{f.codigo}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
+            {/* Generación controlador (solo para controllers) */}
+            {tipoFilter === 'controller' && (
+              <div>
+                <Label>Generacion <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+                <Select
+                  value={String(form.generacionControladorId || '')}
+                  onValueChange={(v) => setForm({ ...form, generacionControladorId: Number(v) })}
+                >
+                  <SelectTrigger><SelectValue placeholder="Seleccionar generacion" /></SelectTrigger>
+                  <SelectContent>
+                    {(generaciones ?? []).map((g) => (
+                      <SelectItem key={g.id} value={String(g.id)}>{g.nombre}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Nombre */}
             <div>

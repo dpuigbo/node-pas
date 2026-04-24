@@ -6,10 +6,12 @@ export const createModeloSchema = z.object({
   fabricanteId: z.number().int().positive(),
   tipo: tipoComponenteEnum,
   familia: z.string().max(200).optional().nullable(),
+  familiaId: z.number().int().positive().optional().nullable(),
+  generacionControladorId: z.number().int().positive().optional().nullable(),
   nombre: z.string().min(1, 'El nombre es obligatorio').max(200),
   notas: z.string().optional().nullable(),
   aceitesConfig: z.any().optional().nullable(),
-  niveles: z.string().max(100).optional().nullable(), // CSV: "1,2,2_inferior,2_superior,3"
+  niveles: z.string().max(100).optional().nullable(),
   controladorIds: z.array(z.number().int().positive()).optional().default([]),
 });
 
