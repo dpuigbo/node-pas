@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Plus, Cpu, Bot, Cog, Trash2,
-  AlertCircle, Pencil, AlertTriangle, Settings,
+  ArrowLeft, Cpu, Bot, Cog, Trash2,
+  AlertCircle, Pencil, Settings,
 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, Column } from '@/components/shared/DataTable';
@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSistema } from '@/hooks/useSistemas';
-import { useModelosCompatibles, useModelosCompatiblesCon } from '@/hooks/useModelos';
+import { useModelosCompatiblesCon } from '@/hooks/useModelos';
 import { useCreateComponente, useCreateRobotConDU, useUpdateComponente, useDeleteComponente } from '@/hooks/useComponentes';
 import { useAuth } from '@/hooks/useAuth';
 import { getControllerCapabilities } from '@/lib/controller-capabilities';
@@ -54,7 +54,7 @@ export default function SistemaDetailPage() {
   // Form for adding robot / eje / editing
   const [familia, setFamilia] = useState('');
   const [modeloId, setModeloId] = useState(0);
-  const [modeloNombre, setModeloNombre] = useState('');
+  const [, setModeloNombre] = useState('');
   const [etiqueta, setEtiqueta] = useState('');
   const [numeroSerie, setNumeroSerie] = useState('');
   const [numEjes, setNumEjes] = useState('6');
