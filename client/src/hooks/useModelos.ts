@@ -128,6 +128,18 @@ export function useMantenimiento(modeloId: number | undefined) {
   });
 }
 
+// Compatibilidad por controladorId (para wizard, sin sistemaId)
+export function useModelosCompatiblesCon(controladorId: number | undefined, tipo: string | undefined) {
+  return useQuery({
+    queryKey: ['modelos', 'compatible-con', controladorId, tipo],
+    queryFn: async () => {
+      const { data } = await api.get(`/v1/modelos/compatible-con?controladorId=${controladorId}&tipo=${tipo}`);
+      return data as any[];
+    },
+    enabled: !!controladorId && !!tipo,
+  });
+}
+
 // Compatibilidad M:N
 export function useUpdateCompatibilidad() {
   const qc = useQueryClient();

@@ -4,6 +4,7 @@ import { prisma } from '../config/database';
 import {
   createSistemaSchema, updateSistemaSchema,
   createComponenteSchema, updateComponenteSchema,
+  createSistemaCompletoSchema,
 } from '../validation/sistemas.validation';
 
 const router = Router();
@@ -65,6 +66,48 @@ router.post('/', requireRole('admin'), async (req: Request, res: Response, next:
         fabricante: { select: { id: true, nombre: true } },
       },
     });
+    res.status(201).json(sistema);
+  } catch (err) { next(err); }
+});
+
+// POST /api/v1/sistemas/completo (admin) — wizard: create sistema + all components atomically
+router.post('/completo', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { componentes, ...sistemaData } = createSistemaCompletoSchema.parse(req.body);
+
+    const sistema = await prisma.$transaction(async (tx) => {
+      // 1. Create the sistema
+      const newSistema = await tx.sistema.create({ data: sistemaData });
+
+      // 2. Create all components
+      for (const comp of componentes) {
+        await tx.componenteSistema.create({
+          data: {
+            sistemaId: newSistema.id,
+            modeloComponenteId: comp.modeloComponenteId,
+            tipo: comp.tipo,
+            etiqueta: comp.etiqueta,
+            numeroSerie: comp.numeroSerie ?? null,
+            numEjes: comp.numEjes ?? null,
+            orden: comp.orden,
+          },
+        });
+      }
+
+      // 3. Return with full includes
+      return tx.sistema.findUnique({
+        where: { id: newSistema.id },
+        include: {
+          cliente: { select: { id: true, nombre: true } },
+          fabricante: { select: { id: true, nombre: true } },
+          componentes: {
+            orderBy: { orden: 'asc' },
+            include: { modeloComponente: { select: { id: true, nombre: true, tipo: true } } },
+          },
+        },
+      });
+    });
+
     res.status(201).json(sistema);
   } catch (err) { next(err); }
 });

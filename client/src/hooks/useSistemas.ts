@@ -32,6 +32,14 @@ export function useCreateSistema() {
   });
 }
 
+export function useCreateSistemaCompleto() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: any) => api.post('/v1/sistemas/completo', body).then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['sistemas'] }),
+  });
+}
+
 export function useUpdateSistema() {
   const qc = useQueryClient();
   return useMutation({

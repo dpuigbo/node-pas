@@ -42,6 +42,7 @@ const ModeloDetailPage = lazyRetry(() => import('./pages/ModeloDetailPage'));
 const IntervencionDetailPage = lazyRetry(() => import('./pages/IntervencionDetailPage'));
 const InformeFormPage = lazyRetry(() => import('./pages/InformeFormPage'));
 const SistemaDetailPage = lazyRetry(() => import('./pages/SistemaDetailPage'));
+const NuevoSistemaPage = lazyRetry(() => import('./pages/NuevoSistemaPage'));
 const DocumentTemplateEditorPage = lazyRetry(() => import('./pages/DocumentTemplateEditorPage'));
 const InformePreviewPage = lazyRetry(() => import('./pages/InformePreviewPage'));
 
@@ -97,6 +98,14 @@ export default function App() {
           <Route path="/fabricantes" element={<FabricantesPage />} />
           <Route path="/clientes" element={<ClientesPage />} />
           <Route path="/clientes/:id" element={<ClienteDetailPage />} />
+          <Route
+            path="/clientes/:clienteId/sistemas/nuevo"
+            element={
+              <Suspense fallback={<EditorLoader />}>
+                <NuevoSistemaPage />
+              </Suspense>
+            }
+          />
           <Route
             path="/sistemas/:id"
             element={

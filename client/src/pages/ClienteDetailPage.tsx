@@ -631,7 +631,7 @@ export default function ClienteDetailPage() {
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold flex items-center gap-2"><Cog className="h-5 w-5" /> Sistemas</h2>
           {isAdmin && (
-            <Button size="sm" onClick={() => setSistemaOpen(true)}><Plus className="h-4 w-4" /> Sistema</Button>
+            <Button size="sm" onClick={() => navigate(`/clientes/${clienteId}/sistemas/nuevo`)}><Plus className="h-4 w-4" /> Sistema</Button>
           )}
         </div>
         <DataTable
