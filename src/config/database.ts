@@ -16,32 +16,13 @@ function createPrismaClient(): PrismaClient {
     return new PrismaClient();
   }
 
-  // Parse DATABASE_URL into adapter config
-  // Format: mysql://user:password@host:port/database
-  let parsed: URL;
-  try {
-    parsed = new URL(url);
-  } catch {
-    console.error('[PAS] Invalid DATABASE_URL format');
-    return new PrismaClient();
-  }
-
-  const adapter = new PrismaMariaDb({
-    host: parsed.hostname,
-    port: Number(parsed.port) || 3306,
-    user: decodeURIComponent(parsed.username),
-    password: decodeURIComponent(parsed.password),
-    database: parsed.pathname.slice(1), // remove leading /
-    connectionLimit: 5,
-    connectTimeout: 10000,    // 10s to establish connection
-    acquireTimeout: 10000,    // 10s to acquire from pool
-    idleTimeout: 60000,       // close idle connections after 60s
-  });
+  // Pass URL string directly to adapter (config object hangs on Hostinger)
+  const adapter = new PrismaMariaDb(url);
 
   return new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-  } as any); // 'as any' needed: Prisma 6 types may not expose adapter in constructor type
+  } as any);
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();
