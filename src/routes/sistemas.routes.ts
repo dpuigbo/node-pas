@@ -283,4 +283,68 @@ router.delete('/:sistemaId/componentes/:componenteId', requireRole('admin'), asy
   } catch (err) { next(err); }
 });
 
+// ===== COMPATIBILIDAD EJES EXTERNOS (tri-vía v2) =====
+
+// GET /api/v1/sistemas/ejes/:ejeModeloId/compatibilidad?robotFamiliaId=X&controladorModeloId=Y
+router.get('/ejes/:ejeModeloId/compatibilidad', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const ejeModeloId = Number(req.params.ejeModeloId);
+    const robotFamiliaId = req.query.robotFamiliaId ? Number(req.query.robotFamiliaId) : undefined;
+    const controladorModeloId = req.query.controladorModeloId ? Number(req.query.controladorModeloId) : undefined;
+
+    // 1. Whitelist de familias
+    const permitidas = await prisma.compatibilidadEjePermitida.findMany({
+      where: { ejeModeloId },
+      include: { familia: { select: { id: true, codigo: true } } },
+    });
+    if (permitidas.length > 0 && robotFamiliaId &&
+        !permitidas.some(p => p.familiaId === robotFamiliaId)) {
+      res.json({
+        compatible: false,
+        motivo: 'Familia de robot no permitida por el eje externo',
+        familiasPermitidas: permitidas.map(p => p.familia),
+      });
+      return;
+    }
+
+    // 2. Blacklist de familias
+    const excluidas = await prisma.compatibilidadEjeExcluye.findMany({
+      where: { ejeModeloId },
+      include: { familia: { select: { id: true, codigo: true } } },
+    });
+    if (robotFamiliaId && excluidas.some(e => e.familiaId === robotFamiliaId)) {
+      res.json({
+        compatible: false,
+        motivo: 'Familia de robot excluida para este eje externo',
+        familiasExcluidas: excluidas.map(e => e.familia),
+      });
+      return;
+    }
+
+    // 3. Whitelist de controladores
+    const ctrlReq = await prisma.compatibilidadEjeControlador.findMany({
+      where: { ejeModeloId },
+      include: { controlador: { select: { id: true, nombre: true } } },
+    });
+    if (ctrlReq.length > 0 && controladorModeloId &&
+        !ctrlReq.some(c => c.controladorModeloId === controladorModeloId)) {
+      res.json({
+        compatible: false,
+        motivo: 'Eje requiere controlador específico',
+        controladoresRequeridos: ctrlReq.map(c => c.controlador),
+      });
+      return;
+    }
+
+    res.json({
+      compatible: true,
+      reglas: {
+        familiasPermitidas: permitidas.length > 0 ? permitidas.map(p => p.familia) : null,
+        familiasExcluidas: excluidas.length > 0 ? excluidas.map(e => e.familia) : null,
+        controladoresRequeridos: ctrlReq.length > 0 ? ctrlReq.map(c => c.controlador) : null,
+      },
+    });
+  } catch (err) { next(err); }
+});
+
 export default router;

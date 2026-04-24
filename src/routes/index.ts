@@ -13,6 +13,7 @@ import documentTemplatesRoutes from './document-templates.routes';
 import consumiblesNivelRoutes from './consumiblesNivel.routes';
 import pedidoCompraRoutes from './pedidoCompra.routes';
 import ofertasRoutes from './ofertas.routes';
+import lookupsRoutes from './lookups.routes';
 
 const router = Router();
 
@@ -32,5 +33,6 @@ router.use('/v1/document-templates', authMiddleware, documentTemplatesRoutes);
 router.use('/v1/consumibles-nivel', authMiddleware, consumiblesNivelRoutes);
 router.use('/v1/pedidos-compra', authMiddleware, pedidoCompraRoutes);
 router.use('/v1/ofertas', authMiddleware, ofertasRoutes);
+router.use('/v1/lookups', authMiddleware, lookupsRoutes);
 
 export default router;
