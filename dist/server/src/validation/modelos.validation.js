@@ -7,10 +7,12 @@ exports.createModeloSchema = zod_1.z.object({
     fabricanteId: zod_1.z.number().int().positive(),
     tipo: tipoComponenteEnum,
     familia: zod_1.z.string().max(200).optional().nullable(),
+    familiaId: zod_1.z.number().int().positive().optional().nullable(),
+    generacionControladorId: zod_1.z.number().int().positive().optional().nullable(),
     nombre: zod_1.z.string().min(1, 'El nombre es obligatorio').max(200),
     notas: zod_1.z.string().optional().nullable(),
     aceitesConfig: zod_1.z.any().optional().nullable(),
-    niveles: zod_1.z.string().max(100).optional().nullable(), // CSV: "1,2,2_inferior,2_superior,3"
+    niveles: zod_1.z.string().max(100).optional().nullable(),
     controladorIds: zod_1.z.array(zod_1.z.number().int().positive()).optional().default([]),
 });
 exports.updateModeloSchema = exports.createModeloSchema.partial().omit({ fabricanteId: true, controladorIds: true });
