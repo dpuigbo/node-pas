@@ -103,10 +103,10 @@ export function useLubricacion(modeloId: number | undefined) {
     queryKey: ['modelos', modeloId, 'lubricacion'],
     queryFn: async () => {
       const { data } = await api.get(`/v1/modelos/${modeloId}/lubricacion`);
-      return data as Array<{
-        id: number; varianteTrm: string; eje: string;
-        tipoLubricante: string; cantidad: string; webConfig: string | null;
-      }>;
+      return data as {
+        source: 'v2' | 'legacy';
+        records: any[];
+      };
     },
     enabled: !!modeloId,
   });
@@ -117,12 +117,10 @@ export function useMantenimiento(modeloId: number | undefined) {
     queryKey: ['modelos', modeloId, 'mantenimiento'],
     queryFn: async () => {
       const { data } = await api.get(`/v1/modelos/${modeloId}/mantenimiento`);
-      return data as Array<{
-        id: number; familiaRobot: string; documento: string | null;
-        tipoActividad: string; componente: string;
-        intervaloEstandar: string | null; intervaloFoundry: string | null;
-        notas: string | null;
-      }>;
+      return data as {
+        source: 'v2' | 'legacy';
+        records: any[];
+      };
     },
     enabled: !!modeloId,
   });

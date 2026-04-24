@@ -44,6 +44,26 @@ const ESTADO_LABELS: Record<string, string> = {
 
 type TabKey = 'info' | 'lubricacion' | 'mantenimiento' | 'templates';
 
+function formatIntervalo(item: any): string {
+  const parts: string[] = [];
+  if (item.intervaloHoras) parts.push(`${item.intervaloHoras} h`);
+  if (item.intervaloMeses) parts.push(`${item.intervaloMeses} meses`);
+  if (parts.length === 0) {
+    if (item.intervaloCondicion === 'condicion') return 'Según condición';
+    if (item.intervaloCondicion === 'alerta_baja') return 'Alerta baja';
+    if (item.intervaloTextoLegacy) return item.intervaloTextoLegacy;
+    return '—';
+  }
+  return parts.join(' / ');
+}
+
+function formatFoundry(item: any): string | null {
+  const parts: string[] = [];
+  if (item.intervaloFoundryHoras) parts.push(`${item.intervaloFoundryHoras} h`);
+  if (item.intervaloFoundryMeses) parts.push(`${item.intervaloFoundryMeses} meses`);
+  return parts.length > 0 ? parts.join(' / ') : null;
+}
+
 export default function ModeloDetailPage() {
   const { modeloId: mId } = useParams<{ modeloId: string }>();
   const modeloId = Number(mId);
@@ -135,14 +155,20 @@ export default function ModeloDetailPage() {
 
   // Group lubricacion by varianteTrm
   const lubricacionGrouped = useMemo(() => {
-    if (!lubricacionData) return [];
-    const groups = new Map<string, typeof lubricacionData>();
-    for (const item of lubricacionData) {
-      if (!groups.has(item.varianteTrm)) groups.set(item.varianteTrm, []);
-      groups.get(item.varianteTrm)!.push(item);
+    if (!lubricacionData?.records) return [];
+    if (lubricacionData.source === 'v2') {
+      // v2: group by modelo (all same modelo, just list by eje)
+      return [{ variante: modelo?.nombre ?? '', items: lubricacionData.records }];
+    }
+    // legacy: group by varianteTrm
+    const groups = new Map<string, any[]>();
+    for (const item of lubricacionData.records) {
+      const key = item.varianteTrm ?? '';
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(item);
     }
     return [...groups.entries()].map(([variante, items]) => ({ variante, items }));
-  }, [lubricacionData]);
+  }, [lubricacionData, modelo]);
 
   if (loadingModelo) {
     return (
@@ -518,28 +544,36 @@ export default function ModeloDetailPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {group.items.map((item) => (
-                        <tr key={item.id} className="border-b last:border-b-0">
-                          <td className="px-4 py-2 font-mono font-medium">{item.eje}</td>
-                          <td className="px-4 py-2">
-                            {item.tipoLubricante === 'N/A' ? (
-                              <span className="text-muted-foreground">N/A</span>
-                            ) : (
-                              item.tipoLubricante
-                            )}
-                          </td>
-                          <td className="px-4 py-2">
-                            {item.cantidad === 'N/A' ? (
-                              <span className="text-muted-foreground">N/A</span>
-                            ) : (
-                              item.cantidad
-                            )}
-                          </td>
-                          <td className="px-4 py-2 text-muted-foreground font-mono text-xs">
-                            {item.webConfig || '—'}
-                          </td>
-                        </tr>
-                      ))}
+                      {group.items.map((item: any) => {
+                        // v2 fields: aceite.nombre, cantidadValor+cantidadUnidad
+                        // legacy fields: tipoLubricante, cantidad
+                        const lubricante = item.aceite?.nombre ?? item.tipoLubricanteLegacy ?? item.tipoLubricante ?? 'N/A';
+                        const cantidad = item.cantidadValor != null
+                          ? `${item.cantidadValor} ${item.cantidadUnidad ?? ''}`.trim()
+                          : item.cantidadTextoLegacy ?? item.cantidad ?? 'N/A';
+                        return (
+                          <tr key={item.id} className="border-b last:border-b-0">
+                            <td className="px-4 py-2 font-mono font-medium">{item.eje}</td>
+                            <td className="px-4 py-2">
+                              {lubricante === 'N/A' ? (
+                                <span className="text-muted-foreground">N/A</span>
+                              ) : (
+                                lubricante
+                              )}
+                            </td>
+                            <td className="px-4 py-2">
+                              {cantidad === 'N/A' ? (
+                                <span className="text-muted-foreground">N/A</span>
+                              ) : (
+                                cantidad
+                              )}
+                            </td>
+                            <td className="px-4 py-2 text-muted-foreground font-mono text-xs">
+                              {item.webConfig || '—'}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </CardContent>
@@ -556,7 +590,7 @@ export default function ModeloDetailPage() {
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-          ) : !mantenimientoData || mantenimientoData.length === 0 ? (
+          ) : !mantenimientoData?.records || mantenimientoData.records.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
               <Wrench className="h-8 w-8" />
               <p>No hay actividades de mantenimiento para la familia {modelo.familia ?? modelo.nombre}</p>
@@ -566,9 +600,9 @@ export default function ModeloDetailPage() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">
                   Actividades de mantenimiento — {modelo.familia}
-                  {mantenimientoData[0]?.documento && (
+                  {mantenimientoData.records[0]?.documento && (
                     <span className="ml-2 text-muted-foreground font-normal">
-                      Doc: {mantenimientoData[0].documento}
+                      Doc: {mantenimientoData.records[0].documento}
                     </span>
                   )}
                 </CardTitle>
@@ -584,29 +618,40 @@ export default function ModeloDetailPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {mantenimientoData.map((item) => (
-                      <tr key={item.id} className="border-b last:border-b-0 hover:bg-muted/20">
-                        <td className="px-4 py-2">
-                          <Badge variant="outline" className="text-[10px]">
-                            {item.tipoActividad}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-2">{item.componente}</td>
-                        <td className="px-4 py-2">
-                          <span>{item.intervaloEstandar || '—'}</span>
-                          {item.intervaloFoundry && (
-                            <span className="block text-xs text-muted-foreground mt-0.5">
-                              Foundry: {item.intervaloFoundry}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-2 text-xs text-muted-foreground max-w-[200px]">
-                          {item.notas ? (
-                            <span className="line-clamp-2" title={item.notas}>{item.notas}</span>
-                          ) : '—'}
-                        </td>
-                      </tr>
-                    ))}
+                    {mantenimientoData.records.map((item: any) => {
+                      // v2: tipoActividad is an object { nombre, categoria }
+                      // legacy: tipoActividad is a string
+                      const tipoLabel = item.tipoActividad?.nombre ?? item.tipoActividad ?? '—';
+                      const intervalo = mantenimientoData.source === 'v2'
+                        ? formatIntervalo(item)
+                        : item.intervaloEstandar || '—';
+                      const foundry = mantenimientoData.source === 'v2'
+                        ? formatFoundry(item)
+                        : item.intervaloFoundry;
+                      return (
+                        <tr key={item.id} className="border-b last:border-b-0 hover:bg-muted/20">
+                          <td className="px-4 py-2">
+                            <Badge variant="outline" className="text-[10px]">
+                              {tipoLabel}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-2">{item.componente}</td>
+                          <td className="px-4 py-2">
+                            <span>{intervalo}</span>
+                            {foundry && (
+                              <span className="block text-xs text-muted-foreground mt-0.5">
+                                Foundry: {foundry}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-2 text-xs text-muted-foreground max-w-[200px]">
+                            {item.notas ? (
+                              <span className="line-clamp-2" title={item.notas}>{item.notas}</span>
+                            ) : '—'}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </CardContent>
