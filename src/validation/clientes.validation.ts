@@ -29,6 +29,7 @@ export const updateClienteSchema = createClienteSchema.partial();
 export const createMaquinaSchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio').max(200),
   descripcion: z.string().max(500).optional().nullable(),
+  plantaId: z.number().int().positive(),
 });
 
 export const updateMaquinaSchema = createMaquinaSchema.partial();
