@@ -295,49 +295,77 @@ router.delete('/:id', (0, role_middleware_1.requireRole)('admin'), async (req, r
 // Returns lubrication data matching the model's familia
 router.get('/:id/lubricacion', async (req, res, next) => {
     try {
+        const modeloId = Number(req.params.id);
         const modelo = await database_1.prisma.modeloComponente.findUnique({
-            where: { id: Number(req.params.id) },
-            select: { familia: true, fabricanteId: true, nombre: true },
+            where: { id: modeloId },
+            select: { familia: true, familiaId: true, fabricanteId: true, nombre: true },
         });
         if (!modelo) {
             res.status(404).json({ error: 'Modelo no encontrado' });
             return;
         }
-        // Search by familia name within varianteTrm
+        // Try normalized table first (v2)
+        const normalized = await database_1.prisma.lubricacion.findMany({
+            where: { modeloComponenteId: modeloId },
+            orderBy: [{ eje: 'asc' }],
+            include: {
+                aceite: { select: { id: true, nombre: true, categoria: true } },
+            },
+        });
+        if (normalized.length > 0) {
+            res.json({ source: 'v2', records: normalized });
+            return;
+        }
+        // Fallback to legacy table
         const familiaSearch = modelo.familia || modelo.nombre;
-        const records = await database_1.prisma.lubricacionReductora.findMany({
+        const legacy = await database_1.prisma.lubricacionReductora.findMany({
             where: {
                 fabricanteId: modelo.fabricanteId,
                 varianteTrm: { contains: familiaSearch },
             },
             orderBy: [{ varianteTrm: 'asc' }, { eje: 'asc' }],
         });
-        res.json(records);
+        res.json({ source: 'legacy', records: legacy });
     }
     catch (err) {
         next(err);
     }
 });
 // GET /api/v1/modelos/:id/mantenimiento
-// Returns maintenance activities for the model's familia
 router.get('/:id/mantenimiento', async (req, res, next) => {
     try {
         const modelo = await database_1.prisma.modeloComponente.findUnique({
             where: { id: Number(req.params.id) },
-            select: { familia: true, fabricanteId: true },
+            select: { familia: true, familiaId: true, fabricanteId: true },
         });
         if (!modelo) {
             res.status(404).json({ error: 'Modelo no encontrado' });
             return;
         }
-        const records = await database_1.prisma.actividadMantenimiento.findMany({
+        // Try normalized table first (v2)
+        if (modelo.familiaId) {
+            const normalized = await database_1.prisma.actividadPreventiva.findMany({
+                where: { familiaId: modelo.familiaId },
+                orderBy: [{ tipoActividadId: 'asc' }, { componente: 'asc' }],
+                include: {
+                    tipoActividad: { select: { id: true, nombre: true, categoria: true } },
+                    familia: { select: { id: true, codigo: true } },
+                },
+            });
+            if (normalized.length > 0) {
+                res.json({ source: 'v2', records: normalized });
+                return;
+            }
+        }
+        // Fallback to legacy table
+        const legacy = await database_1.prisma.actividadMantenimiento.findMany({
             where: {
                 fabricanteId: modelo.fabricanteId,
                 familiaRobot: modelo.familia ?? '',
             },
             orderBy: [{ tipoActividad: 'asc' }, { componente: 'asc' }],
         });
-        res.json(records);
+        res.json({ source: 'legacy', records: legacy });
     }
     catch (err) {
         next(err);
