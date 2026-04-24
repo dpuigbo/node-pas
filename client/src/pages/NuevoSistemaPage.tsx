@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useModelos, useModelosCompatiblesCon } from '@/hooks/useModelos';
+import { useFabricantes } from '@/hooks/useFabricantes';
 import { useCreateSistemaCompleto } from '@/hooks/useSistemas';
 
 // ===== Controller capability rules =====
@@ -59,9 +60,10 @@ export default function NuevoSistemaPage() {
   // Wizard step
   const [step, setStep] = useState(0);
 
-  // Step 1: Sistema info + controladora
+  // Step 1: Sistema info + fabricante + controladora
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
+  const [fabricanteId, setFabricanteId] = useState<number>(0);
   const [controllerFamilia, setControllerFamilia] = useState('');
   const [controllerId, setControllerId] = useState<number>(0);
   const [controllerNombre, setControllerNombre] = useState('');
@@ -84,8 +86,11 @@ export default function NuevoSistemaPage() {
   const [ejeEtiqueta, setEjeEtiqueta] = useState('');
   const [ejeSerie, setEjeSerie] = useState('');
 
-  // Fabricante ABB (hardcoded for now since all data is ABB)
-  const { data: controllers } = useModelos({ tipo: 'controller' });
+  // Data fetching
+  const { data: fabricantes } = useFabricantes();
+  const { data: controllers } = useModelos(
+    fabricanteId ? { fabricanteId, tipo: 'controller' } : undefined,
+  );
   const { data: robotModelos } = useModelosCompatiblesCon(
     controllerId || undefined,
     'mechanical_unit',
@@ -163,7 +168,7 @@ export default function NuevoSistemaPage() {
   };
 
   // Validation per step
-  const isStep0Valid = nombre.trim() && controllerId > 0 && controllerEtiqueta.trim();
+  const isStep0Valid = nombre.trim() && fabricanteId > 0 && controllerId > 0 && controllerEtiqueta.trim();
   const isStep1Valid = robotId > 0 && robotEtiqueta.trim();
   const isStepValid = step === 0 ? isStep0Valid : step === 1 ? isStep1Valid : true;
 
@@ -215,10 +220,6 @@ export default function NuevoSistemaPage() {
         orden: 2 + i,
       })),
     ];
-
-    // Get fabricanteId from controller
-    const ctrl = (controllers as any[])?.find((c: any) => c.id === controllerId);
-    const fabricanteId = ctrl?.fabricanteId ?? ctrl?.fabricante?.id ?? 1;
 
     try {
       const sistema = await createMutation.mutateAsync({
@@ -308,10 +309,34 @@ export default function NuevoSistemaPage() {
             </div>
 
             <div className="border-t pt-4">
-              <h3 className="text-sm font-semibold mb-3">Controladora</h3>
-              <div className="grid grid-cols-2 gap-4">
+              <h3 className="text-sm font-semibold mb-3">Fabricante y controladora</h3>
+              <div>
+                <Label>Fabricante</Label>
+                <Select
+                  value={String(fabricanteId || '')}
+                  onValueChange={(v) => {
+                    setFabricanteId(Number(v));
+                    setControllerFamilia('');
+                    setControllerId(0);
+                    setControllerNombre('');
+                    setRobotFamilia('');
+                    setRobotId(0);
+                    setEjes([]);
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Seleccionar fabricante" /></SelectTrigger>
+                  <SelectContent>
+                    {(Array.isArray(fabricantes) ? fabricantes : []).filter((f: any) => f.activo).map((f: any) => (
+                      <SelectItem key={f.id} value={String(f.id)}>{f.nombre}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {fabricanteId > 0 && (<>
+              <div className="grid grid-cols-2 gap-4 mt-4">
                 <div>
-                  <Label>Familia</Label>
+                  <Label>Familia controladora</Label>
                   <Select
                     value={controllerFamilia}
                     onValueChange={(v) => {
@@ -390,6 +415,7 @@ export default function NuevoSistemaPage() {
                   </div>
                 </div>
               )}
+              </>)}
             </div>
           </CardContent>
         </Card>
