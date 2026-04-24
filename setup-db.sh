@@ -4,25 +4,27 @@
 # Usage: bash setup-db.sh
 
 set -e
+
+# Hostinger: Node.js not in PATH, use explicit path
+NODE="/opt/alt/alt-nodejs20/root/usr/bin/node"
+NPX="$NODE $(pwd)/node_modules/.bin/npx"
+
 echo "[SETUP] Starting database setup at $(date)"
+echo "[SETUP] Using Node: $($NODE --version)"
 
-# 1. Ensure latest code
-echo "[SETUP] Pulling latest code..."
-git pull origin main
-
-# 2. Prisma generate
+# 1. Prisma generate
 echo "[SETUP] Generating Prisma client..."
-node node_modules/prisma/build/index.js generate
+$NODE node_modules/prisma/build/index.js generate
 
-# 3. Push schema changes (creates new tables + indexes, non-destructive)
+# 2. Push schema changes (creates new tables + indexes, non-destructive)
 echo "[SETUP] Pushing schema changes to database..."
-node node_modules/prisma/build/index.js db push
+$NODE node_modules/prisma/build/index.js db push
 
-# 4. Run seed (cleans test data + imports ABB catalog)
+# 3. Run seed (cleans test data + imports ABB catalog)
 echo "[SETUP] Running seed..."
-node_modules/.bin/tsx prisma/seed.ts
+$NODE node_modules/.bin/tsx prisma/seed.ts
 
-# 5. Restart
+# 4. Restart
 echo "[SETUP] Restarting Passenger..."
 mkdir -p tmp && touch tmp/restart.txt
 
