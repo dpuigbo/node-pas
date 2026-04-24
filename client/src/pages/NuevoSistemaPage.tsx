@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, ChevronRight, ChevronLeft, Plus, Trash2,
-  Cpu, Bot, Zap, Cog, Check, Loader2,
+  Cpu, Bot, Cog, Check, Loader2,
 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -156,10 +156,10 @@ export default function NuevoSistemaPage() {
   const canGoPrev = currentStepIndex > 0;
 
   const goNext = () => {
-    if (canGoNext) setStep(steps[currentStepIndex + 1]);
+    if (canGoNext) setStep(steps[currentStepIndex + 1]!);
   };
   const goPrev = () => {
-    if (canGoPrev) setStep(steps[currentStepIndex - 1]);
+    if (canGoPrev) setStep(steps[currentStepIndex - 1]!);
   };
 
   // Validation per step
