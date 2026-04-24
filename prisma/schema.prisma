@@ -43,7 +43,7 @@ model Cliente {
   telefono            String?
   email               String?
   personaContacto     String?   @map("persona_contacto")
-  logo                String?   // filename of uploaded logo image
+  logo                String?
   // Tarifas
   tarifaHoraTrabajo   Decimal?  @map("tarifa_hora_trabajo") @db.Decimal(10, 2)
   tarifaHoraViaje     Decimal?  @map("tarifa_hora_viaje") @db.Decimal(10, 2)
@@ -60,6 +60,7 @@ model Cliente {
   createdAt           DateTime  @default(now()) @map("created_at")
   updatedAt           DateTime  @updatedAt @map("updated_at")
 
+  plantas        Planta[]
   maquinas       Maquina[]
   sistemas       Sistema[]
   intervenciones Intervencion[]
@@ -68,19 +69,119 @@ model Cliente {
   @@map("clientes")
 }
 
+model Planta {
+  id        Int      @id @default(autoincrement())
+  clienteId Int      @map("cliente_id")
+  nombre    String   @db.VarChar(191)
+  direccion String?  @db.VarChar(191)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  cliente  Cliente   @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  maquinas Maquina[]
+  sistemas Sistema[]
+
+  @@map("plantas")
+}
+
 model Maquina {
   id          Int      @id @default(autoincrement())
   clienteId   Int      @map("cliente_id")
+  plantaId    Int      @map("planta_id")
   nombre      String
   descripcion String?
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   cliente  Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  planta   Planta   @relation(fields: [plantaId], references: [id], onDelete: Cascade)
   sistemas Sistema[]
 
   @@unique([clienteId, nombre])
   @@map("maquinas")
+}
+
+// ===== LOOKUPS v2 =====
+
+model LuGeneracionControlador {
+  id          Int      @id @default(autoincrement())
+  codigo      String   @unique @db.VarChar(50)
+  nombre      String   @db.VarChar(100)
+  driveSystem String?  @map("drive_system") @db.VarChar(50)
+  anioDesde   Int?     @map("anio_desde") @db.SmallInt
+  anioHasta   Int?     @map("anio_hasta") @db.SmallInt
+  activo      Boolean  @default(true)
+  orden       Int      @default(0)
+  notas       String?  @db.Text
+
+  modelos ModeloComponente[]
+
+  @@map("lu_generacion_controlador")
+}
+
+model LuFamilia {
+  id            Int            @id @default(autoincrement())
+  fabricanteId  Int            @map("fabricante_id")
+  codigo        String         @db.VarChar(80)
+  tipo          TipoComponente
+  descripcion   String?        @db.VarChar(255)
+  activa        Boolean        @default(true)
+
+  fabricante             Fabricante                   @relation(fields: [fabricanteId], references: [id])
+  modelos                ModeloComponente[]
+  actividadesPreventivas ActividadPreventiva[]
+  equivalencias          EquivalenciaFamilia[]
+  compatEjePermitida     CompatibilidadEjePermitida[]
+  compatEjeExcluye       CompatibilidadEjeExcluye[]
+
+  @@unique([fabricanteId, codigo, tipo], map: "uq_fam_fab_cod")
+  @@map("lu_familia")
+}
+
+model LuTipoActividad {
+  id              Int     @id @default(autoincrement())
+  codigo          String  @unique @db.VarChar(50)
+  nombre          String  @db.VarChar(100)
+  categoria       LuTipoActividadCategoria @default(otro)
+  requiereParada  Boolean @default(true) @map("requiere_parada")
+  orden           Int     @default(0)
+
+  actividadesPreventivas ActividadPreventiva[]
+  actividadesCabinet     ActividadCabinet[]
+  actividadesDriveModule ActividadDriveModule[]
+
+  @@map("lu_tipo_actividad")
+}
+
+enum LuTipoActividadCategoria {
+  inspeccion
+  lubricacion
+  reemplazo
+  overhaul
+  analisis
+  otro
+}
+
+model LuUnidadIntervalo {
+  id          Int      @id @default(autoincrement())
+  codigo      String   @unique @db.VarChar(30)
+  nombre      String   @db.VarChar(50)
+  factorHoras Decimal? @map("factor_horas") @db.Decimal(12, 4)
+  orden       Int      @default(0)
+
+  @@map("lu_unidad_intervalo")
+}
+
+model LuNivelMantenimiento {
+  id          Int     @id @default(autoincrement())
+  codigo      String  @unique @db.VarChar(20)
+  nombre      String  @db.VarChar(50)
+  descripcion String? @db.VarChar(255)
+  orden       Int
+
+  modelosAplicables ModeloNivelAplicable[]
+
+  @@map("lu_nivel_mantenimiento")
 }
 
 // ===== CATALOGOS =====
@@ -93,40 +194,55 @@ model Fabricante {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  modelos                ModeloComponente[]
-  sistemas               Sistema[]
-  lubricacionReductoras  LubricacionReductora[]
+  modelos                  ModeloComponente[]
+  sistemas                 Sistema[]
+  familias                 LuFamilia[]
+  lubricacionReductoras    LubricacionReductora[]
   actividadesMantenimiento ActividadMantenimiento[]
 
   @@map("fabricantes")
 }
 
 model ModeloComponente {
-  id             Int            @id @default(autoincrement())
-  fabricanteId   Int            @map("fabricante_id")
-  tipo           TipoComponente
-  familia        String?        @db.VarChar(200)
-  nombre         String
-  notas          String?        @db.Text
-  aceitesConfig  Json?          @map("aceites_config")
-  niveles        String?        // CSV de niveles aplicables: "1,2,2_inferior,2_superior,3"
-  createdAt      DateTime       @default(now()) @map("created_at")
-  updatedAt      DateTime       @updatedAt @map("updated_at")
+  id                      Int            @id @default(autoincrement())
+  fabricanteId            Int            @map("fabricante_id")
+  tipo                    TipoComponente
+  familia                 String?        @db.VarChar(200)  // legacy, mantener
+  familiaId               Int?           @map("familia_id")
+  generacionControladorId Int?           @map("generacion_controlador_id")
+  nombre                  String
+  notas                   String?        @db.Text
+  aceitesConfig           Json?          @map("aceites_config")  // legacy
+  niveles                 String?        // legacy CSV: "1,2,2_inferior,2_superior,3"
+  createdAt               DateTime       @default(now()) @map("created_at")
+  updatedAt               DateTime       @updatedAt @map("updated_at")
 
-  fabricante               Fabricante                 @relation(fields: [fabricanteId], references: [id], onDelete: Cascade)
-  controladoresCompatibles CompatibilidadControlador[] @relation("ComponenteCompat")
-  componentesCompatibles   CompatibilidadControlador[] @relation("ControladorCompat")
+  fabricante               Fabricante                   @relation(fields: [fabricanteId], references: [id], onDelete: Cascade)
+  familiaRel               LuFamilia?                   @relation(fields: [familiaId], references: [id])
+  generacion               LuGeneracionControlador?     @relation(fields: [generacionControladorId], references: [id])
+  controladoresCompatibles CompatibilidadControlador[]   @relation("ComponenteCompat")
+  componentesCompatibles   CompatibilidadControlador[]   @relation("ControladorCompat")
   versiones                VersionTemplate[]
   componentes              ComponenteSistema[]
   consumiblesNivel         ConsumibleNivel[]
+  nivelesAplicables        ModeloNivelAplicable[]
+  lubricaciones            Lubricacion[]
+  actividadesCabinet       ActividadCabinet[]
+  actividadesDriveModule   ActividadDriveModule[]        @relation("DriveModuleModelo")
+  actividadesDriveModuleCtrl ActividadDriveModule[]      @relation("DriveModuleCtrl")
+  compatEjePermitida       CompatibilidadEjePermitida[]
+  compatEjeExcluye         CompatibilidadEjeExcluye[]
+  compatEjeControladorEje  CompatibilidadEjeControlador[] @relation("EjeCtrlEje")
+  compatEjeControladorCtrl CompatibilidadEjeControlador[] @relation("EjeCtrlCtrl")
 
   @@unique([fabricanteId, tipo, nombre], map: "modelos_componente_fab_tipo_nombre")
   @@map("modelos_componente")
 }
 
 model CompatibilidadControlador {
-  controladorId Int @map("controlador_id")
-  componenteId  Int @map("componente_id")
+  controladorId Int     @map("controlador_id")
+  componenteId  Int     @map("componente_id")
+  notas         String? @db.VarChar(255)
 
   controlador ModeloComponente @relation("ControladorCompat", fields: [controladorId], references: [id], onDelete: Cascade)
   componente  ModeloComponente @relation("ComponenteCompat", fields: [componenteId], references: [id], onDelete: Cascade)
@@ -165,11 +281,25 @@ enum EstadoTemplate {
   obsoleto
 }
 
+// ===== MODELO x NIVEL (normalizado desde CSV) =====
+
+model ModeloNivelAplicable {
+  modeloComponenteId Int @map("modelo_componente_id")
+  nivelId            Int @map("nivel_id")
+
+  modelo ModeloComponente     @relation(fields: [modeloComponenteId], references: [id], onDelete: Cascade)
+  nivel  LuNivelMantenimiento @relation(fields: [nivelId], references: [id])
+
+  @@id([modeloComponenteId, nivelId])
+  @@map("modelo_nivel_aplicable")
+}
+
 // ===== SISTEMAS =====
 
 model Sistema {
   id           Int      @id @default(autoincrement())
   clienteId    Int      @map("cliente_id")
+  plantaId     Int?     @map("planta_id")
   maquinaId    Int?     @map("maquina_id")
   fabricanteId Int      @map("fabricante_id")
   nombre       String
@@ -177,9 +307,10 @@ model Sistema {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  cliente       Cliente              @relation(fields: [clienteId], references: [id], onDelete: Cascade)
-  maquina       Maquina?             @relation(fields: [maquinaId], references: [id], onDelete: SetNull)
-  fabricante    Fabricante           @relation(fields: [fabricanteId], references: [id], onDelete: Cascade)
+  cliente        Cliente              @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  planta         Planta?              @relation(fields: [plantaId], references: [id], onDelete: SetNull)
+  maquina        Maquina?             @relation(fields: [maquinaId], references: [id], onDelete: SetNull)
+  fabricante     Fabricante           @relation(fields: [fabricanteId], references: [id], onDelete: Cascade)
   componentes    ComponenteSistema[]
   intervenciones IntervencionSistema[]
   informes       Informe[]
@@ -214,7 +345,7 @@ model ComponenteSistema {
 model Intervencion {
   id          Int                @id @default(autoincrement())
   clienteId   Int                @map("cliente_id")
-  ofertaId    Int?               @map("oferta_id")  // FK a oferta origen (cuando exista)
+  ofertaId    Int?               @map("oferta_id")
   tipo        TipoIntervencion
   estado      EstadoIntervencion @default(borrador)
   referencia  String?
@@ -222,26 +353,23 @@ model Intervencion {
   fechaInicio DateTime?          @map("fecha_inicio")
   fechaFin    DateTime?          @map("fecha_fin")
   notas       String?            @db.Text
-  // Tarifas (snapshot del cliente, editables)
   tarifaHoraTrabajo   Decimal?   @map("tarifa_hora_trabajo") @db.Decimal(10, 2)
   tarifaHoraViaje     Decimal?   @map("tarifa_hora_viaje") @db.Decimal(10, 2)
   dietas              Decimal?   @db.Decimal(10, 2)
   gestionAccesos      Decimal?   @map("gestion_accesos") @db.Decimal(10, 2)
-  // Logistica viaje (snapshot del cliente, editables)
   horasTrayecto       Decimal?   @map("horas_trayecto") @db.Decimal(8, 2)
   diasViaje           Decimal?   @map("dias_viaje") @db.Decimal(8, 2)
   km                  Decimal?   @db.Decimal(10, 2)
   peajes              Decimal?   @db.Decimal(10, 2)
   precioHotel         Decimal?   @map("precio_hotel") @db.Decimal(10, 2)
   precioKm            Decimal?   @map("precio_km") @db.Decimal(10, 2)
-  // Campos especificos de intervencion
   gestionAccesosNueva Boolean    @default(false) @map("gestion_accesos_nueva")
   numeroTecnicos      Int        @default(1) @map("numero_tecnicos")
   viajesIdaVuelta     Int        @default(1) @map("viajes_ida_vuelta")
   incluyeConsumibles  Boolean    @default(true) @map("incluye_consumibles")
   horasDia            Decimal?   @map("horas_dia") @db.Decimal(8, 2)
   dietasExtra         Decimal?   @map("dietas_extra") @db.Decimal(10, 2)
-  diasTrabajo         String?    @map("dias_trabajo") // JSON: "1,2,3,4,5" (lun-vie)
+  diasTrabajo         String?    @map("dias_trabajo")
   createdAt           DateTime   @default(now()) @map("created_at")
   updatedAt           DateTime   @updatedAt @map("updated_at")
 
@@ -268,7 +396,7 @@ enum EstadoIntervencion {
 model IntervencionSistema {
   intervencionId Int    @map("intervencion_id")
   sistemaId      Int    @map("sistema_id")
-  nivel          String @default("1")  // '1' | '2_inferior' | '2_superior' | '3'
+  nivel          String @default("1")
 
   intervencion Intervencion @relation(fields: [intervencionId], references: [id], onDelete: Cascade)
   sistema      Sistema      @relation(fields: [sistemaId], references: [id], onDelete: Cascade)
@@ -330,28 +458,53 @@ model ComponenteInforme {
 model Aceite {
   id              Int      @id @default(autoincrement())
   nombre          String
+  codigoCanonico  String?  @unique @map("codigo_canonico") @db.VarChar(100)
   fabricante      String?
-  unidad          String?  // unidad de medida: litros, kg, ml…
-  fabricanteRobot String?  @map("fabricante_robot") // CSV de nombres fabricante: "ABB,KUKA"
+  unidad          String?
+  categoria       AceiteCategoria @default(otro)
+  notasTecnicas   String?  @map("notas_tecnicas") @db.Text
+  fabricanteRobot String?  @map("fabricante_robot")
   coste           Decimal? @db.Decimal(10, 2)
   precio          Decimal? @db.Decimal(10, 2)
   activo          Boolean  @default(true)
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
+  alias         AceiteAlias[]
+  lubricaciones Lubricacion[]
+
   @@map("aceites")
+}
+
+enum AceiteCategoria {
+  aceite
+  grasa
+  food_grade
+  foundry
+  harmonic
+  otro
+}
+
+model AceiteAlias {
+  id       Int    @id @default(autoincrement())
+  aceiteId Int    @map("aceite_id")
+  alias    String @unique @db.VarChar(200)
+
+  aceite Aceite @relation(fields: [aceiteId], references: [id], onDelete: Cascade)
+
+  @@map("aceite_alias")
 }
 
 model Consumible {
   id               Int      @id @default(autoincrement())
   nombre           String
   fabricante       String?
-  tipo             String   @default("general") // 'general' | 'bateria'
-  compatibleCon    String?  @map("compatible_con") // 'mechanical_unit' | 'controller' | null (null=ambos)
-  refOriginal      String?  @map("ref_original")      // referencia original del fabricante
-  refProveedor     String?  @map("ref_proveedor")      // referencia del proveedor
-  denominacion     String?                              // denominacion descriptiva
-  fabricanteRobot  String?  @map("fabricante_robot")   // fabricante del robot compatible
+  tipo             String   @default("general")
+  compatibleCon    String?  @map("compatible_con")
+  refOriginal      String?  @map("ref_original")
+  refProveedor     String?  @map("ref_proveedor")
+  denominacion     String?
+  fabricanteRobot  String?  @map("fabricante_robot")
   coste            Decimal? @db.Decimal(10, 2)
   precio           Decimal? @db.Decimal(10, 2)
   activo           Boolean  @default(true)
@@ -361,15 +514,13 @@ model Consumible {
   @@map("consumibles")
 }
 
-// ===== TABLA CONSUMIBLES POR NIVEL (para ofertas/pedidos) =====
-
 model ConsumibleNivel {
   id              Int            @id @default(autoincrement())
   modeloId        Int            @map("modelo_id")
-  nivel           String         // '1' | '2_inferior' | '2_superior' | '3'
-  horas           Decimal?       @db.Decimal(8, 2)  // horas de trabajo por nivel
-  precioOtros     Decimal?       @db.Decimal(10, 2) @map("precio_otros") // precio de otros consumibles
-  consumibles     Json?          // [{ tipo: 'aceite'|'bateria'|'consumible', id: number, cantidad: number }]
+  nivel           String
+  horas           Decimal?       @db.Decimal(8, 2)
+  precioOtros     Decimal?       @db.Decimal(10, 2) @map("precio_otros")
+  consumibles     Json?
   createdAt       DateTime       @default(now()) @map("created_at")
   updatedAt       DateTime       @updatedAt @map("updated_at")
 
@@ -386,22 +537,19 @@ model Oferta {
   clienteId     Int            @map("cliente_id")
   titulo        String
   referencia    String?
-  tipo          TipoIntervencion   // preventiva | correctiva
-  estado        String         @default("borrador") // 'borrador' | 'enviada' | 'aprobada' | 'rechazada'
+  tipo          TipoIntervencion
+  estado        String         @default("borrador")
   fechaOferta   DateTime       @default(now()) @map("fecha_oferta")
   validezDias   Int            @default(30) @map("validez_dias")
   notas         String?        @db.Text
-  // Totals (auto-calculated)
   totalHoras    Decimal?       @db.Decimal(8, 2) @map("total_horas")
   totalCoste    Decimal?       @db.Decimal(10, 2) @map("total_coste")
   totalPrecio   Decimal?       @db.Decimal(10, 2) @map("total_precio")
-  // Planificacion horaria
   fechaInicio       DateTime?  @map("fecha_inicio")
   fechaFin          DateTime?  @map("fecha_fin")
-  horaInicioJornada String?    @map("hora_inicio_jornada")  // "08:00"
-  horaFinJornada    String?    @map("hora_fin_jornada")     // "20:00"
-  diasTrabajo       String?    @map("dias_trabajo")          // "1,2,3,4,5" (lun=1..dom=7)
-  // Desglose recargos (auto-calculated)
+  horaInicioJornada String?    @map("hora_inicio_jornada")
+  horaFinJornada    String?    @map("hora_fin_jornada")
+  diasTrabajo       String?    @map("dias_trabajo")
   desgloseRecargo   Json?      @map("desglose_recargo")
   totalRecargo      Decimal?   @db.Decimal(10, 2) @map("total_recargo")
   createdAt     DateTime       @default(now()) @map("created_at")
@@ -416,8 +564,7 @@ model Oferta {
 model OfertaSistema {
   ofertaId          Int      @map("oferta_id")
   sistemaId         Int      @map("sistema_id")
-  nivel             String   @default("1") // '1' | '2_inferior' | '2_superior' | '3'
-  // Per-system calculated values
+  nivel             String   @default("1")
   horas             Decimal? @db.Decimal(8, 2)
   costeConsumibles  Decimal? @db.Decimal(10, 2) @map("coste_consumibles")
   precioConsumibles Decimal? @db.Decimal(10, 2) @map("precio_consumibles")
@@ -434,9 +581,9 @@ model OfertaSistema {
 model PedidoCompra {
   id              Int      @id @default(autoincrement())
   intervencionId  Int      @unique @map("intervencion_id")
-  estado          String   @default("pendiente") // 'pendiente' | 'pedido' | 'recibido'
+  estado          String   @default("pendiente")
   notas           String?  @db.Text
-  lineas          Json     // [{tipo, itemId, nombre, cantidad, unidad, coste, precio, sistemaId, sistemaNombre, componenteTipo, modeloNombre, nivel}]
+  lineas          Json
   totalCoste      Decimal? @db.Decimal(10, 2) @map("total_coste")
   totalPrecio     Decimal? @db.Decimal(10, 2) @map("total_precio")
   createdAt       DateTime @default(now()) @map("created_at")
@@ -447,15 +594,15 @@ model PedidoCompra {
   @@map("pedidos_compra")
 }
 
-// ===== LUBRICACIÓN Y MANTENIMIENTO =====
+// ===== LUBRICACIÓN (legacy + normalizada v2) =====
 
 model LubricacionReductora {
   id             Int      @id @default(autoincrement())
   fabricanteId   Int      @map("fabricante_id")
   varianteTrm    String   @map("variante_trm") @db.VarChar(300)
-  eje            String   @db.VarChar(20) // "1", "2", "3", "4", "5-6", etc.
+  eje            String   @db.VarChar(20)
   tipoLubricante String   @map("tipo_lubricante") @db.VarChar(200)
-  cantidad       String   @db.VarChar(50)  // "6,400 ml", "N/A"
+  cantidad       String   @db.VarChar(50)
   webConfig      String?  @map("web_config") @db.VarChar(100)
 
   fabricante Fabricante @relation(fields: [fabricanteId], references: [id], onDelete: Cascade)
@@ -464,6 +611,38 @@ model LubricacionReductora {
   @@index([varianteTrm])
   @@map("lubricacion_reductora")
 }
+
+model Lubricacion {
+  id                    Int      @id @default(autoincrement())
+  modeloComponenteId    Int      @map("modelo_componente_id")
+  eje                   String   @db.VarChar(30)
+  aceiteId              Int?     @map("aceite_id")
+  cantidadValor         Decimal? @map("cantidad_valor") @db.Decimal(10, 3)
+  cantidadUnidad        LubricacionUnidad? @map("cantidad_unidad")
+  cantidadTextoLegacy   String?  @map("cantidad_texto_legacy") @db.VarChar(100)
+  varianteTrmLegacy     String?  @map("variante_trm_legacy") @db.VarChar(200)
+  tipoLubricanteLegacy  String?  @map("tipo_lubricante_legacy") @db.VarChar(200)
+  webConfig             String?  @map("web_config") @db.VarChar(100)
+  notas                 String?  @db.Text
+
+  modelo ModeloComponente @relation(fields: [modeloComponenteId], references: [id], onDelete: Cascade)
+  aceite Aceite?          @relation(fields: [aceiteId], references: [id])
+
+  @@index([modeloComponenteId])
+  @@index([aceiteId])
+  @@map("lubricacion")
+}
+
+enum LubricacionUnidad {
+  ml
+  l
+  g
+  kg
+  pcs
+  n_a
+}
+
+// ===== ACTIVIDADES MANTENIMIENTO (legacy + normalizadas v2) =====
 
 model ActividadMantenimiento {
   id                Int      @id @default(autoincrement())
@@ -483,11 +662,169 @@ model ActividadMantenimiento {
   @@map("actividades_mantenimiento")
 }
 
+model ActividadPreventiva {
+  id                     Int                       @id @default(autoincrement())
+  familiaId              Int                       @map("familia_id")
+  tipoActividadId        Int                       @map("tipo_actividad_id")
+  documento              String?                   @db.VarChar(80)
+  componente             String                    @db.VarChar(500)
+  intervaloHoras         Int?                      @map("intervalo_horas")
+  intervaloMeses         Int?                      @map("intervalo_meses") @db.SmallInt
+  intervaloCondicion     IntervaloCondicion         @default(periodico) @map("intervalo_condicion")
+  intervaloTextoLegacy   String?                   @map("intervalo_texto_legacy") @db.VarChar(200)
+  intervaloFoundryHoras  Int?                      @map("intervalo_foundry_horas")
+  intervaloFoundryMeses  Int?                      @map("intervalo_foundry_meses") @db.SmallInt
+  notas                  String?                   @db.Text
+
+  familia       LuFamilia       @relation(fields: [familiaId], references: [id])
+  tipoActividad LuTipoActividad @relation(fields: [tipoActividadId], references: [id])
+
+  @@index([familiaId])
+  @@index([tipoActividadId])
+  @@map("actividad_preventiva")
+}
+
+enum IntervaloCondicion {
+  periodico
+  condicion
+  alerta_baja
+  mixto
+  n_a
+}
+
+model ActividadCabinet {
+  id                     Int                @id @default(autoincrement())
+  cabinetModeloId        Int                @map("cabinet_modelo_id")
+  tipoActividadId        Int                @map("tipo_actividad_id")
+  documento              String?            @db.VarChar(80)
+  componente             String             @db.VarChar(500)
+  tipoCabinet            TipoCabinet        @default(controlador) @map("tipo_cabinet")
+  generacionHw           String?            @map("generacion_hw") @db.VarChar(80)
+  intervaloHoras         Int?               @map("intervalo_horas")
+  intervaloMeses         Int?               @map("intervalo_meses") @db.SmallInt
+  intervaloCondicion     IntervaloCondicion @default(periodico) @map("intervalo_condicion")
+  intervaloTextoLegacy   String?            @map("intervalo_texto_legacy") @db.VarChar(200)
+  notas                  String?            @db.Text
+
+  cabinetModelo ModeloComponente @relation(fields: [cabinetModeloId], references: [id], onDelete: Cascade)
+  tipoActividad LuTipoActividad  @relation(fields: [tipoActividadId], references: [id])
+
+  @@index([cabinetModeloId])
+  @@map("actividad_cabinet")
+}
+
+enum TipoCabinet {
+  controlador
+  cabinet_auxiliar
+}
+
+model ActividadDriveModule {
+  id                       Int                @id @default(autoincrement())
+  driveModuleModeloId      Int                @map("drive_module_modelo_id")
+  controladorAsociadoId    Int                @map("controlador_asociado_id")
+  tipoActividadId          Int                @map("tipo_actividad_id")
+  documento                String?            @db.VarChar(80)
+  componente               String             @db.VarChar(500)
+  generacionHw             String?            @map("generacion_hw") @db.VarChar(80)
+  intervaloHoras           Int?               @map("intervalo_horas")
+  intervaloMeses           Int?               @map("intervalo_meses") @db.SmallInt
+  intervaloCondicion       IntervaloCondicion @default(periodico) @map("intervalo_condicion")
+  intervaloTextoLegacy     String?            @map("intervalo_texto_legacy") @db.VarChar(200)
+  notas                    String?            @db.Text
+
+  driveModuleModelo   ModeloComponente @relation("DriveModuleModelo", fields: [driveModuleModeloId], references: [id], onDelete: Cascade)
+  controladorAsociado ModeloComponente @relation("DriveModuleCtrl", fields: [controladorAsociadoId], references: [id])
+  tipoActividad       LuTipoActividad  @relation(fields: [tipoActividadId], references: [id])
+
+  @@index([driveModuleModeloId])
+  @@map("actividad_drive_module")
+}
+
+// ===== EQUIVALENCIAS Y PUNTOS CONTROL =====
+
+model EquivalenciaFamilia {
+  id                Int                   @id @default(autoincrement())
+  familiaId         Int                   @map("familia_id")
+  tipoEquivalencia  TipoEquivalencia      @map("tipo_equivalencia")
+  descripcion       String                @db.VarChar(500)
+  fuenteDoc         String?               @map("fuente_doc") @db.VarChar(100)
+  notas             String?               @db.Text
+
+  familia LuFamilia @relation(fields: [familiaId], references: [id], onDelete: Cascade)
+
+  @@map("equivalencia_familia")
+}
+
+enum TipoEquivalencia {
+  lubricacion
+  mantenimiento
+  hardware
+  completa
+}
+
+model PuntoControlGenerico {
+  id                Int                    @id @default(autoincrement())
+  categoria         CategoriaPuntoControl
+  componente        String                 @db.VarChar(200)
+  descripcionAccion String                 @map("descripcion_accion") @db.Text
+  intervaloTexto    String?                @map("intervalo_texto") @db.VarChar(100)
+  condicion         String?                @db.VarChar(200)
+  generacionAplica  String?                @map("generacion_aplica") @db.VarChar(100)
+  notas             String?                @db.Text
+  orden             Int                    @default(0)
+
+  @@map("punto_control_generico")
+}
+
+enum CategoriaPuntoControl {
+  manipulador
+  controladora
+  drive_module
+  cabling
+  eje_externo
+  seguridad
+}
+
+// ===== COMPATIBILIDAD EJES EXTERNOS (tri-vía v2) =====
+
+model CompatibilidadEjePermitida {
+  ejeModeloId Int @map("eje_modelo_id")
+  familiaId   Int @map("familia_id")
+
+  ejeModelo ModeloComponente @relation(fields: [ejeModeloId], references: [id], onDelete: Cascade)
+  familia   LuFamilia        @relation(fields: [familiaId], references: [id])
+
+  @@id([ejeModeloId, familiaId])
+  @@map("compatibilidad_eje_permitida")
+}
+
+model CompatibilidadEjeExcluye {
+  ejeModeloId Int @map("eje_modelo_id")
+  familiaId   Int @map("familia_id")
+
+  ejeModelo ModeloComponente @relation(fields: [ejeModeloId], references: [id], onDelete: Cascade)
+  familia   LuFamilia        @relation(fields: [familiaId], references: [id])
+
+  @@id([ejeModeloId, familiaId])
+  @@map("compatibilidad_eje_excluye")
+}
+
+model CompatibilidadEjeControlador {
+  ejeModeloId         Int @map("eje_modelo_id")
+  controladorModeloId Int @map("controlador_modelo_id")
+
+  ejeModelo   ModeloComponente @relation("EjeCtrlEje", fields: [ejeModeloId], references: [id], onDelete: Cascade)
+  controlador ModeloComponente @relation("EjeCtrlCtrl", fields: [controladorModeloId], references: [id])
+
+  @@id([ejeModeloId, controladorModeloId])
+  @@map("compatibilidad_eje_controlador")
+}
+
 // ===== PLANTILLAS DE DOCUMENTO =====
 
 model DocumentTemplate {
   id        Int      @id @default(autoincrement())
-  tipo      String   @unique  // 'preventivo' | 'correctivo'
+  tipo      String   @unique
   nombre    String
   schema    Json
   updatedAt DateTime @updatedAt @map("updated_at")
