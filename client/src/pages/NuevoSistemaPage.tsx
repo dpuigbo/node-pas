@@ -94,6 +94,17 @@ export default function NuevoSistemaPage() {
     controllerId || undefined,
     'mechanical_unit',
   );
+
+  // Drive units compatibles con la controladora (para multimove)
+  const { data: driveUnits } = useModelosCompatiblesCon(
+    controllerId || undefined,
+    'drive_unit',
+  );
+  const driveUnitId = useMemo(() => {
+    if (!driveUnits || driveUnits.length === 0) return null;
+    return driveUnits[0]?.id as number | undefined;
+  }, [driveUnits]);
+
   // Robot principal familiaId (para filtrado de ejes compatibles)
   const robotPrincipalFamiliaId = useMemo(() => {
     const principal = robots[0];
@@ -317,10 +328,10 @@ export default function NuevoSistemaPage() {
 
     // Robots + DUs
     robots.forEach((robot, i) => {
-      if (i > 0) {
-        // Drive unit for additional robots
+      if (i > 0 && driveUnitId) {
+        // Drive unit for additional robots (modelo drive_unit real, no el del robot)
         componentes.push({
-          modeloComponenteId: robot.modeloComponenteId,
+          modeloComponenteId: driveUnitId,
           tipo: 'drive_unit',
           etiqueta: robot.duEtiqueta || `DU - ${robot.etiqueta}`,
           numeroSerie: robot.duSerie || null,
@@ -721,16 +732,32 @@ export default function NuevoSistemaPage() {
                 </Card>
               ))}
 
-              {/* Add robot button (multimove only) */}
+              {/* Add robot button (multimove only — requires drive_unit available) */}
               {capabilities?.multimove && robots.length < capabilities.maxRobots && (
-                <Button
-                  variant="outline"
-                  className="w-full border-dashed"
-                  onClick={addRobot}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Anadir robot ({robots.length}/{capabilities.maxRobots})
-                </Button>
+                driveUnitId ? (
+                  <Button
+                    variant="outline"
+                    className="w-full border-dashed"
+                    onClick={addRobot}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Anadir robot ({robots.length}/{capabilities.maxRobots})
+                  </Button>
+                ) : (
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                    <AlertTriangle className="h-4 w-4 text-orange-500 shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="font-medium text-orange-600 dark:text-orange-400">
+                        Multimove no disponible
+                      </p>
+                      <p className="text-muted-foreground mt-0.5">
+                        No hay drive units registradas como compatibles con esta controladora. Para activar
+                        multimove, registra una drive unit (ej: IRC5 Drive Unit, A250XT, A400XT) y asociala
+                        a este controlador en el catalogo.
+                      </p>
+                    </div>
+                  </div>
+                )
               )}
             </>
           )}
@@ -921,7 +948,9 @@ export default function NuevoSistemaPage() {
                     <div className="flex items-center gap-3 p-3 rounded-lg border border-dashed">
                       <Zap className="h-5 w-5 text-purple-500 shrink-0" />
                       <div className="flex-1">
-                        <span className="font-medium text-muted-foreground">Drive Unit</span>
+                        <span className="font-medium text-muted-foreground">
+                          {driveUnits?.[0]?.nombre ?? 'Drive Unit'}
+                        </span>
                         <span className="text-muted-foreground ml-2">— {robot.duEtiqueta || `DU - ${robot.etiqueta}`}</span>
                       </div>
                       {robot.duSerie && (
