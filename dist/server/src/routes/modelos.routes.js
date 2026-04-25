@@ -6,6 +6,7 @@ const database_1 = require("../config/database");
 const modelos_validation_1 = require("../validation/modelos.validation");
 const templateSeeds_1 = require("../lib/templateSeeds");
 const niveles_1 = require("../lib/niveles");
+const ofertaMantenimiento_1 = require("../lib/ofertaMantenimiento");
 const router = (0, express_1.Router)();
 // ===== MODELOS COMPONENTE =====
 // GET /api/v1/modelos
@@ -154,6 +155,19 @@ router.get('/compatible-con', async (req, res, next) => {
             },
         });
         res.json(modelos);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// GET /api/v1/modelos/:id/niveles-aplicables
+// Niveles aplicables para un modelo + horas + costes limpieza desde mantenimiento_horas_modelo.
+// Va antes de /:id para evitar conflicto de Express.
+router.get('/:id/niveles-aplicables', async (req, res, next) => {
+    try {
+        const modeloId = Number(req.params.id);
+        const niveles = await (0, ofertaMantenimiento_1.getNivelesAplicablesModelo)(modeloId);
+        res.json({ modeloId, niveles });
     }
     catch (err) {
         next(err);

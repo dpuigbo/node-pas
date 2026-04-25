@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generarIntervencionSchema = exports.updateEstadoOfertaSchema = exports.updateOfertaSchema = exports.createOfertaSchema = void 0;
+exports.upsertOfertaComponenteSchema = exports.generarIntervencionSchema = exports.updateEstadoOfertaSchema = exports.updateOfertaSchema = exports.createOfertaSchema = void 0;
 const zod_1 = require("zod");
 const ofertaSistemaSchema = zod_1.z.object({
     sistemaId: zod_1.z.number().int().positive(),
@@ -11,6 +11,7 @@ exports.createOfertaSchema = zod_1.z.object({
     titulo: zod_1.z.string().min(1, 'El titulo es obligatorio').max(300),
     referencia: zod_1.z.string().max(100).optional().nullable(),
     tipo: zod_1.z.enum(['preventiva', 'correctiva']),
+    tipoOferta: zod_1.z.enum(['mantenimiento', 'solo_limpieza']).default('mantenimiento'),
     validezDias: zod_1.z.number().int().min(1).default(30),
     notas: zod_1.z.string().optional().nullable(),
     sistemas: zod_1.z.array(ofertaSistemaSchema).min(1, 'Debe incluir al menos un sistema'),
@@ -25,6 +26,7 @@ exports.updateOfertaSchema = zod_1.z.object({
     titulo: zod_1.z.string().min(1).max(300).optional(),
     referencia: zod_1.z.string().max(100).optional().nullable(),
     tipo: zod_1.z.enum(['preventiva', 'correctiva']).optional(),
+    tipoOferta: zod_1.z.enum(['mantenimiento', 'solo_limpieza']).optional(),
     validezDias: zod_1.z.number().int().min(1).optional(),
     notas: zod_1.z.string().optional().nullable(),
     sistemas: zod_1.z.array(ofertaSistemaSchema).optional(),
@@ -41,5 +43,12 @@ exports.updateEstadoOfertaSchema = zod_1.z.object({
 exports.generarIntervencionSchema = zod_1.z.object({
     fechaInicio: zod_1.z.string().datetime(),
     fechaFin: zod_1.z.string().datetime(),
+});
+// Upsert oferta-componente (configuracion de mantenimiento por componente)
+exports.upsertOfertaComponenteSchema = zod_1.z.object({
+    nivel: zod_1.z.string().max(20).optional().nullable(),
+    conBaterias: zod_1.z.boolean().optional(),
+    conAceite: zod_1.z.boolean().optional(),
+    notas: zod_1.z.string().max(500).optional().nullable(),
 });
 //# sourceMappingURL=ofertas.validation.js.map
