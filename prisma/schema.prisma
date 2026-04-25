@@ -214,6 +214,10 @@ model ModeloComponente {
   notas                   String?        @db.Text
   aceitesConfig           Json?          @map("aceites_config")  // legacy
   niveles                 String?        // legacy CSV: "1,2,2_inferior,2_superior,3"
+  // Capacidades de controladora (solo para tipo='controller')
+  soportaMultimove        Boolean?       @map("soporta_multimove")
+  maxRobotsMultimove      Int?           @map("max_robots_multimove") @db.TinyInt
+  maxEjesExternos         Int?           @map("max_ejes_externos") @db.TinyInt
   createdAt               DateTime       @default(now()) @map("created_at")
   updatedAt               DateTime       @updatedAt @map("updated_at")
 
