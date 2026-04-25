@@ -16,9 +16,11 @@ function dec(v: any): number | null {
   return Number(v);
 }
 
+// Soporta ambos formatos: legacy (tipo+id) y v2 (consumibleId)
 interface ConsumibleItem {
-  tipo: 'aceite' | 'bateria' | 'consumible';
-  id: number;
+  tipo?: 'aceite' | 'bateria' | 'consumible';
+  id?: number;
+  consumibleId?: number;
   cantidad: number;
 }
 
@@ -318,9 +320,10 @@ async function calculateOfertaTotals(
 
   const sistemaMap = new Map(sistemasDb.map((s) => [s.id, s]));
 
-  // Collect all aceite/consumible IDs needed for price lookup
+  // Collect all consumible IDs needed for price lookup (mix de v2 + legacy)
   const aceiteIds = new Set<number>();
   const consumibleIds = new Set<number>();
+  const catalogoIds = new Set<number>();
 
   for (const { sistemaId, nivel } of sistemas) {
     const sistema = sistemaMap.get(sistemaId);
@@ -331,17 +334,27 @@ async function calculateOfertaTotals(
       if (!cn?.consumibles) continue;
       const items = cn.consumibles as unknown as ConsumibleItem[];
       for (const item of items) {
-        if (item.id <= 0) continue;
-        if (item.tipo === 'aceite') aceiteIds.add(item.id);
-        else consumibleIds.add(item.id);
+        if (item.consumibleId && item.consumibleId > 0) {
+          catalogoIds.add(item.consumibleId);
+        } else if (item.id && item.id > 0) {
+          if (item.tipo === 'aceite') aceiteIds.add(item.id);
+          else consumibleIds.add(item.id);
+        }
       }
     }
   }
 
-  // Load prices — preferimos consumible_catalogo (linkado via FK) y fallback a legacy
+  // Load prices: catalogo unificado (v2) + legacy (con fallback al catalogo via FK)
+  const catalogoMap = new Map<number, { coste: number | null; precio: number | null }>();
   const aceiteMap = new Map<number, { coste: number | null; precio: number | null }>();
   const consumibleMap = new Map<number, { coste: number | null; precio: number | null }>();
 
+  if (catalogoIds.size > 0) {
+    const items = await prisma.consumibleCatalogo.findMany({
+      where: { id: { in: Array.from(catalogoIds) } },
+    });
+    for (const it of items) catalogoMap.set(it.id, { coste: dec(it.coste), precio: dec(it.precio) });
+  }
   if (aceiteIds.size > 0) {
     const aceites = await prisma.aceite.findMany({
       where: { id: { in: Array.from(aceiteIds) } },
@@ -382,14 +395,16 @@ async function calculateOfertaTotals(
       sysCoste += dec(cn.precioOtros) ?? 0;
       sysPrecio += dec(cn.precioOtros) ?? 0;
 
-      // Add consumibles costs
+      // Add consumibles costs (soporta v2 + legacy)
       if (cn.consumibles) {
         const items = cn.consumibles as unknown as ConsumibleItem[];
         for (const item of items) {
-          if (item.id <= 0) continue;
-          const priceInfo = item.tipo === 'aceite'
-            ? aceiteMap.get(item.id)
-            : consumibleMap.get(item.id);
+          let priceInfo: { coste: number | null; precio: number | null } | undefined;
+          if (item.consumibleId && item.consumibleId > 0) {
+            priceInfo = catalogoMap.get(item.consumibleId);
+          } else if (item.id && item.id > 0) {
+            priceInfo = item.tipo === 'aceite' ? aceiteMap.get(item.id) : consumibleMap.get(item.id);
+          }
           if (priceInfo) {
             sysCoste += (priceInfo.coste ?? 0) * item.cantidad;
             sysPrecio += (priceInfo.precio ?? 0) * item.cantidad;

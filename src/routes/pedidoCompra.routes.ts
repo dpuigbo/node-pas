@@ -6,8 +6,9 @@ import { updatePedidoCompraSchema, updateEstadoPedidoSchema } from '../validatio
 const router = Router();
 
 interface ConsumibleItem {
-  tipo: 'aceite' | 'bateria' | 'consumible';
-  id: number;
+  tipo?: 'aceite' | 'bateria' | 'consumible';
+  id?: number;
+  consumibleId?: number;
   cantidad: number;
 }
 
@@ -84,8 +85,9 @@ router.post('/generar/:intervencionId', requireRole('admin'), async (req: Reques
     // Collect all aceite IDs and consumible IDs we need to resolve
     const aceiteIds = new Set<number>();
     const consumibleIds = new Set<number>();
+    const catalogoIds = new Set<number>();
 
-    // Build detailed lines
+    // Build detailed lines (mix v2 + legacy)
     const lineas: LineaPedido[] = [];
 
     for (const intSistema of intervencion.sistemas) {
@@ -94,22 +96,38 @@ router.post('/generar/:intervencionId', requireRole('admin'), async (req: Reques
 
       for (const comp of sistema.componentes) {
         const modelo = comp.modeloComponente;
-        // Find ConsumibleNivel for this modelo + nivel
         const cn = modelo.consumiblesNivel.find((c) => c.nivel === nivel);
         if (!cn || !cn.consumibles) continue;
 
         const items = cn.consumibles as unknown as ConsumibleItem[];
         for (const item of items) {
-          if (item.id <= 0) continue; // skip unselected items
-          if (item.tipo === 'aceite') {
-            aceiteIds.add(item.id);
-          } else {
-            consumibleIds.add(item.id);
+          // Formato v2 (consumibleId)
+          if (item.consumibleId && item.consumibleId > 0) {
+            catalogoIds.add(item.consumibleId);
+            lineas.push({
+              tipo: 'catalogo',
+              itemId: item.consumibleId,
+              nombre: '',
+              cantidad: item.cantidad,
+              unidad: null,
+              coste: null,
+              precio: null,
+              sistemaId: sistema.id,
+              sistemaNombre: sistema.nombre,
+              componenteTipo: comp.tipo,
+              modeloNombre: modelo.nombre,
+              nivel,
+            });
+            continue;
           }
+          // Formato legacy (tipo+id)
+          if (!item.id || item.id <= 0) continue;
+          if (item.tipo === 'aceite') aceiteIds.add(item.id);
+          else consumibleIds.add(item.id);
           lineas.push({
-            tipo: item.tipo,
+            tipo: item.tipo ?? 'consumible',
             itemId: item.id,
-            nombre: '', // will be resolved below
+            nombre: '',
             cantidad: item.cantidad,
             unidad: null,
             coste: null,
@@ -160,9 +178,33 @@ router.post('/generar/:intervencionId', requireRole('admin'), async (req: Reques
       }
     }
 
+    // Catalogo unificado (formato v2)
+    const catalogoMap = new Map<number, { nombre: string; unidad: string | null; coste: number | null; precio: number | null }>();
+    if (catalogoIds.size > 0) {
+      const items = await prisma.consumibleCatalogo.findMany({
+        where: { id: { in: Array.from(catalogoIds) } },
+      });
+      for (const it of items) catalogoMap.set(it.id, {
+        nombre: it.nombre,
+        unidad: it.unidad,
+        coste: dec(it.coste),
+        precio: dec(it.precio),
+      });
+    }
+
     // Fill in names and prices
     for (const linea of lineas) {
-      if (linea.tipo === 'aceite') {
+      if (linea.tipo === 'catalogo') {
+        const info = catalogoMap.get(linea.itemId);
+        if (info) {
+          linea.nombre = info.nombre;
+          linea.unidad = info.unidad;
+          linea.coste = info.coste;
+          linea.precio = info.precio;
+        } else {
+          linea.nombre = `Consumible #${linea.itemId} (no encontrado)`;
+        }
+      } else if (linea.tipo === 'aceite') {
         const info = aceiteMap.get(linea.itemId);
         if (info) {
           linea.nombre = info.nombre;

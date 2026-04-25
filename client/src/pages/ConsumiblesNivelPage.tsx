@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Save } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useFabricantes } from '@/hooks/useFabricantes';
 import { useConsumiblesNivelByFabricante, useBatchUpsertConsumibleNivel } from '@/hooks/useConsumiblesNivel';
-import { useAceites, useConsumibles } from '@/hooks/useCatalogos';
+import { useConsumiblesCatalogo } from '@/hooks/useLookups';
 import { getNivelesValidos, NIVEL_SHORT, NIVELES_ALL } from '@/lib/niveles';
 
 const TIPO_COMP_LABELS: Record<string, string> = {
@@ -18,11 +18,20 @@ const TIPO_COMP_LABELS: Record<string, string> = {
 
 const SELECT_CLASS = 'flex h-8 w-full rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring';
 
-interface ConsumibleItem {
+// Nuevo formato: usa consumibleId del catalogo unificado
+interface ConsumibleItemV2 {
+  consumibleId: number;
+  cantidad: number;
+}
+
+// Legacy: mantenido para deserializar datos existentes
+interface ConsumibleItemLegacy {
   tipo: 'aceite' | 'bateria' | 'consumible';
   id: number;
   cantidad: number;
 }
+
+type ConsumibleItem = ConsumibleItemV2;
 
 interface NivelData {
   horas: string;
@@ -30,24 +39,53 @@ interface NivelData {
   consumibles: ConsumibleItem[];
 }
 
-type ModeloNiveles = Record<string, NivelData>; // key = nivel value
-type FormData = Record<number, ModeloNiveles>; // key = modeloId
+type ModeloNiveles = Record<string, NivelData>;
+type FormData = Record<number, ModeloNiveles>;
 
 const emptyNivel = (): NivelData => ({ horas: '', precioOtros: '', consumibles: [] });
+
+// Mapping para deserializar legacy items
+function deserializeItem(item: any, aceiteToCons: Map<number, number>, consToCons: Map<number, number>): ConsumibleItem | null {
+  // Nuevo formato
+  if (item.consumibleId) {
+    return { consumibleId: Number(item.consumibleId), cantidad: Number(item.cantidad) || 1 };
+  }
+  // Legacy: tipo+id → buscar consumibleId
+  if (item.tipo === 'aceite') {
+    const cId = aceiteToCons.get(Number(item.id));
+    return cId ? { consumibleId: cId, cantidad: Number(item.cantidad) || 1 } : null;
+  }
+  if (item.tipo === 'bateria' || item.tipo === 'consumible') {
+    const cId = consToCons.get(Number(item.id));
+    return cId ? { consumibleId: cId, cantidad: Number(item.cantidad) || 1 } : null;
+  }
+  return null;
+}
 
 export default function ConsumiblesNivelPage() {
   const { data: fabricantes } = useFabricantes();
   const [fabId, setFabId] = useState<number | null>(null);
   const { data: modelos, isLoading } = useConsumiblesNivelByFabricante(fabId);
-  const { data: aceites } = useAceites();
-  const { data: baterias } = useConsumibles({ tipo: 'bateria' });
-  const { data: consumiblesGen } = useConsumibles({ tipo: 'general' });
+  const { data: consumiblesCatalogo } = useConsumiblesCatalogo();
   const batchUpsert = useBatchUpsertConsumibleNivel();
 
   const [form, setForm] = useState<FormData>({});
   const [dirty, setDirty] = useState(false);
 
-  // Build form data from fetched modelos (only valid niveles per tipo)
+  // Indice de consumibles por id para mostrar nombre
+  const consumiblesById = useMemo(() => {
+    const m = new Map<number, any>();
+    for (const c of consumiblesCatalogo || []) m.set(c.id, c);
+    return m;
+  }, [consumiblesCatalogo]);
+
+  // Mappings legacy → catalogo (vacios; el backend ya guarda nuevos en formato v2)
+  const legacyMaps = useMemo(() => ({
+    aceiteToCons: new Map<number, number>(),
+    consToCons: new Map<number, number>(),
+  }), []);
+
+  // Build form data from fetched modelos
   useEffect(() => {
     if (!Array.isArray(modelos)) return;
     const fd: FormData = {};
@@ -57,10 +95,14 @@ export default function ConsumiblesNivelPage() {
       for (const nv of validos) {
         const existing = (m.consumiblesNivel || []).find((cn: any) => cn.nivel === nv);
         if (existing) {
+          const rawItems = (existing.consumibles as any[]) || [];
+          const items = rawItems
+            .map((r) => deserializeItem(r, legacyMaps.aceiteToCons, legacyMaps.consToCons))
+            .filter((i): i is ConsumibleItem => i !== null);
           modeloNiveles[nv] = {
             horas: existing.horas != null ? String(existing.horas) : '',
             precioOtros: existing.precioOtros != null ? String(existing.precioOtros) : '',
-            consumibles: (existing.consumibles as ConsumibleItem[]) || [],
+            consumibles: items,
           };
         } else {
           modeloNiveles[nv] = emptyNivel();
@@ -70,7 +112,7 @@ export default function ConsumiblesNivelPage() {
     }
     setForm(fd);
     setDirty(false);
-  }, [modelos]);
+  }, [modelos, legacyMaps]);
 
   const getNd = (prev: FormData, modeloId: number, nivel: string): NivelData => {
     return prev[modeloId]?.[nivel] ?? emptyNivel();
@@ -88,7 +130,7 @@ export default function ConsumiblesNivelPage() {
   const addConsumible = useCallback((modeloId: number, nivel: string) => {
     setForm((prev) => {
       const nd = getNd(prev, modeloId, nivel);
-      const updated: NivelData = { ...nd, consumibles: [...nd.consumibles, { tipo: 'aceite', id: 0, cantidad: 1 }] };
+      const updated: NivelData = { ...nd, consumibles: [...nd.consumibles, { consumibleId: 0, cantidad: 1 }] };
       const modeloNiveles: ModeloNiveles = { ...(prev[modeloId] ?? {}), [nivel]: updated };
       return { ...prev, [modeloId]: modeloNiveles };
     });
@@ -99,8 +141,7 @@ export default function ConsumiblesNivelPage() {
     setForm((prev) => {
       const nd = getNd(prev, modeloId, nivel);
       const items = [...nd.consumibles];
-      items[idx] = { ...items[idx], ...patch } as ConsumibleItem;
-      if (patch.tipo !== undefined) items[idx].id = 0;
+      items[idx] = { ...items[idx], ...patch };
       const updated: NivelData = { ...nd, consumibles: items };
       const modeloNiveles: ModeloNiveles = { ...(prev[modeloId] ?? {}), [nivel]: updated };
       return { ...prev, [modeloId]: modeloNiveles };
@@ -118,12 +159,6 @@ export default function ConsumiblesNivelPage() {
     setDirty(true);
   }, []);
 
-  const getCatalogOptions = (tipo: string) => {
-    if (tipo === 'aceite') return (Array.isArray(aceites) ? aceites : []).filter((a: any) => a.activo);
-    if (tipo === 'bateria') return (Array.isArray(baterias) ? baterias : []).filter((b: any) => b.activo);
-    return (Array.isArray(consumiblesGen) ? consumiblesGen : []).filter((c: any) => c.activo);
-  };
-
   const handleSave = async () => {
     const items: any[] = [];
     for (const [modeloId, niveles] of Object.entries(form)) {
@@ -133,7 +168,7 @@ export default function ConsumiblesNivelPage() {
           nivel,
           horas: data.horas ? Number(data.horas) : null,
           precioOtros: data.precioOtros ? Number(data.precioOtros) : null,
-          consumibles: data.consumibles.filter((c) => c.id > 0),
+          consumibles: data.consumibles.filter((c) => c.consumibleId > 0),
         });
       }
     }
@@ -226,40 +261,37 @@ export default function ConsumiblesNivelPage() {
                       </td>
                       <td className="px-2 py-2">
                         <div className="space-y-1">
-                          {(nd.consumibles || []).map((c, idx) => (
-                            <div key={idx} className="flex items-center gap-1">
-                              <select
-                                value={c.tipo}
-                                onChange={(e) => updateConsumible(modelo.id, nv, idx, { tipo: e.target.value as any })}
-                                className="h-7 rounded border border-input bg-transparent px-1 text-xs w-24"
-                              >
-                                <option value="aceite">Aceite</option>
-                                <option value="bateria">Batería</option>
-                                <option value="consumible">Consumible</option>
-                              </select>
-                              <select
-                                value={c.id}
-                                onChange={(e) => updateConsumible(modelo.id, nv, idx, { id: Number(e.target.value) })}
-                                className="h-7 rounded border border-input bg-transparent px-1 text-xs flex-1 min-w-0"
-                              >
-                                <option value={0}>Seleccionar...</option>
-                                {getCatalogOptions(c.tipo).map((item: any) => (
-                                  <option key={item.id} value={item.id}>{item.nombre}</option>
-                                ))}
-                              </select>
-                              <Input
-                                type="number" min="1" step="1"
-                                className="h-7 text-xs w-14"
-                                value={c.cantidad}
-                                onChange={(e) => updateConsumible(modelo.id, nv, idx, { cantidad: Number(e.target.value) || 1 })}
-                              />
-                              <button
-                                type="button"
-                                onClick={() => removeConsumible(modelo.id, nv, idx)}
-                                className="text-destructive hover:text-destructive/80 text-xs px-1"
-                              >✕</button>
-                            </div>
-                          ))}
+                          {(nd.consumibles || []).map((c, idx) => {
+                            const item = consumiblesById.get(c.consumibleId);
+                            return (
+                              <div key={idx} className="flex items-center gap-1">
+                                <select
+                                  value={c.consumibleId}
+                                  onChange={(e) => updateConsumible(modelo.id, nv, idx, { consumibleId: Number(e.target.value) })}
+                                  className="h-7 rounded border border-input bg-transparent px-1 text-xs flex-1 min-w-0"
+                                >
+                                  <option value={0}>Seleccionar consumible...</option>
+                                  {(consumiblesCatalogo || []).map((it: any) => (
+                                    <option key={it.id} value={it.id}>
+                                      [{it.tipo}] {it.nombre}
+                                    </option>
+                                  ))}
+                                </select>
+                                <Input
+                                  type="number" min="0.001" step="0.001"
+                                  className="h-7 text-xs w-20"
+                                  value={c.cantidad}
+                                  onChange={(e) => updateConsumible(modelo.id, nv, idx, { cantidad: Number(e.target.value) || 1 })}
+                                />
+                                <span className="text-[10px] text-muted-foreground w-10">{item?.unidad ?? ''}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => removeConsumible(modelo.id, nv, idx)}
+                                  className="text-destructive hover:text-destructive/80 text-xs px-1"
+                                >✕</button>
+                              </div>
+                            );
+                          })}
                           <button
                             type="button"
                             onClick={() => addConsumible(modelo.id, nv)}
