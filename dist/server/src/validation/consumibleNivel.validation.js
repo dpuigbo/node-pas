@@ -2,11 +2,18 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.batchUpsertSchema = exports.upsertConsumibleNivelSchema = void 0;
 const zod_1 = require("zod");
-const consumibleItemSchema = zod_1.z.object({
+// Formato v2: usa consumibleId del catalogo unificado
+const consumibleItemV2Schema = zod_1.z.object({
+    consumibleId: zod_1.z.number().int().positive(),
+    cantidad: zod_1.z.number().positive(),
+});
+// Formato legacy: tipo + id (aceites/consumibles tables)
+const consumibleItemLegacySchema = zod_1.z.object({
     tipo: zod_1.z.enum(['aceite', 'bateria', 'consumible']),
     id: zod_1.z.number().int().positive(),
     cantidad: zod_1.z.number().positive(),
 });
+const consumibleItemSchema = zod_1.z.union([consumibleItemV2Schema, consumibleItemLegacySchema]);
 exports.upsertConsumibleNivelSchema = zod_1.z.object({
     modeloId: zod_1.z.number().int().positive(),
     nivel: zod_1.z.enum(['1', '2', '2_inferior', '2_superior', '3']),
