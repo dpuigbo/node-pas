@@ -169,8 +169,7 @@ describe('evaluarReglas — orden y casos limite', () => {
 const CTRL_MATRIZ = {
   IRC5_SINGLE: 28,
   IRC5_COMPACT: 29,
-  IRC5_PMC_SMALL: 100,
-  IRC5_PMC_LARGE: 101,
+  IRC5_PMC: 30,
   IRC5P: 32,
   E10: 33,
   C30: 34,
@@ -182,10 +181,10 @@ const CTRL_MATRIZ = {
 describe('evaluarRobotControlador — matriz cabinet-especifica', () => {
   // Caso 1 — IRB 6660 + IRC5 Compact → falla (este caso lo descubrio Daniel)
   it('IRB 6660 + IRC5 Compact → falla (gama grande no entra en Compact)', () => {
-    // IRB 6660 solo permite IRC5 Single, IRC5 PMC Large, V250XT, V400XT
+    // IRB 6660 solo permite IRC5 Single, IRC5 PMC, V250XT, V400XT
     const compatibles = [
       { id: CTRL_MATRIZ.IRC5_SINGLE, nombre: 'IRC5 Single' },
-      { id: CTRL_MATRIZ.IRC5_PMC_LARGE, nombre: 'IRC5 PMC Large' },
+      { id: CTRL_MATRIZ.IRC5_PMC, nombre: 'IRC5 Panel Mounted (PMC)' },
       { id: CTRL_MATRIZ.V250XT, nombre: 'OmniCore V250XT' },
       { id: CTRL_MATRIZ.V400XT, nombre: 'OmniCore V400XT' },
     ];
