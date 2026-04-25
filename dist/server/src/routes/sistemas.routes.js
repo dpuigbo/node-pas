@@ -83,21 +83,32 @@ router.post('/completo', (0, role_middleware_1.requireRole)('admin'), async (req
         const sistema = await database_1.prisma.$transaction(async (tx) => {
             // 1. Create the sistema
             const newSistema = await tx.sistema.create({ data: sistemaData });
-            // 2. Create all components
-            for (const comp of componentes) {
-                await tx.componenteSistema.create({
-                    data: {
-                        sistemaId: newSistema.id,
-                        modeloComponenteId: comp.modeloComponenteId,
-                        tipo: comp.tipo,
-                        etiqueta: comp.etiqueta,
-                        numeroSerie: comp.numeroSerie ?? null,
-                        numEjes: comp.numEjes ?? null,
-                        orden: comp.orden,
-                    },
-                });
+            // 2. Crear componentes en 2 pases:
+            //    - Pase 1: padres (sin padreTempId)
+            //    - Pase 2: hijos (con padreTempId resuelto al id real)
+            const tempIdToReal = new Map();
+            for (const pass of [1, 2]) {
+                for (const comp of componentes) {
+                    const isHijo = !!comp.padreTempId;
+                    if ((pass === 1 && isHijo) || (pass === 2 && !isHijo))
+                        continue;
+                    const padreId = comp.padreTempId ? tempIdToReal.get(comp.padreTempId) ?? null : null;
+                    const created = await tx.componenteSistema.create({
+                        data: {
+                            sistemaId: newSistema.id,
+                            modeloComponenteId: comp.modeloComponenteId,
+                            tipo: comp.tipo,
+                            etiqueta: comp.etiqueta,
+                            numeroSerie: comp.numeroSerie ?? null,
+                            numEjes: comp.numEjes ?? null,
+                            orden: comp.orden,
+                            componentePadreId: padreId,
+                        },
+                    });
+                    if (comp.tempId)
+                        tempIdToReal.set(comp.tempId, created.id);
+                }
             }
-            // 3. Return with full includes
             return tx.sistema.findUnique({
                 where: { id: newSistema.id },
                 include: {
@@ -133,19 +144,29 @@ router.put('/:id/completo', (0, role_middleware_1.requireRole)('admin'), async (
             });
             // 2. Delete all existing components
             await tx.componenteSistema.deleteMany({ where: { sistemaId } });
-            // 3. Recreate all components
-            for (const comp of componentes) {
-                await tx.componenteSistema.create({
-                    data: {
-                        sistemaId,
-                        modeloComponenteId: comp.modeloComponenteId,
-                        tipo: comp.tipo,
-                        etiqueta: comp.etiqueta,
-                        numeroSerie: comp.numeroSerie ?? null,
-                        numEjes: comp.numEjes ?? null,
-                        orden: comp.orden,
-                    },
-                });
+            // 3. Recreate all components (2 pases para resolver padreTempId)
+            const tempIdToReal = new Map();
+            for (const pass of [1, 2]) {
+                for (const comp of componentes) {
+                    const isHijo = !!comp.padreTempId;
+                    if ((pass === 1 && isHijo) || (pass === 2 && !isHijo))
+                        continue;
+                    const padreId = comp.padreTempId ? tempIdToReal.get(comp.padreTempId) ?? null : null;
+                    const created = await tx.componenteSistema.create({
+                        data: {
+                            sistemaId,
+                            modeloComponenteId: comp.modeloComponenteId,
+                            tipo: comp.tipo,
+                            etiqueta: comp.etiqueta,
+                            numeroSerie: comp.numeroSerie ?? null,
+                            numEjes: comp.numEjes ?? null,
+                            orden: comp.orden,
+                            componentePadreId: padreId,
+                        },
+                    });
+                    if (comp.tempId)
+                        tempIdToReal.set(comp.tempId, created.id);
+                }
             }
             // 4. Return with full includes
             return tx.sistema.findUnique({

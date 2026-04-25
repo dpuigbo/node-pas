@@ -19,10 +19,14 @@ exports.createComponenteSchema = zod_1.z.object({
     numEjes: zod_1.z.number().int().positive().optional().nullable(),
     metadata: zod_1.z.any().optional().nullable(),
     orden: zod_1.z.number().int().optional().default(0),
+    componentePadreId: zod_1.z.number().int().positive().optional().nullable(),
 });
 exports.updateComponenteSchema = exports.createComponenteSchema.partial();
-// Schema for the wizard: create sistema + all components atomically
+// Schema for the wizard: create sistema + all components atomically.
+// tempId/padreTempId permiten referenciar padres antes de tener IDs reales.
 const componenteWizardSchema = zod_1.z.object({
+    tempId: zod_1.z.string().optional(),
+    padreTempId: zod_1.z.string().optional().nullable(),
     modeloComponenteId: zod_1.z.number().int().positive(),
     tipo: tipoComponenteEnum,
     etiqueta: zod_1.z.string().min(1).max(100),
