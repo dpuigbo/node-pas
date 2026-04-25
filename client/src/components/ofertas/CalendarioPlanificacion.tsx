@@ -21,12 +21,6 @@ const TIPO_COLOR: Record<TipoBloque, { bg: string; border: string; text: string;
   comida: { bg: 'bg-green-100/80', border: 'border-green-400', text: 'text-green-900', icon: Coffee },
 };
 
-const TIPO_LABEL: Record<TipoBloque, string> = {
-  trabajo: 'Trabajo',
-  desplazamiento: 'Desplazamiento',
-  comida: 'Comida',
-};
-
 const DIAS_SEMANA = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
 
 interface Props {
@@ -130,7 +124,7 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
     const { dayIdx, startSlot, endSlot } = dragRef.current;
     setDrag(null);
     dragRef.current = null;
-    const fecha = fechasStr[dayIdx];
+    const fecha = fechasStr[dayIdx]!;
     const horaInicio = minutesToHHMM(startSlot * SLOT_MINUTES);
     const horaFin = minutesToHHMM(endSlot * SLOT_MINUTES);
     setBusy(true);
@@ -178,9 +172,9 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <div className="text-sm font-medium min-w-[180px] text-center">
-            {dias[0].toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+            {dias[0]!.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
             {' - '}
-            {dias[6].toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
+            {dias[6]!.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
           </div>
           <Button size="sm" variant="outline" onClick={() => setWeekStart(addDays(weekStart, 7))}>
             <ChevronRight className="h-4 w-4" />
@@ -224,7 +218,7 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
         <div className="grid bg-muted/40 text-xs font-medium border-b" style={{ gridTemplateColumns: '60px repeat(7, 1fr)' }}>
           <div className="px-2 py-1.5"></div>
           {dias.map((d, i) => {
-            const fecha = fechasStr[i];
+            const fecha = fechasStr[i]!;
             const blocks = bloquesPorDia.get(fecha) ?? [];
             const horasDia = blocks.reduce((sum, b) => {
               if (b.tipo === 'comida') return sum;
@@ -259,7 +253,7 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
 
           {/* Day columns */}
           {dias.map((dia, dayIdx) => {
-            const fecha = fechasStr[dayIdx];
+            const fecha = fechasStr[dayIdx]!;
             const dayBlocks = bloquesPorDia.get(fecha) ?? [];
             const fueraRango = (limMin && dia < limMin) || (limMax && dia > limMax);
             return (
