@@ -531,6 +531,8 @@ model ConsumibleCatalogo {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
+  lubricaciones Lubricacion[]
+
   @@map("consumible_catalogo")
 }
 
@@ -653,6 +655,7 @@ model Lubricacion {
   modeloComponenteId    Int      @map("modelo_componente_id")
   eje                   String   @db.VarChar(30)
   aceiteId              Int?     @map("aceite_id")
+  consumibleId          Int?     @map("consumible_id")
   cantidadValor         Decimal? @map("cantidad_valor") @db.Decimal(10, 3)
   cantidadUnidad        LubricacionUnidad? @map("cantidad_unidad")
   cantidadTextoLegacy   String?  @map("cantidad_texto_legacy") @db.VarChar(100)
@@ -661,11 +664,13 @@ model Lubricacion {
   webConfig             String?  @map("web_config") @db.VarChar(100)
   notas                 String?  @db.Text
 
-  modelo ModeloComponente @relation(fields: [modeloComponenteId], references: [id], onDelete: Cascade)
-  aceite Aceite?          @relation(fields: [aceiteId], references: [id])
+  modelo     ModeloComponente    @relation(fields: [modeloComponenteId], references: [id], onDelete: Cascade)
+  aceite     Aceite?             @relation(fields: [aceiteId], references: [id])
+  consumible ConsumibleCatalogo? @relation(fields: [consumibleId], references: [id])
 
   @@index([modeloComponenteId])
   @@index([aceiteId])
+  @@index([consumibleId])
   @@map("lubricacion")
 }
 

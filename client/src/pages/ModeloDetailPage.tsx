@@ -550,9 +550,9 @@ export default function ModeloDetailPage() {
                     </thead>
                     <tbody>
                       {group.items.map((item: any) => {
-                        // v2 fields: aceite.nombre, cantidadValor+cantidadUnidad
-                        // legacy fields: tipoLubricante, cantidad
-                        const lubricante = item.aceite?.nombre ?? item.tipoLubricanteLegacy ?? item.tipoLubricante ?? 'N/A';
+                        // Prioridad: consumible_catalogo > aceite legacy > texto
+                        const consumible = item.consumible;
+                        const lubricante = consumible?.nombre ?? item.aceite?.nombre ?? item.tipoLubricanteLegacy ?? item.tipoLubricante ?? 'N/A';
                         const cantidad = item.cantidadValor != null
                           ? `${item.cantidadValor} ${item.cantidadUnidad ?? ''}`.trim()
                           : item.cantidadTextoLegacy ?? item.cantidad ?? 'N/A';
@@ -563,7 +563,15 @@ export default function ModeloDetailPage() {
                               {lubricante === 'N/A' ? (
                                 <span className="text-muted-foreground">N/A</span>
                               ) : (
-                                lubricante
+                                <div className="flex flex-col gap-0.5">
+                                  <span>{lubricante}</span>
+                                  {consumible?.codigoAbb && (
+                                    <span className="text-[10px] font-mono text-muted-foreground">{consumible.codigoAbb}</span>
+                                  )}
+                                  {consumible?.fabricante && !consumible?.codigoAbb && (
+                                    <span className="text-[10px] text-muted-foreground">{consumible.fabricante}</span>
+                                  )}
+                                </div>
                               )}
                             </td>
                             <td className="px-4 py-2">

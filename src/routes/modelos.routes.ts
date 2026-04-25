@@ -381,6 +381,7 @@ router.get('/:id/lubricacion', async (req: Request, res: Response, next: NextFun
       orderBy: [{ eje: 'asc' }],
       include: {
         aceite: { select: { id: true, nombre: true, categoria: true } },
+        consumible: { select: { id: true, nombre: true, tipo: true, subtipo: true, codigoAbb: true, fabricante: true, unidad: true } },
       },
     });
 
