@@ -107,27 +107,37 @@ export default function NuevoSistemaPage() {
     return driveUnits[0]?.id as number | undefined;
   }, [driveUnits]);
 
-  // Robot principal modelo + familia (para filtrado de ejes compatibles)
-  const robotPrincipalModeloId = robots[0]?.modeloComponenteId || undefined;
-  const robotPrincipalFamiliaId = useMemo(() => {
-    const principal = robots[0];
-    if (!robotModelos || !principal?.modeloComponenteId) return undefined;
-    const modelo = robotModelos.find((m: any) => m.id === principal.modeloComponenteId);
+  // Robot al que se asocia el eje que se esta a punto de añadir (depende de ejeRobotIdx)
+  // Por defecto: robot principal (idx=0)
+  const robotTargetModeloId = robots[ejeRobotIdx ?? 0]?.modeloComponenteId || undefined;
+  const robotTargetFamiliaId = useMemo(() => {
+    const target = robots[ejeRobotIdx ?? 0];
+    if (!robotModelos || !target?.modeloComponenteId) return undefined;
+    const modelo = robotModelos.find((m: any) => m.id === target.modeloComponenteId);
     return modelo?.familiaId as number | undefined;
-  }, [robotModelos, robots]);
+  }, [robotModelos, robots, ejeRobotIdx]);
 
-  // Ejes externos compatibles (backend resuelve familia desde robotModeloId)
+  // Ejes externos compatibles con: controlador + el ROBOT al que se va a asociar
+  // (en multimove, cada robot puede tener familias distintas y por tanto ejes distintos)
   const { data: ejeModelos } = useEjesCompatibles(
     controllerId || undefined,
-    robotPrincipalModeloId,
+    robotTargetModeloId,
   );
 
   // Validacion del eje seleccionado (mantenida como guardrail)
   const { data: ejeCompat, isLoading: ejeCompatLoading } = useEjeCompatibilidad(
     ejeModeloId || undefined,
-    robotPrincipalFamiliaId,
+    robotTargetFamiliaId,
     controllerId || undefined,
   );
+
+  // Al cambiar el robot target, reset la seleccion del eje en curso
+  useEffect(() => {
+    setEjeFamilia('');
+    setEjeModeloId(0);
+    setEjeNombre('');
+    setEjeEtiqueta('');
+  }, [ejeRobotIdx]);
 
   // Derive controller capabilities
   const capabilities = useMemo(() => {
