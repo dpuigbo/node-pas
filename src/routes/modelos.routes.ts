@@ -108,7 +108,10 @@ router.get('/compatible', async (req: Request, res: Response, next: NextFunction
 });
 
 // GET /api/v1/modelos/compatible-con?controladorId=X&tipo=Y
-// Returns models compatible with a specific controller (for wizard, no sistemaId needed)
+// Devuelve modelos compatibles con una controladora especifica.
+// Para tipo='mechanical_unit' usa la matriz nueva compatibilidad_robot_controlador
+// (cabinet-especifica, verificada Daniel). Para los demas tipos usa la tabla
+// legacy compatibilidad_controlador.
 router.get('/compatible-con', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const controladorId = Number(req.query.controladorId);
@@ -118,6 +121,32 @@ router.get('/compatible-con', async (req: Request, res: Response, next: NextFunc
       return;
     }
 
+    if (tipo === 'mechanical_unit') {
+      // Matriz nueva: familia robot ↔ variante de cabinet
+      const familiasOk = await prisma.compatibilidadRobotControlador.findMany({
+        where: { controladorModeloId: controladorId },
+        select: { robotFamiliaId: true },
+      });
+      const familiaIds = familiasOk.map(f => f.robotFamiliaId);
+      if (familiaIds.length === 0) {
+        res.json([]);
+        return;
+      }
+      const modelos = await prisma.modeloComponente.findMany({
+        where: {
+          tipo: 'mechanical_unit',
+          familiaId: { in: familiaIds },
+        },
+        orderBy: [{ familia: 'asc' }, { nombre: 'asc' }],
+        include: {
+          fabricante: { select: { id: true, nombre: true } },
+        },
+      });
+      res.json(modelos);
+      return;
+    }
+
+    // Otros tipos (drive_unit, external_axis): tabla legacy
     const modelos = await prisma.modeloComponente.findMany({
       where: {
         tipo: tipo as any,
