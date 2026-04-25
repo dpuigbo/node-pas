@@ -4,6 +4,7 @@ const express_1 = require("express");
 const role_middleware_1 = require("../middleware/role.middleware");
 const database_1 = require("../config/database");
 const sistemas_validation_1 = require("../validation/sistemas.validation");
+const validarCompatibilidadEje_1 = require("../lib/validarCompatibilidadEje");
 const router = (0, express_1.Router)();
 // ===== SISTEMAS =====
 // GET /api/v1/sistemas
@@ -34,6 +35,7 @@ router.get('/', async (req, res, next) => {
 // IMPORTANTE: estas rutas DEBEN ir antes de '/:id' para que Express no
 // las interprete como un id literal.
 // GET /api/v1/sistemas/ejes-compatibles?controladorId=X&robotModeloId=Y
+// Pre-filtrado para el dropdown del wizard. Aplica las 3 reglas tri-via.
 router.get('/ejes-compatibles', async (req, res, next) => {
     try {
         const controladorId = req.query.controladorId ? Number(req.query.controladorId) : undefined;
@@ -59,27 +61,11 @@ router.get('/ejes-compatibles', async (req, res, next) => {
             include: {
                 fabricante: { select: { id: true, nombre: true } },
                 compatEjePermitida: { select: { familiaId: true } },
-                compatEjeExcluye: { select: { familiaId: true } },
+                compatEjeExcluye: { select: { familiaId: true, motivo: true } },
                 compatEjeControladorEje: { select: { controladorModeloId: true } },
             },
         });
-        const compatibles = candidatos.filter((eje) => {
-            if (eje.compatEjePermitida.length > 0) {
-                if (!robotFamiliaId)
-                    return false;
-                if (!eje.compatEjePermitida.some(p => p.familiaId === robotFamiliaId))
-                    return false;
-            }
-            if (robotFamiliaId && eje.compatEjeExcluye.some(e => e.familiaId === robotFamiliaId)) {
-                return false;
-            }
-            if (eje.compatEjeControladorEje.length > 0) {
-                if (!eje.compatEjeControladorEje.some(c => c.controladorModeloId === controladorId)) {
-                    return false;
-                }
-            }
-            return true;
-        });
+        const compatibles = (0, validarCompatibilidadEje_1.filtrarEjesCompatibles)(candidatos, robotFamiliaId, controladorId);
         const result = compatibles.map(({ compatEjePermitida, compatEjeExcluye, compatEjeControladorEje, ...rest }) => rest);
         res.json(result);
     }
@@ -88,56 +74,21 @@ router.get('/ejes-compatibles', async (req, res, next) => {
     }
 });
 // GET /api/v1/sistemas/ejes/:ejeModeloId/compatibilidad?robotFamiliaId=X&controladorModeloId=Y
+// Validador 1-eje (segunda barrera para el boton "Anadir" del wizard).
 router.get('/ejes/:ejeModeloId/compatibilidad', async (req, res, next) => {
     try {
         const ejeModeloId = Number(req.params.ejeModeloId);
-        const robotFamiliaId = req.query.robotFamiliaId ? Number(req.query.robotFamiliaId) : undefined;
-        const controladorModeloId = req.query.controladorModeloId ? Number(req.query.controladorModeloId) : undefined;
-        const permitidas = await database_1.prisma.compatibilidadEjePermitida.findMany({
-            where: { ejeModeloId },
-            include: { familia: { select: { id: true, codigo: true } } },
+        const robotFamiliaId = req.query.robotFamiliaId ? Number(req.query.robotFamiliaId) : null;
+        const controladorModeloId = req.query.controladorModeloId ? Number(req.query.controladorModeloId) : 0;
+        const result = await (0, validarCompatibilidadEje_1.validarCompatibilidadEje)({
+            ejeId: ejeModeloId,
+            robotFamiliaId,
+            controladorModeloId,
         });
-        if (permitidas.length > 0 && robotFamiliaId &&
-            !permitidas.some(p => p.familiaId === robotFamiliaId)) {
-            res.json({
-                compatible: false,
-                motivo: 'Familia de robot no permitida por el eje externo',
-                familiasPermitidas: permitidas.map(p => p.familia),
-            });
-            return;
-        }
-        const excluidas = await database_1.prisma.compatibilidadEjeExcluye.findMany({
-            where: { ejeModeloId },
-            include: { familia: { select: { id: true, codigo: true } } },
-        });
-        if (robotFamiliaId && excluidas.some(e => e.familiaId === robotFamiliaId)) {
-            res.json({
-                compatible: false,
-                motivo: 'Familia de robot excluida para este eje externo',
-                familiasExcluidas: excluidas.map(e => e.familia),
-            });
-            return;
-        }
-        const ctrlReq = await database_1.prisma.compatibilidadEjeControlador.findMany({
-            where: { ejeModeloId },
-            include: { controlador: { select: { id: true, nombre: true } } },
-        });
-        if (ctrlReq.length > 0 && controladorModeloId &&
-            !ctrlReq.some(c => c.controladorModeloId === controladorModeloId)) {
-            res.json({
-                compatible: false,
-                motivo: 'Eje requiere controlador específico',
-                controladoresRequeridos: ctrlReq.map(c => c.controlador),
-            });
-            return;
-        }
         res.json({
-            compatible: true,
-            reglas: {
-                familiasPermitidas: permitidas.length > 0 ? permitidas.map(p => p.familia) : null,
-                familiasExcluidas: excluidas.length > 0 ? excluidas.map(e => e.familia) : null,
-                controladoresRequeridos: ctrlReq.length > 0 ? ctrlReq.map(c => c.controlador) : null,
-            },
+            compatible: result.ok,
+            motivo: result.motivo,
+            reglasAplicadas: result.reglasAplicadas,
         });
     }
     catch (err) {
