@@ -11,6 +11,8 @@
     "build:local": "npm run build:client && npx prisma generate",
     "build": "npx prisma generate && npx tsc",
     "start": "node dist/server/src/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "db:migrate": "npx prisma migrate deploy",
     "db:seed": "npx prisma db seed",
     "postinstall": "./node_modules/.bin/prisma generate || echo '[PAS] prisma generate skipped (will use CI-built client)'"
@@ -48,5 +50,8 @@
     "typescript": "^5.7.3",
     "dotenv": "^16.4.7",
     "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.8"
   }
 }

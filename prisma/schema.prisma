@@ -915,8 +915,9 @@ model CompatibilidadEjePermitida {
 }
 
 model CompatibilidadEjeExcluye {
-  ejeModeloId Int @map("eje_modelo_id")
-  familiaId   Int @map("familia_id")
+  ejeModeloId Int     @map("eje_modelo_id")
+  familiaId   Int     @map("familia_id")
+  motivo      String? @db.VarChar(255)
 
   ejeModelo ModeloComponente @relation(fields: [ejeModeloId], references: [id], onDelete: Cascade)
   familia   LuFamilia        @relation(fields: [familiaId], references: [id])
