@@ -118,7 +118,7 @@ export function useMantenimiento(modeloId: number | undefined) {
     queryFn: async () => {
       const { data } = await api.get(`/v1/modelos/${modeloId}/mantenimiento`);
       return data as {
-        source: 'v2' | 'legacy';
+        source: 'cabinet' | 'drive_module' | 'v2' | 'legacy';
         records: any[];
       };
     },

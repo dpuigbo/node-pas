@@ -593,13 +593,15 @@ export default function ModeloDetailPage() {
           ) : !mantenimientoData?.records || mantenimientoData.records.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
               <Wrench className="h-8 w-8" />
-              <p>No hay actividades de mantenimiento para la familia {modelo.familia ?? modelo.nombre}</p>
+              <p>No hay actividades de mantenimiento para {modelo.nombre}</p>
             </div>
           ) : (
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Actividades de mantenimiento — {modelo.familia}
+                  {mantenimientoData.source === 'cabinet' && `Actividades de cabinet — ${modelo.nombre}`}
+                  {mantenimientoData.source === 'drive_module' && `Actividades de drive module — ${modelo.nombre}`}
+                  {(mantenimientoData.source === 'v2' || mantenimientoData.source === 'legacy') && `Actividades de mantenimiento — ${modelo.familia ?? modelo.nombre}`}
                   {mantenimientoData.records[0]?.documento && (
                     <span className="ml-2 text-muted-foreground font-normal">
                       Doc: {mantenimientoData.records[0].documento}
@@ -619,15 +621,14 @@ export default function ModeloDetailPage() {
                   </thead>
                   <tbody>
                     {mantenimientoData.records.map((item: any) => {
-                      // v2: tipoActividad is an object { nombre, categoria }
-                      // legacy: tipoActividad is a string
+                      const isLegacy = mantenimientoData.source === 'legacy';
                       const tipoLabel = item.tipoActividad?.nombre ?? item.tipoActividad ?? '—';
-                      const intervalo = mantenimientoData.source === 'v2'
-                        ? formatIntervalo(item)
-                        : item.intervaloEstandar || '—';
-                      const foundry = mantenimientoData.source === 'v2'
-                        ? formatFoundry(item)
-                        : item.intervaloFoundry;
+                      const intervalo = isLegacy
+                        ? item.intervaloEstandar || '—'
+                        : formatIntervalo(item);
+                      const foundry = isLegacy
+                        ? item.intervaloFoundry
+                        : formatFoundry(item);
                       return (
                         <tr key={item.id} className="border-b last:border-b-0 hover:bg-muted/20">
                           <td className="px-4 py-2">
