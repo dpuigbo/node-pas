@@ -151,6 +151,24 @@ export function useUpdateCompatibilidad() {
   });
 }
 
+// Lista de ejes externos compatibles con controlador + familia robot (tri-vía aplicada)
+export function useEjesCompatibles(
+  controladorId: number | undefined,
+  robotFamiliaId: number | undefined,
+) {
+  return useQuery({
+    queryKey: ['ejes-compatibles', controladorId, robotFamiliaId],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (controladorId) params.set('controladorId', String(controladorId));
+      if (robotFamiliaId) params.set('robotFamiliaId', String(robotFamiliaId));
+      const { data } = await api.get(`/v1/sistemas/ejes-compatibles?${params}`);
+      return data as any[];
+    },
+    enabled: !!controladorId,
+  });
+}
+
 // Compatibilidad de eje externo (tri-vía v2)
 export function useEjeCompatibilidad(
   ejeModeloId: number | undefined,

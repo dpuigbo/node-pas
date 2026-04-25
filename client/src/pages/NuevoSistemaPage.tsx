@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useModelos, useModelosCompatiblesCon, useEjeCompatibilidad } from '@/hooks/useModelos';
+import { useModelos, useModelosCompatiblesCon, useEjeCompatibilidad, useEjesCompatibles } from '@/hooks/useModelos';
 import { useFabricantes } from '@/hooks/useFabricantes';
 import { useCreateSistemaCompleto, useSistema, useUpdateSistemaCompleto } from '@/hooks/useSistemas';
 import { getControllerCapabilities } from '@/lib/controller-capabilities';
@@ -94,12 +94,7 @@ export default function NuevoSistemaPage() {
     controllerId || undefined,
     'mechanical_unit',
   );
-  const { data: ejeModelos } = useModelosCompatiblesCon(
-    controllerId || undefined,
-    'external_axis',
-  );
-
-  // Robot principal familiaId (para validacion compatibilidad ejes)
+  // Robot principal familiaId (para filtrado de ejes compatibles)
   const robotPrincipalFamiliaId = useMemo(() => {
     const principal = robots[0];
     if (!robotModelos || !principal?.modeloComponenteId) return undefined;
@@ -107,7 +102,13 @@ export default function NuevoSistemaPage() {
     return modelo?.familiaId as number | undefined;
   }, [robotModelos, robots]);
 
-  // Compatibilidad eje externo seleccionado
+  // Ejes externos compatibles (tri-via aplicada en backend)
+  const { data: ejeModelos } = useEjesCompatibles(
+    controllerId || undefined,
+    robotPrincipalFamiliaId,
+  );
+
+  // Validacion del eje seleccionado (mantenida como guardrail)
   const { data: ejeCompat, isLoading: ejeCompatLoading } = useEjeCompatibilidad(
     ejeModeloId || undefined,
     robotPrincipalFamiliaId,
