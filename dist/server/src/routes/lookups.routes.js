@@ -3,6 +3,53 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const database_1 = require("../config/database");
 const router = (0, express_1.Router)();
+// GET /api/v1/lookups/familias/:id/controladores-compatibles
+// Devuelve los controladores compatibles con la familia robot (matriz cabinet-especifica).
+router.get('/familias/:id/controladores-compatibles', async (req, res, next) => {
+    try {
+        const familiaId = Number(req.params.id);
+        const items = await database_1.prisma.compatibilidadRobotControlador.findMany({
+            where: { robotFamiliaId: familiaId },
+            include: {
+                controlador: {
+                    select: {
+                        id: true, nombre: true, familia: true,
+                        soportaMultimove: true, maxRobotsMultimove: true, maxEjesExternos: true,
+                    },
+                },
+            },
+        });
+        res.json(items.map(i => ({
+            ...i.controlador,
+            notas: i.notas,
+            fuenteDoc: i.fuenteDoc,
+        })));
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// GET /api/v1/lookups/controladores/:id/familias-compatibles
+// Inverso: dado un controlador, lista de familias robot que documentadamente soporta.
+router.get('/controladores/:id/familias-compatibles', async (req, res, next) => {
+    try {
+        const controladorId = Number(req.params.id);
+        const items = await database_1.prisma.compatibilidadRobotControlador.findMany({
+            where: { controladorModeloId: controladorId },
+            include: {
+                robotFamilia: { select: { id: true, codigo: true, descripcion: true } },
+            },
+        });
+        res.json(items.map(i => ({
+            ...i.robotFamilia,
+            notas: i.notas,
+            fuenteDoc: i.fuenteDoc,
+        })));
+    }
+    catch (err) {
+        next(err);
+    }
+});
 // GET /api/v1/lookups/familias?fabricanteId=1&tipo=mechanical_unit
 router.get('/familias', async (req, res, next) => {
     try {

@@ -22,10 +22,48 @@
  *   whitelist familias → blacklist familias → whitelist controladores
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.evaluarRobotControlador = evaluarRobotControlador;
+exports.validarRobotControlador = validarRobotControlador;
 exports.evaluarReglas = evaluarReglas;
 exports.validarCompatibilidadEje = validarCompatibilidadEje;
 exports.filtrarEjesCompatibles = filtrarEjesCompatibles;
 const database_1 = require("../config/database");
+/**
+ * Funcion pura: dado un robot+controlador y la lista de controladores
+ * compatibles para esa familia, decide si la combinacion es valida.
+ */
+function evaluarRobotControlador(controladorId, controladoresCompatibles, familiaCodigo) {
+    if (controladoresCompatibles.length === 0) {
+        return {
+            ok: false,
+            motivo: `La familia robot ${familiaCodigo ?? ''} no tiene controladores documentados como compatibles`.trim(),
+            controladoresCompatibles: [],
+        };
+    }
+    const ok = controladoresCompatibles.some(c => c.id === controladorId);
+    if (!ok) {
+        return {
+            ok: false,
+            motivo: `El robot ${familiaCodigo ?? ''} no es compatible con este cabinet. Compatibilidad documentada: ${controladoresCompatibles.map(c => c.nombre ?? c.id).join(', ')}`,
+            controladoresCompatibles: controladoresCompatibles.map(c => ({ id: c.id, nombre: c.nombre ?? '' })),
+        };
+    }
+    return { ok: true };
+}
+/**
+ * Wrapper async que carga los controladores compatibles de la familia desde BD.
+ */
+async function validarRobotControlador(robotFamiliaId, controladorModeloId) {
+    const familia = await database_1.prisma.luFamilia.findUnique({
+        where: { id: robotFamiliaId },
+        select: { codigo: true },
+    });
+    const compatibles = await database_1.prisma.compatibilidadRobotControlador.findMany({
+        where: { robotFamiliaId },
+        include: { controlador: { select: { nombre: true } } },
+    });
+    return evaluarRobotControlador(controladorModeloId, compatibles.map(c => ({ id: c.controladorModeloId, nombre: c.controlador.nombre })), familia?.codigo);
+}
 /**
  * Aplica las 3 reglas en orden estricto. Funcion pura: no lee BD.
  *
