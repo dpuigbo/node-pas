@@ -7,6 +7,7 @@ import {
 } from '../validation/modelos.validation';
 import { getSeedTemplate } from '../lib/templateSeeds';
 import { ensureNivelesFijos, getNivelesFijos } from '../lib/niveles';
+import { getNivelesAplicablesModelo } from '../lib/ofertaMantenimiento';
 
 const router = Router();
 
@@ -160,6 +161,17 @@ router.get('/compatible-con', async (req: Request, res: Response, next: NextFunc
       },
     });
     res.json(modelos);
+  } catch (err) { next(err); }
+});
+
+// GET /api/v1/modelos/:id/niveles-aplicables
+// Niveles aplicables para un modelo + horas + costes limpieza desde mantenimiento_horas_modelo.
+// Va antes de /:id para evitar conflicto de Express.
+router.get('/:id/niveles-aplicables', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const modeloId = Number(req.params.id);
+    const niveles = await getNivelesAplicablesModelo(modeloId);
+    res.json({ modeloId, niveles });
   } catch (err) { next(err); }
 });
 

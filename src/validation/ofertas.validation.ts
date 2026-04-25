@@ -10,6 +10,7 @@ export const createOfertaSchema = z.object({
   titulo: z.string().min(1, 'El titulo es obligatorio').max(300),
   referencia: z.string().max(100).optional().nullable(),
   tipo: z.enum(['preventiva', 'correctiva']),
+  tipoOferta: z.enum(['mantenimiento', 'solo_limpieza']).default('mantenimiento'),
   validezDias: z.number().int().min(1).default(30),
   notas: z.string().optional().nullable(),
   sistemas: z.array(ofertaSistemaSchema).min(1, 'Debe incluir al menos un sistema'),
@@ -25,6 +26,7 @@ export const updateOfertaSchema = z.object({
   titulo: z.string().min(1).max(300).optional(),
   referencia: z.string().max(100).optional().nullable(),
   tipo: z.enum(['preventiva', 'correctiva']).optional(),
+  tipoOferta: z.enum(['mantenimiento', 'solo_limpieza']).optional(),
   validezDias: z.number().int().min(1).optional(),
   notas: z.string().optional().nullable(),
   sistemas: z.array(ofertaSistemaSchema).optional(),
@@ -45,5 +47,14 @@ export const generarIntervencionSchema = z.object({
   fechaFin: z.string().datetime(),
 });
 
+// Upsert oferta-componente (configuracion de mantenimiento por componente)
+export const upsertOfertaComponenteSchema = z.object({
+  nivel: z.string().max(20).optional().nullable(),
+  conBaterias: z.boolean().optional(),
+  conAceite: z.boolean().optional(),
+  notas: z.string().max(500).optional().nullable(),
+});
+
 export type CreateOfertaInput = z.infer<typeof createOfertaSchema>;
 export type UpdateOfertaInput = z.infer<typeof updateOfertaSchema>;
+export type UpsertOfertaComponenteInput = z.infer<typeof upsertOfertaComponenteSchema>;

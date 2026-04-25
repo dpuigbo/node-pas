@@ -6,7 +6,12 @@ import {
   updateOfertaSchema,
   updateEstadoOfertaSchema,
   generarIntervencionSchema,
+  upsertOfertaComponenteSchema,
 } from '../validation/ofertas.validation';
+import {
+  calcularComponenteOferta,
+  getNivelesAplicablesModelo,
+} from '../lib/ofertaMantenimiento';
 
 const router = Router();
 
@@ -516,6 +521,7 @@ router.post('/', requireRole('admin'), async (req: Request, res: Response, next:
         titulo: data.titulo,
         referencia: data.referencia ?? null,
         tipo: data.tipo,
+        tipoOferta: data.tipoOferta,
         validezDias: data.validezDias,
         notas: data.notas ?? null,
         totalHoras: totalHoras || null,
@@ -576,6 +582,7 @@ router.put('/:id', requireRole('admin'), async (req: Request, res: Response, nex
     if (data.titulo !== undefined) updateData.titulo = data.titulo;
     if (data.referencia !== undefined) updateData.referencia = data.referencia;
     if (data.tipo !== undefined) updateData.tipo = data.tipo;
+    if (data.tipoOferta !== undefined) updateData.tipoOferta = data.tipoOferta;
     if (data.validezDias !== undefined) updateData.validezDias = data.validezDias;
     if (data.notas !== undefined) updateData.notas = data.notas;
     // Schedule fields
@@ -844,6 +851,183 @@ router.post('/:id/recalcular', requireRole('admin'), async (req: Request, res: R
     });
 
     res.json(updated);
+  } catch (err) { next(err); }
+});
+
+// GET /api/v1/ofertas/:id/componentes-disponibles
+// Devuelve todos los componentes de los sistemas en la oferta, con sus niveles
+// aplicables y la seleccion actual (si existe oferta_componente).
+router.get('/:id/componentes-disponibles', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const ofertaId = Number(req.params.id);
+    const oferta = await prisma.oferta.findUnique({
+      where: { id: ofertaId },
+      include: {
+        sistemas: {
+          include: {
+            sistema: {
+              select: {
+                id: true,
+                nombre: true,
+                componentes: {
+                  orderBy: { orden: 'asc' },
+                  select: {
+                    id: true,
+                    tipo: true,
+                    etiqueta: true,
+                    numeroSerie: true,
+                    numEjes: true,
+                    componentePadreId: true,
+                    modeloComponente: { select: { id: true, nombre: true, tipo: true, tipoBateriaMedida: true } },
+                  },
+                },
+              },
+            },
+          },
+        },
+        componentes: true,
+      },
+    });
+    if (!oferta) {
+      res.status(404).json({ error: 'Oferta no encontrada' });
+      return;
+    }
+
+    // Index oferta_componente por componenteSistemaId para lookup rapido
+    const seleccionMap = new Map(oferta.componentes.map((c) => [c.componenteSistemaId, c]));
+
+    // Recolectar todos los componentes de todos los sistemas
+    const items: any[] = [];
+    for (const os of oferta.sistemas) {
+      const sistema = os.sistema;
+      for (const comp of sistema.componentes) {
+        const niveles = await getNivelesAplicablesModelo(comp.modeloComponente.id);
+        const sel = seleccionMap.get(comp.id);
+        items.push({
+          componenteSistemaId: comp.id,
+          sistemaId: sistema.id,
+          sistemaNombre: sistema.nombre,
+          tipo: comp.tipo,
+          etiqueta: comp.etiqueta,
+          numeroSerie: comp.numeroSerie,
+          numEjes: comp.numEjes,
+          componentePadreId: comp.componentePadreId,
+          modeloId: comp.modeloComponente.id,
+          modeloNombre: comp.modeloComponente.nombre,
+          tipoBateriaMedida: comp.modeloComponente.tipoBateriaMedida,
+          nivelesAplicables: niveles,
+          seleccion: sel ? {
+            nivel: sel.nivel,
+            conBaterias: sel.conBaterias,
+            conAceite: sel.conAceite,
+            horas: dec(sel.horas),
+            costeConsumibles: dec(sel.costeConsumibles),
+            precioConsumibles: dec(sel.precioConsumibles),
+            costeLimpieza: dec(sel.costeLimpieza),
+            notas: sel.notas,
+          } : null,
+        });
+      }
+    }
+
+    res.json({
+      ofertaId,
+      tipoOferta: oferta.tipoOferta,
+      componentes: items,
+    });
+  } catch (err) { next(err); }
+});
+
+// PUT /api/v1/ofertas/:id/componente/:cmpId (admin)
+// Upsert de oferta_componente con calculo automatico de horas + costes.
+router.put('/:id/componente/:cmpId', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const ofertaId = Number(req.params.id);
+    const componenteSistemaId = Number(req.params.cmpId);
+    const data = upsertOfertaComponenteSchema.parse(req.body);
+
+    const oferta = await prisma.oferta.findUnique({
+      where: { id: ofertaId },
+      select: { tipoOferta: true, estado: true },
+    });
+    if (!oferta) {
+      res.status(404).json({ error: 'Oferta no encontrada' });
+      return;
+    }
+    if (oferta.estado !== 'borrador') {
+      res.status(400).json({ error: 'Solo se pueden editar ofertas en estado borrador' });
+      return;
+    }
+
+    const comp = await prisma.componenteSistema.findUnique({
+      where: { id: componenteSistemaId },
+      select: { modeloComponenteId: true },
+    });
+    if (!comp) {
+      res.status(404).json({ error: 'Componente no encontrado' });
+      return;
+    }
+
+    // Defaults: con baterias y con aceite TRUE si no se especifica
+    const conBaterias = data.conBaterias ?? true;
+    const conAceite = data.conAceite ?? true;
+    const nivel = data.nivel ?? null;
+
+    // Calcular horas + costes solo si hay nivel definido
+    let calc = { horas: 0, costeConsumibles: 0, precioConsumibles: 0, costeLimpieza: 0 };
+    if (nivel) {
+      calc = await calcularComponenteOferta(comp.modeloComponenteId, nivel, {
+        tipoOferta: oferta.tipoOferta,
+        conBaterias,
+        conAceite,
+      });
+    }
+
+    const upserted = await prisma.ofertaComponente.upsert({
+      where: { ofertaId_componenteSistemaId: { ofertaId, componenteSistemaId } },
+      create: {
+        ofertaId,
+        componenteSistemaId,
+        nivel,
+        conBaterias,
+        conAceite,
+        horas: calc.horas || null,
+        costeConsumibles: calc.costeConsumibles || null,
+        precioConsumibles: calc.precioConsumibles || null,
+        costeLimpieza: calc.costeLimpieza || null,
+        notas: data.notas ?? null,
+      },
+      update: {
+        nivel,
+        conBaterias,
+        conAceite,
+        horas: calc.horas || null,
+        costeConsumibles: calc.costeConsumibles || null,
+        precioConsumibles: calc.precioConsumibles || null,
+        costeLimpieza: calc.costeLimpieza || null,
+        notas: data.notas ?? null,
+      },
+    });
+
+    res.json({
+      ...upserted,
+      horas: dec(upserted.horas),
+      costeConsumibles: dec(upserted.costeConsumibles),
+      precioConsumibles: dec(upserted.precioConsumibles),
+      costeLimpieza: dec(upserted.costeLimpieza),
+    });
+  } catch (err) { next(err); }
+});
+
+// DELETE /api/v1/ofertas/:id/componente/:cmpId (admin)
+router.delete('/:id/componente/:cmpId', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const ofertaId = Number(req.params.id);
+    const componenteSistemaId = Number(req.params.cmpId);
+    await prisma.ofertaComponente.deleteMany({
+      where: { ofertaId, componenteSistemaId },
+    });
+    res.json({ message: 'Componente eliminado de la oferta' });
   } catch (err) { next(err); }
 });
 
