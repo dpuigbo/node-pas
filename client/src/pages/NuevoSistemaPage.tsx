@@ -18,6 +18,14 @@ import { useCreateSistemaCompleto, useSistema, useUpdateSistemaCompleto } from '
 import { getControllerCapabilities } from '@/lib/controller-capabilities';
 
 // ===== Types =====
+type EjeDraft = {
+  modeloComponenteId: number;
+  modeloNombre: string;
+  etiqueta: string;
+  numeroSerie: string;
+  robotIdx: number; // indice del robot al que se asocia (0 = principal)
+};
+
 type RobotDraft = {
   modeloComponenteId: number;
   modeloNombre: string;
@@ -27,13 +35,6 @@ type RobotDraft = {
   numEjes: number | null;
   duEtiqueta: string;
   duSerie: string;
-};
-
-type EjeDraft = {
-  modeloComponenteId: number;
-  modeloNombre: string;
-  etiqueta: string;
-  numeroSerie: string;
 };
 
 const emptyRobot = (): RobotDraft => ({
@@ -77,13 +78,14 @@ export default function NuevoSistemaPage() {
   // Step 2: Robots (array — first = principal, rest = multimove)
   const [robots, setRobots] = useState<RobotDraft[]>([emptyRobot()]);
 
-  // Step 3: Ejes externos
+  // Step 3: Ejes externos (cada uno con robotIdx que indica a que robot se asocia)
   const [ejes, setEjes] = useState<EjeDraft[]>([]);
   const [ejeFamilia, setEjeFamilia] = useState('');
   const [ejeModeloId, setEjeModeloId] = useState<number>(0);
   const [ejeNombre, setEjeNombre] = useState('');
   const [ejeEtiqueta, setEjeEtiqueta] = useState('');
   const [ejeSerie, setEjeSerie] = useState('');
+  const [ejeRobotIdx, setEjeRobotIdx] = useState<number>(0);
 
   // Data fetching
   const { data: fabricantes } = useFabricantes();
@@ -173,12 +175,22 @@ export default function NuevoSistemaPage() {
     }
 
     if (exAxes.length > 0) {
-      setEjes(exAxes.map((e: any) => ({
-        modeloComponenteId: e.modeloComponenteId,
-        modeloNombre: e.modeloComponente?.nombre ?? '',
-        etiqueta: e.etiqueta,
-        numeroSerie: e.numeroSerie || '',
-      })));
+      // Resolver robotIdx desde componente_padre_id apuntando a un robot
+      const robotIdById = new Map<number, number>();
+      mechs.forEach((m: any, i: number) => robotIdById.set(m.id, i));
+      setEjes(exAxes.map((e: any) => {
+        const padreId = e.componentePadreId;
+        const robotIdx = padreId != null && robotIdById.has(padreId)
+          ? robotIdById.get(padreId)!
+          : 0;
+        return {
+          modeloComponenteId: e.modeloComponenteId,
+          modeloNombre: e.modeloComponente?.nombre ?? '',
+          etiqueta: e.etiqueta,
+          numeroSerie: e.numeroSerie || '',
+          robotIdx,
+        };
+      }));
     }
 
     setInitialized(true);
@@ -300,6 +312,7 @@ export default function NuevoSistemaPage() {
       modeloNombre: ejeNombre,
       etiqueta: ejeEtiqueta,
       numeroSerie: ejeSerie,
+      robotIdx: ejeRobotIdx,
     }]);
     setEjeFamilia('');
     setEjeModeloId(0);
@@ -312,13 +325,20 @@ export default function NuevoSistemaPage() {
     setEjes(ejes.filter((_, i) => i !== index));
   };
 
-  // Build component list for submit
+  // Build component list for submit con jerarquia padre-hijo
+  // Controladora (top, padre=null)
+  //   Robot 1 (padre=ctrl)
+  //     Ejes externos del robot 1 (padre=robot 1)
+  //   DU 2 (padre=ctrl) [solo multimove]
+  //     Robot 2 (padre=DU 2)
+  //       Ejes externos del robot 2 (padre=robot 2)
   const buildComponentes = () => {
     let orden = 0;
     const componentes: any[] = [];
 
-    // Controller
+    // Controller (top-level, no padre)
     componentes.push({
+      tempId: 'ctrl',
       modeloComponenteId: controllerId,
       tipo: 'controller',
       etiqueta: controllerEtiqueta,
@@ -327,20 +347,37 @@ export default function NuevoSistemaPage() {
       orden: orden++,
     });
 
-    // Robots + DUs
+    // Robots y sus DUs
     robots.forEach((robot, i) => {
-      if (i > 0 && driveUnitId) {
-        // Drive unit for additional robots (modelo drive_unit real, no el del robot)
-        componentes.push({
-          modeloComponenteId: driveUnitId,
-          tipo: 'drive_unit',
-          etiqueta: robot.duEtiqueta || `DU - ${robot.etiqueta}`,
-          numeroSerie: robot.duSerie || null,
-          numEjes: null,
-          orden: orden++,
-        });
+      const robotTempId = `robot-${i}`;
+      let robotPadreTempId: string;
+
+      if (i === 0) {
+        // Robot principal: padre = controladora (DU integrada)
+        robotPadreTempId = 'ctrl';
+      } else {
+        // Multimove: drive_unit auxiliar bajo controladora, robot bajo DU
+        if (driveUnitId) {
+          const duTempId = `du-${i}`;
+          componentes.push({
+            tempId: duTempId,
+            padreTempId: 'ctrl',
+            modeloComponenteId: driveUnitId,
+            tipo: 'drive_unit',
+            etiqueta: robot.duEtiqueta || `DU - ${robot.etiqueta}`,
+            numeroSerie: robot.duSerie || null,
+            numEjes: null,
+            orden: orden++,
+          });
+          robotPadreTempId = duTempId;
+        } else {
+          robotPadreTempId = 'ctrl';
+        }
       }
+
       componentes.push({
+        tempId: robotTempId,
+        padreTempId: robotPadreTempId,
         modeloComponenteId: robot.modeloComponenteId,
         tipo: 'mechanical_unit',
         etiqueta: robot.etiqueta,
@@ -350,9 +387,12 @@ export default function NuevoSistemaPage() {
       });
     });
 
-    // External axes
-    ejes.forEach((eje) => {
+    // Ejes externos: padre = robot al que se asocian
+    ejes.forEach((eje, idx) => {
+      const robotIdx = Math.min(eje.robotIdx ?? 0, robots.length - 1);
       componentes.push({
+        tempId: `eje-${idx}`,
+        padreTempId: `robot-${robotIdx}`,
         modeloComponenteId: eje.modeloComponenteId,
         tipo: 'external_axis',
         etiqueta: eje.etiqueta,
@@ -775,23 +815,30 @@ export default function NuevoSistemaPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* List of added ejes */}
+            {/* List of added ejes - agrupados por robot si multimove */}
             {ejes.length > 0 && (
               <div className="space-y-2">
-                {ejes.map((eje, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
-                    <div>
-                      <span className="font-medium">{eje.modeloNombre}</span>
-                      <span className="text-muted-foreground ml-2">— {eje.etiqueta}</span>
-                      {eje.numeroSerie && (
-                        <span className="text-xs text-muted-foreground ml-2">S/N: {eje.numeroSerie}</span>
-                      )}
+                {ejes.map((eje, i) => {
+                  const robotIdx = eje.robotIdx ?? 0;
+                  const robotLabel = robots[robotIdx]?.etiqueta || `Robot ${robotIdx + 1}`;
+                  return (
+                    <div key={i} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                      <div className="flex items-center gap-2 flex-1">
+                        <Badge variant="secondary" className="text-[10px]">
+                          <Bot className="h-3 w-3 mr-0.5" /> {robotLabel}
+                        </Badge>
+                        <span className="font-medium">{eje.modeloNombre}</span>
+                        <span className="text-muted-foreground ml-2">— {eje.etiqueta}</span>
+                        {eje.numeroSerie && (
+                          <span className="text-xs text-muted-foreground ml-2">S/N: {eje.numeroSerie}</span>
+                        )}
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeEje(i)}>
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      </Button>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeEje(i)}>
-                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                    </Button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
@@ -799,6 +846,31 @@ export default function NuevoSistemaPage() {
             {ejes.length < maxEjes && ejeModelos && ejeModelos.length > 0 && (
               <div className="border-t pt-4 space-y-3">
                 <h4 className="text-sm font-medium">Anadir eje externo</h4>
+
+                {/* Selector de robot al que se asocia el eje (solo en multimove con >1 robots) */}
+                {robots.length > 1 && (
+                  <div>
+                    <Label>Asignar a robot</Label>
+                    <Select
+                      value={String(ejeRobotIdx)}
+                      onValueChange={(v) => setEjeRobotIdx(Number(v))}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {robots.map((r, idx) => (
+                          <SelectItem key={idx} value={String(idx)}>
+                            {r.etiqueta || `Robot ${idx + 1}`}
+                            {idx === 0 ? ' (principal)' : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      En multimove cada robot tiene sus propios ejes externos asociados.
+                    </p>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>Familia</Label>
@@ -942,50 +1014,54 @@ export default function NuevoSistemaPage() {
                 )}
               </div>
 
-              {/* Robots + DUs */}
-              {robots.map((robot, i) => (
-                <div key={i}>
-                  {i > 0 && (
-                    <div className="flex items-center gap-3 p-3 rounded-lg border border-dashed">
-                      <Zap className="h-5 w-5 text-purple-500 shrink-0" />
-                      <div className="flex-1">
-                        <span className="font-medium text-muted-foreground">
-                          {driveUnits?.[0]?.nombre ?? 'Drive Unit'}
-                        </span>
-                        <span className="text-muted-foreground ml-2">— {robot.duEtiqueta || `DU - ${robot.etiqueta}`}</span>
+              {/* Robots con sus DUs y ejes anidados */}
+              {robots.map((robot, i) => {
+                const ejesDeEsteRobot = ejes
+                  .map((e, idx) => ({ e, idx }))
+                  .filter(({ e }) => (e.robotIdx ?? 0) === i);
+                return (
+                  <div key={i} className="space-y-1">
+                    {i > 0 && (
+                      <div className="flex items-center gap-3 p-3 rounded-lg border border-dashed">
+                        <Zap className="h-5 w-5 text-purple-500 shrink-0" />
+                        <div className="flex-1">
+                          <span className="font-medium text-muted-foreground">
+                            {driveUnits?.[0]?.nombre ?? 'Drive Unit'}
+                          </span>
+                          <span className="text-muted-foreground ml-2">— {robot.duEtiqueta || `DU - ${robot.etiqueta}`}</span>
+                        </div>
+                        {robot.duSerie && (
+                          <span className="text-xs text-muted-foreground">S/N: {robot.duSerie}</span>
+                        )}
                       </div>
-                      {robot.duSerie && (
-                        <span className="text-xs text-muted-foreground">S/N: {robot.duSerie}</span>
-                      )}
+                    )}
+                    <div className="flex items-center gap-3 p-3 rounded-lg border">
+                      <Bot className="h-5 w-5 text-green-500 shrink-0" />
+                      <div className="flex-1">
+                        <span className="font-medium">{robot.modeloNombre}</span>
+                        <span className="text-muted-foreground ml-2">— {robot.etiqueta}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {robot.numEjes && <Badge variant="outline">{robot.numEjes} ejes</Badge>}
+                        {robot.numeroSerie && <span className="text-xs text-muted-foreground">S/N: {robot.numeroSerie}</span>}
+                      </div>
                     </div>
-                  )}
-                  <div className="flex items-center gap-3 p-3 rounded-lg border">
-                    <Bot className="h-5 w-5 text-green-500 shrink-0" />
-                    <div className="flex-1">
-                      <span className="font-medium">{robot.modeloNombre}</span>
-                      <span className="text-muted-foreground ml-2">— {robot.etiqueta}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {robot.numEjes && <Badge variant="outline">{robot.numEjes} ejes</Badge>}
-                      {robot.numeroSerie && <span className="text-xs text-muted-foreground">S/N: {robot.numeroSerie}</span>}
-                    </div>
+                    {/* Ejes asociados a este robot, indentados */}
+                    {ejesDeEsteRobot.map(({ e: eje, idx }) => (
+                      <div key={`eje-${idx}`} className="flex items-center gap-3 p-3 rounded-lg border ml-6 bg-muted/20">
+                        <Cog className="h-5 w-5 text-orange-500 shrink-0" />
+                        <div className="flex-1">
+                          <span className="font-medium">{eje.modeloNombre}</span>
+                          <span className="text-muted-foreground ml-2">— {eje.etiqueta}</span>
+                        </div>
+                        {eje.numeroSerie && (
+                          <span className="text-xs text-muted-foreground">S/N: {eje.numeroSerie}</span>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                </div>
-              ))}
-
-              {/* Ejes */}
-              {ejes.map((eje, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 rounded-lg border">
-                  <Cog className="h-5 w-5 text-orange-500 shrink-0" />
-                  <div className="flex-1">
-                    <span className="font-medium">{eje.modeloNombre}</span>
-                    <span className="text-muted-foreground ml-2">— {eje.etiqueta}</span>
-                  </div>
-                  {eje.numeroSerie && (
-                    <span className="text-xs text-muted-foreground">S/N: {eje.numeroSerie}</span>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <p className="text-sm text-muted-foreground">
