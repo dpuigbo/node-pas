@@ -206,10 +206,11 @@ export function useEjeCompatibilidad(
       return data as {
         compatible: boolean;
         motivo?: string;
-        familiasPermitidas?: { id: number; codigo: string }[];
-        familiasExcluidas?: { id: number; codigo: string }[];
-        controladoresRequeridos?: { id: number; nombre: string }[];
-        reglas?: any;
+        reglasAplicadas?: {
+          permitidas?: { familiaId: number; codigo: string }[];
+          excluidas?: { familiaId: number; codigo: string; motivo: string | null }[];
+          controladoresRequeridos?: { id: number; nombre: string }[];
+        };
       };
     },
     enabled: !!ejeModeloId,

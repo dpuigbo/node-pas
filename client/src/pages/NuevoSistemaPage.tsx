@@ -946,14 +946,14 @@ export default function NuevoSistemaPage() {
                     <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
                     <div className="text-sm">
                       <p className="font-medium text-destructive">{ejeCompat.motivo}</p>
-                      {ejeCompat.familiasPermitidas && (
+                      {ejeCompat.reglasAplicadas?.permitidas && ejeCompat.reglasAplicadas.permitidas.length > 0 && (
                         <p className="text-muted-foreground mt-1">
-                          Familias compatibles: {ejeCompat.familiasPermitidas.map(f => f.codigo).join(', ')}
+                          Familias compatibles: {ejeCompat.reglasAplicadas.permitidas.map(f => f.codigo).join(', ')}
                         </p>
                       )}
-                      {ejeCompat.controladoresRequeridos && (
+                      {ejeCompat.reglasAplicadas?.controladoresRequeridos && ejeCompat.reglasAplicadas.controladoresRequeridos.length > 0 && (
                         <p className="text-muted-foreground mt-1">
-                          Controladores requeridos: {ejeCompat.controladoresRequeridos.map(c => c.nombre).join(', ')}
+                          Controladores requeridos: {ejeCompat.reglasAplicadas.controladoresRequeridos.map(c => c.nombre).join(', ')}
                         </p>
                       )}
                     </div>
