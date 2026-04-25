@@ -467,11 +467,13 @@ model Aceite {
   coste           Decimal? @db.Decimal(10, 2)
   precio          Decimal? @db.Decimal(10, 2)
   activo          Boolean  @default(true)
+  consumibleId    Int?     @map("consumible_id")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
   alias         AceiteAlias[]
   lubricaciones Lubricacion[]
+  consumible    ConsumibleCatalogo? @relation(fields: [consumibleId], references: [id])
 
   @@map("aceites")
 }
@@ -508,8 +510,11 @@ model Consumible {
   coste            Decimal? @db.Decimal(10, 2)
   precio           Decimal? @db.Decimal(10, 2)
   activo           Boolean  @default(true)
+  consumibleId     Int?     @map("consumible_id")
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
+
+  consumible       ConsumibleCatalogo? @relation(fields: [consumibleId], references: [id])
 
   @@map("consumibles")
 }
@@ -517,25 +522,32 @@ model Consumible {
 // Catalogo unificado de consumibles (v2) — fuente de verdad para
 // pedidos y trazabilidad de aceites/grasas/baterias/filtros/etc.
 model ConsumibleCatalogo {
-  id            Int      @id @default(autoincrement())
-  tipo          ConsumibleTipo
-  subtipo       String?  @db.VarChar(80)
-  nombre        String   @unique @db.VarChar(200)
-  codigoAbb     String?  @map("codigo_abb") @db.VarChar(80)
-  fabricante    String?  @db.VarChar(100)
-  unidad        String?  @db.VarChar(20)
-  equivalencias String?  @db.Text
-  apariciones   Int      @default(0)
-  notas         String?  @db.Text
-  activo        Boolean  @default(true)
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  id              Int      @id @default(autoincrement())
+  tipo            ConsumibleTipo
+  subtipo         String?  @db.VarChar(80)
+  nombre          String   @unique @db.VarChar(200)
+  codigoAbb       String?  @map("codigo_abb") @db.VarChar(80)
+  fabricante      String?  @db.VarChar(100)
+  unidad          String?  @db.VarChar(20)
+  equivalencias   String?  @db.Text
+  apariciones     Int      @default(0)
+  coste           Decimal? @db.Decimal(10, 2)
+  precio          Decimal? @db.Decimal(10, 2)
+  fabricanteRobot String?  @map("fabricante_robot") @db.VarChar(100)
+  refOriginal     String?  @map("ref_original") @db.VarChar(100)
+  refProveedor    String?  @map("ref_proveedor") @db.VarChar(100)
+  notas           String?  @db.Text
+  activo          Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   lubricaciones      Lubricacion[]
   actividadesPrev    ActividadConsumible[]
   actividadesCabinet ActividadCabinetConsumible[]
   actividadesDriveMod ActividadDriveModuleConsumible[]
   puntosControl      PuntoControlGenerico[]
+  aceitesLegacy      Aceite[]
+  consumiblesLegacy  Consumible[]
 
   @@map("consumible_catalogo")
 }
