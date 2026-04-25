@@ -19,19 +19,10 @@ const TIPO_COMP_LABELS: Record<string, string> = {
 const SELECT_CLASS = 'flex h-8 w-full rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring';
 
 // Nuevo formato: usa consumibleId del catalogo unificado
-interface ConsumibleItemV2 {
+interface ConsumibleItem {
   consumibleId: number;
   cantidad: number;
 }
-
-// Legacy: mantenido para deserializar datos existentes
-interface ConsumibleItemLegacy {
-  tipo: 'aceite' | 'bateria' | 'consumible';
-  id: number;
-  cantidad: number;
-}
-
-type ConsumibleItem = ConsumibleItemV2;
 
 interface NivelData {
   horas: string;
@@ -141,7 +132,12 @@ export default function ConsumiblesNivelPage() {
     setForm((prev) => {
       const nd = getNd(prev, modeloId, nivel);
       const items = [...nd.consumibles];
-      items[idx] = { ...items[idx], ...patch };
+      const current = items[idx];
+      if (!current) return prev;
+      items[idx] = {
+        consumibleId: patch.consumibleId ?? current.consumibleId,
+        cantidad: patch.cantidad ?? current.cantidad,
+      };
       const updated: NivelData = { ...nd, consumibles: items };
       const modeloNiveles: ModeloNiveles = { ...(prev[modeloId] ?? {}), [nivel]: updated };
       return { ...prev, [modeloId]: modeloNiveles };
