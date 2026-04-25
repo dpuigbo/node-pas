@@ -107,6 +107,104 @@ router.get('/aceites', async (req, res, next) => {
         next(err);
     }
 });
+// ===== ACTIVIDAD ↔ CONSUMIBLE (M:N) =====
+// GET /api/v1/lookups/actividad/:id/consumibles
+router.get('/actividad/:tipo(preventiva|cabinet|drive-module)/:id/consumibles', async (req, res, next) => {
+    try {
+        const id = Number(req.params.id);
+        const tipo = req.params.tipo;
+        let items = [];
+        if (tipo === 'preventiva') {
+            items = await database_1.prisma.actividadConsumible.findMany({
+                where: { actividadPreventivaId: id },
+                include: { consumible: true },
+            });
+        }
+        else if (tipo === 'cabinet') {
+            items = await database_1.prisma.actividadCabinetConsumible.findMany({
+                where: { actividadCabinetId: id },
+                include: { consumible: true },
+            });
+        }
+        else {
+            items = await database_1.prisma.actividadDriveModuleConsumible.findMany({
+                where: { actividadDriveModuleId: id },
+                include: { consumible: true },
+            });
+        }
+        res.json(items);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// POST /api/v1/lookups/actividad/:tipo/:id/consumibles
+router.post('/actividad/:tipo(preventiva|cabinet|drive-module)/:id/consumibles', async (req, res, next) => {
+    try {
+        const id = Number(req.params.id);
+        const tipo = req.params.tipo;
+        const { consumibleId, cantidad, unidad, notas } = req.body;
+        let item;
+        if (tipo === 'preventiva') {
+            item = await database_1.prisma.actividadConsumible.create({
+                data: { actividadPreventivaId: id, consumibleId, cantidad, unidad, notas },
+                include: { consumible: true },
+            });
+        }
+        else if (tipo === 'cabinet') {
+            item = await database_1.prisma.actividadCabinetConsumible.create({
+                data: { actividadCabinetId: id, consumibleId, cantidad, unidad, notas },
+                include: { consumible: true },
+            });
+        }
+        else {
+            item = await database_1.prisma.actividadDriveModuleConsumible.create({
+                data: { actividadDriveModuleId: id, consumibleId, cantidad, unidad, notas },
+                include: { consumible: true },
+            });
+        }
+        res.status(201).json(item);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// DELETE /api/v1/lookups/actividad/:tipo/:id/consumibles/:linkId
+router.delete('/actividad/:tipo(preventiva|cabinet|drive-module)/:id/consumibles/:linkId', async (req, res, next) => {
+    try {
+        const linkId = Number(req.params.linkId);
+        const tipo = req.params.tipo;
+        if (tipo === 'preventiva') {
+            await database_1.prisma.actividadConsumible.delete({ where: { id: linkId } });
+        }
+        else if (tipo === 'cabinet') {
+            await database_1.prisma.actividadCabinetConsumible.delete({ where: { id: linkId } });
+        }
+        else {
+            await database_1.prisma.actividadDriveModuleConsumible.delete({ where: { id: linkId } });
+        }
+        res.json({ message: 'Eliminado' });
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// PUT /api/v1/lookups/punto-control/:id/consumible
+router.put('/punto-control/:id/consumible', async (req, res, next) => {
+    try {
+        const id = Number(req.params.id);
+        const { consumibleId } = req.body;
+        const punto = await database_1.prisma.puntoControlGenerico.update({
+            where: { id },
+            data: { consumibleId: consumibleId ?? null },
+            include: { consumible: true },
+        });
+        res.json(punto);
+    }
+    catch (err) {
+        next(err);
+    }
+});
 // GET /api/v1/lookups/consumibles-catalogo?tipo=aceite&subtipo=engranaje&q=...
 router.get('/consumibles-catalogo', async (req, res, next) => {
     try {
