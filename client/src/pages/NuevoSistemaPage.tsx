@@ -105,7 +105,8 @@ export default function NuevoSistemaPage() {
     return driveUnits[0]?.id as number | undefined;
   }, [driveUnits]);
 
-  // Robot principal familiaId (para filtrado de ejes compatibles)
+  // Robot principal modelo + familia (para filtrado de ejes compatibles)
+  const robotPrincipalModeloId = robots[0]?.modeloComponenteId || undefined;
   const robotPrincipalFamiliaId = useMemo(() => {
     const principal = robots[0];
     if (!robotModelos || !principal?.modeloComponenteId) return undefined;
@@ -113,10 +114,10 @@ export default function NuevoSistemaPage() {
     return modelo?.familiaId as number | undefined;
   }, [robotModelos, robots]);
 
-  // Ejes externos compatibles (tri-via aplicada en backend)
+  // Ejes externos compatibles (backend resuelve familia desde robotModeloId)
   const { data: ejeModelos } = useEjesCompatibles(
     controllerId || undefined,
-    robotPrincipalFamiliaId,
+    robotPrincipalModeloId,
   );
 
   // Validacion del eje seleccionado (mantenida como guardrail)

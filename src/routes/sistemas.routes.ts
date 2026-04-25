@@ -285,7 +285,8 @@ router.delete('/:sistemaId/componentes/:componenteId', requireRole('admin'), asy
 
 // ===== COMPATIBILIDAD EJES EXTERNOS (tri-vía v2) =====
 
-// GET /api/v1/sistemas/ejes-compatibles?controladorId=X&robotFamiliaId=Y
+// GET /api/v1/sistemas/ejes-compatibles?controladorId=X&robotModeloId=Y
+// (alternativa legacy: &robotFamiliaId=Y)
 // Devuelve solo los ejes externos compatibles con esa combinacion segun:
 //   1. compatibilidad_controlador (basico controlador↔eje)
 //   2. compatibilidad_eje_permitida (whitelist familias robot)
@@ -294,11 +295,21 @@ router.delete('/:sistemaId/componentes/:componenteId', requireRole('admin'), asy
 router.get('/ejes-compatibles', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const controladorId = req.query.controladorId ? Number(req.query.controladorId) : undefined;
-    const robotFamiliaId = req.query.robotFamiliaId ? Number(req.query.robotFamiliaId) : undefined;
+    const robotModeloId = req.query.robotModeloId ? Number(req.query.robotModeloId) : undefined;
+    let robotFamiliaId = req.query.robotFamiliaId ? Number(req.query.robotFamiliaId) : undefined;
 
     if (!controladorId) {
       res.status(400).json({ error: 'controladorId es obligatorio' });
       return;
+    }
+
+    // Resolver familiaId desde el modelo del robot (mas robusto que confiar en frontend)
+    if (!robotFamiliaId && robotModeloId) {
+      const robot = await prisma.modeloComponente.findUnique({
+        where: { id: robotModeloId },
+        select: { familiaId: true },
+      });
+      robotFamiliaId = robot?.familiaId ?? undefined;
     }
 
     // 1. Ejes compatibles con la controladora (compatibilidad_controlador)
