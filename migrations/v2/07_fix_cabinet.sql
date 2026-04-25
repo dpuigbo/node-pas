@@ -1,10 +1,26 @@
 -- =============================================================================
 -- PAS ROBOTICS MANAGE - Re-cargar actividades cabinet (script 03 truncado)
 -- =============================================================================
--- El script 03 solo cargo 35 de 171 actividades cabinet por truncamiento.
--- Este script vacia la tabla y re-carga las 171 actividades del catalogo.
+-- El script 03 solo cargo 35-69 de 171 actividades cabinet por:
+--   1. Tipos de actividad faltantes en lu_tipo_actividad ('Limpieza/Reemplazo',
+--      'Mantenimiento general', 'Prueba funcional',
+--      'Reemplazo (preventivo programado)')
+--   2. La JOIN con lu_tipo_actividad fallaba silenciosamente
+--
+-- Este script:
+--   1. Anade los tipos de actividad faltantes
+--   2. Vacia actividad_cabinet
+--   3. Re-carga las 171 actividades
 -- =============================================================================
 
+-- 1. Tipos de actividad faltantes
+INSERT IGNORE INTO lu_tipo_actividad (codigo, nombre, categoria, requiere_parada, orden) VALUES
+  ('limpieza_reemplazo', 'Limpieza/Reemplazo', 'reemplazo', 1, 35),
+  ('mantenimiento_general', 'Mantenimiento general', 'otro', 0, 75),
+  ('prueba_funcional', 'Prueba funcional', 'inspeccion', 0, 13),
+  ('reemplazo_preventivo', 'Reemplazo (preventivo programado)', 'reemplazo', 1, 32);
+
+-- 2. Vaciar tabla
 TRUNCATE TABLE actividad_cabinet;
 
 -- A. ACTIVIDADES DE MANTENIMIENTO DE CABINETS (171 filas)
