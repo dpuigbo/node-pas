@@ -44,3 +44,24 @@ export function useNivelesMantenimiento() {
     },
   });
 }
+
+export function usePuntosControl(categoria?: string) {
+  return useQuery({
+    queryKey: ['lookups', 'puntos-control', categoria],
+    queryFn: async () => {
+      const params = categoria ? `?categoria=${categoria}` : '';
+      const { data } = await api.get(`/v1/lookups/puntos-control${params}`);
+      return data as {
+        id: number;
+        categoria: string;
+        componente: string;
+        descripcionAccion: string;
+        intervaloTexto: string | null;
+        condicion: string | null;
+        generacionAplica: string | null;
+        notas: string | null;
+        orden: number;
+      }[];
+    },
+  });
+}

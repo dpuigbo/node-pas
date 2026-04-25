@@ -14,6 +14,7 @@ import {
   useAceites, useCreateAceite, useUpdateAceite, useDeleteAceite,
   useConsumibles, useCreateConsumible, useUpdateConsumible, useDeleteConsumible,
 } from '@/hooks/useCatalogos';
+import { usePuntosControl } from '@/hooks/useLookups';
 import { useAuth } from '@/hooks/useAuth';
 
 const UNIDADES = ['litros', 'ml', 'kg', 'g', 'cm³', 'unidades'] as const;
@@ -404,6 +405,71 @@ function ConsumiblesTable({ items, isLoading, isAdmin, onCreate, onUpdate, onDel
 
 // ===== Page =====
 
+// ===== Puntos de Control =====
+const CATEGORIA_LABELS: Record<string, string> = {
+  manipulador: 'Manipulador',
+  controladora: 'Controladora',
+  drive_module: 'Drive Module',
+  cabling: 'Cableado',
+  eje_externo: 'Eje externo',
+  seguridad: 'Seguridad',
+};
+
+function PuntosControlSection() {
+  const [categoria, setCategoria] = useState<string>('');
+  const { data: puntos, isLoading } = usePuntosControl(categoria || undefined);
+
+  const cols: Column<any>[] = [
+    {
+      key: 'categoria',
+      header: 'Categoria',
+      render: (p) => <Badge variant="secondary">{CATEGORIA_LABELS[p.categoria] ?? p.categoria}</Badge>,
+    },
+    { key: 'componente', header: 'Componente' },
+    { key: 'descripcionAccion', header: 'Accion' },
+    {
+      key: 'intervaloTexto',
+      header: 'Intervalo',
+      render: (p) => p.intervaloTexto || <span className="text-muted-foreground">—</span>,
+    },
+    {
+      key: 'generacionAplica',
+      header: 'Generacion',
+      render: (p) => p.generacionAplica || <span className="text-muted-foreground">—</span>,
+    },
+  ];
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold">Puntos de Control Genericos</h2>
+          <p className="text-sm text-muted-foreground">
+            Verificaciones transversales aplicables a varios componentes (38 puntos)
+          </p>
+        </div>
+        <select
+          value={categoria}
+          onChange={(e) => setCategoria(e.target.value)}
+          className={SELECT_CLASS + ' w-48'}
+        >
+          <option value="">Todas las categorias</option>
+          {Object.entries(CATEGORIA_LABELS).map(([k, v]) => (
+            <option key={k} value={k}>{v}</option>
+          ))}
+        </select>
+      </div>
+      <DataTable
+        columns={cols}
+        data={puntos || []}
+        isLoading={isLoading}
+        emptyMessage="Sin puntos de control"
+        rowKey={(p) => p.id}
+      />
+    </div>
+  );
+}
+
 export default function CatalogosPage() {
   const { isAdmin } = useAuth();
   const { data: aceites, isLoading: loadingAceites } = useAceites();
@@ -418,7 +484,7 @@ export default function CatalogosPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title="Catalogos" description="Aceites, grasas, baterías y consumibles" />
+      <PageHeader title="Catalogos" description="Aceites, grasas, baterías, consumibles y puntos de control" />
       <AceitesTable
         items={aceites}
         isLoading={loadingAceites}
@@ -443,6 +509,7 @@ export default function CatalogosPage() {
         onUpdate={(d: any) => updateConsumible.mutateAsync(d)}
         onDelete={(id: number) => deleteConsumible.mutateAsync(id)}
       />
+      <PuntosControlSection />
     </div>
   );
 }
