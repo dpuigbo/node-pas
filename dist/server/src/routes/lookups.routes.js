@@ -208,7 +208,9 @@ router.put('/punto-control/:id/consumible', async (req, res, next) => {
 // GET /api/v1/lookups/consumibles-catalogo?tipo=aceite&subtipo=engranaje&q=...
 router.get('/consumibles-catalogo', async (req, res, next) => {
     try {
-        const where = { activo: true };
+        const where = {};
+        if (req.query.activo !== '0')
+            where.activo = true;
         if (req.query.tipo)
             where.tipo = String(req.query.tipo);
         if (req.query.subtipo)
@@ -224,6 +226,42 @@ router.get('/consumibles-catalogo', async (req, res, next) => {
             orderBy: [{ tipo: 'asc' }, { subtipo: 'asc' }, { nombre: 'asc' }],
         });
         res.json(items);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// POST /api/v1/lookups/consumibles-catalogo
+router.post('/consumibles-catalogo', async (req, res, next) => {
+    try {
+        const item = await database_1.prisma.consumibleCatalogo.create({ data: req.body });
+        res.status(201).json(item);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// PUT /api/v1/lookups/consumibles-catalogo/:id
+router.put('/consumibles-catalogo/:id', async (req, res, next) => {
+    try {
+        const item = await database_1.prisma.consumibleCatalogo.update({
+            where: { id: Number(req.params.id) },
+            data: req.body,
+        });
+        res.json(item);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// DELETE /api/v1/lookups/consumibles-catalogo/:id (soft delete)
+router.delete('/consumibles-catalogo/:id', async (req, res, next) => {
+    try {
+        const item = await database_1.prisma.consumibleCatalogo.update({
+            where: { id: Number(req.params.id) },
+            data: { activo: false },
+        });
+        res.json(item);
     }
     catch (err) {
         next(err);
