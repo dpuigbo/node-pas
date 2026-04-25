@@ -2,408 +2,22 @@ import { useState } from 'react';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, Column } from '@/components/shared/DataTable';
-import { FabricanteRobotSelect } from '@/components/shared/FabricanteRobotSelect';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import {
-  useAceites, useCreateAceite, useUpdateAceite, useDeleteAceite,
-  useConsumibles, useCreateConsumible, useUpdateConsumible, useDeleteConsumible,
-} from '@/hooks/useCatalogos';
-import { usePuntosControl, useEquivalencias, useConsumiblesCatalogo } from '@/hooks/useLookups';
+  usePuntosControl, useEquivalencias, useConsumiblesCatalogo,
+  useCreateConsumibleCatalogo, useUpdateConsumibleCatalogo, useDeleteConsumibleCatalogo,
+} from '@/hooks/useLookups';
 import { useAuth } from '@/hooks/useAuth';
 
-const UNIDADES = ['litros', 'ml', 'kg', 'g', 'cm³', 'unidades'] as const;
-
 const SELECT_CLASS = 'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring';
-
-/** Render CSV fab. robot as badges */
-function FabRobotBadges({ csv }: { csv?: string | null }) {
-  if (!csv) return <span>-</span>;
-  return (
-    <div className="flex flex-wrap gap-0.5">
-      {csv.split(',').filter(Boolean).map((f) => (
-        <span key={f} className="inline-block rounded bg-primary/10 px-1.5 py-0.5 text-xs font-medium">{f}</span>
-      ))}
-    </div>
-  );
-}
-
-// ===== Aceites table =====
-
-function AceitesTable({ items, isLoading, isAdmin, onCreate, onUpdate, onDelete }: any) {
-  const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<any>(null);
-  const [form, setForm] = useState({ nombre: '', fabricante: '', unidad: '', fabricanteRobot: '', coste: '', precio: '' });
-
-  const openCreate = () => {
-    setEditing(null);
-    setForm({ nombre: '', fabricante: '', unidad: '', fabricanteRobot: '', coste: '', precio: '' });
-    setFormOpen(true);
-  };
-  const openEdit = (item: any) => {
-    setEditing(item);
-    setForm({
-      nombre: item.nombre,
-      fabricante: item.fabricante || '',
-      unidad: item.unidad || '',
-      fabricanteRobot: item.fabricanteRobot || '',
-      coste: item.coste ? String(item.coste) : '',
-      precio: item.precio ? String(item.precio) : '',
-    });
-    setFormOpen(true);
-  };
-
-  const handleSubmit = async () => {
-    try {
-      const body = {
-        nombre: form.nombre,
-        fabricante: form.fabricante || null,
-        unidad: form.unidad || null,
-        fabricanteRobot: form.fabricanteRobot || null,
-        coste: form.coste ? Number(form.coste) : null,
-        precio: form.precio ? Number(form.precio) : null,
-      };
-      if (editing) await onUpdate({ id: editing.id, ...body });
-      else await onCreate(body);
-      setFormOpen(false);
-    } catch (err) {
-      console.error('Error guardando aceite:', err);
-      alert('Error al guardar: ' + ((err as any)?.response?.data?.message || (err as Error).message));
-    }
-  };
-
-  const columns: Column<any>[] = [
-    { key: 'nombre', header: 'Nombre' },
-    { key: 'fabricante', header: 'Fabricante', render: (i) => i.fabricante || '-' },
-    { key: 'unidad', header: 'Unidad', render: (i) => i.unidad || '-' },
-    { key: 'fabricanteRobot', header: 'Fab. robot', render: (i) => <FabRobotBadges csv={i.fabricanteRobot} /> },
-    { key: 'coste', header: 'Coste', render: (i) => i.coste ? `${Number(i.coste).toFixed(2)}` : '-' },
-    { key: 'precio', header: 'Precio', render: (i) => i.precio ? `${Number(i.precio).toFixed(2)}` : '-' },
-    { key: 'activo', header: 'Estado', render: (i) => <Badge variant={i.activo ? 'success' : 'outline'}>{i.activo ? 'Activo' : 'Inactivo'}</Badge> },
-    ...(isAdmin ? [{
-      key: 'actions', header: '', className: 'w-24',
-      render: (item: any) => (
-        <div className="flex gap-1">
-          <Button variant="ghost" size="icon" onClick={() => openEdit(item)}><Pencil className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="icon" onClick={() => onDelete(item.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-        </div>
-      ),
-    }] : []),
-  ];
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Aceites y grasas</h2>
-        {isAdmin && <Button size="sm" onClick={openCreate}><Plus className="h-4 w-4" /> Nuevo</Button>}
-      </div>
-      <DataTable columns={columns} data={items || []} isLoading={isLoading} emptyMessage="Sin aceites" rowKey={(i) => i.id} />
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{editing ? 'Editar' : 'Nuevo'} aceite</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div><Label>Nombre</Label><Input value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} /></div>
-            <div className="grid grid-cols-2 gap-4">
-              <div><Label>Fabricante</Label><Input value={form.fabricante} onChange={(e) => setForm({ ...form, fabricante: e.target.value })} /></div>
-              <div>
-                <Label>Unidad de medida</Label>
-                <select
-                  value={form.unidad}
-                  onChange={(e) => setForm({ ...form, unidad: e.target.value })}
-                  className={SELECT_CLASS}
-                >
-                  <option value="">— Sin unidad —</option>
-                  {UNIDADES.map((u) => (
-                    <option key={u} value={u}>{u}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div>
-              <Label>Fabricantes de robot compatibles</Label>
-              <FabricanteRobotSelect
-                value={form.fabricanteRobot}
-                onChange={(csv) => setForm({ ...form, fabricanteRobot: csv })}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div><Label>Coste</Label><Input type="number" step="0.01" value={form.coste} onChange={(e) => setForm({ ...form, coste: e.target.value })} /></div>
-              <div><Label>Precio</Label><Input type="number" step="0.01" value={form.precio} onChange={(e) => setForm({ ...form, precio: e.target.value })} /></div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setFormOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={!form.nombre.trim()}>{editing ? 'Guardar' : 'Crear'}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
-
-// ===== Baterias table =====
-
-const COMPATIBLE_CON_OPTIONS = [
-  { value: '', label: 'Ambos (manipulador y controlador)' },
-  { value: 'mechanical_unit', label: 'Solo manipulador' },
-  { value: 'controller', label: 'Solo controlador' },
-] as const;
-
-const COMPATIBLE_CON_LABELS: Record<string, string> = {
-  mechanical_unit: 'Manipulador',
-  controller: 'Controlador',
-};
-
-const EMPTY_BATERIA_FORM = {
-  nombre: '', fabricante: '', compatibleCon: '', refOriginal: '', refProveedor: '',
-  denominacion: '', fabricanteRobot: '', coste: '', precio: '',
-};
-
-function BateriasTable({ items, isLoading, isAdmin, onCreate, onUpdate, onDelete }: any) {
-  const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<any>(null);
-  const [form, setForm] = useState({ ...EMPTY_BATERIA_FORM });
-
-  const openCreate = () => {
-    setEditing(null);
-    setForm({ ...EMPTY_BATERIA_FORM });
-    setFormOpen(true);
-  };
-  const openEdit = (item: any) => {
-    setEditing(item);
-    setForm({
-      nombre: item.nombre,
-      fabricante: item.fabricante || '',
-      compatibleCon: item.compatibleCon || '',
-      refOriginal: item.refOriginal || '',
-      refProveedor: item.refProveedor || '',
-      denominacion: item.denominacion || '',
-      fabricanteRobot: item.fabricanteRobot || '',
-      coste: item.coste ? String(item.coste) : '',
-      precio: item.precio ? String(item.precio) : '',
-    });
-    setFormOpen(true);
-  };
-
-  const handleSubmit = async () => {
-    try {
-      const body = {
-        nombre: form.nombre,
-        fabricante: form.fabricante || null,
-        tipo: 'bateria',
-        compatibleCon: form.compatibleCon || null,
-        refOriginal: form.refOriginal || null,
-        refProveedor: form.refProveedor || null,
-        denominacion: form.denominacion || null,
-        fabricanteRobot: form.fabricanteRobot || null,
-        coste: form.coste ? Number(form.coste) : null,
-        precio: form.precio ? Number(form.precio) : null,
-      };
-      if (editing) await onUpdate({ id: editing.id, ...body });
-      else await onCreate(body);
-      setFormOpen(false);
-    } catch (err) {
-      console.error('Error guardando bateria:', err);
-      alert('Error al guardar: ' + ((err as any)?.response?.data?.message || (err as Error).message));
-    }
-  };
-
-  const columns: Column<any>[] = [
-    { key: 'nombre', header: 'Nombre' },
-    { key: 'fabricante', header: 'Fabricante', render: (i) => i.fabricante || '-' },
-    { key: 'compatibleCon', header: 'Compatible con', render: (i) => COMPATIBLE_CON_LABELS[i.compatibleCon] || 'Ambos' },
-    { key: 'fabricanteRobot', header: 'Fab. robot', render: (i) => <FabRobotBadges csv={i.fabricanteRobot} /> },
-    { key: 'refOriginal', header: 'Ref. original', render: (i) => i.refOriginal || '-' },
-    { key: 'coste', header: 'Coste', render: (i) => i.coste ? `${Number(i.coste).toFixed(2)}` : '-' },
-    { key: 'precio', header: 'Precio', render: (i) => i.precio ? `${Number(i.precio).toFixed(2)}` : '-' },
-    { key: 'activo', header: 'Estado', render: (i) => <Badge variant={i.activo ? 'success' : 'outline'}>{i.activo ? 'Activo' : 'Inactivo'}</Badge> },
-    ...(isAdmin ? [{
-      key: 'actions', header: '', className: 'w-24',
-      render: (item: any) => (
-        <div className="flex gap-1">
-          <Button variant="ghost" size="icon" onClick={() => openEdit(item)}><Pencil className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="icon" onClick={() => onDelete(item.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-        </div>
-      ),
-    }] : []),
-  ];
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Baterías</h2>
-        {isAdmin && <Button size="sm" onClick={openCreate}><Plus className="h-4 w-4" /> Nueva</Button>}
-      </div>
-      <DataTable columns={columns} data={items || []} isLoading={isLoading} emptyMessage="Sin baterías" rowKey={(i) => i.id} />
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{editing ? 'Editar' : 'Nueva'} batería</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div><Label>Nombre</Label><Input value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} /></div>
-            <div className="grid grid-cols-2 gap-4">
-              <div><Label>Fabricante</Label><Input value={form.fabricante} onChange={(e) => setForm({ ...form, fabricante: e.target.value })} /></div>
-              <div>
-                <Label>Compatible con</Label>
-                <select
-                  value={form.compatibleCon}
-                  onChange={(e) => setForm({ ...form, compatibleCon: e.target.value })}
-                  className={SELECT_CLASS}
-                >
-                  {COMPATIBLE_CON_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div>
-              <Label>Fabricantes de robot compatibles</Label>
-              <FabricanteRobotSelect
-                value={form.fabricanteRobot}
-                onChange={(csv) => setForm({ ...form, fabricanteRobot: csv })}
-              />
-            </div>
-            <div><Label>Denominacion</Label><Input value={form.denominacion} onChange={(e) => setForm({ ...form, denominacion: e.target.value })} placeholder="Descripcion de la bateria" /></div>
-            <div className="grid grid-cols-2 gap-4">
-              <div><Label>Ref. original</Label><Input value={form.refOriginal} onChange={(e) => setForm({ ...form, refOriginal: e.target.value })} placeholder="Referencia fabricante" /></div>
-              <div><Label>Ref. proveedor</Label><Input value={form.refProveedor} onChange={(e) => setForm({ ...form, refProveedor: e.target.value })} placeholder="Referencia proveedor" /></div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div><Label>Coste</Label><Input type="number" step="0.01" value={form.coste} onChange={(e) => setForm({ ...form, coste: e.target.value })} /></div>
-              <div><Label>Precio</Label><Input type="number" step="0.01" value={form.precio} onChange={(e) => setForm({ ...form, precio: e.target.value })} /></div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setFormOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={!form.nombre.trim()}>{editing ? 'Guardar' : 'Crear'}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
-
-// ===== Consumibles table =====
-
-const EMPTY_CONSUMIBLE_FORM = {
-  nombre: '', fabricante: '', refOriginal: '', refProveedor: '',
-  denominacion: '', fabricanteRobot: '', coste: '', precio: '',
-};
-
-function ConsumiblesTable({ items, isLoading, isAdmin, onCreate, onUpdate, onDelete }: any) {
-  const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<any>(null);
-  const [form, setForm] = useState({ ...EMPTY_CONSUMIBLE_FORM });
-
-  const openCreate = () => {
-    setEditing(null);
-    setForm({ ...EMPTY_CONSUMIBLE_FORM });
-    setFormOpen(true);
-  };
-  const openEdit = (item: any) => {
-    setEditing(item);
-    setForm({
-      nombre: item.nombre,
-      fabricante: item.fabricante || '',
-      refOriginal: item.refOriginal || '',
-      refProveedor: item.refProveedor || '',
-      denominacion: item.denominacion || '',
-      fabricanteRobot: item.fabricanteRobot || '',
-      coste: item.coste ? String(item.coste) : '',
-      precio: item.precio ? String(item.precio) : '',
-    });
-    setFormOpen(true);
-  };
-
-  const handleSubmit = async () => {
-    try {
-      const body = {
-        nombre: form.nombre,
-        fabricante: form.fabricante || null,
-        refOriginal: form.refOriginal || null,
-        refProveedor: form.refProveedor || null,
-        denominacion: form.denominacion || null,
-        fabricanteRobot: form.fabricanteRobot || null,
-        coste: form.coste ? Number(form.coste) : null,
-        precio: form.precio ? Number(form.precio) : null,
-      };
-      if (editing) await onUpdate({ id: editing.id, ...body });
-      else await onCreate(body);
-      setFormOpen(false);
-    } catch (err) {
-      console.error('Error guardando consumible:', err);
-      alert('Error al guardar: ' + ((err as any)?.response?.data?.message || (err as Error).message));
-    }
-  };
-
-  const columns: Column<any>[] = [
-    { key: 'nombre', header: 'Nombre' },
-    { key: 'fabricante', header: 'Fabricante', render: (i) => i.fabricante || '-' },
-    { key: 'refOriginal', header: 'Ref. original', render: (i) => i.refOriginal || '-' },
-    { key: 'refProveedor', header: 'Ref. proveedor', render: (i) => i.refProveedor || '-' },
-    { key: 'denominacion', header: 'Denominacion', render: (i) => i.denominacion || '-' },
-    { key: 'fabricanteRobot', header: 'Fab. robot', render: (i) => <FabRobotBadges csv={i.fabricanteRobot} /> },
-    { key: 'coste', header: 'Coste', render: (i) => i.coste ? `${Number(i.coste).toFixed(2)}` : '-' },
-    { key: 'precio', header: 'Precio', render: (i) => i.precio ? `${Number(i.precio).toFixed(2)}` : '-' },
-    { key: 'activo', header: 'Estado', render: (i) => <Badge variant={i.activo ? 'success' : 'outline'}>{i.activo ? 'Activo' : 'Inactivo'}</Badge> },
-    ...(isAdmin ? [{
-      key: 'actions', header: '', className: 'w-24',
-      render: (item: any) => (
-        <div className="flex gap-1">
-          <Button variant="ghost" size="icon" onClick={() => openEdit(item)}><Pencil className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="icon" onClick={() => onDelete(item.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-        </div>
-      ),
-    }] : []),
-  ];
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Consumibles generales</h2>
-        {isAdmin && <Button size="sm" onClick={openCreate}><Plus className="h-4 w-4" /> Nuevo</Button>}
-      </div>
-      <DataTable columns={columns} data={items || []} isLoading={isLoading} emptyMessage="Sin consumibles" rowKey={(i) => i.id} />
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{editing ? 'Editar' : 'Nuevo'} consumible</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div><Label>Nombre</Label><Input value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} /></div>
-            <div className="grid grid-cols-2 gap-4">
-              <div><Label>Fabricante</Label><Input value={form.fabricante} onChange={(e) => setForm({ ...form, fabricante: e.target.value })} /></div>
-              <div><Label>Denominacion</Label><Input value={form.denominacion} onChange={(e) => setForm({ ...form, denominacion: e.target.value })} placeholder="Descripcion" /></div>
-            </div>
-            <div>
-              <Label>Fabricantes de robot compatibles</Label>
-              <FabricanteRobotSelect
-                value={form.fabricanteRobot}
-                onChange={(csv) => setForm({ ...form, fabricanteRobot: csv })}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div><Label>Ref. original</Label><Input value={form.refOriginal} onChange={(e) => setForm({ ...form, refOriginal: e.target.value })} placeholder="Referencia fabricante" /></div>
-              <div><Label>Ref. proveedor</Label><Input value={form.refProveedor} onChange={(e) => setForm({ ...form, refProveedor: e.target.value })} placeholder="Referencia proveedor" /></div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div><Label>Coste</Label><Input type="number" step="0.01" value={form.coste} onChange={(e) => setForm({ ...form, coste: e.target.value })} /></div>
-              <div><Label>Precio</Label><Input type="number" step="0.01" value={form.precio} onChange={(e) => setForm({ ...form, precio: e.target.value })} /></div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setFormOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={!form.nombre.trim()}>{editing ? 'Guardar' : 'Crear'}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
-
-// ===== Page =====
 
 // ===== Catalogo Consumibles v2 =====
 const CONSUMIBLE_TIPO_LABELS: Record<string, string> = {
@@ -422,13 +36,93 @@ const CONSUMIBLE_TIPO_LABELS: Record<string, string> = {
   otro: 'Otro',
 };
 
-function ConsumiblesCatalogoSection() {
+const UNIDADES = ['L', 'ml', 'kg', 'g', 'ud', 'pcs'] as const;
+
+const emptyForm = () => ({
+  tipo: 'aceite' as string,
+  subtipo: '',
+  nombre: '',
+  codigoAbb: '',
+  fabricante: '',
+  unidad: '',
+  equivalencias: '',
+  fabricanteRobot: '',
+  refOriginal: '',
+  refProveedor: '',
+  coste: '',
+  precio: '',
+  notas: '',
+});
+
+function ConsumiblesCatalogoSection({ isAdmin }: { isAdmin: boolean }) {
   const [tipo, setTipo] = useState<string>('');
   const [q, setQ] = useState('');
   const { data: items, isLoading } = useConsumiblesCatalogo({
     tipo: tipo || undefined,
     q: q || undefined,
   });
+  const createMut = useCreateConsumibleCatalogo();
+  const updateMut = useUpdateConsumibleCatalogo();
+  const deleteMut = useDeleteConsumibleCatalogo();
+
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<any>(null);
+  const [form, setForm] = useState(emptyForm());
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState<any>(null);
+
+  const openCreate = () => {
+    setEditing(null);
+    setForm(emptyForm());
+    setFormOpen(true);
+  };
+  const openEdit = (item: any) => {
+    setEditing(item);
+    setForm({
+      tipo: item.tipo,
+      subtipo: item.subtipo ?? '',
+      nombre: item.nombre,
+      codigoAbb: item.codigoAbb ?? '',
+      fabricante: item.fabricante ?? '',
+      unidad: item.unidad ?? '',
+      equivalencias: item.equivalencias ?? '',
+      fabricanteRobot: item.fabricanteRobot ?? '',
+      refOriginal: item.refOriginal ?? '',
+      refProveedor: item.refProveedor ?? '',
+      coste: item.coste != null ? String(item.coste) : '',
+      precio: item.precio != null ? String(item.precio) : '',
+      notas: item.notas ?? '',
+    });
+    setFormOpen(true);
+  };
+
+  const handleSubmit = async () => {
+    const data: any = {
+      tipo: form.tipo,
+      subtipo: form.subtipo || null,
+      nombre: form.nombre,
+      codigoAbb: form.codigoAbb || null,
+      fabricante: form.fabricante || null,
+      unidad: form.unidad || null,
+      equivalencias: form.equivalencias || null,
+      fabricanteRobot: form.fabricanteRobot || null,
+      refOriginal: form.refOriginal || null,
+      refProveedor: form.refProveedor || null,
+      coste: form.coste ? Number(form.coste) : null,
+      precio: form.precio ? Number(form.precio) : null,
+      notas: form.notas || null,
+    };
+    try {
+      if (editing) {
+        await updateMut.mutateAsync({ id: editing.id, ...data });
+      } else {
+        await createMut.mutateAsync(data);
+      }
+      setFormOpen(false);
+    } catch (err: any) {
+      alert(err?.response?.data?.error ?? 'Error al guardar');
+    }
+  };
 
   const cols: Column<any>[] = [
     {
@@ -456,8 +150,19 @@ function ConsumiblesCatalogoSection() {
     },
     {
       key: 'unidad',
-      header: 'Unidad',
+      header: 'Unid.',
       render: (c) => c.unidad || <span className="text-muted-foreground">—</span>,
+    },
+    {
+      key: 'precio',
+      header: 'Coste / Precio',
+      render: (c) => (
+        <div className="flex flex-col gap-0.5 text-xs">
+          {c.coste != null && <span>Coste: {c.coste} €</span>}
+          {c.precio != null && <span>Precio: {c.precio} €</span>}
+          {c.coste == null && c.precio == null && <span className="text-muted-foreground">—</span>}
+        </div>
+      ),
     },
     {
       key: 'apariciones',
@@ -466,22 +171,32 @@ function ConsumiblesCatalogoSection() {
         ? <Badge variant="outline" className="text-[10px]">{c.apariciones}</Badge>
         : <span className="text-muted-foreground text-xs">0</span>,
     },
-    {
-      key: 'equivalencias',
-      header: 'Equivalencias',
-      render: (c) => c.equivalencias
-        ? <span className="text-xs text-muted-foreground line-clamp-1" title={c.equivalencias}>{c.equivalencias}</span>
-        : <span className="text-muted-foreground">—</span>,
-    },
+    ...(isAdmin ? [{
+      key: 'acciones' as const,
+      header: '',
+      className: 'w-24',
+      render: (c: any) => (
+        <div className="flex gap-0.5">
+          <Button variant="ghost" size="icon" className="h-7 w-7"
+            onClick={(e) => { e.stopPropagation(); openEdit(c); }}>
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"
+            onClick={(e) => { e.stopPropagation(); setDeleting(c); setDeleteOpen(true); }}>
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      ),
+    }] : []),
   ];
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-xl font-semibold">Catalogo Unificado de Consumibles</h2>
+          <h2 className="text-xl font-semibold">Catalogo de Consumibles</h2>
           <p className="text-sm text-muted-foreground">
-            Aceites, grasas, baterias, filtros, ventiladores y otros consumibles del catalogo ABB v7
+            Aceites, grasas, baterias, filtros y demas consumibles del catalogo (catalogo unificado)
           </p>
         </div>
         <div className="flex gap-2">
@@ -501,6 +216,11 @@ function ConsumiblesCatalogoSection() {
               <option key={k} value={k}>{v}</option>
             ))}
           </select>
+          {isAdmin && (
+            <Button onClick={openCreate}>
+              <Plus className="h-4 w-4 mr-1" /> Nuevo
+            </Button>
+          )}
         </div>
       </div>
       <DataTable
@@ -509,6 +229,93 @@ function ConsumiblesCatalogoSection() {
         isLoading={isLoading}
         emptyMessage="Sin consumibles"
         rowKey={(c) => c.id}
+      />
+
+      {/* Form Dialog */}
+      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{editing ? 'Editar consumible' : 'Nuevo consumible'}</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Tipo</Label>
+              <select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })} className={SELECT_CLASS}>
+                {Object.entries(CONSUMIBLE_TIPO_LABELS).map(([k, v]) => (
+                  <option key={k} value={k}>{v}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label>Subtipo <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+              <Input value={form.subtipo} onChange={(e) => setForm({ ...form, subtipo: e.target.value })} placeholder="engranaje, harmonic, smb_litio..." />
+            </div>
+            <div className="col-span-2">
+              <Label>Nombre</Label>
+              <Input value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} placeholder="Ej: Kyodo Yushi TMO 150" />
+            </div>
+            <div>
+              <Label>Codigo ABB</Label>
+              <Input value={form.codigoAbb} onChange={(e) => setForm({ ...form, codigoAbb: e.target.value })} placeholder="3HAB 9999-1" />
+            </div>
+            <div>
+              <Label>Fabricante</Label>
+              <Input value={form.fabricante} onChange={(e) => setForm({ ...form, fabricante: e.target.value })} placeholder="Mobil, Shell, ABB..." />
+            </div>
+            <div>
+              <Label>Unidad</Label>
+              <select value={form.unidad} onChange={(e) => setForm({ ...form, unidad: e.target.value })} className={SELECT_CLASS}>
+                <option value="">—</option>
+                {UNIDADES.map(u => <option key={u} value={u}>{u}</option>)}
+              </select>
+            </div>
+            <div>
+              <Label>Fab. robot compatible <span className="text-muted-foreground font-normal">(CSV)</span></Label>
+              <Input value={form.fabricanteRobot} onChange={(e) => setForm({ ...form, fabricanteRobot: e.target.value })} placeholder="ABB,KUKA" />
+            </div>
+            <div>
+              <Label>Coste (€)</Label>
+              <Input type="number" step="0.01" value={form.coste} onChange={(e) => setForm({ ...form, coste: e.target.value })} />
+            </div>
+            <div>
+              <Label>Precio (€)</Label>
+              <Input type="number" step="0.01" value={form.precio} onChange={(e) => setForm({ ...form, precio: e.target.value })} />
+            </div>
+            <div>
+              <Label>Ref. original</Label>
+              <Input value={form.refOriginal} onChange={(e) => setForm({ ...form, refOriginal: e.target.value })} />
+            </div>
+            <div>
+              <Label>Ref. proveedor</Label>
+              <Input value={form.refProveedor} onChange={(e) => setForm({ ...form, refProveedor: e.target.value })} />
+            </div>
+            <div className="col-span-2">
+              <Label>Equivalencias</Label>
+              <Input value={form.equivalencias} onChange={(e) => setForm({ ...form, equivalencias: e.target.value })} placeholder="= Shell Tivela S150, = Castrol Optigear..." />
+            </div>
+            <div className="col-span-2">
+              <Label>Notas</Label>
+              <Textarea value={form.notas} onChange={(e) => setForm({ ...form, notas: e.target.value })} rows={2} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFormOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSubmit} disabled={!form.nombre.trim() || createMut.isPending || updateMut.isPending}>
+              {(createMut.isPending || updateMut.isPending) ? 'Guardando...' : (editing ? 'Guardar' : 'Crear')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Eliminar consumible"
+        description={`Se desactivara "${deleting?.nombre}".`}
+        confirmLabel="Eliminar"
+        variant="destructive"
+        onConfirm={async () => { await deleteMut.mutateAsync(deleting.id); setDeleteOpen(false); }}
+        isLoading={deleteMut.isPending}
       />
     </div>
   );
@@ -625,7 +432,7 @@ function PuntosControlSection() {
         <div>
           <h2 className="text-xl font-semibold">Puntos de Control Genericos</h2>
           <p className="text-sm text-muted-foreground">
-            Verificaciones transversales aplicables a varios componentes (38 puntos)
+            Verificaciones transversales aplicables a varios componentes
           </p>
         </div>
         <select
@@ -652,44 +459,11 @@ function PuntosControlSection() {
 
 export default function CatalogosPage() {
   const { isAdmin } = useAuth();
-  const { data: aceites, isLoading: loadingAceites } = useAceites();
-  const { data: baterias, isLoading: loadingBaterias } = useConsumibles({ tipo: 'bateria' });
-  const { data: consumibles, isLoading: loadingConsumibles } = useConsumibles({ tipo: 'general' });
-  const createAceite = useCreateAceite();
-  const updateAceite = useUpdateAceite();
-  const deleteAceite = useDeleteAceite();
-  const createConsumible = useCreateConsumible();
-  const updateConsumible = useUpdateConsumible();
-  const deleteConsumible = useDeleteConsumible();
 
   return (
     <div className="space-y-8">
-      <PageHeader title="Catalogos" description="Aceites, grasas, baterías, consumibles y puntos de control" />
-      <AceitesTable
-        items={aceites}
-        isLoading={loadingAceites}
-        isAdmin={isAdmin}
-        onCreate={(d: any) => createAceite.mutateAsync(d)}
-        onUpdate={(d: any) => updateAceite.mutateAsync(d)}
-        onDelete={(id: number) => deleteAceite.mutateAsync(id)}
-      />
-      <BateriasTable
-        items={baterias}
-        isLoading={loadingBaterias}
-        isAdmin={isAdmin}
-        onCreate={(d: any) => createConsumible.mutateAsync(d)}
-        onUpdate={(d: any) => updateConsumible.mutateAsync(d)}
-        onDelete={(id: number) => deleteConsumible.mutateAsync(id)}
-      />
-      <ConsumiblesTable
-        items={consumibles}
-        isLoading={loadingConsumibles}
-        isAdmin={isAdmin}
-        onCreate={(d: any) => createConsumible.mutateAsync(d)}
-        onUpdate={(d: any) => updateConsumible.mutateAsync(d)}
-        onDelete={(id: number) => deleteConsumible.mutateAsync(id)}
-      />
-      <ConsumiblesCatalogoSection />
+      <PageHeader title="Catalogos" description="Consumibles, equivalencias y puntos de control" />
+      <ConsumiblesCatalogoSection isAdmin={isAdmin} />
       <EquivalenciasSection />
       <PuntosControlSection />
     </div>

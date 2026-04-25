@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 
 export function useFamilias(filters?: { fabricanteId?: number; tipo?: string }) {
@@ -67,6 +67,30 @@ export function useConsumiblesCatalogo(filters?: { tipo?: string; subtipo?: stri
         notas: string | null;
       }[];
     },
+  });
+}
+
+export function useCreateConsumibleCatalogo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: any) => api.post('/v1/lookups/consumibles-catalogo', body).then(r => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['lookups', 'consumibles-catalogo'] }),
+  });
+}
+
+export function useUpdateConsumibleCatalogo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }: any) => api.put(`/v1/lookups/consumibles-catalogo/${id}`, body).then(r => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['lookups', 'consumibles-catalogo'] }),
+  });
+}
+
+export function useDeleteConsumibleCatalogo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.delete(`/v1/lookups/consumibles-catalogo/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['lookups', 'consumibles-catalogo'] }),
   });
 }
 
