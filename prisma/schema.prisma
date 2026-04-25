@@ -321,22 +321,26 @@ model Sistema {
 }
 
 model ComponenteSistema {
-  id                 Int            @id @default(autoincrement())
-  sistemaId          Int            @map("sistema_id")
-  modeloComponenteId Int            @map("modelo_componente_id")
-  tipo               TipoComponente
-  etiqueta           String
-  numeroSerie        String?        @map("numero_serie")
-  numEjes            Int?           @map("num_ejes")
-  metadata           Json?
-  orden              Int            @default(0)
-  createdAt          DateTime       @default(now()) @map("created_at")
-  updatedAt          DateTime       @updatedAt @map("updated_at")
+  id                  Int            @id @default(autoincrement())
+  sistemaId           Int            @map("sistema_id")
+  modeloComponenteId  Int            @map("modelo_componente_id")
+  tipo                TipoComponente
+  etiqueta            String
+  numeroSerie         String?        @map("numero_serie")
+  numEjes             Int?           @map("num_ejes")
+  metadata            Json?
+  orden               Int            @default(0)
+  componentePadreId   Int?           @map("componente_padre_id")
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
 
-  sistema            Sistema          @relation(fields: [sistemaId], references: [id], onDelete: Cascade)
-  modeloComponente   ModeloComponente @relation(fields: [modeloComponenteId], references: [id])
+  sistema            Sistema             @relation(fields: [sistemaId], references: [id], onDelete: Cascade)
+  modeloComponente   ModeloComponente    @relation(fields: [modeloComponenteId], references: [id])
+  padre              ComponenteSistema?  @relation("ComponenteJerarquia", fields: [componentePadreId], references: [id], onDelete: SetNull)
+  hijos              ComponenteSistema[] @relation("ComponenteJerarquia")
   componentesInforme ComponenteInforme[]
 
+  @@index([componentePadreId])
   @@map("componentes_sistema")
 }
 
