@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Plus, FileText, Play, Pause,
   AlertCircle, Loader2, Pencil, Save, X,
-  Droplets, Wrench,
+  Droplets, Wrench, Link2, Cpu, Bot, Cog, Ban, CheckCircle2,
 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, Column } from '@/components/shared/DataTable';
@@ -19,6 +19,7 @@ import {
 import {
   useModelo, useUpdateModelo, useVersiones, useCreateVersion, useActivateVersion,
   useModelos, useUpdateCompatibilidad, useLubricacion, useMantenimiento,
+  useModeloCompatibilidad,
 } from '@/hooks/useModelos';
 import { useAuth } from '@/hooks/useAuth';
 import { getNivelesForTipo, getNivelesFijos, tieneNivelesEditables, NIVEL_SHORT } from '@/lib/niveles';
@@ -42,7 +43,7 @@ const ESTADO_LABELS: Record<string, string> = {
   obsoleto: 'Obsoleto',
 };
 
-type TabKey = 'info' | 'lubricacion' | 'mantenimiento' | 'templates';
+type TabKey = 'info' | 'lubricacion' | 'mantenimiento' | 'compatibilidad' | 'templates';
 
 function formatIntervalo(item: any): string {
   const parts: string[] = [];
@@ -85,6 +86,9 @@ export default function ModeloDetailPage() {
   );
   const { data: mantenimientoData, isLoading: loadingMant } = useMantenimiento(
     activeTab === 'mantenimiento' ? modeloId : undefined,
+  );
+  const { data: compatibilidadData, isLoading: loadingCompat } = useModeloCompatibilidad(
+    activeTab === 'compatibilidad' ? modeloId : undefined,
   );
 
   const [createOpen, setCreateOpen] = useState(false);
@@ -318,8 +322,9 @@ export default function ModeloDetailPage() {
     { key: 'info', label: 'Info', icon: null },
     ...(isNonController ? [
       { key: 'lubricacion' as TabKey, label: 'Lubricacion', icon: <Droplets className="h-3.5 w-3.5" /> },
-      { key: 'mantenimiento' as TabKey, label: 'Mant. Preventivo', icon: <Wrench className="h-3.5 w-3.5" /> },
     ] : []),
+    { key: 'mantenimiento', label: modelo.tipo === 'controller' ? 'Mant. Cabinet' : modelo.tipo === 'drive_unit' ? 'Mant. Drive' : 'Mant. Preventivo', icon: <Wrench className="h-3.5 w-3.5" /> },
+    { key: 'compatibilidad', label: 'Compatibilidad', icon: <Link2 className="h-3.5 w-3.5" /> },
     { key: 'templates', label: `Templates (${versionList.length})`, icon: <FileText className="h-3.5 w-3.5" /> },
   ];
 
@@ -658,6 +663,179 @@ export default function ModeloDetailPage() {
               </CardContent>
             </Card>
           )}
+        </div>
+      )}
+
+      {/* ===== TAB: COMPATIBILIDAD ===== */}
+      {activeTab === 'compatibilidad' && (
+        <div className="space-y-4">
+          {loadingCompat ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : !compatibilidadData ? (
+            <div className="text-center text-muted-foreground py-8">
+              No hay datos de compatibilidad disponibles.
+            </div>
+          ) : compatibilidadData.tipo === 'external_axis' ? (
+            <>
+              {/* Whitelist familias robot permitidas */}
+              {compatibilidadData.familiasPermitidas && compatibilidadData.familiasPermitidas.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      Familias robot permitidas ({compatibilidadData.familiasPermitidas.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Este eje externo solo es compatible con robots de las siguientes familias.
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {compatibilidadData.familiasPermitidas.map(f => (
+                        <Badge key={f.id} variant="secondary" className="gap-1">
+                          <Bot className="h-3 w-3" /> {f.codigo}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Blacklist familias robot excluidas */}
+              {compatibilidadData.familiasExcluidas && compatibilidadData.familiasExcluidas.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Ban className="h-4 w-4 text-destructive" />
+                      Familias robot excluidas ({compatibilidadData.familiasExcluidas.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Compatible con cualquier robot ABB EXCEPTO estas familias.
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {compatibilidadData.familiasExcluidas.map(f => (
+                        <Badge key={f.id} variant="destructive" className="gap-1">
+                          <Bot className="h-3 w-3" /> {f.codigo}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Whitelist controladores requeridos */}
+              {compatibilidadData.controladoresRequeridos && compatibilidadData.controladoresRequeridos.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Cpu className="h-4 w-4 text-blue-500" />
+                      Controladores requeridos ({compatibilidadData.controladoresRequeridos.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Este eje requiere obligatoriamente uno de estos controladores.
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {compatibilidadData.controladoresRequeridos.map(c => (
+                        <Badge key={c.id} variant="default" className="gap-1">
+                          <Cpu className="h-3 w-3" /> {c.nombre}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {(!compatibilidadData.familiasPermitidas?.length &&
+                !compatibilidadData.familiasExcluidas?.length &&
+                !compatibilidadData.controladoresRequeridos?.length) && (
+                <div className="p-4 rounded-lg bg-muted/30 text-sm text-muted-foreground">
+                  Este eje externo no tiene reglas de compatibilidad especificas.
+                  Es compatible con cualquier combinacion robot+controlador
+                  segun la tabla de <code>compatibilidad_controlador</code>.
+                </div>
+              )}
+            </>
+          ) : (compatibilidadData.tipo === 'mechanical_unit' || compatibilidadData.tipo === 'drive_unit') ? (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Cpu className="h-4 w-4 text-blue-500" />
+                  Controladores compatibles ({compatibilidadData.controladoresCompatibles?.length ?? 0})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {compatibilidadData.controladoresCompatibles && compatibilidadData.controladoresCompatibles.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {compatibilidadData.controladoresCompatibles.map(c => (
+                      <Badge key={c.id} variant="secondary" className="gap-1">
+                        <Cpu className="h-3 w-3" /> {c.nombre}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Sin controladores asociados.</p>
+                )}
+              </CardContent>
+            </Card>
+          ) : compatibilidadData.tipo === 'controller' ? (
+            <>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Bot className="h-4 w-4 text-green-500" />
+                    Robots compatibles ({compatibilidadData.robotsCompatibles?.length ?? 0})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {compatibilidadData.robotsCompatibles && compatibilidadData.robotsCompatibles.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {compatibilidadData.robotsCompatibles.slice(0, 50).map(r => (
+                        <Badge key={r.id} variant="secondary" className="gap-1">
+                          <Bot className="h-3 w-3" /> {r.nombre}
+                        </Badge>
+                      ))}
+                      {compatibilidadData.robotsCompatibles.length > 50 && (
+                        <Badge variant="outline">+{compatibilidadData.robotsCompatibles.length - 50} más</Badge>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Sin robots asociados.</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Cog className="h-4 w-4 text-orange-500" />
+                    Ejes externos compatibles ({compatibilidadData.ejesCompatibles?.length ?? 0})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {compatibilidadData.ejesCompatibles && compatibilidadData.ejesCompatibles.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {compatibilidadData.ejesCompatibles.slice(0, 50).map(e => (
+                        <Badge key={e.id} variant="secondary" className="gap-1">
+                          <Cog className="h-3 w-3" /> {e.nombre}
+                        </Badge>
+                      ))}
+                      {compatibilidadData.ejesCompatibles.length > 50 && (
+                        <Badge variant="outline">+{compatibilidadData.ejesCompatibles.length - 50} más</Badge>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Sin ejes asociados.</p>
+                  )}
+                </CardContent>
+              </Card>
+            </>
+          ) : null}
         </div>
       )}
 

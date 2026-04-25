@@ -151,6 +151,27 @@ export function useUpdateCompatibilidad() {
   });
 }
 
+// Compatibilidad completa de un modelo (tri-via para ejes, controllers para robots, etc.)
+export function useModeloCompatibilidad(modeloId: number | undefined) {
+  return useQuery({
+    queryKey: ['modelos', modeloId, 'compatibilidad'],
+    queryFn: async () => {
+      const { data } = await api.get(`/v1/modelos/${modeloId}/compatibilidad`);
+      return data as {
+        tipo: string;
+        modelo: { id: number; nombre: string; tipo: string; familia: string | null };
+        familiasPermitidas?: { id: number; codigo: string; descripcion: string | null }[];
+        familiasExcluidas?: { id: number; codigo: string; descripcion: string | null }[];
+        controladoresRequeridos?: { id: number; nombre: string; familia: string | null }[];
+        controladoresCompatibles?: { id: number; nombre: string; familia: string | null }[];
+        robotsCompatibles?: { id: number; nombre: string; familia: string | null; tipo: string }[];
+        ejesCompatibles?: { id: number; nombre: string; familia: string | null; tipo: string }[];
+      };
+    },
+    enabled: !!modeloId,
+  });
+}
+
 // Lista de ejes externos compatibles con controlador + familia robot (tri-vía aplicada)
 export function useEjesCompatibles(
   controladorId: number | undefined,
