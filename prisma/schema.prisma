@@ -219,6 +219,8 @@ model ModeloComponente {
   soportaMultimove        Boolean?       @map("soporta_multimove")
   maxRobotsMultimove      Int?           @map("max_robots_multimove") @db.TinyInt
   maxEjesExternos         Int?           @map("max_ejes_externos") @db.TinyInt
+  // Tipo de bateria de medida (solo aplica a mechanical_unit)
+  tipoBateriaMedida       TipoBateriaMedida? @map("tipo_bateria_medida")
   createdAt               DateTime       @default(now()) @map("created_at")
   updatedAt               DateTime       @updatedAt @map("updated_at")
 
@@ -230,6 +232,7 @@ model ModeloComponente {
   versiones                VersionTemplate[]
   componentes              ComponenteSistema[]
   consumiblesNivel         ConsumibleNivel[]
+  mantenimientoHoras       MantenimientoHorasModelo[]
   nivelesAplicables        ModeloNivelAplicable[]
   lubricaciones            Lubricacion[]
   actividadesCabinet       ActividadCabinet[]
@@ -345,6 +348,7 @@ model ComponenteSistema {
   padre              ComponenteSistema?  @relation("ComponenteJerarquia", fields: [componentePadreId], references: [id], onDelete: SetNull)
   hijos              ComponenteSistema[] @relation("ComponenteJerarquia")
   componentesInforme ComponenteInforme[]
+  ofertaComponentes  OfertaComponente[]
 
   @@index([componentePadreId])
   @@map("componentes_sistema")
@@ -575,6 +579,7 @@ enum ConsumibleTipo {
   tope_mecanico
   tarjeta
   desiccant
+  limpieza
   otro
 }
 
@@ -596,12 +601,40 @@ model ConsumibleNivel {
 
 // ===== OFERTAS =====
 
+enum TipoBateriaMedida {
+  smb
+  eib
+}
+
+// Horas de trabajo + coste consumibles de limpieza por (modelo, nivel)
+model MantenimientoHorasModelo {
+  id                  Int      @id @default(autoincrement())
+  modeloComponenteId  Int      @map("modelo_componente_id")
+  nivel               String   @db.VarChar(20)
+  horas               Decimal? @db.Decimal(8, 2)
+  costeLimpieza       Decimal? @map("coste_limpieza") @db.Decimal(10, 2)
+  notas               String?  @db.VarChar(500)
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  modelo ModeloComponente @relation(fields: [modeloComponenteId], references: [id], onDelete: Cascade)
+
+  @@unique([modeloComponenteId, nivel], map: "uq_mhm")
+  @@map("mantenimiento_horas_modelo")
+}
+
+enum TipoOferta {
+  mantenimiento
+  solo_limpieza
+}
+
 model Oferta {
   id            Int            @id @default(autoincrement())
   clienteId     Int            @map("cliente_id")
   titulo        String
   referencia    String?
   tipo          TipoIntervencion
+  tipoOferta    TipoOferta     @default(mantenimiento) @map("tipo_oferta")
   estado        String         @default("borrador")
   fechaOferta   DateTime       @default(now()) @map("fecha_oferta")
   validezDias   Int            @default(30) @map("validez_dias")
@@ -619,10 +652,34 @@ model Oferta {
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
 
-  cliente  Cliente         @relation(fields: [clienteId], references: [id], onDelete: Cascade)
-  sistemas OfertaSistema[]
+  cliente     Cliente            @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  sistemas    OfertaSistema[]
+  componentes OfertaComponente[]
 
   @@map("ofertas")
+}
+
+// Detalle por componente del sistema en una oferta
+model OfertaComponente {
+  id                    Int      @id @default(autoincrement())
+  ofertaId              Int      @map("oferta_id")
+  componenteSistemaId   Int      @map("componente_sistema_id")
+  nivel                 String?  @db.VarChar(20)
+  conBaterias           Boolean  @default(true) @map("con_baterias")
+  conAceite             Boolean  @default(true) @map("con_aceite")
+  horas                 Decimal? @db.Decimal(8, 2)
+  costeConsumibles      Decimal? @map("coste_consumibles") @db.Decimal(10, 2)
+  precioConsumibles     Decimal? @map("precio_consumibles") @db.Decimal(10, 2)
+  costeLimpieza         Decimal? @map("coste_limpieza") @db.Decimal(10, 2)
+  notas                 String?  @db.VarChar(500)
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  oferta            Oferta            @relation(fields: [ofertaId], references: [id], onDelete: Cascade)
+  componenteSistema ComponenteSistema @relation(fields: [componenteSistemaId], references: [id], onDelete: Cascade)
+
+  @@unique([ofertaId, componenteSistemaId], map: "uq_oc")
+  @@map("oferta_componente")
 }
 
 model OfertaSistema {
