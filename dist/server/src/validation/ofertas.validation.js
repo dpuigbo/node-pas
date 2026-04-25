@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.upsertOfertaComponenteSchema = exports.generarIntervencionSchema = exports.updateEstadoOfertaSchema = exports.updateOfertaSchema = exports.createOfertaSchema = void 0;
+exports.bulkBloquesSchema = exports.updateBloqueSchema = exports.createBloqueSchema = exports.upsertOfertaComponenteSchema = exports.generarIntervencionSchema = exports.updateEstadoOfertaSchema = exports.updateOfertaSchema = exports.createOfertaSchema = void 0;
 const zod_1 = require("zod");
 const ofertaSistemaSchema = zod_1.z.object({
     sistemaId: zod_1.z.number().int().positive(),
@@ -50,5 +50,17 @@ exports.upsertOfertaComponenteSchema = zod_1.z.object({
     conBaterias: zod_1.z.boolean().optional(),
     conAceite: zod_1.z.boolean().optional(),
     notas: zod_1.z.string().max(500).optional().nullable(),
+});
+// Bloques de calendario para planificacion
+exports.createBloqueSchema = zod_1.z.object({
+    fecha: zod_1.z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato YYYY-MM-DD'),
+    horaInicio: zod_1.z.string().regex(/^\d{2}:\d{2}$/, 'Formato HH:MM'),
+    horaFin: zod_1.z.string().regex(/^\d{2}:\d{2}$/, 'Formato HH:MM'),
+    tipo: zod_1.z.enum(['trabajo', 'desplazamiento', 'comida']),
+    notas: zod_1.z.string().max(500).optional().nullable(),
+});
+exports.updateBloqueSchema = exports.createBloqueSchema.partial();
+exports.bulkBloquesSchema = zod_1.z.object({
+    bloques: zod_1.z.array(exports.createBloqueSchema),
 });
 //# sourceMappingURL=ofertas.validation.js.map

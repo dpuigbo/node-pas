@@ -5,6 +5,7 @@ const role_middleware_1 = require("../middleware/role.middleware");
 const database_1 = require("../config/database");
 const ofertas_validation_1 = require("../validation/ofertas.validation");
 const ofertaMantenimiento_1 = require("../lib/ofertaMantenimiento");
+const ofertaPlanificacion_1 = require("../lib/ofertaPlanificacion");
 const router = (0, express_1.Router)();
 /** Helper: convert Decimal | null to number | null */
 function dec(v) {
@@ -943,6 +944,131 @@ router.delete('/:id/componente/:cmpId', (0, role_middleware_1.requireRole)('admi
             where: { ofertaId, componenteSistemaId },
         });
         res.json({ message: 'Componente eliminado de la oferta' });
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// ===== PLANIFICACION (bloques calendario + totales auto) =====
+// GET /api/v1/ofertas/:id/planificacion
+// Devuelve bloques + totales calculados (horas trabajo/viaje/comida, dias ocupados,
+// noches fuera, dietas, hotel, recargos por bloque, total)
+router.get('/:id/planificacion', async (req, res, next) => {
+    try {
+        const ofertaId = Number(req.params.id);
+        const oferta = await database_1.prisma.oferta.findUnique({
+            where: { id: ofertaId },
+            select: { id: true },
+        });
+        if (!oferta) {
+            res.status(404).json({ error: 'Oferta no encontrada' });
+            return;
+        }
+        const bloques = await database_1.prisma.ofertaBloqueCalendario.findMany({
+            where: { ofertaId },
+            orderBy: [{ fecha: 'asc' }, { horaInicio: 'asc' }],
+        });
+        const totales = await (0, ofertaPlanificacion_1.calcularPlanificacion)(ofertaId);
+        res.json({
+            ofertaId,
+            bloques: bloques.map((b) => ({
+                id: b.id,
+                fecha: b.fecha.toISOString().slice(0, 10),
+                horaInicio: b.horaInicio,
+                horaFin: b.horaFin,
+                tipo: b.tipo,
+                notas: b.notas,
+            })),
+            totales,
+        });
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// POST /api/v1/ofertas/:id/bloques (admin) — crear bloque
+router.post('/:id/bloques', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
+    try {
+        const ofertaId = Number(req.params.id);
+        const data = ofertas_validation_1.createBloqueSchema.parse(req.body);
+        const bloque = await database_1.prisma.ofertaBloqueCalendario.create({
+            data: {
+                ofertaId,
+                fecha: new Date(data.fecha + 'T00:00:00Z'),
+                horaInicio: data.horaInicio,
+                horaFin: data.horaFin,
+                tipo: data.tipo,
+                notas: data.notas ?? null,
+            },
+        });
+        res.status(201).json({
+            ...bloque,
+            fecha: bloque.fecha.toISOString().slice(0, 10),
+        });
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// PUT /api/v1/ofertas/:id/bloques/:bloqueId (admin)
+router.put('/:id/bloques/:bloqueId', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
+    try {
+        const id = Number(req.params.bloqueId);
+        const data = ofertas_validation_1.updateBloqueSchema.parse(req.body);
+        const updateData = {};
+        if (data.fecha !== undefined)
+            updateData.fecha = new Date(data.fecha + 'T00:00:00Z');
+        if (data.horaInicio !== undefined)
+            updateData.horaInicio = data.horaInicio;
+        if (data.horaFin !== undefined)
+            updateData.horaFin = data.horaFin;
+        if (data.tipo !== undefined)
+            updateData.tipo = data.tipo;
+        if (data.notas !== undefined)
+            updateData.notas = data.notas;
+        const bloque = await database_1.prisma.ofertaBloqueCalendario.update({
+            where: { id },
+            data: updateData,
+        });
+        res.json({
+            ...bloque,
+            fecha: bloque.fecha.toISOString().slice(0, 10),
+        });
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// DELETE /api/v1/ofertas/:id/bloques/:bloqueId (admin)
+router.delete('/:id/bloques/:bloqueId', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
+    try {
+        const id = Number(req.params.bloqueId);
+        await database_1.prisma.ofertaBloqueCalendario.delete({ where: { id } });
+        res.json({ message: 'Bloque eliminado' });
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// PUT /api/v1/ofertas/:id/bloques (admin) — reemplazo total
+router.put('/:id/bloques', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
+    try {
+        const ofertaId = Number(req.params.id);
+        const { bloques } = ofertas_validation_1.bulkBloquesSchema.parse(req.body);
+        await database_1.prisma.$transaction([
+            database_1.prisma.ofertaBloqueCalendario.deleteMany({ where: { ofertaId } }),
+            database_1.prisma.ofertaBloqueCalendario.createMany({
+                data: bloques.map((b) => ({
+                    ofertaId,
+                    fecha: new Date(b.fecha + 'T00:00:00Z'),
+                    horaInicio: b.horaInicio,
+                    horaFin: b.horaFin,
+                    tipo: b.tipo,
+                    notas: b.notas ?? null,
+                })),
+            }),
+        ]);
+        res.json({ message: 'Bloques actualizados', count: bloques.length });
     }
     catch (err) {
         next(err);
