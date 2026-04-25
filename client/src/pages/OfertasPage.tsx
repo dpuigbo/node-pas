@@ -21,6 +21,7 @@ import {
   useUpdateEstadoOferta, useRecalcularOferta,
   useGenerarIntervencion, useDeleteOferta,
 } from '@/hooks/useOfertas';
+import { MantenimientoComponentes } from '@/components/ofertas/MantenimientoComponentes';
 
 const ESTADO_BADGE: Record<string, string> = {
   borrador: 'bg-gray-100 text-gray-700',
@@ -172,6 +173,7 @@ function CrearOfertaDialog({ open, onOpenChange }: { open: boolean; onOpenChange
   const [titulo, setTitulo] = useState('');
   const [referencia, setReferencia] = useState('');
   const [tipo, setTipo] = useState<'preventiva' | 'correctiva'>('preventiva');
+  const [tipoOferta, setTipoOferta] = useState<'mantenimiento' | 'solo_limpieza'>('mantenimiento');
   const [validezDias, setValidezDias] = useState(30);
   const [notas, setNotas] = useState('');
   const [sistemas, setSistemas] = useState<SistemaOferta[]>([]);
@@ -196,6 +198,7 @@ function CrearOfertaDialog({ open, onOpenChange }: { open: boolean; onOpenChange
     setTitulo('');
     setReferencia('');
     setTipo('preventiva');
+    setTipoOferta('mantenimiento');
     setValidezDias(30);
     setNotas('');
     setSistemas([]);
@@ -249,6 +252,7 @@ function CrearOfertaDialog({ open, onOpenChange }: { open: boolean; onOpenChange
         titulo,
         referencia: referencia || null,
         tipo,
+        tipoOferta,
         validezDias,
         notas: notas || null,
         sistemas,
@@ -305,7 +309,7 @@ function CrearOfertaDialog({ open, onOpenChange }: { open: boolean; onOpenChange
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <Label>Tipo *</Label>
               <Select value={tipo} onValueChange={(v: any) => setTipo(v)}>
@@ -313,6 +317,16 @@ function CrearOfertaDialog({ open, onOpenChange }: { open: boolean; onOpenChange
                 <SelectContent>
                   <SelectItem value="preventiva">Preventiva</SelectItem>
                   <SelectItem value="correctiva">Correctiva</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Modalidad *</Label>
+              <Select value={tipoOferta} onValueChange={(v: any) => setTipoOferta(v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
+                  <SelectItem value="solo_limpieza">Solo limpieza</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -554,6 +568,9 @@ function OfertaDetailDialog({ ofertaId, open, onOpenChange }: {
               <Badge className={TIPO_BADGE[oferta.tipo] ?? ''}>
                 {oferta.tipo}
               </Badge>
+              {oferta.tipoOferta === 'solo_limpieza' && (
+                <Badge variant="outline" className="text-xs">Solo limpieza</Badge>
+              )}
             </DialogTitle>
           </DialogHeader>
 
@@ -663,6 +680,12 @@ function OfertaDetailDialog({ ofertaId, open, onOpenChange }: {
                 </table>
               </div>
             </div>
+
+            {/* Mantenimiento por componente (oferta_componente) */}
+            <MantenimientoComponentes
+              ofertaId={oferta.id}
+              readOnly={oferta.estado !== 'borrador'}
+            />
 
             {/* Surcharge breakdown */}
             {hasRecargos && (

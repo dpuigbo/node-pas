@@ -77,3 +77,97 @@ export function useDeleteOferta() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['ofertas'] }),
   });
 }
+
+// ===== OFERTA-COMPONENTE (mantenimiento por componente) =====
+
+export interface NivelAplicable {
+  codigo: string;
+  nombre: string;
+  orden: number;
+  horas: number | null;
+  costeLimpieza: number | null;
+  tieneConsumibles: boolean;
+}
+
+export interface OfertaComponenteSeleccion {
+  nivel: string | null;
+  conBaterias: boolean;
+  conAceite: boolean;
+  horas: number | null;
+  costeConsumibles: number | null;
+  precioConsumibles: number | null;
+  costeLimpieza: number | null;
+  notas: string | null;
+}
+
+export interface OfertaComponenteItem {
+  componenteSistemaId: number;
+  sistemaId: number;
+  sistemaNombre: string;
+  tipo: string;
+  etiqueta: string;
+  numeroSerie: string | null;
+  numEjes: number | null;
+  componentePadreId: number | null;
+  modeloId: number;
+  modeloNombre: string;
+  tipoBateriaMedida: 'smb' | 'eib' | null;
+  nivelesAplicables: NivelAplicable[];
+  seleccion: OfertaComponenteSeleccion | null;
+}
+
+export function useOfertaComponentesDisponibles(ofertaId: number | undefined) {
+  return useQuery({
+    queryKey: ['ofertas', ofertaId, 'componentes-disponibles'],
+    queryFn: async () => {
+      const { data } = await api.get<{
+        ofertaId: number;
+        tipoOferta: 'mantenimiento' | 'solo_limpieza';
+        componentes: OfertaComponenteItem[];
+      }>(`/v1/ofertas/${ofertaId}/componentes-disponibles`);
+      return data;
+    },
+    enabled: !!ofertaId,
+  });
+}
+
+export function useUpsertOfertaComponente(ofertaId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ cmpId, ...body }: {
+      cmpId: number;
+      nivel?: string | null;
+      conBaterias?: boolean;
+      conAceite?: boolean;
+      notas?: string | null;
+    }) => api.put(`/v1/ofertas/${ofertaId}/componente/${cmpId}`, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['ofertas', ofertaId, 'componentes-disponibles'] });
+      qc.invalidateQueries({ queryKey: ['ofertas', ofertaId] });
+    },
+  });
+}
+
+export function useDeleteOfertaComponente(ofertaId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (cmpId: number) =>
+      api.delete(`/v1/ofertas/${ofertaId}/componente/${cmpId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['ofertas', ofertaId, 'componentes-disponibles'] });
+    },
+  });
+}
+
+export function useNivelesAplicables(modeloId: number | undefined) {
+  return useQuery({
+    queryKey: ['modelos', modeloId, 'niveles-aplicables'],
+    queryFn: async () => {
+      const { data } = await api.get<{ modeloId: number; niveles: NivelAplicable[] }>(
+        `/v1/modelos/${modeloId}/niveles-aplicables`
+      );
+      return data;
+    },
+    enabled: !!modeloId,
+  });
+}
