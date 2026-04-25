@@ -296,6 +296,63 @@ router.delete('/:sistemaId/componentes/:componenteId', (0, role_middleware_1.req
     }
 });
 // ===== COMPATIBILIDAD EJES EXTERNOS (tri-vía v2) =====
+// GET /api/v1/sistemas/ejes-compatibles?controladorId=X&robotFamiliaId=Y
+// Devuelve solo los ejes externos compatibles con esa combinacion segun:
+//   1. compatibilidad_controlador (basico controlador↔eje)
+//   2. compatibilidad_eje_permitida (whitelist familias robot)
+//   3. compatibilidad_eje_excluye (blacklist familias robot)
+//   4. compatibilidad_eje_controlador (whitelist controladores)
+router.get('/ejes-compatibles', async (req, res, next) => {
+    try {
+        const controladorId = req.query.controladorId ? Number(req.query.controladorId) : undefined;
+        const robotFamiliaId = req.query.robotFamiliaId ? Number(req.query.robotFamiliaId) : undefined;
+        if (!controladorId) {
+            res.status(400).json({ error: 'controladorId es obligatorio' });
+            return;
+        }
+        // 1. Ejes compatibles con la controladora (compatibilidad_controlador)
+        const candidatos = await database_1.prisma.modeloComponente.findMany({
+            where: {
+                tipo: 'external_axis',
+                controladoresCompatibles: { some: { controladorId } },
+            },
+            orderBy: [{ familia: 'asc' }, { nombre: 'asc' }],
+            include: {
+                fabricante: { select: { id: true, nombre: true } },
+                compatEjePermitida: { select: { familiaId: true } },
+                compatEjeExcluye: { select: { familiaId: true } },
+                compatEjeControladorEje: { select: { controladorModeloId: true } },
+            },
+        });
+        // 2. Aplicar reglas tri-vía
+        const compatibles = candidatos.filter((eje) => {
+            // Whitelist de familias robot
+            if (eje.compatEjePermitida.length > 0) {
+                if (!robotFamiliaId)
+                    return false; // si hay whitelist, necesitamos saber familia
+                if (!eje.compatEjePermitida.some(p => p.familiaId === robotFamiliaId))
+                    return false;
+            }
+            // Blacklist de familias robot
+            if (robotFamiliaId && eje.compatEjeExcluye.some(e => e.familiaId === robotFamiliaId)) {
+                return false;
+            }
+            // Whitelist de controladores
+            if (eje.compatEjeControladorEje.length > 0) {
+                if (!eje.compatEjeControladorEje.some(c => c.controladorModeloId === controladorId)) {
+                    return false;
+                }
+            }
+            return true;
+        });
+        // Stripear las relaciones tri-via del response (solo informacion)
+        const result = compatibles.map(({ compatEjePermitida, compatEjeExcluye, compatEjeControladorEje, ...rest }) => rest);
+        res.json(result);
+    }
+    catch (err) {
+        next(err);
+    }
+});
 // GET /api/v1/sistemas/ejes/:ejeModeloId/compatibilidad?robotFamiliaId=X&controladorModeloId=Y
 router.get('/ejes/:ejeModeloId/compatibilidad', async (req, res, next) => {
     try {
