@@ -5,7 +5,7 @@ import {
   AlertCircle, Pencil, Settings,
 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { DataTable, Column } from '@/components/shared/DataTable';
+// DataTable reemplazado por ComponentesJerarquia (vista en arbol)
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,6 +34,72 @@ const TIPO_ICON: Record<string, React.ReactNode> = {
   drive_unit: <Cpu className="h-4 w-4 text-purple-500" />,
   external_axis: <Cog className="h-4 w-4 text-orange-500" />,
 };
+
+// Vista jerarquica: agrupa componentes segun componente_padre_id
+// Controladora top, Robots/DUs hijos de ctrl, Ejes hijos de robots
+function ComponentesJerarquia({
+  componentes, isAdmin, onEdit, onDelete,
+}: {
+  componentes: any[];
+  isAdmin: boolean;
+  onEdit: (c: any) => void;
+  onDelete: (id: number, nombre: string) => void;
+}) {
+  // Agrupar hijos por padre_id
+  const byPadre = new Map<number | null, any[]>();
+  for (const c of componentes) {
+    const key = c.componentePadreId ?? null;
+    if (!byPadre.has(key)) byPadre.set(key, []);
+    byPadre.get(key)!.push(c);
+  }
+  // Top-level: padre null
+  const topLevel = byPadre.get(null) ?? [];
+
+  const renderRow = (comp: any, depth: number) => {
+    const hijos = byPadre.get(comp.id) ?? [];
+    const indent = depth * 24;
+    return (
+      <div key={comp.id}>
+        <div
+          className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/30 transition-colors"
+          style={{ marginLeft: indent }}
+        >
+          {TIPO_ICON[comp.tipo]}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-medium">{comp.etiqueta}</span>
+              <Badge variant="secondary" className="text-[10px]">{TIPO_LABELS[comp.tipo] ?? comp.tipo}</Badge>
+            </div>
+            <div className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
+              <span>{comp.modeloComponente?.nombre ?? '—'}</span>
+              {comp.numeroSerie && <span>· S/N: {comp.numeroSerie}</span>}
+              {comp.numEjes != null && <span>· {comp.numEjes} ejes</span>}
+            </div>
+          </div>
+          {isAdmin && (
+            <div className="flex gap-0.5">
+              <Button variant="ghost" size="icon" className="h-7 w-7"
+                onClick={() => onEdit(comp)}>
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"
+                onClick={() => onDelete(comp.id, comp.etiqueta)}>
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
+        </div>
+        {hijos.map((h: any) => renderRow(h, depth + 1))}
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-1">
+      {topLevel.map((c) => renderRow(c, 0))}
+    </div>
+  );
+}
 
 export default function SistemaDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -191,49 +257,7 @@ export default function SistemaDetailPage() {
     ? etiqueta.trim()
     : modeloId > 0 && etiqueta.trim();
 
-  const compCols: Column<any>[] = [
-    {
-      key: 'tipo',
-      header: '',
-      className: 'w-8',
-      render: (c) => TIPO_ICON[c.tipo] ?? null,
-    },
-    { key: 'etiqueta', header: 'Etiqueta' },
-    {
-      key: 'tipoLabel',
-      header: 'Tipo',
-      render: (c) => (
-        <Badge variant="secondary">{TIPO_LABELS[c.tipo] ?? c.tipo}</Badge>
-      ),
-    },
-    {
-      key: 'modelo',
-      header: 'Modelo',
-      render: (c) => c.modeloComponente?.nombre ?? '-',
-    },
-    { key: 'numeroSerie', header: 'N/S', render: (c) => c.numeroSerie || '-' },
-    {
-      key: 'numEjes',
-      header: 'Ejes',
-      render: (c) => c.numEjes ?? '-',
-    },
-    ...(isAdmin
-      ? [{
-          key: 'acciones' as const,
-          header: '',
-          render: (c: any) => (
-            <div className="flex gap-0.5">
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); openEdit(c); }}>
-                <Pencil className="h-3.5 w-3.5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(c.id, c.etiqueta); }}>
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          ),
-        }]
-      : []),
-  ];
+  // compCols (DataTable) reemplazado por ComponentesJerarquia (vista en arbol)
 
   return (
     <div className="space-y-6">
@@ -306,12 +330,16 @@ export default function SistemaDetailPage() {
             </div>
           )}
         </div>
-        <DataTable
-          columns={compCols}
-          data={componentes}
-          emptyMessage="Sin componentes."
-          rowKey={(c) => c.id}
-        />
+        {componentes.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-8 text-center">Sin componentes.</p>
+        ) : (
+          <ComponentesJerarquia
+            componentes={componentes}
+            isAdmin={isAdmin}
+            onEdit={openEdit}
+            onDelete={handleDelete}
+          />
+        )}
       </div>
 
       {/* Add Robot / Add Eje / Edit Dialog */}
