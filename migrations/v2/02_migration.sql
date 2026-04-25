@@ -29,24 +29,31 @@ INSERT IGNORE INTO lu_generacion_controlador (codigo, nombre, drive_system, anio
 -- B. POBLAR lu_tipo_actividad (normaliza typos "Inspección"/"Inspeccion")
 -- ------------------------------------------------------------------------------
 INSERT IGNORE INTO lu_tipo_actividad (codigo, nombre, categoria, requiere_parada, orden) VALUES
-  ('inspeccion',            'Inspección',              'inspeccion',  0, 10),
-  ('cambio_aceite',         'Cambio aceite',           'lubricacion', 1, 20),
-  ('cambio_grasa',          'Cambio grasa',            'lubricacion', 1, 21),
-  ('cambio_aceite_grasa',   'Cambio aceite/grasa',     'lubricacion', 1, 22),
-  ('lubricacion',           'Lubricación',             'lubricacion', 0, 23),
-  ('engrase',               'Engrase',                 'lubricacion', 0, 24),
-  ('reemplazo',             'Reemplazo',               'reemplazo',   1, 30),
-  ('inspeccion_reemplazo',  'Inspeccion + reemplazo',  'reemplazo',   1, 31),
-  ('overhaul',              'Overhaul',                'overhaul',    1, 40),
-  ('analisis',              'Análisis',                'analisis',    0, 50),
-  ('analisis_agua_aceite',  'Analisis agua en aceite', 'analisis',    0, 51),
-  ('antioxidante',          'Antioxidante',            'otro',        0, 60),
-  ('verificacion',          'Verificación',            'inspeccion',  0, 11),
-  ('inspeccion_lubric',     'Inspección / Lubricación','lubricacion', 0, 25),
-  ('inspeccion_diaria',     'Inspección diaria',       'inspeccion',  0, 12),
-  ('mantenimiento_diario',  'Mantenimiento diario',    'otro',        0, 70),
-  ('mantenimiento_recom',   'Mantenimiento recomendado','otro',       0, 71),
-  ('gearboxes',             'Gearboxes',               'otro',        0, 72);
+  ('inspeccion',                'Inspección',                       'inspeccion',  0, 10),
+  ('cambio_aceite',             'Cambio aceite',                    'lubricacion', 1, 20),
+  ('cambio_grasa',              'Cambio grasa',                     'lubricacion', 1, 21),
+  ('cambio_aceite_grasa',       'Cambio aceite/grasa',              'lubricacion', 1, 22),
+  ('lubricacion',               'Lubricación',                      'lubricacion', 0, 23),
+  ('engrase',                   'Engrase',                          'lubricacion', 0, 24),
+  ('reemplazo',                 'Reemplazo',                        'reemplazo',   1, 30),
+  ('inspeccion_reemplazo',      'Inspeccion + reemplazo',           'reemplazo',   1, 31),
+  ('overhaul',                  'Overhaul',                         'overhaul',    1, 40),
+  ('analisis',                  'Análisis',                         'analisis',    0, 50),
+  ('analisis_agua_aceite',      'Analisis agua en aceite',          'analisis',    0, 51),
+  ('antioxidante',              'Antioxidante',                     'otro',        0, 60),
+  ('verificacion',              'Verificación',                     'inspeccion',  0, 11),
+  ('inspeccion_lubric',         'Inspección / Lubricación',         'lubricacion', 0, 25),
+  ('lubricacion_inspeccion_v2', 'Lubricación / Inspección',         'lubricacion', 0, 26),
+  ('inspeccion_diaria',         'Inspección diaria',                'inspeccion',  0, 12),
+  ('mantenimiento_diario',      'Mantenimiento diario',             'otro',        0, 70),
+  ('mantenimiento_recom',       'Mantenimiento recomendado',        'otro',        0, 71),
+  ('gearboxes',                 'Gearboxes',                        'otro',        0, 72),
+  -- Tipos descubiertos al ejecutar 03 (no estaban en 02 original)
+  ('limpieza',                  'Limpieza',                         'otro',        0, 80),
+  ('limpieza_reemplazo',        'Limpieza/Reemplazo',               'reemplazo',   1, 35),
+  ('mantenimiento_general',     'Mantenimiento general',            'otro',        0, 75),
+  ('prueba_funcional',          'Prueba funcional',                 'inspeccion',  0, 13),
+  ('reemplazo_preventivo',      'Reemplazo (preventivo programado)','reemplazo',   1, 32);
 
 -- ------------------------------------------------------------------------------
 -- C. POBLAR lu_nivel_mantenimiento (sincronizado con CSVs existentes en modelos_componente)
