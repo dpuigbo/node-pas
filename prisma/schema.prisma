@@ -655,8 +655,34 @@ model Oferta {
   cliente     Cliente            @relation(fields: [clienteId], references: [id], onDelete: Cascade)
   sistemas    OfertaSistema[]
   componentes OfertaComponente[]
+  bloques     OfertaBloqueCalendario[]
 
   @@map("ofertas")
+}
+
+enum TipoBloqueOferta {
+  trabajo
+  desplazamiento
+  comida
+}
+
+// Bloque de tiempo en el calendario de planificacion de una oferta
+model OfertaBloqueCalendario {
+  id          Int              @id @default(autoincrement())
+  ofertaId    Int              @map("oferta_id")
+  fecha       DateTime         @db.Date
+  horaInicio  String           @map("hora_inicio") @db.VarChar(8)
+  horaFin     String           @map("hora_fin") @db.VarChar(8)
+  tipo        TipoBloqueOferta
+  notas       String?          @db.VarChar(500)
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  oferta Oferta @relation(fields: [ofertaId], references: [id], onDelete: Cascade)
+
+  @@index([ofertaId])
+  @@index([ofertaId, fecha])
+  @@map("oferta_bloque_calendario")
 }
 
 // Detalle por componente del sistema en una oferta

@@ -55,6 +55,21 @@ export const upsertOfertaComponenteSchema = z.object({
   notas: z.string().max(500).optional().nullable(),
 });
 
+// Bloques de calendario para planificacion
+export const createBloqueSchema = z.object({
+  fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato YYYY-MM-DD'),
+  horaInicio: z.string().regex(/^\d{2}:\d{2}$/, 'Formato HH:MM'),
+  horaFin: z.string().regex(/^\d{2}:\d{2}$/, 'Formato HH:MM'),
+  tipo: z.enum(['trabajo', 'desplazamiento', 'comida']),
+  notas: z.string().max(500).optional().nullable(),
+});
+
+export const updateBloqueSchema = createBloqueSchema.partial();
+
+export const bulkBloquesSchema = z.object({
+  bloques: z.array(createBloqueSchema),
+});
+
 export type CreateOfertaInput = z.infer<typeof createOfertaSchema>;
 export type UpdateOfertaInput = z.infer<typeof updateOfertaSchema>;
 export type UpsertOfertaComponenteInput = z.infer<typeof upsertOfertaComponenteSchema>;
