@@ -45,6 +45,31 @@ export function useNivelesMantenimiento() {
   });
 }
 
+export function useConsumiblesCatalogo(filters?: { tipo?: string; subtipo?: string; q?: string }) {
+  return useQuery({
+    queryKey: ['lookups', 'consumibles-catalogo', filters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.tipo) params.set('tipo', filters.tipo);
+      if (filters?.subtipo) params.set('subtipo', filters.subtipo);
+      if (filters?.q) params.set('q', filters.q);
+      const { data } = await api.get(`/v1/lookups/consumibles-catalogo?${params}`);
+      return data as {
+        id: number;
+        tipo: string;
+        subtipo: string | null;
+        nombre: string;
+        codigoAbb: string | null;
+        fabricante: string | null;
+        unidad: string | null;
+        equivalencias: string | null;
+        apariciones: number;
+        notas: string | null;
+      }[];
+    },
+  });
+}
+
 export function useEquivalencias(filters?: { familiaId?: number; tipo?: string }) {
   return useQuery({
     queryKey: ['lookups', 'equivalencias', filters],

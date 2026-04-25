@@ -14,7 +14,7 @@ import {
   useAceites, useCreateAceite, useUpdateAceite, useDeleteAceite,
   useConsumibles, useCreateConsumible, useUpdateConsumible, useDeleteConsumible,
 } from '@/hooks/useCatalogos';
-import { usePuntosControl, useEquivalencias } from '@/hooks/useLookups';
+import { usePuntosControl, useEquivalencias, useConsumiblesCatalogo } from '@/hooks/useLookups';
 import { useAuth } from '@/hooks/useAuth';
 
 const UNIDADES = ['litros', 'ml', 'kg', 'g', 'cm³', 'unidades'] as const;
@@ -405,6 +405,115 @@ function ConsumiblesTable({ items, isLoading, isAdmin, onCreate, onUpdate, onDel
 
 // ===== Page =====
 
+// ===== Catalogo Consumibles v2 =====
+const CONSUMIBLE_TIPO_LABELS: Record<string, string> = {
+  aceite: 'Aceite',
+  grasa: 'Grasa',
+  bateria: 'Bateria',
+  filtro: 'Filtro',
+  ventilador: 'Ventilador',
+  rodamiento: 'Rodamiento',
+  sello: 'Sello',
+  cable: 'Cable',
+  ball_screw: 'Ball Screw',
+  tope_mecanico: 'Tope mecanico',
+  tarjeta: 'Tarjeta',
+  desiccant: 'Desiccant',
+  otro: 'Otro',
+};
+
+function ConsumiblesCatalogoSection() {
+  const [tipo, setTipo] = useState<string>('');
+  const [q, setQ] = useState('');
+  const { data: items, isLoading } = useConsumiblesCatalogo({
+    tipo: tipo || undefined,
+    q: q || undefined,
+  });
+
+  const cols: Column<any>[] = [
+    {
+      key: 'tipo',
+      header: 'Tipo',
+      render: (c) => (
+        <div className="flex flex-col gap-0.5">
+          <Badge variant="secondary" className="w-fit">{CONSUMIBLE_TIPO_LABELS[c.tipo] ?? c.tipo}</Badge>
+          {c.subtipo && <span className="text-[10px] text-muted-foreground">{c.subtipo}</span>}
+        </div>
+      ),
+    },
+    { key: 'nombre', header: 'Nombre' },
+    {
+      key: 'codigoAbb',
+      header: 'Codigo ABB',
+      render: (c) => c.codigoAbb
+        ? <span className="font-mono text-xs">{c.codigoAbb}</span>
+        : <span className="text-muted-foreground">—</span>,
+    },
+    {
+      key: 'fabricante',
+      header: 'Fabricante',
+      render: (c) => c.fabricante || <span className="text-muted-foreground">—</span>,
+    },
+    {
+      key: 'unidad',
+      header: 'Unidad',
+      render: (c) => c.unidad || <span className="text-muted-foreground">—</span>,
+    },
+    {
+      key: 'apariciones',
+      header: 'Usos',
+      render: (c) => c.apariciones > 0
+        ? <Badge variant="outline" className="text-[10px]">{c.apariciones}</Badge>
+        : <span className="text-muted-foreground text-xs">0</span>,
+    },
+    {
+      key: 'equivalencias',
+      header: 'Equivalencias',
+      render: (c) => c.equivalencias
+        ? <span className="text-xs text-muted-foreground line-clamp-1" title={c.equivalencias}>{c.equivalencias}</span>
+        : <span className="text-muted-foreground">—</span>,
+    },
+  ];
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h2 className="text-xl font-semibold">Catalogo Unificado de Consumibles</h2>
+          <p className="text-sm text-muted-foreground">
+            Aceites, grasas, baterias, filtros, ventiladores y otros consumibles del catalogo ABB v7
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Input
+            placeholder="Buscar nombre o codigo..."
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            className="w-56"
+          />
+          <select
+            value={tipo}
+            onChange={(e) => setTipo(e.target.value)}
+            className={SELECT_CLASS + ' w-44'}
+          >
+            <option value="">Todos los tipos</option>
+            {Object.entries(CONSUMIBLE_TIPO_LABELS).map(([k, v]) => (
+              <option key={k} value={k}>{v}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <DataTable
+        columns={cols}
+        data={items || []}
+        isLoading={isLoading}
+        emptyMessage="Sin consumibles"
+        rowKey={(c) => c.id}
+      />
+    </div>
+  );
+}
+
 // ===== Equivalencias entre Familias =====
 const TIPO_EQUIV_LABELS: Record<string, string> = {
   lubricacion: 'Lubricacion',
@@ -580,6 +689,7 @@ export default function CatalogosPage() {
         onUpdate={(d: any) => updateConsumible.mutateAsync(d)}
         onDelete={(id: number) => deleteConsumible.mutateAsync(id)}
       />
+      <ConsumiblesCatalogoSection />
       <EquivalenciasSection />
       <PuntosControlSection />
     </div>

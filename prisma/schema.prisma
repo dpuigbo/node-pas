@@ -514,6 +514,42 @@ model Consumible {
   @@map("consumibles")
 }
 
+// Catalogo unificado de consumibles (v2) — fuente de verdad para
+// pedidos y trazabilidad de aceites/grasas/baterias/filtros/etc.
+model ConsumibleCatalogo {
+  id            Int      @id @default(autoincrement())
+  tipo          ConsumibleTipo
+  subtipo       String?  @db.VarChar(80)
+  nombre        String   @unique @db.VarChar(200)
+  codigoAbb     String?  @map("codigo_abb") @db.VarChar(80)
+  fabricante    String?  @db.VarChar(100)
+  unidad        String?  @db.VarChar(20)
+  equivalencias String?  @db.Text
+  apariciones   Int      @default(0)
+  notas         String?  @db.Text
+  activo        Boolean  @default(true)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("consumible_catalogo")
+}
+
+enum ConsumibleTipo {
+  aceite
+  grasa
+  bateria
+  filtro
+  ventilador
+  rodamiento
+  sello
+  cable
+  ball_screw
+  tope_mecanico
+  tarjeta
+  desiccant
+  otro
+}
+
 model ConsumibleNivel {
   id              Int            @id @default(autoincrement())
   modeloId        Int            @map("modelo_id")

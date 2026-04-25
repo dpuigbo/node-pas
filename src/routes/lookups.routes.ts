@@ -91,6 +91,26 @@ router.get('/aceites', async (req: Request, res: Response, next: NextFunction) =
   } catch (err) { next(err); }
 });
 
+// GET /api/v1/lookups/consumibles-catalogo?tipo=aceite&subtipo=engranaje&q=...
+router.get('/consumibles-catalogo', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const where: any = { activo: true };
+    if (req.query.tipo) where.tipo = String(req.query.tipo);
+    if (req.query.subtipo) where.subtipo = String(req.query.subtipo);
+    if (req.query.q) {
+      where.OR = [
+        { nombre: { contains: String(req.query.q) } },
+        { codigoAbb: { contains: String(req.query.q) } },
+      ];
+    }
+    const items = await prisma.consumibleCatalogo.findMany({
+      where,
+      orderBy: [{ tipo: 'asc' }, { subtipo: 'asc' }, { nombre: 'asc' }],
+    });
+    res.json(items);
+  } catch (err) { next(err); }
+});
+
 // GET /api/v1/lookups/equivalencias?familiaId=X&tipo=lubricacion
 router.get('/equivalencias', async (req: Request, res: Response, next: NextFunction) => {
   try {
