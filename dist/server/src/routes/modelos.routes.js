@@ -159,6 +159,84 @@ router.get('/:id', async (req, res, next) => {
         next(err);
     }
 });
+// GET /api/v1/modelos/:id/compatibilidad
+// Devuelve la compatibilidad completa segun tipo:
+//   external_axis: tri-via (whitelist familias, blacklist familias, whitelist controladores)
+//   mechanical_unit: controllers compatibles
+//   controller: modelos compatibles (robots + ejes)
+//   drive_unit: controllers compatibles
+router.get('/:id/compatibilidad', async (req, res, next) => {
+    try {
+        const modeloId = Number(req.params.id);
+        const modelo = await database_1.prisma.modeloComponente.findUnique({
+            where: { id: modeloId },
+            select: { id: true, nombre: true, tipo: true, familia: true, familiaId: true },
+        });
+        if (!modelo) {
+            res.status(404).json({ error: 'Modelo no encontrado' });
+            return;
+        }
+        if (modelo.tipo === 'external_axis') {
+            const [permitidas, excluidas, controladores] = await Promise.all([
+                database_1.prisma.compatibilidadEjePermitida.findMany({
+                    where: { ejeModeloId: modeloId },
+                    include: { familia: { select: { id: true, codigo: true, descripcion: true } } },
+                }),
+                database_1.prisma.compatibilidadEjeExcluye.findMany({
+                    where: { ejeModeloId: modeloId },
+                    include: { familia: { select: { id: true, codigo: true, descripcion: true } } },
+                }),
+                database_1.prisma.compatibilidadEjeControlador.findMany({
+                    where: { ejeModeloId: modeloId },
+                    include: { controlador: { select: { id: true, nombre: true, familia: true } } },
+                }),
+            ]);
+            res.json({
+                tipo: 'external_axis',
+                modelo,
+                familiasPermitidas: permitidas.map(p => p.familia),
+                familiasExcluidas: excluidas.map(e => e.familia),
+                controladoresRequeridos: controladores.map(c => c.controlador),
+            });
+            return;
+        }
+        if (modelo.tipo === 'mechanical_unit' || modelo.tipo === 'drive_unit') {
+            const compat = await database_1.prisma.compatibilidadControlador.findMany({
+                where: { componenteId: modeloId },
+                include: { controlador: { select: { id: true, nombre: true, familia: true } } },
+            });
+            res.json({
+                tipo: modelo.tipo,
+                modelo,
+                controladoresCompatibles: compat.map(c => c.controlador),
+            });
+            return;
+        }
+        if (modelo.tipo === 'controller') {
+            const [robots, ejes] = await Promise.all([
+                database_1.prisma.compatibilidadControlador.findMany({
+                    where: { controladorId: modeloId },
+                    include: { componente: { select: { id: true, nombre: true, familia: true, tipo: true } } },
+                }).then(rows => rows.filter(r => r.componente.tipo === 'mechanical_unit')),
+                database_1.prisma.compatibilidadControlador.findMany({
+                    where: { controladorId: modeloId },
+                    include: { componente: { select: { id: true, nombre: true, familia: true, tipo: true } } },
+                }).then(rows => rows.filter(r => r.componente.tipo === 'external_axis')),
+            ]);
+            res.json({
+                tipo: 'controller',
+                modelo,
+                robotsCompatibles: robots.map(r => r.componente),
+                ejesCompatibles: ejes.map(r => r.componente),
+            });
+            return;
+        }
+        res.json({ tipo: modelo.tipo, modelo });
+    }
+    catch (err) {
+        next(err);
+    }
+});
 // POST /api/v1/modelos (admin)
 router.post('/', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
     try {
