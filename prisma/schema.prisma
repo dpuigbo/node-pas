@@ -531,7 +531,11 @@ model ConsumibleCatalogo {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  lubricaciones Lubricacion[]
+  lubricaciones      Lubricacion[]
+  actividadesPrev    ActividadConsumible[]
+  actividadesCabinet ActividadCabinetConsumible[]
+  actividadesDriveMod ActividadDriveModuleConsumible[]
+  puntosControl      PuntoControlGenerico[]
 
   @@map("consumible_catalogo")
 }
@@ -717,12 +721,28 @@ model ActividadPreventiva {
   intervaloFoundryMeses  Int?                      @map("intervalo_foundry_meses") @db.SmallInt
   notas                  String?                   @db.Text
 
-  familia       LuFamilia       @relation(fields: [familiaId], references: [id])
-  tipoActividad LuTipoActividad @relation(fields: [tipoActividadId], references: [id])
+  familia       LuFamilia            @relation(fields: [familiaId], references: [id])
+  tipoActividad LuTipoActividad      @relation(fields: [tipoActividadId], references: [id])
+  consumibles   ActividadConsumible[]
 
   @@index([familiaId])
   @@index([tipoActividadId])
   @@map("actividad_preventiva")
+}
+
+model ActividadConsumible {
+  id                    Int     @id @default(autoincrement())
+  actividadPreventivaId Int     @map("actividad_preventiva_id")
+  consumibleId          Int     @map("consumible_id")
+  cantidad              Decimal? @db.Decimal(10, 3)
+  unidad                String?  @db.VarChar(20)
+  notas                 String?  @db.VarChar(255)
+
+  actividad  ActividadPreventiva @relation(fields: [actividadPreventivaId], references: [id], onDelete: Cascade)
+  consumible ConsumibleCatalogo  @relation(fields: [consumibleId], references: [id])
+
+  @@unique([actividadPreventivaId, consumibleId], map: "uq_act_cons")
+  @@map("actividad_consumible")
 }
 
 enum IntervaloCondicion {
@@ -747,11 +767,27 @@ model ActividadCabinet {
   intervaloTextoLegacy   String?            @map("intervalo_texto_legacy") @db.VarChar(200)
   notas                  String?            @db.Text
 
-  cabinetModelo ModeloComponente @relation(fields: [cabinetModeloId], references: [id], onDelete: Cascade)
-  tipoActividad LuTipoActividad  @relation(fields: [tipoActividadId], references: [id])
+  cabinetModelo ModeloComponente            @relation(fields: [cabinetModeloId], references: [id], onDelete: Cascade)
+  tipoActividad LuTipoActividad             @relation(fields: [tipoActividadId], references: [id])
+  consumibles   ActividadCabinetConsumible[]
 
   @@index([cabinetModeloId])
   @@map("actividad_cabinet")
+}
+
+model ActividadCabinetConsumible {
+  id                  Int     @id @default(autoincrement())
+  actividadCabinetId  Int     @map("actividad_cabinet_id")
+  consumibleId        Int     @map("consumible_id")
+  cantidad            Decimal? @db.Decimal(10, 3)
+  unidad              String?  @db.VarChar(20)
+  notas               String?  @db.VarChar(255)
+
+  actividad  ActividadCabinet   @relation(fields: [actividadCabinetId], references: [id], onDelete: Cascade)
+  consumible ConsumibleCatalogo @relation(fields: [consumibleId], references: [id])
+
+  @@unique([actividadCabinetId, consumibleId], map: "uq_actcab_cons")
+  @@map("actividad_cabinet_consumible")
 }
 
 enum TipoCabinet {
@@ -773,12 +809,28 @@ model ActividadDriveModule {
   intervaloTextoLegacy     String?            @map("intervalo_texto_legacy") @db.VarChar(200)
   notas                    String?            @db.Text
 
-  driveModuleModelo   ModeloComponente @relation("DriveModuleModelo", fields: [driveModuleModeloId], references: [id], onDelete: Cascade)
-  controladorAsociado ModeloComponente @relation("DriveModuleCtrl", fields: [controladorAsociadoId], references: [id])
-  tipoActividad       LuTipoActividad  @relation(fields: [tipoActividadId], references: [id])
+  driveModuleModelo   ModeloComponente                @relation("DriveModuleModelo", fields: [driveModuleModeloId], references: [id], onDelete: Cascade)
+  controladorAsociado ModeloComponente                @relation("DriveModuleCtrl", fields: [controladorAsociadoId], references: [id])
+  tipoActividad       LuTipoActividad                 @relation(fields: [tipoActividadId], references: [id])
+  consumibles         ActividadDriveModuleConsumible[]
 
   @@index([driveModuleModeloId])
   @@map("actividad_drive_module")
+}
+
+model ActividadDriveModuleConsumible {
+  id                       Int     @id @default(autoincrement())
+  actividadDriveModuleId   Int     @map("actividad_drive_module_id")
+  consumibleId             Int     @map("consumible_id")
+  cantidad                 Decimal? @db.Decimal(10, 3)
+  unidad                   String?  @db.VarChar(20)
+  notas                    String?  @db.VarChar(255)
+
+  actividad  ActividadDriveModule @relation(fields: [actividadDriveModuleId], references: [id], onDelete: Cascade)
+  consumible ConsumibleCatalogo   @relation(fields: [consumibleId], references: [id])
+
+  @@unique([actividadDriveModuleId, consumibleId], map: "uq_actdm_cons")
+  @@map("actividad_drive_module_consumible")
 }
 
 // ===== EQUIVALENCIAS Y PUNTOS CONTROL =====
@@ -812,7 +864,10 @@ model PuntoControlGenerico {
   condicion         String?                @db.VarChar(200)
   generacionAplica  String?                @map("generacion_aplica") @db.VarChar(100)
   notas             String?                @db.Text
+  consumibleId      Int?                   @map("consumible_id")
   orden             Int                    @default(0)
+
+  consumible ConsumibleCatalogo? @relation(fields: [consumibleId], references: [id])
 
   @@map("punto_control_generico")
 }
