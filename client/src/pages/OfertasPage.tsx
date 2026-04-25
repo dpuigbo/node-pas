@@ -22,6 +22,8 @@ import {
   useGenerarIntervencion, useDeleteOferta,
 } from '@/hooks/useOfertas';
 import { MantenimientoComponentes } from '@/components/ofertas/MantenimientoComponentes';
+import { CalendarioPlanificacion } from '@/components/ofertas/CalendarioPlanificacion';
+import { ResumenOferta } from '@/components/ofertas/ResumenOferta';
 
 const ESTADO_BADGE: Record<string, string> = {
   borrador: 'bg-gray-100 text-gray-700',
@@ -35,13 +37,6 @@ const ESTADO_LABEL: Record<string, string> = {
   enviada: 'Enviada',
   aprobada: 'Aprobada',
   rechazada: 'Rechazada',
-};
-
-const NIVEL_LABEL: Record<string, string> = {
-  '1': 'Nivel 1',
-  '2_inferior': 'Nivel 2 Inf.',
-  '2_superior': 'Nivel 2 Sup.',
-  '3': 'Nivel 3',
 };
 
 const TIPO_BADGE: Record<string, string> = {
@@ -498,6 +493,7 @@ function OfertaDetailDialog({ ofertaId, open, onOpenChange }: {
   const [fechaDialogOpen, setFechaDialogOpen] = useState(false);
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
+  const [activeTab, setActiveTab] = useState<'componentes' | 'planificacion' | 'resumen'>('componentes');
 
   if (isLoading) {
     return (
@@ -513,8 +509,6 @@ function OfertaDetailDialog({ ofertaId, open, onOpenChange }: {
 
   if (!oferta) return null;
 
-  const desglose = oferta.desgloseRecargo as any;
-  const hasRecargos = desglose && desglose.resumen && desglose.resumen.length > 0;
 
   const handleEstado = async (estado: string) => {
     try {
@@ -628,129 +622,46 @@ function OfertaDetailDialog({ ofertaId, open, onOpenChange }: {
               <p className="text-sm text-muted-foreground border-l-2 pl-3">{oferta.notas}</p>
             )}
 
-            {/* Sistemas table */}
-            <div>
-              <h4 className="font-medium mb-2">Sistemas ({oferta.sistemas?.length ?? 0})</h4>
-              <div className="rounded-lg border overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-muted/50 border-b">
-                      <th className="px-3 py-2 text-left">Sistema</th>
-                      <th className="px-3 py-2 text-left">Nivel</th>
-                      <th className="px-3 py-2 text-right">Horas</th>
-                      <th className="px-3 py-2 text-right">Coste</th>
-                      <th className="px-3 py-2 text-right">Precio</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(oferta.sistemas ?? []).map((os: any) => (
-                      <tr key={os.sistemaId} className="border-b last:border-0">
-                        <td className="px-3 py-2 font-medium">{os.sistema?.nombre}</td>
-                        <td className="px-3 py-2">
-                          <Badge variant="secondary" className="text-xs">
-                            {NIVEL_LABEL[os.nivel] ?? os.nivel}
-                          </Badge>
-                        </td>
-                        <td className="px-3 py-2 text-right font-mono">
-                          {os.horas != null ? Number(os.horas).toFixed(1) : '-'}
-                        </td>
-                        <td className="px-3 py-2 text-right font-mono">
-                          {os.costeConsumibles != null ? `${Number(os.costeConsumibles).toFixed(2)} €` : '-'}
-                        </td>
-                        <td className="px-3 py-2 text-right font-mono">
-                          {os.precioConsumibles != null ? `${Number(os.precioConsumibles).toFixed(2)} €` : '-'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr className="border-t bg-muted/50 font-medium">
-                      <td colSpan={2} className="px-3 py-2 text-right">Totales consumibles:</td>
-                      <td className="px-3 py-2 text-right font-mono">
-                        {oferta.totalHoras != null ? Number(oferta.totalHoras).toFixed(1) : '-'}
-                      </td>
-                      <td className="px-3 py-2 text-right font-mono">
-                        {oferta.totalCoste != null ? `${Number(oferta.totalCoste).toFixed(2)} €` : '-'}
-                      </td>
-                      <td className="px-3 py-2 text-right font-mono">
-                        {oferta.totalPrecio != null ? `${Number(oferta.totalPrecio).toFixed(2)} €` : '-'}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
+            {/* Tabs navigation */}
+            <div className="border-b flex gap-1">
+              {[
+                { key: 'componentes', label: '1. Componentes y niveles' },
+                { key: 'planificacion', label: '2. Planificacion' },
+                { key: 'resumen', label: '3. Resumen' },
+              ].map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => setActiveTab(t.key as any)}
+                  className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                    activeTab === t.key
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
             </div>
 
-            {/* Mantenimiento por componente (oferta_componente) */}
-            <MantenimientoComponentes
-              ofertaId={oferta.id}
-              readOnly={oferta.estado !== 'borrador'}
-            />
+            {activeTab === 'componentes' && (
+              <MantenimientoComponentes
+                ofertaId={oferta.id}
+                readOnly={oferta.estado !== 'borrador'}
+              />
+            )}
 
-            {/* Surcharge breakdown */}
-            {hasRecargos && (
-              <div>
-                <h4 className="font-medium mb-2 flex items-center gap-1.5">
-                  <Clock className="h-4 w-4" />
-                  Recargos por horario
-                </h4>
-                <div className="text-xs text-muted-foreground mb-2">
-                  {desglose.diasTotales} dia(s) de trabajo: {desglose.diasNormales} normal(es)
-                  {desglose.diasDomFestivos > 0 && `, ${desglose.diasDomFestivos} dom/festivo(s)`}
-                  {desglose.diasEspeciales > 0 && `, ${desglose.diasEspeciales} especial(es)`}
-                  {' | '}Tarifa base: {desglose.tarifaBase?.toFixed(2)} €/h
-                </div>
-                <div className="rounded-lg border overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-muted/50 border-b">
-                        <th className="px-3 py-2 text-left">Franja</th>
-                        <th className="px-3 py-2 text-right">Horas</th>
-                        <th className="px-3 py-2 text-right">Recargo</th>
-                        <th className="px-3 py-2 text-right">Importe</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {desglose.resumen.map((r: any, i: number) => (
-                        <tr key={i} className={`border-b last:border-0 ${r.recargoPct === 0 ? 'text-muted-foreground' : ''}`}>
-                          <td className="px-3 py-1.5">{r.tipo}</td>
-                          <td className="px-3 py-1.5 text-right font-mono">{r.horas.toFixed(1)} h</td>
-                          <td className="px-3 py-1.5 text-right font-mono">
-                            {r.recargoPct > 0 ? (
-                              <span className="text-amber-600 font-medium">+{r.recargoPct}%</span>
-                            ) : (
-                              <span>0%</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-1.5 text-right font-mono">
-                            {r.importe > 0 ? `${r.importe.toFixed(2)} €` : '-'}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    <tfoot>
-                      <tr className="border-t bg-amber-50 font-medium text-amber-800">
-                        <td colSpan={3} className="px-3 py-2 text-right">Total recargos:</td>
-                        <td className="px-3 py-2 text-right font-mono">
-                          {desglose.totalRecargo.toFixed(2)} €
-                        </td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
+            {activeTab === 'planificacion' && (
+              <CalendarioPlanificacion
+                ofertaId={oferta.id}
+                fechaInicio={oferta.fechaInicio}
+                fechaFin={oferta.fechaFin}
+                readOnly={oferta.estado !== 'borrador'}
+              />
+            )}
 
-                {/* Grand total with surcharges */}
-                {oferta.totalPrecio != null && (
-                  <div className="mt-2 flex justify-end">
-                    <div className="bg-muted rounded-lg px-4 py-2 text-sm">
-                      <span className="text-muted-foreground">Precio consumibles + recargos: </span>
-                      <span className="font-bold font-mono">
-                        {(Number(oferta.totalPrecio) + (Number(oferta.totalRecargo) || 0)).toFixed(2)} €
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
+            {activeTab === 'resumen' && (
+              <ResumenOferta ofertaId={oferta.id} oferta={oferta} />
             )}
           </div>
 

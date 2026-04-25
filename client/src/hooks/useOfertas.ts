@@ -171,3 +171,119 @@ export function useNivelesAplicables(modeloId: number | undefined) {
     enabled: !!modeloId,
   });
 }
+
+// ===== PLANIFICACION (calendario) =====
+
+export type TipoBloque = 'trabajo' | 'desplazamiento' | 'comida';
+
+export interface BloqueCalendario {
+  id: number;
+  fecha: string; // YYYY-MM-DD
+  horaInicio: string; // HH:MM
+  horaFin: string;
+  tipo: TipoBloque;
+  notas: string | null;
+}
+
+export interface BloqueRecargoDesglose {
+  bloqueId: number;
+  fecha: string;
+  tipo: 'trabajo' | 'desplazamiento';
+  horas: number;
+  diaTipo: 'normal' | 'dom_festivo' | 'especial';
+  franjas: { nombre: string; horas: number; recargoPct: number; importe: number }[];
+  importeBase: number;
+  importeRecargo: number;
+}
+
+export interface PlanificacionTotales {
+  horasTrabajo: number;
+  horasDesplazamiento: number;
+  horasComida: number;
+  precioTrabajo: number;
+  precioDesplazamiento: number;
+  precioRecargos: number;
+  diasOcupados: number;
+  diasNormales: number;
+  diasDomFestivos: number;
+  diasEspeciales: number;
+  nochesFuera: number;
+  precioDietas: number;
+  precioHotel: number;
+  bloquesDesglose: BloqueRecargoDesglose[];
+  totalPlanificacion: number;
+}
+
+export function useOfertaPlanificacion(ofertaId: number | undefined) {
+  return useQuery({
+    queryKey: ['ofertas', ofertaId, 'planificacion'],
+    queryFn: async () => {
+      const { data } = await api.get<{
+        ofertaId: number;
+        bloques: BloqueCalendario[];
+        totales: PlanificacionTotales;
+      }>(`/v1/ofertas/${ofertaId}/planificacion`);
+      return data;
+    },
+    enabled: !!ofertaId,
+  });
+}
+
+export function useCreateBloque(ofertaId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: {
+      fecha: string;
+      horaInicio: string;
+      horaFin: string;
+      tipo: TipoBloque;
+      notas?: string | null;
+    }) => api.post(`/v1/ofertas/${ofertaId}/bloques`, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['ofertas', ofertaId, 'planificacion'] });
+    },
+  });
+}
+
+export function useUpdateBloque(ofertaId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }: {
+      id: number;
+      fecha?: string;
+      horaInicio?: string;
+      horaFin?: string;
+      tipo?: TipoBloque;
+      notas?: string | null;
+    }) => api.put(`/v1/ofertas/${ofertaId}/bloques/${id}`, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['ofertas', ofertaId, 'planificacion'] });
+    },
+  });
+}
+
+export function useDeleteBloque(ofertaId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.delete(`/v1/ofertas/${ofertaId}/bloques/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['ofertas', ofertaId, 'planificacion'] });
+    },
+  });
+}
+
+export function useReplaceBloques(ofertaId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (bloques: Array<{
+      fecha: string;
+      horaInicio: string;
+      horaFin: string;
+      tipo: TipoBloque;
+      notas?: string | null;
+    }>) => api.put(`/v1/ofertas/${ofertaId}/bloques`, { bloques }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['ofertas', ofertaId, 'planificacion'] });
+    },
+  });
+}
