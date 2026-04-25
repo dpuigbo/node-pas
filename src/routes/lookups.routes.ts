@@ -91,6 +91,23 @@ router.get('/aceites', async (req: Request, res: Response, next: NextFunction) =
   } catch (err) { next(err); }
 });
 
+// GET /api/v1/lookups/equivalencias?familiaId=X&tipo=lubricacion
+router.get('/equivalencias', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const where: any = {};
+    if (req.query.familiaId) where.familiaId = Number(req.query.familiaId);
+    if (req.query.tipo) where.tipoEquivalencia = String(req.query.tipo);
+    const equivalencias = await prisma.equivalenciaFamilia.findMany({
+      where,
+      orderBy: { id: 'asc' },
+      include: {
+        familia: { select: { id: true, codigo: true, tipo: true } },
+      },
+    });
+    res.json(equivalencias);
+  } catch (err) { next(err); }
+});
+
 // GET /api/v1/lookups/puntos-control?categoria=manipulador
 router.get('/puntos-control', async (req: Request, res: Response, next: NextFunction) => {
   try {

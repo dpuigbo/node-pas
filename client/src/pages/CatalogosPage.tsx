@@ -14,7 +14,7 @@ import {
   useAceites, useCreateAceite, useUpdateAceite, useDeleteAceite,
   useConsumibles, useCreateConsumible, useUpdateConsumible, useDeleteConsumible,
 } from '@/hooks/useCatalogos';
-import { usePuntosControl } from '@/hooks/useLookups';
+import { usePuntosControl, useEquivalencias } from '@/hooks/useLookups';
 import { useAuth } from '@/hooks/useAuth';
 
 const UNIDADES = ['litros', 'ml', 'kg', 'g', 'cm³', 'unidades'] as const;
@@ -405,6 +405,77 @@ function ConsumiblesTable({ items, isLoading, isAdmin, onCreate, onUpdate, onDel
 
 // ===== Page =====
 
+// ===== Equivalencias entre Familias =====
+const TIPO_EQUIV_LABELS: Record<string, string> = {
+  lubricacion: 'Lubricacion',
+  mantenimiento: 'Mantenimiento',
+  hardware: 'Hardware',
+  completa: 'Completa',
+};
+
+function EquivalenciasSection() {
+  const [tipo, setTipo] = useState<string>('');
+  const { data: equivalencias, isLoading } = useEquivalencias(tipo ? { tipo } : undefined);
+
+  const cols: Column<any>[] = [
+    {
+      key: 'familia',
+      header: 'Familia',
+      render: (e) => <Badge variant="secondary">{e.familia?.codigo ?? '—'}</Badge>,
+    },
+    {
+      key: 'tipo',
+      header: 'Tipo',
+      render: (e) => <Badge variant="outline">{TIPO_EQUIV_LABELS[e.tipoEquivalencia] ?? e.tipoEquivalencia}</Badge>,
+    },
+    { key: 'descripcion', header: 'Descripcion' },
+    {
+      key: 'fuenteDoc',
+      header: 'Fuente',
+      render: (e) => e.fuenteDoc
+        ? <span className="text-xs font-mono text-muted-foreground">{e.fuenteDoc}</span>
+        : <span className="text-muted-foreground">—</span>,
+    },
+    {
+      key: 'notas',
+      header: 'Notas',
+      render: (e) => e.notas
+        ? <span className="text-xs line-clamp-2" title={e.notas}>{e.notas}</span>
+        : <span className="text-muted-foreground">—</span>,
+    },
+  ];
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold">Equivalencias entre Familias</h2>
+          <p className="text-sm text-muted-foreground">
+            Reglas que indican cuando una familia/variante hereda mantenimiento o lubricacion
+          </p>
+        </div>
+        <select
+          value={tipo}
+          onChange={(e) => setTipo(e.target.value)}
+          className={SELECT_CLASS + ' w-48'}
+        >
+          <option value="">Todos los tipos</option>
+          {Object.entries(TIPO_EQUIV_LABELS).map(([k, v]) => (
+            <option key={k} value={k}>{v}</option>
+          ))}
+        </select>
+      </div>
+      <DataTable
+        columns={cols}
+        data={equivalencias || []}
+        isLoading={isLoading}
+        emptyMessage="Sin equivalencias"
+        rowKey={(e) => e.id}
+      />
+    </div>
+  );
+}
+
 // ===== Puntos de Control =====
 const CATEGORIA_LABELS: Record<string, string> = {
   manipulador: 'Manipulador',
@@ -509,6 +580,7 @@ export default function CatalogosPage() {
         onUpdate={(d: any) => updateConsumible.mutateAsync(d)}
         onDelete={(id: number) => deleteConsumible.mutateAsync(id)}
       />
+      <EquivalenciasSection />
       <PuntosControlSection />
     </div>
   );

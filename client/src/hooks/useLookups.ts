@@ -45,6 +45,27 @@ export function useNivelesMantenimiento() {
   });
 }
 
+export function useEquivalencias(filters?: { familiaId?: number; tipo?: string }) {
+  return useQuery({
+    queryKey: ['lookups', 'equivalencias', filters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.familiaId) params.set('familiaId', String(filters.familiaId));
+      if (filters?.tipo) params.set('tipo', filters.tipo);
+      const { data } = await api.get(`/v1/lookups/equivalencias?${params}`);
+      return data as {
+        id: number;
+        familiaId: number;
+        tipoEquivalencia: string;
+        descripcion: string;
+        fuenteDoc: string | null;
+        notas: string | null;
+        familia: { id: number; codigo: string; tipo: string };
+      }[];
+    },
+  });
+}
+
 export function usePuntosControl(categoria?: string) {
   return useQuery({
     queryKey: ['lookups', 'puntos-control', categoria],
