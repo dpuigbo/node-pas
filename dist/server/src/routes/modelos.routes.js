@@ -332,17 +332,48 @@ router.get('/:id/lubricacion', async (req, res, next) => {
     }
 });
 // GET /api/v1/modelos/:id/mantenimiento
+// Returns activities depending on the model type:
+//   controller       → actividad_cabinet
+//   drive_unit       → actividad_drive_module
+//   mechanical_unit  → actividad_preventiva
+//   external_axis    → actividad_preventiva
 router.get('/:id/mantenimiento', async (req, res, next) => {
     try {
+        const modeloId = Number(req.params.id);
         const modelo = await database_1.prisma.modeloComponente.findUnique({
-            where: { id: Number(req.params.id) },
-            select: { familia: true, familiaId: true, fabricanteId: true },
+            where: { id: modeloId },
+            select: { tipo: true, familia: true, familiaId: true, fabricanteId: true },
         });
         if (!modelo) {
             res.status(404).json({ error: 'Modelo no encontrado' });
             return;
         }
-        // Try normalized table first (v2)
+        // Controller → actividad_cabinet
+        if (modelo.tipo === 'controller') {
+            const records = await database_1.prisma.actividadCabinet.findMany({
+                where: { cabinetModeloId: modeloId },
+                orderBy: [{ tipoActividadId: 'asc' }, { componente: 'asc' }],
+                include: {
+                    tipoActividad: { select: { id: true, nombre: true, categoria: true } },
+                },
+            });
+            res.json({ source: 'cabinet', records });
+            return;
+        }
+        // Drive unit → actividad_drive_module
+        if (modelo.tipo === 'drive_unit') {
+            const records = await database_1.prisma.actividadDriveModule.findMany({
+                where: { driveModuleModeloId: modeloId },
+                orderBy: [{ tipoActividadId: 'asc' }, { componente: 'asc' }],
+                include: {
+                    tipoActividad: { select: { id: true, nombre: true, categoria: true } },
+                    controladorAsociado: { select: { id: true, nombre: true } },
+                },
+            });
+            res.json({ source: 'drive_module', records });
+            return;
+        }
+        // Mechanical unit / external axis → actividad_preventiva (por familia)
         if (modelo.familiaId) {
             const normalized = await database_1.prisma.actividadPreventiva.findMany({
                 where: { familiaId: modelo.familiaId },
@@ -357,7 +388,7 @@ router.get('/:id/mantenimiento', async (req, res, next) => {
                 return;
             }
         }
-        // Fallback to legacy table
+        // Fallback legacy
         const legacy = await database_1.prisma.actividadMantenimiento.findMany({
             where: {
                 fabricanteId: modelo.fabricanteId,
