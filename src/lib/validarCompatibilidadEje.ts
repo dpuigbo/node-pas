@@ -23,6 +23,65 @@
 
 import { prisma } from '../config/database';
 
+// ============================================================================
+// Validador robot↔controlador (matriz a granularidad de variante de cabinet)
+// ============================================================================
+
+export type RobotControladorResult = {
+  ok: boolean;
+  motivo?: string;
+  controladoresCompatibles?: { id: number; nombre: string }[];
+};
+
+/**
+ * Funcion pura: dado un robot+controlador y la lista de controladores
+ * compatibles para esa familia, decide si la combinacion es valida.
+ */
+export function evaluarRobotControlador(
+  controladorId: number,
+  controladoresCompatibles: { id: number; nombre?: string }[],
+  familiaCodigo?: string,
+): RobotControladorResult {
+  if (controladoresCompatibles.length === 0) {
+    return {
+      ok: false,
+      motivo: `La familia robot ${familiaCodigo ?? ''} no tiene controladores documentados como compatibles`.trim(),
+      controladoresCompatibles: [],
+    };
+  }
+  const ok = controladoresCompatibles.some(c => c.id === controladorId);
+  if (!ok) {
+    return {
+      ok: false,
+      motivo: `El robot ${familiaCodigo ?? ''} no es compatible con este cabinet. Compatibilidad documentada: ${controladoresCompatibles.map(c => c.nombre ?? c.id).join(', ')}`,
+      controladoresCompatibles: controladoresCompatibles.map(c => ({ id: c.id, nombre: c.nombre ?? '' })),
+    };
+  }
+  return { ok: true };
+}
+
+/**
+ * Wrapper async que carga los controladores compatibles de la familia desde BD.
+ */
+export async function validarRobotControlador(
+  robotFamiliaId: number,
+  controladorModeloId: number,
+): Promise<RobotControladorResult> {
+  const familia = await prisma.luFamilia.findUnique({
+    where: { id: robotFamiliaId },
+    select: { codigo: true },
+  });
+  const compatibles = await prisma.compatibilidadRobotControlador.findMany({
+    where: { robotFamiliaId },
+    include: { controlador: { select: { nombre: true } } },
+  });
+  return evaluarRobotControlador(
+    controladorModeloId,
+    compatibles.map(c => ({ id: c.controladorModeloId, nombre: c.controlador.nombre })),
+    familia?.codigo,
+  );
+}
+
 export type CompatibilidadResult = {
   ok: boolean;
   motivo?: string;

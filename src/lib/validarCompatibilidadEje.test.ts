@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { evaluarReglas, type ReglasEje } from './validarCompatibilidadEje';
+import { evaluarReglas, evaluarRobotControlador, type ReglasEje } from './validarCompatibilidadEje';
 
 // IDs de prueba (ficticios, solo para los tests)
 const FAM = {
@@ -159,5 +159,109 @@ describe('evaluarReglas — orden y casos limite', () => {
     expect(r.ok).toBe(false);
     expect(r.motivo).toContain('IRB 120');
     expect(r.motivo).not.toContain(': null');
+  });
+});
+
+// ============================================================================
+// Tests robot↔controlador (matriz a granularidad de variante de cabinet)
+// ============================================================================
+
+const CTRL_MATRIZ = {
+  IRC5_SINGLE: 28,
+  IRC5_COMPACT: 29,
+  IRC5_PMC_SMALL: 100,
+  IRC5_PMC_LARGE: 101,
+  IRC5P: 32,
+  E10: 33,
+  C30: 34,
+  C90XT: 35,
+  V250XT: 36,
+  V400XT: 37,
+};
+
+describe('evaluarRobotControlador — matriz cabinet-especifica', () => {
+  // Caso 1 — IRB 6660 + IRC5 Compact → falla (este caso lo descubrio Daniel)
+  it('IRB 6660 + IRC5 Compact → falla (gama grande no entra en Compact)', () => {
+    // IRB 6660 solo permite IRC5 Single, IRC5 PMC Large, V250XT, V400XT
+    const compatibles = [
+      { id: CTRL_MATRIZ.IRC5_SINGLE, nombre: 'IRC5 Single' },
+      { id: CTRL_MATRIZ.IRC5_PMC_LARGE, nombre: 'IRC5 PMC Large' },
+      { id: CTRL_MATRIZ.V250XT, nombre: 'OmniCore V250XT' },
+      { id: CTRL_MATRIZ.V400XT, nombre: 'OmniCore V400XT' },
+    ];
+    const r = evaluarRobotControlador(CTRL_MATRIZ.IRC5_COMPACT, compatibles, 'IRB 6660');
+    expect(r.ok).toBe(false);
+    expect(r.motivo).toContain('IRB 6660');
+    expect(r.motivo).toContain('no es compatible');
+    expect(r.motivo).toContain('IRC5 Single');
+    expect(r.motivo).toContain('V250XT');
+  });
+
+  // Caso 2 — IRB 7710 + IRC5 Single → falla (OmniCore-only)
+  it('IRB 7710 + IRC5 Single → falla (robot OmniCore-only lanzado 2024)', () => {
+    const compatibles = [
+      { id: CTRL_MATRIZ.V250XT, nombre: 'OmniCore V250XT' },
+      { id: CTRL_MATRIZ.V400XT, nombre: 'OmniCore V400XT' },
+    ];
+    const r = evaluarRobotControlador(CTRL_MATRIZ.IRC5_SINGLE, compatibles, 'IRB 7710');
+    expect(r.ok).toBe(false);
+    expect(r.motivo).toContain('IRB 7710');
+    expect(r.motivo).toContain('V250XT');
+    expect(r.motivo).toContain('V400XT');
+  });
+
+  // Caso 3 — IRB 5720 + OmniCore C30 → falla (requiere V250XT/V400XT)
+  it('IRB 5720 + OmniCore C30 → falla (requiere V250XT o V400XT)', () => {
+    const compatibles = [
+      { id: CTRL_MATRIZ.V250XT, nombre: 'OmniCore V250XT' },
+      { id: CTRL_MATRIZ.V400XT, nombre: 'OmniCore V400XT' },
+    ];
+    const r = evaluarRobotControlador(CTRL_MATRIZ.C30, compatibles, 'IRB 5720');
+    expect(r.ok).toBe(false);
+    expect(r.motivo).toContain('IRB 5720');
+  });
+
+  // Caso 4 — IRB 1200 + IRC5 Compact → OK
+  it('IRB 1200 + IRC5 Compact → OK (gama pequeña)', () => {
+    const compatibles = [
+      { id: CTRL_MATRIZ.IRC5_SINGLE, nombre: 'IRC5 Single' },
+      { id: CTRL_MATRIZ.IRC5_COMPACT, nombre: 'IRC5 Compact' },
+      { id: CTRL_MATRIZ.IRC5_PMC_SMALL, nombre: 'IRC5 PMC Small' },
+    ];
+    const r = evaluarRobotControlador(CTRL_MATRIZ.IRC5_COMPACT, compatibles, 'IRB 1200');
+    expect(r.ok).toBe(true);
+    expect(r.motivo).toBeUndefined();
+  });
+
+  // Caso 5 — IRB 6700 + OmniCore V250XT → OK (hibrido IRC5+OmniCore)
+  it('IRB 6700 + OmniCore V250XT → OK (robot hibrido)', () => {
+    const compatibles = [
+      { id: CTRL_MATRIZ.IRC5_SINGLE, nombre: 'IRC5 Single' },
+      { id: CTRL_MATRIZ.IRC5_PMC_LARGE, nombre: 'IRC5 PMC Large' },
+      { id: CTRL_MATRIZ.V250XT, nombre: 'OmniCore V250XT' },
+      { id: CTRL_MATRIZ.V400XT, nombre: 'OmniCore V400XT' },
+    ];
+    const r = evaluarRobotControlador(CTRL_MATRIZ.V250XT, compatibles, 'IRB 6700');
+    expect(r.ok).toBe(true);
+  });
+
+  // Caso 6 — IRB 8700 + OmniCore V250XT → falla (solo V400XT en OmniCore)
+  it('IRB 8700 + OmniCore V250XT → falla (drive system mayor, solo V400XT)', () => {
+    // IRB 8700 solo: IRC5 Single + OmniCore V400XT
+    const compatibles = [
+      { id: CTRL_MATRIZ.IRC5_SINGLE, nombre: 'IRC5 Single' },
+      { id: CTRL_MATRIZ.V400XT, nombre: 'OmniCore V400XT' },
+    ];
+    const r = evaluarRobotControlador(CTRL_MATRIZ.V250XT, compatibles, 'IRB 8700');
+    expect(r.ok).toBe(false);
+    expect(r.motivo).toContain('IRB 8700');
+    expect(r.motivo).toContain('V400XT');
+    expect(r.motivo).not.toContain('V250XT,'); // V250XT NO debe estar en compatibles
+  });
+
+  it('Familia sin reglas en BD → falla con mensaje claro', () => {
+    const r = evaluarRobotControlador(CTRL_MATRIZ.IRC5_SINGLE, [], 'IRB inventado');
+    expect(r.ok).toBe(false);
+    expect(r.motivo).toContain('no tiene controladores documentados');
   });
 });

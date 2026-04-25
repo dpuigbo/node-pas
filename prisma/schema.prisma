@@ -127,12 +127,13 @@ model LuFamilia {
   descripcion   String?        @db.VarChar(255)
   activa        Boolean        @default(true)
 
-  fabricante             Fabricante                   @relation(fields: [fabricanteId], references: [id])
+  fabricante             Fabricante                       @relation(fields: [fabricanteId], references: [id])
   modelos                ModeloComponente[]
   actividadesPreventivas ActividadPreventiva[]
   equivalencias          EquivalenciaFamilia[]
   compatEjePermitida     CompatibilidadEjePermitida[]
   compatEjeExcluye       CompatibilidadEjeExcluye[]
+  compatRobotCtrl        CompatibilidadRobotControlador[]
 
   @@unique([fabricanteId, codigo, tipo], map: "uq_fam_fab_cod")
   @@map("lu_familia")
@@ -238,6 +239,7 @@ model ModeloComponente {
   compatEjeExcluye         CompatibilidadEjeExcluye[]
   compatEjeControladorEje  CompatibilidadEjeControlador[] @relation("EjeCtrlEje")
   compatEjeControladorCtrl CompatibilidadEjeControlador[] @relation("EjeCtrlCtrl")
+  compatRobotCtrl          CompatibilidadRobotControlador[] @relation("RobotCtrlControlador")
 
   @@unique([fabricanteId, tipo, nombre], map: "modelos_componente_fab_tipo_nombre")
   @@map("modelos_componente")
@@ -935,6 +937,22 @@ model CompatibilidadEjeControlador {
 
   @@id([ejeModeloId, controladorModeloId])
   @@map("compatibilidad_eje_controlador")
+}
+
+model CompatibilidadRobotControlador {
+  id                  Int     @id @default(autoincrement())
+  robotFamiliaId      Int     @map("robot_familia_id")
+  controladorModeloId Int     @map("controlador_modelo_id")
+  notas               String? @db.VarChar(255)
+  fuenteDoc           String? @map("fuente_doc") @db.VarChar(100)
+
+  robotFamilia LuFamilia        @relation(fields: [robotFamiliaId], references: [id])
+  controlador  ModeloComponente @relation("RobotCtrlControlador", fields: [controladorModeloId], references: [id])
+
+  @@unique([robotFamiliaId, controladorModeloId], map: "uq_robot_ctrl")
+  @@index([robotFamiliaId])
+  @@index([controladorModeloId])
+  @@map("compatibilidad_robot_controlador")
 }
 
 // ===== PLANTILLAS DE DOCUMENTO =====
