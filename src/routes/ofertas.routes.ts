@@ -338,17 +338,29 @@ async function calculateOfertaTotals(
     }
   }
 
-  // Load prices
+  // Load prices — preferimos consumible_catalogo (linkado via FK) y fallback a legacy
   const aceiteMap = new Map<number, { coste: number | null; precio: number | null }>();
   const consumibleMap = new Map<number, { coste: number | null; precio: number | null }>();
 
   if (aceiteIds.size > 0) {
-    const aceites = await prisma.aceite.findMany({ where: { id: { in: Array.from(aceiteIds) } } });
-    for (const a of aceites) aceiteMap.set(a.id, { coste: dec(a.coste), precio: dec(a.precio) });
+    const aceites = await prisma.aceite.findMany({
+      where: { id: { in: Array.from(aceiteIds) } },
+      include: { consumible: true },
+    });
+    for (const a of aceites) aceiteMap.set(a.id, {
+      coste: dec(a.consumible?.coste ?? a.coste),
+      precio: dec(a.consumible?.precio ?? a.precio),
+    });
   }
   if (consumibleIds.size > 0) {
-    const consumibles = await prisma.consumible.findMany({ where: { id: { in: Array.from(consumibleIds) } } });
-    for (const c of consumibles) consumibleMap.set(c.id, { coste: dec(c.coste), precio: dec(c.precio) });
+    const consumibles = await prisma.consumible.findMany({
+      where: { id: { in: Array.from(consumibleIds) } },
+      include: { consumible: true },
+    });
+    for (const c of consumibles) consumibleMap.set(c.id, {
+      coste: dec(c.consumible?.coste ?? c.coste),
+      precio: dec(c.consumible?.precio ?? c.precio),
+    });
   }
 
   // Calculate per system

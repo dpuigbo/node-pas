@@ -131,13 +131,16 @@ router.post('/generar/:intervencionId', requireRole('admin'), async (req: Reques
     if (aceiteIds.size > 0) {
       const aceites = await prisma.aceite.findMany({
         where: { id: { in: Array.from(aceiteIds) } },
+        include: { consumible: true },
       });
       for (const a of aceites) {
+        // Prefiere datos del consumible_catalogo si esta linkado
+        const cat = a.consumible;
         aceiteMap.set(a.id, {
-          nombre: a.nombre,
-          unidad: a.unidad,
-          coste: dec(a.coste),
-          precio: dec(a.precio),
+          nombre: cat?.nombre ?? a.nombre,
+          unidad: cat?.unidad ?? a.unidad,
+          coste: dec(cat?.coste ?? a.coste),
+          precio: dec(cat?.precio ?? a.precio),
         });
       }
     }
@@ -145,12 +148,14 @@ router.post('/generar/:intervencionId', requireRole('admin'), async (req: Reques
     if (consumibleIds.size > 0) {
       const consumibles = await prisma.consumible.findMany({
         where: { id: { in: Array.from(consumibleIds) } },
+        include: { consumible: true },
       });
       for (const c of consumibles) {
+        const cat = c.consumible;
         consumibleMap.set(c.id, {
-          nombre: c.nombre,
-          coste: dec(c.coste),
-          precio: dec(c.precio),
+          nombre: cat?.nombre ?? c.nombre,
+          coste: dec(cat?.coste ?? c.coste),
+          precio: dec(cat?.precio ?? c.precio),
         });
       }
     }
