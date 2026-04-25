@@ -42,7 +42,17 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "ci: build client + server [skip ci]"
-            git push
+            # Retry con rebase si race condition con otros pushes
+            for i in 1 2 3; do
+              if git push; then
+                echo "Push exitoso (intento $i)"
+                exit 0
+              fi
+              echo "Push fallo (intento $i), rebase y reintento..."
+              git pull --rebase origin main
+            done
+            echo "Push fallo despues de 3 reintentos"
+            exit 1
           fi
 
       - name: Trigger deploy on Hostinger
