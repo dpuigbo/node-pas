@@ -87,30 +87,75 @@ export default function ModeloDetailPage() {
     activeTab === 'lubricacion' ? modeloId : undefined,
   );
   const updateLub = useUpdateLubricacionFila(modeloId);
-  const [editingLubId, setEditingLubId] = useState<number | null>(null);
-  const [lubDraft, setLubDraft] = useState<{ cantidadValor: string; cantidadUnidad: string; notas: string }>({
-    cantidadValor: '', cantidadUnidad: '', notas: '',
-  });
-  const startEditLub = (item: any) => {
-    setEditingLubId(item.id);
-    setLubDraft({
-      cantidadValor: item.cantidadValor != null ? String(item.cantidadValor) : '',
-      cantidadUnidad: item.cantidadUnidad ?? '',
-      notas: item.notas ?? '',
+  // Modo edicion global de toda la tabla: drafts indexados por item.id
+  const [lubEditMode, setLubEditMode] = useState(false);
+  const [lubDrafts, setLubDrafts] = useState<Map<number, { cantidadValor: string; cantidadUnidad: string; notas: string }>>(new Map());
+
+  const startEditAll = () => {
+    const drafts = new Map<number, { cantidadValor: string; cantidadUnidad: string; notas: string }>();
+    for (const group of lubricacionGrouped) {
+      for (const item of group.items) {
+        drafts.set(item.id, {
+          cantidadValor: item.cantidadValor != null ? String(item.cantidadValor) : '',
+          cantidadUnidad: item.cantidadUnidad ?? '',
+          notas: item.notas ?? '',
+        });
+      }
+    }
+    setLubDrafts(drafts);
+    setLubEditMode(true);
+  };
+
+  const cancelEditAll = () => {
+    setLubEditMode(false);
+    setLubDrafts(new Map());
+  };
+
+  const updateDraft = (itemId: number, patch: Partial<{ cantidadValor: string; cantidadUnidad: string; notas: string }>) => {
+    setLubDrafts((prev) => {
+      const next = new Map(prev);
+      const cur = next.get(itemId) ?? { cantidadValor: '', cantidadUnidad: '', notas: '' };
+      next.set(itemId, { ...cur, ...patch });
+      return next;
     });
   };
-  const saveEditLub = async () => {
-    if (editingLubId == null) return;
+
+  const saveAllEdits = async () => {
+    // Guardar solo las filas que hayan cambiado.
+    // Iteramos los drafts y comparamos con item original.
+    const itemsById = new Map<number, any>();
+    for (const group of lubricacionGrouped) {
+      for (const item of group.items) itemsById.set(item.id, item);
+    }
+    const updates: Promise<any>[] = [];
+    for (const [id, draft] of lubDrafts.entries()) {
+      const orig = itemsById.get(id);
+      if (!orig) continue;
+      const newCantidad = draft.cantidadValor === '' ? null : Number(draft.cantidadValor);
+      const newUnidad = draft.cantidadUnidad || null;
+      const newNotas = draft.notas || null;
+      const origCantidad = orig.cantidadValor != null ? Number(orig.cantidadValor) : null;
+      const origUnidad = orig.cantidadUnidad ?? null;
+      const origNotas = orig.notas ?? null;
+      const changed = origCantidad !== newCantidad || origUnidad !== newUnidad || origNotas !== newNotas;
+      if (!changed) continue;
+      updates.push(updateLub.mutateAsync({
+        lubId: id,
+        cantidadValor: newCantidad,
+        cantidadUnidad: newUnidad,
+        notas: newNotas,
+      }));
+    }
+    if (updates.length === 0) {
+      setLubEditMode(false);
+      return;
+    }
     try {
-      await updateLub.mutateAsync({
-        lubId: editingLubId,
-        cantidadValor: lubDraft.cantidadValor === '' ? null : Number(lubDraft.cantidadValor),
-        cantidadUnidad: lubDraft.cantidadUnidad || null,
-        notas: lubDraft.notas || null,
-      });
-      setEditingLubId(null);
+      await Promise.all(updates);
+      setLubEditMode(false);
+      setLubDrafts(new Map());
     } catch (err: any) {
-      alert(err?.response?.data?.error ?? 'Error al guardar');
+      alert(err?.response?.data?.error ?? 'Error al guardar (algunas filas pueden haberse guardado)');
     }
   };
   const { data: mantenimientoData, isLoading: loadingMant } = useMantenimiento(
@@ -560,129 +605,134 @@ export default function ModeloDetailPage() {
               <p>No hay datos de lubricacion para la familia {modelo.familia ?? modelo.nombre}</p>
             </div>
           ) : (
-            lubricacionGrouped.map((group) => (
-              <Card key={group.variante}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    {group.variante}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b bg-muted/30 text-xs text-muted-foreground">
-                        <th className="px-4 py-2 text-left font-medium w-20">Eje</th>
-                        <th className="px-4 py-2 text-left font-medium">Lubricante</th>
-                        <th className="px-4 py-2 text-left font-medium w-32">Cantidad</th>
-                        <th className="px-4 py-2 text-left font-medium w-24">Unidad</th>
-                        <th className="px-4 py-2 text-left font-medium">Notas</th>
-                        {isAdmin && (
-                          <th className="px-4 py-2 w-20"></th>
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {group.items.map((item: any) => {
-                        const consumible = item.consumible;
-                        const lubricante = consumible?.nombre ?? item.aceite?.nombre ?? item.tipoLubricanteLegacy ?? item.tipoLubricante ?? 'N/A';
-                        const isEditing = editingLubId === item.id;
-                        const isV2 = lubricacionData?.source === 'v2' && item.id > 0;
-                        return (
-                          <tr key={item.id} className="border-b last:border-b-0">
-                            <td className="px-4 py-2 font-mono font-medium">{item.eje}</td>
-                            <td className="px-4 py-2">
-                              {lubricante === 'N/A' ? (
-                                <span className="text-muted-foreground">N/A</span>
-                              ) : (
-                                <div className="flex flex-col gap-0.5">
-                                  <span>{lubricante}</span>
-                                  {consumible?.codigoAbb && (
-                                    <span className="text-[10px] font-mono text-muted-foreground">{consumible.codigoAbb}</span>
-                                  )}
-                                  {consumible?.fabricante && !consumible?.codigoAbb && (
-                                    <span className="text-[10px] text-muted-foreground">{consumible.fabricante}</span>
-                                  )}
-                                </div>
-                              )}
-                            </td>
-                            <td className="px-4 py-2">
-                              {isEditing ? (
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  className="h-8 text-sm"
-                                  value={lubDraft.cantidadValor}
-                                  onChange={(e) => setLubDraft({ ...lubDraft, cantidadValor: e.target.value })}
-                                />
-                              ) : (
-                                item.cantidadValor != null
-                                  ? Number(item.cantidadValor).toFixed(2)
-                                  : (item.cantidadTextoLegacy ?? item.cantidad ?? <span className="text-muted-foreground">N/A</span>)
-                              )}
-                            </td>
-                            <td className="px-4 py-2">
-                              {isEditing ? (
-                                <USelect
-                                  value={lubDraft.cantidadUnidad}
-                                  onValueChange={(v) => setLubDraft({ ...lubDraft, cantidadUnidad: v })}
-                                >
-                                  <SelectTrigger className="h-8 text-sm w-20">
-                                    <SelectValue placeholder="—" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {['ml', 'l', 'g', 'kg', 'pcs', 'n_a'].map((u) => (
-                                      <SelectItem key={u} value={u}>{u}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </USelect>
-                              ) : (
-                                item.cantidadUnidad ?? <span className="text-muted-foreground">—</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-2 text-xs">
-                              {isEditing ? (
-                                <Input
-                                  className="h-8 text-sm"
-                                  value={lubDraft.notas}
-                                  onChange={(e) => setLubDraft({ ...lubDraft, notas: e.target.value })}
-                                />
-                              ) : (
-                                item.notas ?? <span className="text-muted-foreground">—</span>
-                              )}
-                            </td>
-                            {isAdmin && (
-                              <td className="px-4 py-2 text-right">
-                                {isEditing ? (
-                                  <div className="flex gap-1 justify-end">
-                                    <Button size="sm" variant="ghost" onClick={saveEditLub} disabled={updateLub.isPending} className="h-7 w-7 p-0">
-                                      <Save className="h-3.5 w-3.5" />
-                                    </Button>
-                                    <Button size="sm" variant="ghost" onClick={() => setEditingLubId(null)} className="h-7 w-7 p-0">
-                                      <X className="h-3.5 w-3.5" />
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => startEditLub(item)}
-                                    className="h-7 px-2 text-xs"
-                                    title={isV2 ? 'Editar' : 'Editar (se promovera a v2 al guardar)'}
-                                  >
-                                    <Pencil className="h-3 w-3 mr-1" />
-                                    {isV2 ? 'Editar' : 'Editar*'}
-                                  </Button>
+            <>
+              {/* Toolbar: edit-all toggle */}
+              {isAdmin && (
+                <div className="flex justify-end gap-2">
+                  {lubEditMode ? (
+                    <>
+                      <Button size="sm" variant="outline" onClick={cancelEditAll} disabled={updateLub.isPending}>
+                        <X className="h-4 w-4 mr-1" /> Cancelar
+                      </Button>
+                      <Button size="sm" onClick={saveAllEdits} disabled={updateLub.isPending}>
+                        <Save className="h-4 w-4 mr-1" />
+                        {updateLub.isPending ? 'Guardando...' : 'Guardar todo'}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={startEditAll}>
+                      <Pencil className="h-4 w-4 mr-1" /> Editar tabla
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {lubricacionGrouped.map((group) => (
+                <Card key={group.variante}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                      {group.variante}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b bg-muted/30 text-xs text-muted-foreground">
+                          <th className="px-4 py-2 text-left font-medium w-20">Eje</th>
+                          <th className="px-4 py-2 text-left font-medium">Lubricante</th>
+                          <th className="px-4 py-2 text-left font-medium w-32">Cantidad</th>
+                          <th className="px-4 py-2 text-left font-medium w-24">Unidad</th>
+                          <th className="px-4 py-2 text-left font-medium">Notas</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {group.items.map((item: any) => {
+                          const consumible = item.consumible;
+                          const lubricante = consumible?.nombre ?? item.aceite?.nombre ?? item.tipoLubricanteLegacy ?? item.tipoLubricante ?? 'N/A';
+                          const draft = lubDrafts.get(item.id);
+                          const isV2 = lubricacionData?.source === 'v2' && item.id > 0;
+                          return (
+                            <tr key={item.id} className="border-b last:border-b-0">
+                              <td className="px-4 py-2 font-mono font-medium">
+                                {item.eje}
+                                {!isV2 && lubEditMode && (
+                                  <span className="ml-1 text-[10px] text-amber-600" title="Se promovera a v2 al guardar">*</span>
                                 )}
                               </td>
-                            )}
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </CardContent>
-              </Card>
-            ))
+                              <td className="px-4 py-2">
+                                {lubricante === 'N/A' ? (
+                                  <span className="text-muted-foreground">N/A</span>
+                                ) : (
+                                  <div className="flex flex-col gap-0.5">
+                                    <span>{lubricante}</span>
+                                    {consumible?.codigoAbb && (
+                                      <span className="text-[10px] font-mono text-muted-foreground">{consumible.codigoAbb}</span>
+                                    )}
+                                    {consumible?.fabricante && !consumible?.codigoAbb && (
+                                      <span className="text-[10px] text-muted-foreground">{consumible.fabricante}</span>
+                                    )}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="px-4 py-2">
+                                {lubEditMode && draft ? (
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    className="h-8 text-sm"
+                                    value={draft.cantidadValor}
+                                    onChange={(e) => updateDraft(item.id, { cantidadValor: e.target.value })}
+                                  />
+                                ) : (
+                                  item.cantidadValor != null
+                                    ? Number(item.cantidadValor).toFixed(2)
+                                    : (item.cantidadTextoLegacy ?? item.cantidad ?? <span className="text-muted-foreground">N/A</span>)
+                                )}
+                              </td>
+                              <td className="px-4 py-2">
+                                {lubEditMode && draft ? (
+                                  <USelect
+                                    value={draft.cantidadUnidad}
+                                    onValueChange={(v) => updateDraft(item.id, { cantidadUnidad: v })}
+                                  >
+                                    <SelectTrigger className="h-8 text-sm w-20">
+                                      <SelectValue placeholder="—" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {['ml', 'l', 'g', 'kg', 'pcs', 'n_a'].map((u) => (
+                                        <SelectItem key={u} value={u}>{u}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </USelect>
+                                ) : (
+                                  item.cantidadUnidad ?? <span className="text-muted-foreground">—</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-2 text-xs">
+                                {lubEditMode && draft ? (
+                                  <Input
+                                    className="h-8 text-sm"
+                                    value={draft.notas}
+                                    onChange={(e) => updateDraft(item.id, { notas: e.target.value })}
+                                  />
+                                ) : (
+                                  item.notas ?? <span className="text-muted-foreground">—</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </CardContent>
+                </Card>
+              ))}
+              {lubEditMode && lubricacionData?.source === 'legacy' && (
+                <div className="text-xs text-amber-700 bg-amber-50 border border-amber-300 rounded p-2">
+                  * Las filas marcadas se promoveran a la tabla v2 (editable) al guardar.
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
