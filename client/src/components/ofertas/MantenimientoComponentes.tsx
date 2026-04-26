@@ -211,19 +211,27 @@ export function MantenimientoComponentes({ ofertaId, readOnly = false }: Props) 
                       </button>
                     </td>
                     <td className="px-3 py-2 text-center">
-                      <button
-                        type="button"
-                        disabled={readOnly || isLoading}
-                        onClick={() => handleToggle(c.componenteSistemaId, 'conAceite', !(sel?.conAceite ?? true), c)}
-                        className={`inline-flex items-center justify-center h-7 w-7 rounded transition-colors ${
-                          (sel?.conAceite ?? true)
-                            ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                            : 'bg-gray-100 text-gray-400 line-through hover:bg-gray-200'
-                        } disabled:opacity-50`}
-                        title={(sel?.conAceite ?? true) ? 'Cambiar aceite (click para excluir)' : 'Aceite excluido (click para incluir)'}
-                      >
-                        <Droplet className="h-3.5 w-3.5" />
-                      </button>
+                      {(c.tipo === 'mechanical_unit' || c.tipo === 'external_axis') ? (
+                        <button
+                          type="button"
+                          disabled={readOnly || isLoading || !sel?.nivel}
+                          onClick={() => handleToggle(c.componenteSistemaId, 'conAceite', !(sel?.conAceite ?? true), c)}
+                          className={`inline-flex items-center justify-center h-7 w-7 rounded transition-colors ${
+                            (sel?.conAceite ?? true)
+                              ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                              : 'bg-gray-100 text-gray-400 line-through hover:bg-gray-200'
+                          } disabled:opacity-50`}
+                          title={
+                            !sel?.nivel
+                              ? 'Selecciona nivel primero'
+                              : (sel?.conAceite ?? true) ? 'Cambiar aceite (click para excluir)' : 'Aceite excluido (click para incluir)'
+                          }
+                        >
+                          <Droplet className="h-3.5 w-3.5" />
+                        </button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground/50">—</span>
+                      )}
                     </td>
                     <td className="px-3 py-2 text-right font-mono">
                       {sel?.horas != null ? Number(sel.horas).toFixed(1) : '-'}

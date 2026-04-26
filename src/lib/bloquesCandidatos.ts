@@ -99,7 +99,6 @@ export async function getBloquesCandidatos(ofertaId: number): Promise<CandidatoB
     });
     for (const a of acts) {
       const list = actividadesPorFamilia.get(a.familiaId) ?? [];
-      // Etiqueta humana: "Cambio aceite — Eje 1"
       list.push({
         nombre: `${a.tipoActividad.nombre}${a.componente ? ` — ${a.componente}` : ''}`,
         niveles: a.niveles,
@@ -108,15 +107,53 @@ export async function getBloquesCandidatos(ofertaId: number): Promise<CandidatoB
     }
   }
 
-  function actividadesParaNivel(familiaId: number | null, nivel: string): string[] {
-    if (familiaId == null) return [];
-    const lista = actividadesPorFamilia.get(familiaId) ?? [];
-    return lista
-      .filter((a) => {
-        if (!a.niveles || a.niveles.trim() === '') return true;
-        return a.niveles.split(',').map((s) => s.trim()).includes(nivel);
-      })
-      .map((a) => a.nombre);
+  // Fallback legacy: para componentes con familia vacia o sin actividades v2,
+  // buscar en actividades_mantenimiento por fabricante + familia (texto)
+  // Indexado por componenteSistemaId (no por familia, porque legacy usa string)
+  const actividadesLegacyPorComp = new Map<number, string[]>();
+  for (const oc of oferta.componentes) {
+    const familiaId = oc.componenteSistema.modeloComponente.familiaId;
+    const tieneV2 = familiaId != null && (actividadesPorFamilia.get(familiaId)?.length ?? 0) > 0;
+    if (tieneV2) continue;
+    // Cargar legacy on-demand para este componente
+    const modelo = await prisma.modeloComponente.findUnique({
+      where: { id: oc.componenteSistema.modeloComponenteId },
+      select: { fabricanteId: true, familia: true, nombre: true },
+    });
+    if (!modelo) continue;
+    const legacy = await prisma.actividadMantenimiento.findMany({
+      where: {
+        fabricanteId: modelo.fabricanteId,
+        OR: [
+          modelo.familia ? { familiaRobot: { contains: modelo.familia } } : { id: -1 },
+          { familiaRobot: { contains: modelo.nombre } },
+        ],
+      },
+      select: { tipoActividad: true, componente: true },
+      take: 50,
+    });
+    if (legacy.length > 0) {
+      actividadesLegacyPorComp.set(
+        oc.id,
+        legacy.map((a) => `${a.tipoActividad}${a.componente ? ` — ${a.componente}` : ''}`)
+      );
+    }
+  }
+
+  function actividadesParaNivel(familiaId: number | null, nivel: string, ofertaCompId: number): string[] {
+    // V2 path
+    if (familiaId != null) {
+      const lista = actividadesPorFamilia.get(familiaId) ?? [];
+      const filtradas = lista
+        .filter((a) => {
+          if (!a.niveles || a.niveles.trim() === '') return true;
+          return a.niveles.split(',').map((s) => s.trim()).includes(nivel);
+        })
+        .map((a) => a.nombre);
+      if (filtradas.length > 0) return filtradas;
+    }
+    // Fallback legacy (sin filtro de nivel — la tabla legacy no lo tiene)
+    return actividadesLegacyPorComp.get(ofertaCompId) ?? [];
   }
 
   // Index horas colocadas por componente
@@ -154,7 +191,7 @@ export async function getBloquesCandidatos(ofertaId: number): Promise<CandidatoB
       horasColocadas: +colocadas.toFixed(2),
       horasPendientes: +pendientes.toFixed(2),
       sinHoras,
-      actividades: actividadesParaNivel(familiaId, oc.nivel),
+      actividades: actividadesParaNivel(familiaId, oc.nivel, oc.id),
       meta: {
         sistemaNombre: oc.componenteSistema.sistema.nombre,
         componenteEtiqueta: oc.componenteSistema.etiqueta,
