@@ -1,10 +1,14 @@
 import { useState, useMemo, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Briefcase, Car, Coffee, Trash2, Loader2 } from 'lucide-react';
+import {
+  ChevronLeft, ChevronRight, Briefcase, Car, Coffee, Trash2, Loader2,
+  CheckCircle2,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   useOfertaPlanificacion, useCreateBloque, useUpdateBloque, useDeleteBloque,
-  type BloqueCalendario, type TipoBloque,
+  useBloquesCandidatos,
+  type BloqueCalendario, type TipoBloque, type CandidatoBloque,
 } from '@/hooks/useOfertas';
 
 // Cuadrante: 30 minutos
@@ -65,6 +69,7 @@ function addDays(d: Date, n: number): Date {
 
 export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readOnly = false }: Props) {
   const { data, isLoading } = useOfertaPlanificacion(ofertaId);
+  const { data: candidatosData } = useBloquesCandidatos(ofertaId);
   const create = useCreateBloque(ofertaId);
   const update = useUpdateBloque(ofertaId);
   const del = useDeleteBloque(ofertaId);
@@ -77,9 +82,21 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
   const [weekStart, setWeekStart] = useState<Date>(initialMonday);
 
   const [tipoSeleccionado, setTipoSeleccionado] = useState<TipoBloque>('trabajo');
+  const [candidatoActivo, setCandidatoActivo] = useState<CandidatoBloque | null>(null);
   const [drag, setDrag] = useState<null | { dayIdx: number; startSlot: number; endSlot: number }>(null);
   const [busy, setBusy] = useState(false);
   const dragRef = useRef<{ dayIdx: number; startSlot: number; endSlot: number } | null>(null);
+
+  const candidatos = candidatosData?.candidatos ?? [];
+
+  // Si el candidato activo se queda sin horas pendientes, deseleccionar
+  const activoActualizado = candidatoActivo
+    ? candidatos.find((c) => c.id === candidatoActivo.id) ?? null
+    : null;
+  if (activoActualizado && activoActualizado.horasPendientes <= 0 && candidatoActivo) {
+    // Auto-deselect si ya no hay pendientes
+    setTimeout(() => setCandidatoActivo(null), 0);
+  }
 
   // Limites de fecha (de la oferta)
   const limMin = fechaInicio ? new Date(fechaInicio) : null;
@@ -125,11 +142,33 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
     setDrag(null);
     dragRef.current = null;
     const fecha = fechasStr[dayIdx]!;
+    let slotsLen = endSlot - startSlot;
+
+    // Si hay candidato activo, limitar a las horas pendientes restantes
+    let tipo: TipoBloque = tipoSeleccionado;
+    let ofertaComponenteId: number | null = null;
+    let origenTipo: 'componente' | 'desplazamiento' | 'manual' | 'comida' = 'manual';
+    if (candidatoActivo) {
+      const slotsPend = Math.round(candidatoActivo.horasPendientes * SLOTS_PER_HOUR);
+      if (slotsPend > 0 && slotsLen > slotsPend) slotsLen = slotsPend;
+      tipo = candidatoActivo.tipo;
+      ofertaComponenteId = candidatoActivo.ofertaComponenteId;
+      origenTipo = candidatoActivo.origenTipo;
+    } else if (tipoSeleccionado === 'comida') {
+      origenTipo = 'comida';
+    }
+
+    if (slotsLen <= 0) return;
     const horaInicio = minutesToHHMM(startSlot * SLOT_MINUTES);
-    const horaFin = minutesToHHMM(endSlot * SLOT_MINUTES);
+    const horaFin = minutesToHHMM((startSlot + slotsLen) * SLOT_MINUTES);
+
     setBusy(true);
     try {
-      await create.mutateAsync({ fecha, horaInicio, horaFin, tipo: tipoSeleccionado });
+      await create.mutateAsync({
+        fecha, horaInicio, horaFin, tipo,
+        ofertaComponenteId,
+        origenTipo,
+      });
     } finally {
       setBusy(false);
     }
@@ -186,27 +225,103 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
 
         {!readOnly && (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Tipo bloque al arrastrar:</span>
-            <Select value={tipoSeleccionado} onValueChange={(v: any) => setTipoSeleccionado(v)}>
-              <SelectTrigger className="h-8 text-xs w-44">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="trabajo">
-                  <span className="flex items-center gap-2"><Briefcase className="h-3.5 w-3.5" /> Trabajo</span>
-                </SelectItem>
-                <SelectItem value="desplazamiento">
-                  <span className="flex items-center gap-2"><Car className="h-3.5 w-3.5" /> Desplazamiento</span>
-                </SelectItem>
-                <SelectItem value="comida">
-                  <span className="flex items-center gap-2"><Coffee className="h-3.5 w-3.5" /> Comida</span>
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            {!candidatoActivo && (
+              <>
+                <span className="text-xs text-muted-foreground">Bloque manual:</span>
+                <Select value={tipoSeleccionado} onValueChange={(v: any) => setTipoSeleccionado(v)}>
+                  <SelectTrigger className="h-8 text-xs w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="trabajo">
+                      <span className="flex items-center gap-2"><Briefcase className="h-3.5 w-3.5" /> Trabajo</span>
+                    </SelectItem>
+                    <SelectItem value="desplazamiento">
+                      <span className="flex items-center gap-2"><Car className="h-3.5 w-3.5" /> Desplazamiento</span>
+                    </SelectItem>
+                    <SelectItem value="comida">
+                      <span className="flex items-center gap-2"><Coffee className="h-3.5 w-3.5" /> Comida</span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </>
+            )}
             {busy && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
           </div>
         )}
       </div>
+
+      {/* Panel de candidatos */}
+      {!readOnly && candidatos.length > 0 && (
+        <div className="rounded-lg border bg-muted/20 p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-medium uppercase text-muted-foreground tracking-wide">
+              Bloques pendientes de planificar
+            </div>
+            {candidatoActivo && (
+              <button
+                type="button"
+                onClick={() => setCandidatoActivo(null)}
+                className="text-xs text-muted-foreground hover:text-foreground underline"
+              >
+                Cancelar seleccion
+              </button>
+            )}
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {candidatos.map((c) => {
+              const completo = c.horasPendientes <= 0.01;
+              const isActivo = candidatoActivo?.id === c.id;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  disabled={completo}
+                  onClick={() => setCandidatoActivo(isActivo ? null : c)}
+                  className={`
+                    flex-shrink-0 text-left rounded-md border px-3 py-2 text-xs min-w-[200px] max-w-[260px]
+                    transition-colors
+                    ${completo
+                      ? 'border-green-300 bg-green-50 text-green-800 cursor-default'
+                      : isActivo
+                        ? 'border-primary bg-primary/10 text-primary ring-2 ring-primary/30'
+                        : 'border-border bg-background hover:border-primary/50 cursor-pointer'}
+                  `}
+                >
+                  <div className="flex items-center gap-1.5 font-medium">
+                    {c.tipo === 'trabajo' ? <Briefcase className="h-3 w-3" /> : <Car className="h-3 w-3" />}
+                    <span className="truncate">{c.label}</span>
+                    {completo && <CheckCircle2 className="h-3 w-3 text-green-600 flex-shrink-0" />}
+                  </div>
+                  {c.meta.sistemaNombre && (
+                    <div className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                      {c.meta.sistemaNombre}
+                      {c.meta.nivel && ` · Nivel ${c.meta.nivel}`}
+                    </div>
+                  )}
+                  <div className="mt-1 text-[11px] flex items-center gap-2">
+                    <span className="font-mono">
+                      {c.horasPendientes.toFixed(1)}h <span className="text-muted-foreground">/ {c.horasTotal.toFixed(1)}h</span>
+                    </span>
+                    <div className="flex-1 h-1 rounded bg-muted/60 overflow-hidden">
+                      <div
+                        className="h-full bg-primary"
+                        style={{ width: `${Math.min(100, (c.horasColocadas / c.horasTotal) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          {candidatoActivo && (
+            <div className="text-xs text-primary bg-primary/5 rounded px-2 py-1.5 border border-primary/30">
+              Arrastra en el calendario para colocar <strong>{candidatoActivo.label}</strong>
+              {' · '}{candidatoActivo.horasPendientes.toFixed(1)}h pendientes (se ajustara al maximo disponible)
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Calendar grid */}
       <div

@@ -666,22 +666,33 @@ enum TipoBloqueOferta {
   comida
 }
 
+enum OrigenBloqueOferta {
+  componente
+  desplazamiento
+  manual
+  comida
+}
+
 // Bloque de tiempo en el calendario de planificacion de una oferta
 model OfertaBloqueCalendario {
-  id          Int              @id @default(autoincrement())
-  ofertaId    Int              @map("oferta_id")
-  fecha       DateTime         @db.Date
-  horaInicio  String           @map("hora_inicio") @db.VarChar(8)
-  horaFin     String           @map("hora_fin") @db.VarChar(8)
-  tipo        TipoBloqueOferta
-  notas       String?          @db.VarChar(500)
-  createdAt   DateTime         @default(now()) @map("created_at")
-  updatedAt   DateTime         @updatedAt @map("updated_at")
+  id                  Int                 @id @default(autoincrement())
+  ofertaId            Int                 @map("oferta_id")
+  fecha               DateTime            @db.Date
+  horaInicio          String              @map("hora_inicio") @db.VarChar(8)
+  horaFin             String              @map("hora_fin") @db.VarChar(8)
+  tipo                TipoBloqueOferta
+  ofertaComponenteId  Int?                @map("oferta_componente_id")
+  origenTipo          OrigenBloqueOferta  @default(manual) @map("origen_tipo")
+  notas               String?             @db.VarChar(500)
+  createdAt           DateTime            @default(now()) @map("created_at")
+  updatedAt           DateTime            @updatedAt @map("updated_at")
 
-  oferta Oferta @relation(fields: [ofertaId], references: [id], onDelete: Cascade)
+  oferta            Oferta            @relation(fields: [ofertaId], references: [id], onDelete: Cascade)
+  ofertaComponente  OfertaComponente? @relation(fields: [ofertaComponenteId], references: [id], onDelete: SetNull)
 
   @@index([ofertaId])
   @@index([ofertaId, fecha])
+  @@index([ofertaComponenteId])
   @@map("oferta_bloque_calendario")
 }
 
@@ -703,6 +714,7 @@ model OfertaComponente {
 
   oferta            Oferta            @relation(fields: [ofertaId], references: [id], onDelete: Cascade)
   componenteSistema ComponenteSistema @relation(fields: [componenteSistemaId], references: [id], onDelete: Cascade)
+  bloques           OfertaBloqueCalendario[]
 
   @@unique([ofertaId, componenteSistemaId], map: "uq_oc")
   @@map("oferta_componente")

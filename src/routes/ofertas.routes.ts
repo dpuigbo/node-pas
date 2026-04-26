@@ -16,6 +16,7 @@ import {
   getNivelesAplicablesModelo,
 } from '../lib/ofertaMantenimiento';
 import { calcularPlanificacion } from '../lib/ofertaPlanificacion';
+import { getBloquesCandidatos } from '../lib/bloquesCandidatos';
 
 const router = Router();
 
@@ -1071,6 +1072,16 @@ router.get('/:id/planificacion', async (req: Request, res: Response, next: NextF
   } catch (err) { next(err); }
 });
 
+// GET /api/v1/ofertas/:id/bloques-candidatos
+// Devuelve los bloques pendientes de colocar (componentes con horas + viaje cliente)
+router.get('/:id/bloques-candidatos', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const ofertaId = Number(req.params.id);
+    const candidatos = await getBloquesCandidatos(ofertaId);
+    res.json({ ofertaId, candidatos });
+  } catch (err) { next(err); }
+});
+
 // POST /api/v1/ofertas/:id/bloques (admin) — crear bloque
 router.post('/:id/bloques', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -1083,6 +1094,8 @@ router.post('/:id/bloques', requireRole('admin'), async (req: Request, res: Resp
         horaInicio: data.horaInicio,
         horaFin: data.horaFin,
         tipo: data.tipo,
+        ofertaComponenteId: data.ofertaComponenteId ?? null,
+        origenTipo: data.origenTipo ?? 'manual',
         notas: data.notas ?? null,
       },
     });

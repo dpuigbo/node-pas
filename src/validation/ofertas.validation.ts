@@ -61,6 +61,8 @@ export const createBloqueSchema = z.object({
   horaInicio: z.string().regex(/^\d{2}:\d{2}$/, 'Formato HH:MM'),
   horaFin: z.string().regex(/^\d{2}:\d{2}$/, 'Formato HH:MM'),
   tipo: z.enum(['trabajo', 'desplazamiento', 'comida']),
+  ofertaComponenteId: z.number().int().positive().optional().nullable(),
+  origenTipo: z.enum(['componente', 'desplazamiento', 'manual', 'comida']).optional(),
   notas: z.string().max(500).optional().nullable(),
 });
 

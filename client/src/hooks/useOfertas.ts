@@ -182,7 +182,26 @@ export interface BloqueCalendario {
   horaInicio: string; // HH:MM
   horaFin: string;
   tipo: TipoBloque;
+  ofertaComponenteId: number | null;
+  origenTipo: 'componente' | 'desplazamiento' | 'manual' | 'comida';
   notas: string | null;
+}
+
+export interface CandidatoBloque {
+  id: string;
+  tipo: 'trabajo' | 'desplazamiento';
+  origenTipo: 'componente' | 'desplazamiento';
+  ofertaComponenteId: number | null;
+  label: string;
+  horasTotal: number;
+  horasColocadas: number;
+  horasPendientes: number;
+  meta: {
+    sistemaNombre?: string;
+    componenteEtiqueta?: string;
+    componenteTipo?: string;
+    nivel?: string;
+  };
 }
 
 export interface BloqueRecargoDesglose {
@@ -237,11 +256,28 @@ export function useCreateBloque(ofertaId: number) {
       horaInicio: string;
       horaFin: string;
       tipo: TipoBloque;
+      ofertaComponenteId?: number | null;
+      origenTipo?: 'componente' | 'desplazamiento' | 'manual' | 'comida';
       notas?: string | null;
     }) => api.post(`/v1/ofertas/${ofertaId}/bloques`, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['ofertas', ofertaId, 'planificacion'] });
+      qc.invalidateQueries({ queryKey: ['ofertas', ofertaId, 'bloques-candidatos'] });
     },
+  });
+}
+
+export function useBloquesCandidatos(ofertaId: number | undefined) {
+  return useQuery({
+    queryKey: ['ofertas', ofertaId, 'bloques-candidatos'],
+    queryFn: async () => {
+      const { data } = await api.get<{
+        ofertaId: number;
+        candidatos: CandidatoBloque[];
+      }>(`/v1/ofertas/${ofertaId}/bloques-candidatos`);
+      return data;
+    },
+    enabled: !!ofertaId,
   });
 }
 
@@ -258,6 +294,7 @@ export function useUpdateBloque(ofertaId: number) {
     }) => api.put(`/v1/ofertas/${ofertaId}/bloques/${id}`, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['ofertas', ofertaId, 'planificacion'] });
+      qc.invalidateQueries({ queryKey: ['ofertas', ofertaId, 'bloques-candidatos'] });
     },
   });
 }
@@ -268,6 +305,7 @@ export function useDeleteBloque(ofertaId: number) {
     mutationFn: (id: number) => api.delete(`/v1/ofertas/${ofertaId}/bloques/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['ofertas', ofertaId, 'planificacion'] });
+      qc.invalidateQueries({ queryKey: ['ofertas', ofertaId, 'bloques-candidatos'] });
     },
   });
 }
