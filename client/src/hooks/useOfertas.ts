@@ -159,6 +159,38 @@ export function useDeleteOfertaComponente(ofertaId: number) {
   });
 }
 
+export interface ActividadModelo {
+  id: number;
+  componente: string;
+  niveles: string | null;
+  intervaloHoras: number | null;
+  intervaloMeses: number | null;
+  intervaloCondicion: string;
+  notas: string | null;
+  tipoActividad: { codigo: string; nombre: string; categoria: string };
+  consumibles: Array<{
+    id: number;
+    cantidad: number | null;
+    unidad: string | null;
+    notas: string | null;
+    consumible: { id: number; nombre: string; tipo: string; unidad: string | null; coste: number | null; precio: number | null };
+  }>;
+}
+
+export function useModeloActividades(modeloId: number | undefined, nivel?: string | null) {
+  return useQuery({
+    queryKey: ['modelos', modeloId, 'actividades', nivel ?? '_all'],
+    queryFn: async () => {
+      const params = nivel ? `?nivel=${encodeURIComponent(nivel)}` : '';
+      const { data } = await api.get<{ modeloId: number; nivel: string | null; actividades: ActividadModelo[] }>(
+        `/v1/modelos/${modeloId}/actividades${params}`
+      );
+      return data;
+    },
+    enabled: !!modeloId,
+  });
+}
+
 export function useNivelesAplicables(modeloId: number | undefined) {
   return useQuery({
     queryKey: ['modelos', modeloId, 'niveles-aplicables'],

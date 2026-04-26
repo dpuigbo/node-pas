@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { Loader2, Wrench, Battery, Droplet } from 'lucide-react';
+import { useState, Fragment } from 'react';
+import { Loader2, Wrench, Battery, Droplet, ChevronDown, ChevronRight, ListChecks } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   useOfertaComponentesDisponibles,
   useUpsertOfertaComponente,
+  useModeloActividades,
   type OfertaComponenteItem,
 } from '@/hooks/useOfertas';
 
@@ -30,6 +31,16 @@ export function MantenimientoComponentes({ ofertaId, readOnly = false }: Props) 
   const upsert = useUpsertOfertaComponente(ofertaId);
 
   const [busy, setBusy] = useState<number | null>(null);
+  const [expandido, setExpandido] = useState<Set<number>>(new Set());
+
+  const toggleExpand = (cmpId: number) => {
+    setExpandido((prev) => {
+      const next = new Set(prev);
+      if (next.has(cmpId)) next.delete(cmpId);
+      else next.add(cmpId);
+      return next;
+    });
+  };
 
   const handleNivelChange = async (cmpId: number, nivel: string, current: OfertaComponenteItem) => {
     setBusy(cmpId);
@@ -136,14 +147,28 @@ export function MantenimientoComponentes({ ofertaId, readOnly = false }: Props) 
                 const nivelValue = sel?.nivel ?? '__none__';
                 const isLoading = busy === c.componenteSistemaId;
                 const totalCoste = (sel?.costeConsumibles ?? 0) + (sel?.costeLimpieza ?? 0);
+                const isExpanded = expandido.has(c.componenteSistemaId);
                 return (
-                  <tr key={c.componenteSistemaId} className="border-b last:border-0 hover:bg-muted/10">
+                  <Fragment key={c.componenteSistemaId}>
+                  <tr className="border-b last:border-0 hover:bg-muted/10">
                     <td className="px-3 py-2">
-                      <div className="font-medium">{c.etiqueta}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {TIPO_LABEL[c.tipo] ?? c.tipo}
-                        {c.tipoBateriaMedida && ` · ${c.tipoBateriaMedida.toUpperCase()}`}
-                        {c.numEjes && ` · ${c.numEjes} ejes`}
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => toggleExpand(c.componenteSistemaId)}
+                          className="text-muted-foreground hover:text-foreground p-0.5"
+                          title={isExpanded ? 'Ocultar actividades' : 'Ver actividades de mantenimiento'}
+                        >
+                          {isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                        </button>
+                        <div>
+                          <div className="font-medium">{c.etiqueta}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {TIPO_LABEL[c.tipo] ?? c.tipo}
+                            {c.tipoBateriaMedida && ` · ${c.tipoBateriaMedida.toUpperCase()}`}
+                            {c.numEjes && ` · ${c.numEjes} ejes`}
+                          </div>
+                        </div>
                       </div>
                     </td>
                     <td className="px-3 py-2 text-xs">{c.modeloNombre}</td>
@@ -206,6 +231,14 @@ export function MantenimientoComponentes({ ofertaId, readOnly = false }: Props) 
                       {formatEuros(sel?.precioConsumibles)}
                     </td>
                   </tr>
+                  {isExpanded && (
+                    <tr className="border-b last:border-0 bg-muted/5">
+                      <td colSpan={8} className="px-6 py-3">
+                        <ActividadesComponente modeloId={c.modeloId} nivel={sel?.nivel ?? null} />
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 );
               })}
             </tbody>
@@ -226,6 +259,96 @@ export function MantenimientoComponentes({ ofertaId, readOnly = false }: Props) 
           <span className="text-muted-foreground">Precio:</span>{' '}
           <span className="font-mono font-medium">{formatEuros(totales.precio)}</span>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function ActividadesComponente({ modeloId, nivel }: { modeloId: number; nivel: string | null }) {
+  const { data, isLoading } = useModeloActividades(modeloId, nivel ?? undefined);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Loader2 className="h-3 w-3 animate-spin" /> Cargando actividades...
+      </div>
+    );
+  }
+
+  const acts = data?.actividades ?? [];
+  if (acts.length === 0) {
+    return (
+      <div className="text-xs text-muted-foreground italic">
+        {nivel
+          ? `No hay actividades de mantenimiento configuradas para nivel ${nivel} en la familia de este modelo.`
+          : 'No hay actividades de mantenimiento configuradas para la familia de este modelo.'}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+        <ListChecks className="h-3.5 w-3.5" />
+        Actividades de mantenimiento aplicables
+        {nivel && <Badge variant="secondary" className="text-[10px]">Nivel {nivel}</Badge>}
+        <span className="text-muted-foreground">({acts.length})</span>
+      </div>
+      <div className="rounded border bg-background overflow-hidden">
+        <table className="w-full text-xs">
+          <thead className="bg-muted/30">
+            <tr>
+              <th className="px-2 py-1 text-left">Actividad</th>
+              <th className="px-2 py-1 text-left">Componente</th>
+              <th className="px-2 py-1 text-left">Intervalo</th>
+              <th className="px-2 py-1 text-left">Niveles</th>
+              <th className="px-2 py-1 text-left">Consumibles</th>
+            </tr>
+          </thead>
+          <tbody>
+            {acts.map((a) => (
+              <tr key={a.id} className="border-t">
+                <td className="px-2 py-1 font-medium">{a.tipoActividad.nombre}</td>
+                <td className="px-2 py-1 text-muted-foreground">{a.componente}</td>
+                <td className="px-2 py-1 text-muted-foreground">
+                  {a.intervaloHoras ? `${a.intervaloHoras}h` : ''}
+                  {a.intervaloHoras && a.intervaloMeses ? ' / ' : ''}
+                  {a.intervaloMeses ? `${a.intervaloMeses}m` : ''}
+                  {!a.intervaloHoras && !a.intervaloMeses && '—'}
+                </td>
+                <td className="px-2 py-1">
+                  {a.niveles ? (
+                    a.niveles.split(',').map((n) => (
+                      <Badge key={n.trim()} variant="outline" className="text-[10px] mr-0.5">
+                        {n.trim()}
+                      </Badge>
+                    ))
+                  ) : (
+                    <span className="text-muted-foreground italic text-[10px]">todos</span>
+                  )}
+                </td>
+                <td className="px-2 py-1">
+                  {a.consumibles.length === 0 ? (
+                    <span className="text-muted-foreground">—</span>
+                  ) : (
+                    <div className="flex flex-wrap gap-1">
+                      {a.consumibles.map((ac) => (
+                        <span key={ac.id} className="inline-flex items-center gap-1 rounded bg-muted/40 px-1.5 py-0.5">
+                          <span className="font-medium">{ac.consumible.nombre}</span>
+                          {ac.cantidad != null && (
+                            <span className="text-muted-foreground font-mono">
+                              ×{Number(ac.cantidad).toFixed(2)}{ac.unidad ?? ac.consumible.unidad ?? ''}
+                            </span>
+                          )}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
