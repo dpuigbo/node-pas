@@ -18,7 +18,21 @@ SET @sql = (SELECT IF(
 ));
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
+-- Mismo cambio en intervencion_sistema (las intervenciones heredan el nivel
+-- de la oferta; si la oferta tiene sistemas sin nivel, la intervencion tambien)
+SET @sql = (SELECT IF(
+  (SELECT IS_NULLABLE FROM information_schema.columns
+   WHERE table_schema = DATABASE()
+     AND table_name = 'intervencion_sistema'
+     AND column_name = 'nivel_id') = 'NO',
+  'ALTER TABLE intervencion_sistema MODIFY COLUMN nivel_id INT NULL',
+  'SELECT 1'
+));
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
 -- Verificacion
 SELECT
   (SELECT IS_NULLABLE FROM information_schema.columns
-   WHERE table_schema=DATABASE() AND table_name='oferta_sistema' AND column_name='nivel_id') AS nivel_id_nullable;
+   WHERE table_schema=DATABASE() AND table_name='oferta_sistema' AND column_name='nivel_id') AS oferta_sistema_nullable,
+  (SELECT IS_NULLABLE FROM information_schema.columns
+   WHERE table_schema=DATABASE() AND table_name='intervencion_sistema' AND column_name='nivel_id') AS intervencion_sistema_nullable;

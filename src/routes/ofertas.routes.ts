@@ -318,7 +318,7 @@ async function calculateRecargos(params: {
  * Returns per-system costs and overall totals.
  */
 async function calculateOfertaTotals(
-  sistemas: { sistemaId: number; nivel: string | null | undefined }[]
+  sistemas: { sistemaId: number; nivel?: string | null }[]
 ): Promise<{
   sistemaTotals: Map<number, { horas: number; coste: number; precio: number }>;
   totalHoras: number;
@@ -792,10 +792,12 @@ router.post('/:id/generar-intervencion', requireRole('admin'), async (req: Reque
         notas: oferta.notas,
         estado: 'borrador',
         sistemas: {
-          create: oferta.sistemas.map((s) => ({
-            sistemaId: s.sistemaId,
-            nivelId: s.nivelId,
-          })),
+          createMany: {
+            data: oferta.sistemas.map((s) => ({
+              sistemaId: s.sistemaId,
+              nivelId: s.nivelId,
+            })),
+          },
         },
       },
       include: {

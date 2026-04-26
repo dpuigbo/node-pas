@@ -10,23 +10,22 @@ const router = Router();
 
 /** Build sistema rows from either `sistemas` (new) or `sistemaIds` (legacy).
  * Each row carries nivelId resolved from the codigo (default 'N1'). */
-async function buildSistemaRows(data: { sistemas?: { sistemaId: number; nivel: string }[]; sistemaIds?: number[] }) {
-  const defaultNivelId = await nivelIdFromCodigo('N1');
-  const resolveNivel = async (codigo: string): Promise<number> => {
+async function buildSistemaRows(data: { sistemas?: { sistemaId: number; nivel?: string | null }[]; sistemaIds?: number[] }): Promise<{ sistemaId: number; nivelId: number | null }[]> {
+  const resolveNivel = async (codigo: string | null | undefined): Promise<number | null> => {
+    if (!codigo) return null;
     const id = await nivelIdFromCodigo(codigo);
     if (id == null) throw new Error(`Nivel desconocido: ${codigo}`);
     return id;
   };
   if (data.sistemas && data.sistemas.length > 0) {
-    const out = [];
+    const out: { sistemaId: number; nivelId: number | null }[] = [];
     for (const s of data.sistemas) {
       out.push({ sistemaId: s.sistemaId, nivelId: await resolveNivel(s.nivel) });
     }
     return out;
   }
   if (data.sistemaIds && data.sistemaIds.length > 0) {
-    if (defaultNivelId == null) throw new Error('Nivel default N1 no existe');
-    return data.sistemaIds.map((id) => ({ sistemaId: id, nivelId: defaultNivelId }));
+    return data.sistemaIds.map((id) => ({ sistemaId: id, nivelId: null }));
   }
   return [];
 }
@@ -142,7 +141,7 @@ router.post('/', requireRole('admin'), async (req: Request, res: Response, next:
         dietasExtra: data.dietasExtra ?? null,
         diasTrabajo: data.diasTrabajo ?? '1,2,3,4,5',
         sistemas: {
-          create: rows,
+          createMany: { data: rows },
         },
       },
       include: {

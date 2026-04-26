@@ -432,13 +432,13 @@ enum EstadoIntervencion {
 }
 
 model IntervencionSistema {
-  intervencionId Int @map("intervencion_id")
-  sistemaId      Int @map("sistema_id")
-  nivelId        Int @map("nivel_id")
+  intervencionId Int  @map("intervencion_id")
+  sistemaId      Int  @map("sistema_id")
+  nivelId        Int? @map("nivel_id")
 
-  intervencion Intervencion         @relation(fields: [intervencionId], references: [id], onDelete: Cascade)
-  sistema      Sistema              @relation(fields: [sistemaId], references: [id], onDelete: Cascade)
-  nivel        LuNivelMantenimiento @relation(fields: [nivelId], references: [id])
+  intervencion Intervencion          @relation(fields: [intervencionId], references: [id], onDelete: Cascade)
+  sistema      Sistema               @relation(fields: [sistemaId], references: [id], onDelete: Cascade)
+  nivel        LuNivelMantenimiento? @relation(fields: [nivelId], references: [id])
 
   @@id([intervencionId, sistemaId])
   @@map("intervencion_sistema")
