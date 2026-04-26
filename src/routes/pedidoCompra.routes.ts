@@ -95,7 +95,8 @@ router.post('/generar/:intervencionId', requireRole('admin'), async (req: Reques
 
     for (const intSistema of intervencion.sistemas) {
       const sistema = intSistema.sistema;
-      const nivel = intSistema.nivel.codigo;
+      const nivel = intSistema.nivel?.codigo ?? null;
+      if (!nivel) continue; // sistema sin nivel asignado, no genera lineas
 
       for (const comp of sistema.componentes) {
         const modelo = comp.modeloComponente;
