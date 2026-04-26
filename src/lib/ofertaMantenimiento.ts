@@ -66,13 +66,15 @@ export async function calcularComponenteOferta(
   const horasRow = await prisma.mantenimientoHorasModelo.findUnique({
     where: { modeloComponenteId_nivel: { modeloComponenteId: modeloId, nivel } },
   });
-  const horas = dec(horasRow?.horas) ?? 0;
   const costeLimpieza = dec(horasRow?.costeLimpieza) ?? 0;
 
   // 2. Consumibles regulares desde consumibles_nivel
   const cn = await prisma.consumibleNivel.findUnique({
     where: { modeloId_nivel: { modeloId, nivel } },
   });
+
+  // Horas: prioridad mantenimiento_horas_modelo, fallback a consumibles_nivel.horas
+  const horas = dec(horasRow?.horas) ?? dec(cn?.horas) ?? 0;
 
   let costeConsumibles = 0;
   let precioConsumibles = 0;

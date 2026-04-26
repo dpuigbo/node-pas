@@ -150,6 +150,7 @@ export default function App() {
             }
           />
           <Route path="/ofertas" element={<OfertasPage />} />
+          <Route path="/ofertas/nuevo" element={<OfertaEditorPage />} />
           <Route path="/ofertas/:id" element={<OfertaEditorPage />} />
           <Route path="/catalogos" element={<CatalogosPage />} />
           <Route path="/consumibles-nivel" element={<ConsumiblesNivelPage />} />

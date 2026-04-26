@@ -270,22 +270,26 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {candidatos.map((c) => {
-              const completo = c.horasPendientes <= 0.01;
+              const completo = !c.sinHoras && c.horasPendientes <= 0.01;
               const isActivo = candidatoActivo?.id === c.id;
+              const disabled = completo || c.sinHoras;
               return (
                 <button
                   key={c.id}
                   type="button"
-                  disabled={completo}
+                  disabled={disabled}
                   onClick={() => setCandidatoActivo(isActivo ? null : c)}
+                  title={c.sinHoras ? 'Configura horas en mantenimiento_horas_modelo o consumibles_nivel para este modelo+nivel' : undefined}
                   className={`
                     flex-shrink-0 text-left rounded-md border px-3 py-2 text-xs min-w-[200px] max-w-[260px]
                     transition-colors
                     ${completo
                       ? 'border-green-300 bg-green-50 text-green-800 cursor-default'
-                      : isActivo
-                        ? 'border-primary bg-primary/10 text-primary ring-2 ring-primary/30'
-                        : 'border-border bg-background hover:border-primary/50 cursor-pointer'}
+                      : c.sinHoras
+                        ? 'border-amber-300 bg-amber-50 text-amber-900 cursor-not-allowed opacity-80'
+                        : isActivo
+                          ? 'border-primary bg-primary/10 text-primary ring-2 ring-primary/30'
+                          : 'border-border bg-background hover:border-primary/50 cursor-pointer'}
                   `}
                 >
                   <div className="flex items-center gap-1.5 font-medium">
@@ -300,15 +304,21 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
                     </div>
                   )}
                   <div className="mt-1 text-[11px] flex items-center gap-2">
-                    <span className="font-mono">
-                      {c.horasPendientes.toFixed(1)}h <span className="text-muted-foreground">/ {c.horasTotal.toFixed(1)}h</span>
-                    </span>
-                    <div className="flex-1 h-1 rounded bg-muted/60 overflow-hidden">
-                      <div
-                        className="h-full bg-primary"
-                        style={{ width: `${Math.min(100, (c.horasColocadas / c.horasTotal) * 100)}%` }}
-                      />
-                    </div>
+                    {c.sinHoras ? (
+                      <span className="italic">⚠ Sin horas configuradas</span>
+                    ) : (
+                      <>
+                        <span className="font-mono">
+                          {c.horasPendientes.toFixed(1)}h <span className="text-muted-foreground">/ {c.horasTotal.toFixed(1)}h</span>
+                        </span>
+                        <div className="flex-1 h-1 rounded bg-muted/60 overflow-hidden">
+                          <div
+                            className="h-full bg-primary"
+                            style={{ width: `${Math.min(100, (c.horasColocadas / c.horasTotal) * 100)}%` }}
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
                 </button>
               );

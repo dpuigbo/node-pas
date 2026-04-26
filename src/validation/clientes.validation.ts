@@ -1,5 +1,13 @@
 import { z } from 'zod';
 
+// Redondea horas al ceil del multiplo de 0.5h
+// (50 min = 0.83h → 1.0h, 9:37h = 9.62h → 10h, 9:30h = 9.5h → 9.5h)
+function ceilHalfHour(h: number): number {
+  return Math.ceil(h * 2) / 2;
+}
+
+const horasTrayectoTransformer = z.number().min(0).transform(ceilHalfHour);
+
 export const createClienteSchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio').max(200),
   sede: z.string().max(200).optional().nullable(),
@@ -15,7 +23,7 @@ export const createClienteSchema = z.object({
   tarifaHoraViaje: z.number().min(0).optional().nullable(),
   dietas: z.number().min(0).optional().nullable(),
   gestionAccesos: z.number().min(0).optional().nullable(),
-  horasTrayecto: z.number().min(0).optional().nullable(),
+  horasTrayecto: horasTrayectoTransformer.optional().nullable(),
   diasViaje: z.number().min(0).optional().nullable(),
   km: z.number().min(0).optional().nullable(),
   peajes: z.number().min(0).optional().nullable(),

@@ -196,6 +196,7 @@ export interface CandidatoBloque {
   horasTotal: number;
   horasColocadas: number;
   horasPendientes: number;
+  sinHoras: boolean;
   meta: {
     sistemaNombre?: string;
     componenteEtiqueta?: string;

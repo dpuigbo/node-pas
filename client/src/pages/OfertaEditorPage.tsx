@@ -19,6 +19,7 @@ import {
 import { MantenimientoComponentes } from '@/components/ofertas/MantenimientoComponentes';
 import { CalendarioPlanificacion } from '@/components/ofertas/CalendarioPlanificacion';
 import { ResumenOferta } from '@/components/ofertas/ResumenOferta';
+import { DatosOfertaTab } from '@/components/ofertas/DatosOfertaTab';
 
 const ESTADO_BADGE: Record<string, string> = {
   borrador: 'bg-gray-100 text-gray-700',
@@ -41,10 +42,11 @@ const TIPO_BADGE: Record<string, string> = {
 
 export default function OfertaEditorPage() {
   const { id } = useParams<{ id: string }>();
-  const ofertaId = Number(id);
+  const isNew = !id;
+  const ofertaId = id ? Number(id) : 0;
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
-  const { data: oferta, isLoading } = useOferta(ofertaId);
+  const { data: oferta, isLoading } = useOferta(isNew ? undefined : ofertaId);
   const updateEstado = useUpdateEstadoOferta();
   const recalcular = useRecalcularOferta();
   const deleteOferta = useDeleteOferta();
@@ -53,7 +55,29 @@ export default function OfertaEditorPage() {
   const [fechaDialogOpen, setFechaDialogOpen] = useState(false);
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
-  const [activeTab, setActiveTab] = useState<'componentes' | 'planificacion' | 'resumen'>('componentes');
+  const [activeTab, setActiveTab] = useState<'datos' | 'componentes' | 'planificacion' | 'resumen'>(
+    isNew ? 'datos' : 'componentes'
+  );
+
+  // Modo creacion: pagina simplificada con solo Tab 0
+  if (isNew) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-start gap-3">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/ofertas')}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-semibold">Nueva oferta</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Rellena los datos basicos. El resto (componentes, planificacion) se configura tras crear.
+            </p>
+          </div>
+        </div>
+        <DatosOfertaTab onCreated={(newId) => navigate(`/ofertas/${newId}`)} />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -195,8 +219,9 @@ export default function OfertaEditorPage() {
       )}
 
       {/* Tabs navigation */}
-      <div className="border-b flex gap-1">
+      <div className="border-b flex gap-1 flex-wrap">
         {[
+          { key: 'datos', label: '0. Datos' },
           { key: 'componentes', label: '1. Componentes y niveles' },
           { key: 'planificacion', label: '2. Planificacion' },
           { key: 'resumen', label: '3. Resumen' },
@@ -217,6 +242,9 @@ export default function OfertaEditorPage() {
       </div>
 
       <div className="pb-12">
+        {activeTab === 'datos' && (
+          <DatosOfertaTab oferta={oferta} readOnly={readOnly} />
+        )}
         {activeTab === 'componentes' && (
           <MantenimientoComponentes ofertaId={oferta.id} readOnly={readOnly} />
         )}
