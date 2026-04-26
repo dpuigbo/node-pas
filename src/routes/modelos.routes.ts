@@ -316,30 +316,83 @@ router.get('/:id/lubricacion', async (req: Request, res: Response, next: NextFun
   } catch (err) { next(err); }
 });
 
-// PUT /api/v1/modelos/:id/lubricacion/:lubId (admin) — editar fila
+// PUT /api/v1/modelos/:id/lubricacion/:lubId (admin) — editar fila.
+// Si lubId > 0 → update fila v2.
+// Si lubId < 0 → crear fila v2 nueva clonando datos de lubricacion_reductora
+//   (id = -lubId). Sirve para "promover" datos legacy a editables.
 router.put('/:id/lubricacion/:lubId', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const modeloId = Number(req.params.id);
     const lubId = Number(req.params.lubId);
     const { eje, cantidadValor, cantidadUnidad, notas } = req.body;
-    const updateData: any = {};
-    if (eje !== undefined) updateData.eje = String(eje).trim();
-    if (cantidadValor !== undefined) {
-      updateData.cantidadValor = cantidadValor === null || cantidadValor === ''
-        ? null
-        : Number(cantidadValor);
+
+    if (lubId > 0) {
+      // Update v2 directo
+      const updateData: any = {};
+      if (eje !== undefined) updateData.eje = String(eje).trim();
+      if (cantidadValor !== undefined) {
+        updateData.cantidadValor = cantidadValor === null || cantidadValor === ''
+          ? null
+          : Number(cantidadValor);
+      }
+      if (cantidadUnidad !== undefined) {
+        updateData.cantidadUnidad = cantidadUnidad || null;
+      }
+      if (notas !== undefined) updateData.notas = notas || null;
+      const row = await prisma.lubricacion.update({
+        where: { id: lubId },
+        data: updateData,
+        include: {
+          aceite: { select: { id: true, nombre: true, fabricante: true } },
+          consumible: { select: { id: true, nombre: true, tipo: true, unidad: true } },
+        },
+      });
+      res.json(row);
+      return;
     }
-    if (cantidadUnidad !== undefined) {
-      updateData.cantidadUnidad = cantidadUnidad || null;
+
+    // Legacy → clonar a v2
+    const legacyId = -lubId;
+    const legacy = await prisma.lubricacionReductora.findUnique({ where: { id: legacyId } });
+    if (!legacy) {
+      res.status(404).json({ error: 'Fila legacy no encontrada' });
+      return;
     }
-    if (notas !== undefined) updateData.notas = notas || null;
-    const row = await prisma.lubricacion.update({
-      where: { id: lubId },
-      data: updateData,
-      include: {
-        aceite: { select: { id: true, nombre: true, fabricante: true } },
-        consumible: { select: { id: true, nombre: true, tipo: true, unidad: true } },
-      },
+    // Si ya existe una fila v2 para (modelo, eje), updatear esa en vez de duplicar
+    const existing = await prisma.lubricacion.findFirst({
+      where: { modeloComponenteId: modeloId, eje: eje !== undefined ? String(eje).trim() : legacy.eje },
     });
+    const dataPayload: any = {
+      modeloComponenteId: modeloId,
+      eje: eje !== undefined ? String(eje).trim() : legacy.eje,
+      cantidadValor: cantidadValor === null || cantidadValor === '' || cantidadValor === undefined
+        ? null : Number(cantidadValor),
+      cantidadUnidad: cantidadUnidad || null,
+      cantidadTextoLegacy: legacy.cantidad,
+      varianteTrmLegacy: legacy.varianteTrm,
+      tipoLubricanteLegacy: legacy.tipoLubricante,
+      webConfig: legacy.webConfig,
+      notas: notas || null,
+    };
+    let row;
+    if (existing) {
+      row = await prisma.lubricacion.update({
+        where: { id: existing.id },
+        data: dataPayload,
+        include: {
+          aceite: { select: { id: true, nombre: true, fabricante: true } },
+          consumible: { select: { id: true, nombre: true, tipo: true, unidad: true } },
+        },
+      });
+    } else {
+      row = await prisma.lubricacion.create({
+        data: dataPayload,
+        include: {
+          aceite: { select: { id: true, nombre: true, fabricante: true } },
+          consumible: { select: { id: true, nombre: true, tipo: true, unidad: true } },
+        },
+      });
+    }
     res.json(row);
   } catch (err) { next(err); }
 });

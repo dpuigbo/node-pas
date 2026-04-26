@@ -44,13 +44,27 @@ export function MantenimientoComponentes({ ofertaId, readOnly = false }: Props) 
   };
 
   const handleNivelChange = async (cmpId: number, nivel: string, current: OfertaComponenteItem) => {
+    const nuevoNivel = nivel === '__none__' ? null : nivel;
+    // Aceite (lubricacion) se setea automaticamente segun el nivel:
+    //   N1 o sin nivel → off (en N1 no hay lubricacion)
+    //   N2_INF / N2_SUP / N3 / N1_EJE / N2_EJE → on
+    // Solo aplica a mech_unit y external_axis (controlador/drive no tienen toggle)
+    const aplicaAceite = current.tipo === 'mechanical_unit' || current.tipo === 'external_axis';
+    let conAceiteAuto = current.seleccion?.conAceite ?? true;
+    if (aplicaAceite) {
+      if (nuevoNivel == null || nuevoNivel === 'N1') {
+        conAceiteAuto = false;
+      } else {
+        conAceiteAuto = true;
+      }
+    }
     setBusy(cmpId);
     try {
       await upsert.mutateAsync({
         cmpId,
-        nivel: nivel === '__none__' ? null : nivel,
+        nivel: nuevoNivel,
         conBaterias: current.seleccion?.conBaterias ?? true,
-        conAceite: current.seleccion?.conAceite ?? true,
+        conAceite: conAceiteAuto,
       });
     } finally {
       setBusy(null);

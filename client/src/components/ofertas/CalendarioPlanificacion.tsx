@@ -471,18 +471,28 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
                           <span className="font-mono">{horasBloque.toFixed(1)}h</span>
                         </span>
                       </div>
-                      {candidato && height >= SLOT_PX * 2 && (
-                        <div className="leading-tight mt-0.5 opacity-90 truncate">
-                          {candidato.meta.componenteEtiqueta ?? candidato.label}
+                      {/* Nombre del sistema siempre visible si hay candidato (incluso bloque corto) */}
+                      {candidato && candidato.meta.sistemaNombre && (
+                        <div className="leading-tight mt-0.5 opacity-95 font-medium truncate flex items-center gap-1">
+                          <span className="truncate">{candidato.meta.sistemaNombre}</span>
                           {candidato.meta.nivel && (
-                            <span className="ml-1 inline-block px-1 rounded bg-white/60 text-[10px] font-medium">
-                              N{candidato.meta.nivel}
+                            <span className="inline-block px-1 rounded bg-white/70 text-[10px] font-semibold flex-shrink-0">
+                              {candidato.meta.nivel}
                             </span>
                           )}
                         </div>
                       )}
-                      {candidato && height >= SLOT_PX * 3 && candidato.meta.sistemaNombre && (
-                        <div className="text-[10px] opacity-70 truncate">{candidato.meta.sistemaNombre}</div>
+                      {/* Desglose de componentes solo si hay altura */}
+                      {candidato && height >= SLOT_PX * 3 && candidato.meta.componenteEtiqueta && (
+                        <div className="text-[10px] opacity-70 leading-tight line-clamp-2">
+                          {candidato.meta.componenteEtiqueta}
+                        </div>
+                      )}
+                      {/* Fallback si no encontramos candidato pero el bloque tiene oferta_componente */}
+                      {!candidato && b.ofertaComponenteId != null && height >= SLOT_PX * 2 && (
+                        <div className="leading-tight mt-0.5 opacity-70 italic text-[10px]">
+                          Componente #{b.ofertaComponenteId}
+                        </div>
                       )}
                       {candidato && candidato.actividades.length > 0 && height >= SLOT_PX * 4 && (
                         <div className="text-[10px] opacity-80 mt-0.5 leading-tight border-t border-white/40 pt-0.5">

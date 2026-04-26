@@ -576,7 +576,7 @@ export default function ModeloDetailPage() {
                         <th className="px-4 py-2 text-left font-medium w-32">Cantidad</th>
                         <th className="px-4 py-2 text-left font-medium w-24">Unidad</th>
                         <th className="px-4 py-2 text-left font-medium">Notas</th>
-                        {isAdmin && lubricacionData?.source === 'v2' && (
+                        {isAdmin && (
                           <th className="px-4 py-2 w-20"></th>
                         )}
                       </tr>
@@ -650,10 +650,10 @@ export default function ModeloDetailPage() {
                                 item.notas ?? <span className="text-muted-foreground">—</span>
                               )}
                             </td>
-                            {isAdmin && lubricacionData?.source === 'v2' && (
+                            {isAdmin && (
                               <td className="px-4 py-2 text-right">
                                 {isEditing ? (
-                                  <div className="flex gap-1">
+                                  <div className="flex gap-1 justify-end">
                                     <Button size="sm" variant="ghost" onClick={saveEditLub} disabled={updateLub.isPending} className="h-7 w-7 p-0">
                                       <Save className="h-3.5 w-3.5" />
                                     </Button>
@@ -661,11 +661,18 @@ export default function ModeloDetailPage() {
                                       <X className="h-3.5 w-3.5" />
                                     </Button>
                                   </div>
-                                ) : isV2 ? (
-                                  <Button size="sm" variant="ghost" onClick={() => startEditLub(item)} className="h-7 px-2 text-xs">
-                                    <Pencil className="h-3 w-3 mr-1" /> Editar
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => startEditLub(item)}
+                                    className="h-7 px-2 text-xs"
+                                    title={isV2 ? 'Editar' : 'Editar (se promovera a v2 al guardar)'}
+                                  >
+                                    <Pencil className="h-3 w-3 mr-1" />
+                                    {isV2 ? 'Editar' : 'Editar*'}
                                   </Button>
-                                ) : null}
+                                )}
                               </td>
                             )}
                           </tr>
