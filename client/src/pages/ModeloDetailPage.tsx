@@ -689,78 +689,133 @@ export default function ModeloDetailPage() {
 
       {/* ===== TAB: MANTENIMIENTO PREVENTIVO ===== */}
       {activeTab === 'mantenimiento' && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {loadingMant ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-          ) : !mantenimientoData?.records || mantenimientoData.records.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
-              <Wrench className="h-8 w-8" />
-              <p>No hay actividades de mantenimiento para {modelo.nombre}</p>
-            </div>
           ) : (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {mantenimientoData.source === 'cabinet' && `Actividades de cabinet — ${modelo.nombre}`}
-                  {mantenimientoData.source === 'drive_module' && `Actividades de drive module — ${modelo.nombre}`}
-                  {(mantenimientoData.source === 'v2' || mantenimientoData.source === 'legacy') && `Actividades de mantenimiento — ${modelo.familia ?? modelo.nombre}`}
-                  {mantenimientoData.records[0]?.documento && (
-                    <span className="ml-2 text-muted-foreground font-normal">
-                      Doc: {mantenimientoData.records[0].documento}
-                    </span>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b bg-muted/30 text-xs text-muted-foreground">
-                      <th className="px-4 py-2 text-left font-medium w-36">Tipo</th>
-                      <th className="px-4 py-2 text-left font-medium">Componente</th>
-                      <th className="px-4 py-2 text-left font-medium">Intervalo</th>
-                      <th className="px-4 py-2 text-left font-medium w-48">Notas</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {mantenimientoData.records.map((item: any) => {
-                      const isLegacy = mantenimientoData.source === 'legacy';
-                      const tipoLabel = item.tipoActividad?.nombre ?? item.tipoActividad ?? '—';
-                      const intervalo = isLegacy
-                        ? item.intervaloEstandar || '—'
-                        : formatIntervalo(item);
-                      const foundry = isLegacy
-                        ? item.intervaloFoundry
-                        : formatFoundry(item);
-                      return (
-                        <tr key={item.id} className="border-b last:border-b-0 hover:bg-muted/20">
-                          <td className="px-4 py-2">
-                            <Badge variant="outline" className="text-[10px]">
-                              {tipoLabel}
-                            </Badge>
-                          </td>
-                          <td className="px-4 py-2">{item.componente}</td>
-                          <td className="px-4 py-2">
-                            <span>{intervalo}</span>
-                            {foundry && (
-                              <span className="block text-xs text-muted-foreground mt-0.5">
-                                Foundry: {foundry}
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-4 py-2 text-xs text-muted-foreground max-w-[200px]">
-                            {item.notas ? (
-                              <span className="line-clamp-2" title={item.notas}>{item.notas}</span>
-                            ) : '—'}
-                          </td>
+            <>
+              {/* Acciones genericas (read-only, comunes a todos los modelos del tipo) */}
+              {mantenimientoData?.genericos && mantenimientoData.genericos.length > 0 && (
+                <Card className="border-dashed">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <span>Acciones genéricas del tipo</span>
+                      <Badge variant="outline" className="text-[10px] font-normal">
+                        {(mantenimientoData.genericosCategorias ?? []).join(', ')}
+                      </Badge>
+                      <Badge variant="secondary" className="text-[10px] font-normal">read-only</Badge>
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground">
+                      Comunes a todos los modelos de este tipo. Se editan desde Catálogos → Acciones genéricas.
+                    </p>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b bg-muted/20 text-xs text-muted-foreground">
+                          <th className="px-4 py-2 text-left font-medium w-32">Categoría</th>
+                          <th className="px-4 py-2 text-left font-medium w-40">Componente</th>
+                          <th className="px-4 py-2 text-left font-medium">Acción</th>
+                          <th className="px-4 py-2 text-left font-medium w-32">Intervalo</th>
+                          <th className="px-4 py-2 text-left font-medium w-40">Condición</th>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </CardContent>
-            </Card>
+                      </thead>
+                      <tbody>
+                        {mantenimientoData.genericos.map((g: any) => (
+                          <tr key={`g-${g.id}`} className="border-b last:border-b-0 hover:bg-muted/10">
+                            <td className="px-4 py-2">
+                              <Badge variant="outline" className="text-[10px]">{g.categoria}</Badge>
+                            </td>
+                            <td className="px-4 py-2 font-medium">{g.componente}</td>
+                            <td className="px-4 py-2 text-xs">{g.descripcionAccion}</td>
+                            <td className="px-4 py-2 text-xs text-muted-foreground">
+                              {g.intervaloTexto ?? '—'}
+                            </td>
+                            <td className="px-4 py-2 text-xs text-muted-foreground">
+                              {g.condicion ?? '—'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Acciones especificas (familia / cabinet / drive / legacy) */}
+              {!mantenimientoData?.records || mantenimientoData.records.length === 0 ? (
+                (!mantenimientoData?.genericos || mantenimientoData.genericos.length === 0) && (
+                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
+                    <Wrench className="h-8 w-8" />
+                    <p>No hay actividades de mantenimiento para {modelo.nombre}</p>
+                  </div>
+                )
+              ) : (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      {mantenimientoData.source === 'cabinet' && `Acciones específicas — Cabinet ${modelo.nombre}`}
+                      {mantenimientoData.source === 'drive_module' && `Acciones específicas — Drive ${modelo.nombre}`}
+                      {(mantenimientoData.source === 'v2' || mantenimientoData.source === 'legacy') && `Acciones específicas — Familia ${modelo.familia ?? modelo.nombre}`}
+                      {mantenimientoData.records[0]?.documento && (
+                        <span className="ml-2 text-muted-foreground font-normal">
+                          Doc: {mantenimientoData.records[0].documento}
+                        </span>
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b bg-muted/30 text-xs text-muted-foreground">
+                          <th className="px-4 py-2 text-left font-medium w-36">Tipo</th>
+                          <th className="px-4 py-2 text-left font-medium">Componente</th>
+                          <th className="px-4 py-2 text-left font-medium">Intervalo</th>
+                          <th className="px-4 py-2 text-left font-medium w-48">Notas</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {mantenimientoData.records.map((item: any) => {
+                          const isLegacy = mantenimientoData.source === 'legacy';
+                          const tipoLabel = item.tipoActividad?.nombre ?? item.tipoActividad ?? '—';
+                          const intervalo = isLegacy
+                            ? item.intervaloEstandar || '—'
+                            : formatIntervalo(item);
+                          const foundry = isLegacy
+                            ? item.intervaloFoundry
+                            : formatFoundry(item);
+                          return (
+                            <tr key={item.id} className="border-b last:border-b-0 hover:bg-muted/20">
+                              <td className="px-4 py-2">
+                                <Badge variant="outline" className="text-[10px]">
+                                  {tipoLabel}
+                                </Badge>
+                              </td>
+                              <td className="px-4 py-2">{item.componente}</td>
+                              <td className="px-4 py-2">
+                                <span>{intervalo}</span>
+                                {foundry && (
+                                  <span className="block text-xs text-muted-foreground mt-0.5">
+                                    Foundry: {foundry}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-4 py-2 text-xs text-muted-foreground max-w-[200px]">
+                                {item.notas ? (
+                                  <span className="line-clamp-2" title={item.notas}>{item.notas}</span>
+                                ) : '—'}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </CardContent>
+                </Card>
+              )}
+            </>
           )}
         </div>
       )}

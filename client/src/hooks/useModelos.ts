@@ -136,6 +136,10 @@ export function useMantenimiento(modeloId: number | undefined) {
       return data as {
         source: 'cabinet' | 'drive_module' | 'v2' | 'legacy';
         records: any[];
+        especificas: any[];
+        especificasSource: 'cabinet' | 'drive_module' | 'v2' | 'legacy';
+        genericos: any[];
+        genericosCategorias: string[];
       };
     },
     enabled: !!modeloId,
