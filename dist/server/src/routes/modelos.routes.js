@@ -254,7 +254,14 @@ router.get('/:id/lubricacion', async (req, res, next) => {
             orderBy: [{ eje: 'asc' }, { id: 'asc' }],
         });
         if (rows.length > 0) {
-            res.json({ modeloId, lubricacion: rows, fuente: 'lubricacion' });
+            // Shape dual: `lubricacion/fuente` (oferta) + `records/source` (modelos)
+            res.json({
+                modeloId,
+                lubricacion: rows,
+                records: rows,
+                fuente: 'lubricacion',
+                source: 'v2',
+            });
             return;
         }
         // Fallback a lubricacion_reductora por nombre del modelo
@@ -263,7 +270,7 @@ router.get('/:id/lubricacion', async (req, res, next) => {
             select: { nombre: true, fabricanteId: true, familia: true },
         });
         if (!modelo) {
-            res.json({ modeloId, lubricacion: [], fuente: 'ninguna' });
+            res.json({ modeloId, lubricacion: [], records: [], fuente: 'ninguna', source: 'v2' });
             return;
         }
         const legacy = await database_1.prisma.lubricacionReductora.findMany({
@@ -292,7 +299,13 @@ router.get('/:id/lubricacion', async (req, res, next) => {
             aceite: null,
             consumible: null,
         }));
-        res.json({ modeloId, lubricacion: mapped, fuente: 'lubricacion_reductora_legacy' });
+        res.json({
+            modeloId,
+            lubricacion: mapped,
+            records: mapped,
+            fuente: 'lubricacion_reductora_legacy',
+            source: 'legacy',
+        });
     }
     catch (err) {
         next(err);
@@ -658,48 +671,8 @@ router.delete('/:id', (0, role_middleware_1.requireRole)('admin'), async (req, r
         next(err);
     }
 });
-// ===== LUBRICACIÓN Y MANTENIMIENTO (nested under modelo) =====
-// GET /api/v1/modelos/:id/lubricacion
-// Returns lubrication data matching the model's familia
-router.get('/:id/lubricacion', async (req, res, next) => {
-    try {
-        const modeloId = Number(req.params.id);
-        const modelo = await database_1.prisma.modeloComponente.findUnique({
-            where: { id: modeloId },
-            select: { familia: true, familiaId: true, fabricanteId: true, nombre: true },
-        });
-        if (!modelo) {
-            res.status(404).json({ error: 'Modelo no encontrado' });
-            return;
-        }
-        // Try normalized table first (v2)
-        const normalized = await database_1.prisma.lubricacion.findMany({
-            where: { modeloComponenteId: modeloId },
-            orderBy: [{ eje: 'asc' }],
-            include: {
-                aceite: { select: { id: true, nombre: true, categoria: true } },
-                consumible: { select: { id: true, nombre: true, tipo: true, subtipo: true, codigoAbb: true, fabricante: true, unidad: true } },
-            },
-        });
-        if (normalized.length > 0) {
-            res.json({ source: 'v2', records: normalized });
-            return;
-        }
-        // Fallback to legacy table
-        const familiaSearch = modelo.familia || modelo.nombre;
-        const legacy = await database_1.prisma.lubricacionReductora.findMany({
-            where: {
-                fabricanteId: modelo.fabricanteId,
-                varianteTrm: { contains: familiaSearch },
-            },
-            orderBy: [{ varianteTrm: 'asc' }, { eje: 'asc' }],
-        });
-        res.json({ source: 'legacy', records: legacy });
-    }
-    catch (err) {
-        next(err);
-    }
-});
+// ===== MANTENIMIENTO (nested under modelo) =====
+// (lubricacion ahora esta unificado arriba en /:id/lubricacion)
 // GET /api/v1/modelos/:id/mantenimiento
 // Returns activities depending on the model type:
 //   controller       → actividad_cabinet

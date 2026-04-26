@@ -145,32 +145,61 @@ async function getBloquesCandidatos(ofertaId) {
         }
     }
     const candidatos = [];
-    // Componentes con nivel asignado (mostramos incluso si horas=0 para visibilidad)
+    const porSistema = new Map();
     for (const oc of oferta.componentes) {
         const nivelCodigo = oc.nivel?.codigo ?? null;
         if (!nivelCodigo)
-            continue; // sin nivel no es candidato
-        const horasTotal = dec(oc.horas);
-        const sinHoras = horasTotal <= 0;
-        const colocadas = horasPorComponente.get(oc.id) ?? 0;
+            continue;
+        const sId = oc.componenteSistema.sistema.id;
+        let bucket = porSistema.get(sId);
+        if (!bucket) {
+            bucket = { sistemaNombre: oc.componenteSistema.sistema.nombre, componentes: [] };
+            porSistema.set(sId, bucket);
+        }
+        bucket.componentes.push(oc);
+    }
+    for (const [sistemaId, { sistemaNombre, componentes }] of porSistema.entries()) {
+        if (componentes.length === 0)
+            continue;
+        let horasTotal = 0;
+        let colocadas = 0;
+        const desglosePartes = [];
+        const actividadesUnion = new Set();
+        let primerOcId = null;
+        const componenteIds = [];
+        const niveles = new Set();
+        for (const oc of componentes) {
+            const ht = dec(oc.horas);
+            horasTotal += ht;
+            colocadas += horasPorComponente.get(oc.id) ?? 0;
+            const nivelCodigo = oc.nivel.codigo;
+            niveles.add(nivelCodigo);
+            const familiaId = oc.componenteSistema.modeloComponente.familiaId;
+            for (const a of actividadesParaNivel(familiaId, nivelCodigo, oc.id))
+                actividadesUnion.add(a);
+            desglosePartes.push(`${oc.componenteSistema.modeloComponente.nombre} · ${oc.componenteSistema.etiqueta} (${nivelCodigo}, ${ht.toFixed(1)}h)`);
+            if (primerOcId == null)
+                primerOcId = oc.id;
+            componenteIds.push(oc.id);
+        }
         const pendientes = Math.max(0, horasTotal - colocadas);
-        const familiaId = oc.componenteSistema.modeloComponente.familiaId;
         candidatos.push({
-            id: `comp-${oc.id}`,
+            id: `sis-${sistemaId}`,
             tipo: 'trabajo',
             origenTipo: 'componente',
-            ofertaComponenteId: oc.id,
-            label: `${oc.componenteSistema.modeloComponente.nombre} · ${oc.componenteSistema.etiqueta}`,
+            ofertaComponenteId: primerOcId,
+            componenteIds,
+            label: `${sistemaNombre}`,
             horasTotal: +horasTotal.toFixed(2),
             horasColocadas: +colocadas.toFixed(2),
             horasPendientes: +pendientes.toFixed(2),
-            sinHoras,
-            actividades: actividadesParaNivel(familiaId, nivelCodigo, oc.id),
+            sinHoras: horasTotal <= 0,
+            actividades: Array.from(actividadesUnion),
             meta: {
-                sistemaNombre: oc.componenteSistema.sistema.nombre,
-                componenteEtiqueta: oc.componenteSistema.etiqueta,
-                componenteTipo: oc.componenteSistema.tipo,
-                nivel: nivelCodigo,
+                sistemaNombre,
+                componenteEtiqueta: desglosePartes.join(' + '),
+                componenteTipo: 'sistema',
+                nivel: Array.from(niveles).join('+'),
             },
         });
     }
@@ -186,6 +215,7 @@ async function getBloquesCandidatos(ofertaId) {
             tipo: 'desplazamiento',
             origenTipo: 'desplazamiento',
             ofertaComponenteId: null,
+            componenteIds: [],
             label: `Trayecto cliente (ida ${horasTrayectoUna}h + vuelta ${horasTrayectoUna}h)`,
             horasTotal: horasTotalIdaVuelta,
             horasColocadas: +colocadas.toFixed(2),

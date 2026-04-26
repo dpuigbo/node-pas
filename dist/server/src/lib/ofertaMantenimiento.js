@@ -355,16 +355,36 @@ async function getNivelesAplicablesModelo(modeloId) {
     const consumiblesSet = new Set(modelo.consumiblesNivel
         .filter((c) => c.consumibles && Array.isArray(c.consumibles) && c.consumibles.length > 0)
         .map((c) => c.nivel.codigo));
-    // 1. Explicit nivelesAplicables
+    // 1. Explicit nivelesAplicables — normaliza codigos legacy a canonicos
+    //    y deduplica (modelo_nivel_aplicable puede tener rows apuntando tanto
+    //    a niveles legacy '1' como nuevos 'N1'; nos quedamos con el canonico).
     if (modelo.nivelesAplicables.length > 0) {
-        return modelo.nivelesAplicables.map((na) => ({
-            codigo: na.nivel.codigo,
-            nombre: na.nivel.nombre,
-            orden: na.nivel.orden,
-            horas: horasMap.get(na.nivel.codigo) ?? null,
-            costeLimpieza: null,
-            tieneConsumibles: consumiblesSet.has(na.nivel.codigo),
-        }));
+        const seen = new Set();
+        const items = [];
+        for (const na of modelo.nivelesAplicables) {
+            const canon = (0, niveles_1.normalizarCodigoNivel)(na.nivel.codigo) ?? na.nivel.codigo;
+            if (seen.has(canon))
+                continue;
+            seen.add(canon);
+            // Si el codigo era legacy, buscar el row canonico para tener nombre/orden actualizados
+            let nivel = na.nivel;
+            if (canon !== na.nivel.codigo) {
+                const canonRow = await database_1.prisma.luNivelMantenimiento.findUnique({ where: { codigo: canon } });
+                if (canonRow)
+                    nivel = canonRow;
+            }
+            items.push({
+                codigo: canon,
+                nombre: nivel.nombre,
+                orden: nivel.orden,
+                horas: horasMap.get(canon) ?? horasMap.get(na.nivel.codigo) ?? null,
+                costeLimpieza: null,
+                tieneConsumibles: consumiblesSet.has(canon) || consumiblesSet.has(na.nivel.codigo),
+            });
+        }
+        if (items.length > 0) {
+            return items.sort((a, b) => a.orden - b.orden);
+        }
     }
     // 2. Fallback: niveles permitidos por tipo
     const codigos = (0, niveles_1.getNivelesPermitidos)(modelo.tipo);
