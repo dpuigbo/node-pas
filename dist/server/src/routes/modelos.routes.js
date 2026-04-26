@@ -731,6 +731,13 @@ router.delete('/:id', (0, role_middleware_1.requireRole)('admin'), async (req, r
 //   drive_unit       → actividad_drive_module
 //   mechanical_unit  → actividad_preventiva
 //   external_axis    → actividad_preventiva
+// Mapeo tipo modelo → categoria de punto_control_generico
+const TIPO_TO_CATEGORIA = {
+    mechanical_unit: ['manipulador', 'cabling', 'seguridad'],
+    controller: ['controladora', 'cabling', 'seguridad'],
+    drive_unit: ['drive_module', 'cabling', 'seguridad'],
+    external_axis: ['eje_externo', 'cabling', 'seguridad'],
+};
 router.get('/:id/mantenimiento', async (req, res, next) => {
     try {
         const modeloId = Number(req.params.id);
@@ -742,21 +749,32 @@ router.get('/:id/mantenimiento', async (req, res, next) => {
             res.status(404).json({ error: 'Modelo no encontrado' });
             return;
         }
-        // Controller → actividad_cabinet
+        // Puntos genericos del tipo (read-only, comunes a todos los modelos del tipo)
+        const categorias = TIPO_TO_CATEGORIA[modelo.tipo] ?? [];
+        const genericos = categorias.length > 0
+            ? await database_1.prisma.puntoControlGenerico.findMany({
+                where: { categoria: { in: categorias } },
+                orderBy: [{ categoria: 'asc' }, { orden: 'asc' }, { componente: 'asc' }],
+                include: {
+                    consumible: { select: { id: true, nombre: true, tipo: true, codigoAbb: true } },
+                },
+            })
+            : [];
+        // Especificas: depende del tipo
+        let specificSource = 'v2';
+        let specificRecords = [];
         if (modelo.tipo === 'controller') {
-            const records = await database_1.prisma.actividadCabinet.findMany({
+            specificRecords = await database_1.prisma.actividadCabinet.findMany({
                 where: { cabinetModeloId: modeloId },
                 orderBy: [{ tipoActividadId: 'asc' }, { componente: 'asc' }],
                 include: {
                     tipoActividad: { select: { id: true, nombre: true, categoria: true } },
                 },
             });
-            res.json({ source: 'cabinet', records });
-            return;
+            specificSource = 'cabinet';
         }
-        // Drive unit → actividad_drive_module
-        if (modelo.tipo === 'drive_unit') {
-            const records = await database_1.prisma.actividadDriveModule.findMany({
+        else if (modelo.tipo === 'drive_unit') {
+            specificRecords = await database_1.prisma.actividadDriveModule.findMany({
                 where: { driveModuleModeloId: modeloId },
                 orderBy: [{ tipoActividadId: 'asc' }, { componente: 'asc' }],
                 include: {
@@ -764,11 +782,10 @@ router.get('/:id/mantenimiento', async (req, res, next) => {
                     controladorAsociado: { select: { id: true, nombre: true } },
                 },
             });
-            res.json({ source: 'drive_module', records });
-            return;
+            specificSource = 'drive_module';
         }
-        // Mechanical unit / external axis → actividad_preventiva (por familia)
-        if (modelo.familiaId) {
+        else if (modelo.familiaId) {
+            // Mechanical unit / external axis → actividad_preventiva (por familia)
             const normalized = await database_1.prisma.actividadPreventiva.findMany({
                 where: { familiaId: modelo.familiaId },
                 orderBy: [{ tipoActividadId: 'asc' }, { componente: 'asc' }],
@@ -778,19 +795,30 @@ router.get('/:id/mantenimiento', async (req, res, next) => {
                 },
             });
             if (normalized.length > 0) {
-                res.json({ source: 'v2', records: normalized });
-                return;
+                specificRecords = normalized;
+                specificSource = 'v2';
             }
         }
-        // Fallback legacy
-        const legacy = await database_1.prisma.actividadMantenimiento.findMany({
-            where: {
-                fabricanteId: modelo.fabricanteId,
-                familiaRobot: modelo.familia ?? '',
-            },
-            orderBy: [{ tipoActividad: 'asc' }, { componente: 'asc' }],
+        // Fallback legacy si no hay especificas v2
+        if (specificRecords.length === 0 && (modelo.tipo === 'mechanical_unit' || modelo.tipo === 'external_axis')) {
+            specificRecords = await database_1.prisma.actividadMantenimiento.findMany({
+                where: {
+                    fabricanteId: modelo.fabricanteId,
+                    familiaRobot: modelo.familia ?? '',
+                },
+                orderBy: [{ tipoActividad: 'asc' }, { componente: 'asc' }],
+            });
+            specificSource = 'legacy';
+        }
+        res.json({
+            source: specificSource, // compat con frontend antiguo
+            records: specificRecords, // compat con frontend antiguo
+            // Nuevo shape unificado:
+            especificas: specificRecords,
+            especificasSource: specificSource,
+            genericos,
+            genericosCategorias: categorias,
         });
-        res.json({ source: 'legacy', records: legacy });
     }
     catch (err) {
         next(err);

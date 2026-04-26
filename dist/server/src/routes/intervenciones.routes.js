@@ -9,8 +9,9 @@ const router = (0, express_1.Router)();
 /** Build sistema rows from either `sistemas` (new) or `sistemaIds` (legacy).
  * Each row carries nivelId resolved from the codigo (default 'N1'). */
 async function buildSistemaRows(data) {
-    const defaultNivelId = await (0, niveles_1.nivelIdFromCodigo)('N1');
     const resolveNivel = async (codigo) => {
+        if (!codigo)
+            return null;
         const id = await (0, niveles_1.nivelIdFromCodigo)(codigo);
         if (id == null)
             throw new Error(`Nivel desconocido: ${codigo}`);
@@ -24,9 +25,7 @@ async function buildSistemaRows(data) {
         return out;
     }
     if (data.sistemaIds && data.sistemaIds.length > 0) {
-        if (defaultNivelId == null)
-            throw new Error('Nivel default N1 no existe');
-        return data.sistemaIds.map((id) => ({ sistemaId: id, nivelId: defaultNivelId }));
+        return data.sistemaIds.map((id) => ({ sistemaId: id, nivelId: null }));
     }
     return [];
 }
@@ -150,7 +149,7 @@ router.post('/', (0, role_middleware_1.requireRole)('admin'), async (req, res, n
                 dietasExtra: data.dietasExtra ?? null,
                 diasTrabajo: data.diasTrabajo ?? '1,2,3,4,5',
                 sistemas: {
-                    create: rows,
+                    createMany: { data: rows },
                 },
             },
             include: {

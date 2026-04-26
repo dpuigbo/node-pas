@@ -66,7 +66,9 @@ router.post('/generar/:intervencionId', (0, role_middleware_1.requireRole)('admi
         const lineas = [];
         for (const intSistema of intervencion.sistemas) {
             const sistema = intSistema.sistema;
-            const nivel = intSistema.nivel.codigo;
+            const nivel = intSistema.nivel?.codigo ?? null;
+            if (!nivel)
+                continue; // sistema sin nivel asignado, no genera lineas
             for (const comp of sistema.componentes) {
                 const modelo = comp.modeloComponente;
                 const cn = modelo.consumiblesNivel.find((c) => c.nivel.codigo === nivel);

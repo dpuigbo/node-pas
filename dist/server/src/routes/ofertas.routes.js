@@ -8,10 +8,13 @@ const ofertaMantenimiento_1 = require("../lib/ofertaMantenimiento");
 const ofertaPlanificacion_1 = require("../lib/ofertaPlanificacion");
 const bloquesCandidatos_1 = require("../lib/bloquesCandidatos");
 const niveles_1 = require("../lib/niveles");
-/** Resolver codigos canonicos a IDs en batch. Lanza si algun codigo no existe. */
+/** Resolver codigos canonicos a IDs en batch. Lanza si algun codigo no existe.
+ * Acepta null/undefined entries y los ignora. */
 async function resolveNivelCodigos(codigos) {
     const out = new Map();
     for (const c of codigos) {
+        if (!c)
+            continue;
         const norm = (0, niveles_1.normalizarCodigoNivel)(c) ?? c;
         if (out.has(norm))
             continue;
@@ -273,6 +276,8 @@ async function calculateOfertaTotals(sistemas) {
     const consumibleIds = new Set();
     const catalogoIds = new Set();
     for (const { sistemaId, nivel } of sistemas) {
+        if (!nivel)
+            continue; // sin nivel global, no contribuye al total
         const sistema = sistemaMap.get(sistemaId);
         if (!sistema)
             continue;
@@ -329,6 +334,8 @@ async function calculateOfertaTotals(sistemas) {
     }
     // Calculate per system
     for (const { sistemaId, nivel } of sistemas) {
+        if (!nivel)
+            continue;
         const sistema = sistemaMap.get(sistemaId);
         if (!sistema)
             continue;
@@ -393,7 +400,7 @@ router.get('/', async (req, res, next) => {
         // Serializar nivel objeto -> codigo string para mantener compat con frontend
         res.json(ofertas.map((o) => ({
             ...o,
-            sistemas: o.sistemas.map((s) => ({ ...s, nivel: s.nivel.codigo, nivelNombre: s.nivel.nombre })),
+            sistemas: o.sistemas.map((s) => ({ ...s, nivel: s.nivel?.codigo ?? null, nivelNombre: s.nivel?.nombre ?? null })),
         })));
     }
     catch (err) {
@@ -431,7 +438,7 @@ router.get('/:id', async (req, res, next) => {
         }
         res.json({
             ...oferta,
-            sistemas: oferta.sistemas.map((s) => ({ ...s, nivel: s.nivel.codigo, nivelNombre: s.nivel.nombre })),
+            sistemas: oferta.sistemas.map((s) => ({ ...s, nivel: s.nivel?.codigo ?? null, nivelNombre: s.nivel?.nombre ?? null })),
         });
     }
     catch (err) {
@@ -492,7 +499,7 @@ router.post('/', (0, role_middleware_1.requireRole)('admin'), async (req, res, n
                         const totals = sistemaTotals.get(s.sistemaId);
                         return {
                             sistemaId: s.sistemaId,
-                            nivelId: sistemaNivelMap.get(s.nivel),
+                            nivelId: s.nivel ? (sistemaNivelMap.get(s.nivel) ?? null) : null,
                             horas: totals?.horas ?? null,
                             costeConsumibles: totals?.coste ?? null,
                             precioConsumibles: totals?.precio ?? null,
@@ -602,7 +609,7 @@ router.put('/:id', (0, role_middleware_1.requireRole)('admin'), async (req, res,
                                 const totals = sistemaTotals.get(s.sistemaId);
                                 return {
                                     sistemaId: s.sistemaId,
-                                    nivelId: sistemaNivelMapPut.get(s.nivel),
+                                    nivelId: s.nivel ? (sistemaNivelMapPut.get(s.nivel) ?? null) : null,
                                     horas: totals?.horas ?? null,
                                     costeConsumibles: totals?.coste ?? null,
                                     precioConsumibles: totals?.precio ?? null,
@@ -712,10 +719,12 @@ router.post('/:id/generar-intervencion', (0, role_middleware_1.requireRole)('adm
                 notas: oferta.notas,
                 estado: 'borrador',
                 sistemas: {
-                    create: oferta.sistemas.map((s) => ({
-                        sistemaId: s.sistemaId,
-                        nivelId: s.nivelId,
-                    })),
+                    createMany: {
+                        data: oferta.sistemas.map((s) => ({
+                            sistemaId: s.sistemaId,
+                            nivelId: s.nivelId,
+                        })),
+                    },
                 },
             },
             include: {
@@ -747,7 +756,7 @@ router.post('/:id/recalcular', (0, role_middleware_1.requireRole)('admin'), asyn
             res.status(404).json({ error: 'Oferta no encontrada' });
             return;
         }
-        const sistemas = oferta.sistemas.map((s) => ({ sistemaId: s.sistemaId, nivel: s.nivel.codigo }));
+        const sistemas = oferta.sistemas.map((s) => ({ sistemaId: s.sistemaId, nivel: s.nivel?.codigo ?? null }));
         const { sistemaTotals, totalHoras, totalCoste, totalPrecio } = await calculateOfertaTotals(sistemas);
         // Recalculate surcharges if schedule exists
         let desgloseRecargo = null;
