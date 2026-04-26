@@ -178,9 +178,11 @@ export function useModeloLubricacion(modeloId: number | undefined) {
   return useQuery({
     queryKey: ['modelos', modeloId, 'lubricacion'],
     queryFn: async () => {
-      const { data } = await api.get<{ modeloId: number; lubricacion: LubricacionFila[] }>(
-        `/v1/modelos/${modeloId}/lubricacion`
-      );
+      const { data } = await api.get<{
+        modeloId: number;
+        lubricacion: LubricacionFila[];
+        fuente?: 'lubricacion' | 'lubricacion_reductora_legacy' | 'ninguna';
+      }>(`/v1/modelos/${modeloId}/lubricacion`);
       return data;
     },
     enabled: !!modeloId,

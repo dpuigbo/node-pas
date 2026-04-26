@@ -1,16 +1,13 @@
 import { useState, Fragment } from 'react';
-import { Loader2, Wrench, Battery, Droplet, ChevronDown, ChevronRight, ListChecks, Save, X as XIcon } from 'lucide-react';
+import { Loader2, Wrench, Battery, Droplet, ChevronDown, ChevronRight, ListChecks } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   useOfertaComponentesDisponibles,
   useUpsertOfertaComponente,
   useModeloActividades,
   useModeloLubricacion,
-  useUpdateLubricacion,
   type OfertaComponenteItem,
-  type LubricacionFila,
 } from '@/hooks/useOfertas';
 
 interface Props {
@@ -247,8 +244,8 @@ export function MantenimientoComponentes({ ofertaId, readOnly = false }: Props) 
                     <tr className="border-b last:border-0 bg-muted/5">
                       <td colSpan={8} className="px-6 py-3 space-y-4">
                         <ActividadesComponente modeloId={c.modeloId} nivel={sel?.nivel ?? null} />
-                        {c.tipo === 'mechanical_unit' && (
-                          <LubricacionEditor modeloId={c.modeloId} readOnly={readOnly} />
+                        {(c.tipo === 'mechanical_unit' || c.tipo === 'external_axis') && (
+                          <LubricacionView modeloId={c.modeloId} />
                         )}
                       </td>
                     </tr>
@@ -279,16 +276,8 @@ export function MantenimientoComponentes({ ofertaId, readOnly = false }: Props) 
   );
 }
 
-const UNIDADES_LUB = ['ml', 'l', 'g', 'kg', 'pcs', 'n_a'] as const;
-
-function LubricacionEditor({ modeloId, readOnly }: { modeloId: number; readOnly: boolean }) {
+function LubricacionView({ modeloId }: { modeloId: number }) {
   const { data, isLoading } = useModeloLubricacion(modeloId);
-  const update = useUpdateLubricacion(modeloId);
-
-  const [editId, setEditId] = useState<number | null>(null);
-  const [draft, setDraft] = useState<{ eje: string; cantidadValor: string; cantidadUnidad: string; notas: string }>({
-    eje: '', cantidadValor: '', cantidadUnidad: '', notas: '',
-  });
 
   if (isLoading) {
     return (
@@ -302,36 +291,10 @@ function LubricacionEditor({ modeloId, readOnly }: { modeloId: number; readOnly:
   if (filas.length === 0) {
     return (
       <div className="text-xs text-muted-foreground italic">
-        No hay datos de lubricacion configurados para este modelo.
+        No hay datos de lubricacion configurados para este modelo. Editalos en la vista de modelos.
       </div>
     );
   }
-
-  const startEdit = (f: LubricacionFila) => {
-    setEditId(f.id);
-    setDraft({
-      eje: f.eje,
-      cantidadValor: f.cantidadValor != null ? String(f.cantidadValor) : '',
-      cantidadUnidad: f.cantidadUnidad ?? '',
-      notas: f.notas ?? '',
-    });
-  };
-
-  const cancelEdit = () => {
-    setEditId(null);
-  };
-
-  const saveEdit = async () => {
-    if (editId == null) return;
-    await update.mutateAsync({
-      lubId: editId,
-      eje: draft.eje.trim() || undefined,
-      cantidadValor: draft.cantidadValor === '' ? null : Number(draft.cantidadValor),
-      cantidadUnidad: draft.cantidadUnidad || null,
-      notas: draft.notas || null,
-    });
-    setEditId(null);
-  };
 
   return (
     <div className="space-y-2">
@@ -339,6 +302,9 @@ function LubricacionEditor({ modeloId, readOnly }: { modeloId: number; readOnly:
         <Droplet className="h-3.5 w-3.5" />
         Lubricacion del modelo
         <span className="text-muted-foreground">({filas.length} ejes)</span>
+        {data?.fuente === 'lubricacion_reductora_legacy' && (
+          <Badge variant="outline" className="text-[10px]">legacy</Badge>
+        )}
       </div>
       <div className="rounded border bg-background overflow-hidden">
         <table className="w-full text-xs">
@@ -349,100 +315,22 @@ function LubricacionEditor({ modeloId, readOnly }: { modeloId: number; readOnly:
               <th className="px-2 py-1 text-right">Cantidad</th>
               <th className="px-2 py-1 text-left">Unidad</th>
               <th className="px-2 py-1 text-left">Notas</th>
-              {!readOnly && <th className="px-2 py-1 w-16"></th>}
             </tr>
           </thead>
           <tbody>
-            {filas.map((f) => {
-              const editing = editId === f.id;
-              return (
-                <tr key={f.id} className="border-t">
-                  <td className="px-2 py-1 font-medium">
-                    {editing ? (
-                      <Input
-                        className="h-7 text-xs"
-                        value={draft.eje}
-                        onChange={(e) => setDraft({ ...draft, eje: e.target.value })}
-                      />
-                    ) : (
-                      f.eje
-                    )}
-                  </td>
-                  <td className="px-2 py-1 text-muted-foreground">
-                    {f.consumible?.nombre ?? f.aceite?.nombre ?? f.tipoLubricanteLegacy ?? '—'}
-                  </td>
-                  <td className="px-2 py-1 text-right font-mono">
-                    {editing ? (
-                      <Input
-                        type="number"
-                        step="0.01"
-                        className="h-7 text-xs text-right"
-                        value={draft.cantidadValor}
-                        onChange={(e) => setDraft({ ...draft, cantidadValor: e.target.value })}
-                      />
-                    ) : (
-                      f.cantidadValor != null ? Number(f.cantidadValor).toFixed(2) : (f.cantidadTextoLegacy ?? '—')
-                    )}
-                  </td>
-                  <td className="px-2 py-1">
-                    {editing ? (
-                      <Select value={draft.cantidadUnidad} onValueChange={(v) => setDraft({ ...draft, cantidadUnidad: v })}>
-                        <SelectTrigger className="h-7 text-xs w-20"><SelectValue placeholder="—" /></SelectTrigger>
-                        <SelectContent>
-                          {UNIDADES_LUB.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      f.cantidadUnidad ?? '—'
-                    )}
-                  </td>
-                  <td className="px-2 py-1 text-muted-foreground">
-                    {editing ? (
-                      <Input
-                        className="h-7 text-xs"
-                        value={draft.notas}
-                        onChange={(e) => setDraft({ ...draft, notas: e.target.value })}
-                      />
-                    ) : (
-                      f.notas ?? '—'
-                    )}
-                  </td>
-                  {!readOnly && (
-                    <td className="px-2 py-1">
-                      {editing ? (
-                        <div className="flex gap-1">
-                          <button
-                            type="button"
-                            onClick={saveEdit}
-                            disabled={update.isPending}
-                            className="h-6 w-6 inline-flex items-center justify-center rounded bg-green-100 text-green-700 hover:bg-green-200"
-                            title="Guardar"
-                          >
-                            <Save className="h-3 w-3" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={cancelEdit}
-                            className="h-6 w-6 inline-flex items-center justify-center rounded bg-gray-100 text-gray-700 hover:bg-gray-200"
-                            title="Cancelar"
-                          >
-                            <XIcon className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => startEdit(f)}
-                          className="text-xs text-primary hover:underline"
-                        >
-                          Editar
-                        </button>
-                      )}
-                    </td>
-                  )}
-                </tr>
-              );
-            })}
+            {filas.map((f) => (
+              <tr key={f.id} className="border-t">
+                <td className="px-2 py-1 font-medium">{f.eje}</td>
+                <td className="px-2 py-1 text-muted-foreground">
+                  {f.consumible?.nombre ?? f.aceite?.nombre ?? f.tipoLubricanteLegacy ?? '—'}
+                </td>
+                <td className="px-2 py-1 text-right font-mono">
+                  {f.cantidadValor != null ? Number(f.cantidadValor).toFixed(2) : (f.cantidadTextoLegacy ?? '—')}
+                </td>
+                <td className="px-2 py-1">{f.cantidadUnidad ?? '—'}</td>
+                <td className="px-2 py-1 text-muted-foreground">{f.notas ?? '—'}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
