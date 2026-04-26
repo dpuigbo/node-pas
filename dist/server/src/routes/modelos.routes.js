@@ -173,8 +173,75 @@ router.get('/:id/niveles-aplicables', async (req, res, next) => {
         next(err);
     }
 });
+// GET /api/v1/modelos/:id/diagnostico
+// Devuelve estadisticas para diagnosticar por que faltan datos:
+//   - familiaId del modelo + nombre de familia
+//   - conteo de actividades preventivas (v2) por familia
+//   - conteo de actividades mantenimiento (legacy) por nombre familia
+//   - conteo de lubricacion (v2) por modelo
+//   - conteo de lubricacion_reductora (legacy) por fabricante + variante
+router.get('/:id/diagnostico', async (req, res, next) => {
+    try {
+        const modeloId = Number(req.params.id);
+        const modelo = await database_1.prisma.modeloComponente.findUnique({
+            where: { id: modeloId },
+            include: {
+                familiaRel: true,
+                fabricante: { select: { id: true, nombre: true } },
+            },
+        });
+        if (!modelo) {
+            res.status(404).json({ error: 'Modelo no encontrado' });
+            return;
+        }
+        const familiaIdNum = modelo.familiaId;
+        const [actividadesV2, lubricacionV2, actividadesLegacy, lubricacionLegacy,] = await Promise.all([
+            familiaIdNum ? database_1.prisma.actividadPreventiva.count({ where: { familiaId: familiaIdNum } }) : Promise.resolve(0),
+            database_1.prisma.lubricacion.count({ where: { modeloComponenteId: modeloId } }),
+            database_1.prisma.actividadMantenimiento.count({
+                where: {
+                    fabricanteId: modelo.fabricanteId,
+                    OR: [
+                        modelo.familia ? { familiaRobot: { contains: modelo.familia } } : { id: -1 },
+                        { familiaRobot: { contains: modelo.nombre } },
+                    ],
+                },
+            }),
+            database_1.prisma.lubricacionReductora.count({
+                where: {
+                    fabricanteId: modelo.fabricanteId,
+                    OR: [
+                        { varianteTrm: { contains: modelo.nombre } },
+                        modelo.familia ? { varianteTrm: { contains: modelo.familia } } : { id: -1 },
+                    ],
+                },
+            }),
+        ]);
+        res.json({
+            modeloId,
+            modeloNombre: modelo.nombre,
+            modeloTipo: modelo.tipo,
+            modeloFamiliaTexto: modelo.familia,
+            familiaId: familiaIdNum,
+            familia: modelo.familiaRel
+                ? { codigo: modelo.familiaRel.codigo, descripcion: modelo.familiaRel.descripcion }
+                : null,
+            fabricante: modelo.fabricante,
+            conteos: {
+                actividades_preventiva_v2: actividadesV2,
+                actividades_mantenimiento_legacy: actividadesLegacy,
+                lubricacion_v2: lubricacionV2,
+                lubricacion_reductora_legacy: lubricacionLegacy,
+            },
+        });
+    }
+    catch (err) {
+        next(err);
+    }
+});
 // GET /api/v1/modelos/:id/lubricacion
-// Devuelve la tabla de lubricacion del modelo (ejes con aceite, cantidad, unidad)
+// Devuelve la tabla de lubricacion del modelo (ejes con aceite, cantidad, unidad).
+// Fallback a lubricacion_reductora (legacy) si tabla v2 esta vacia para el modelo.
 router.get('/:id/lubricacion', async (req, res, next) => {
     try {
         const modeloId = Number(req.params.id);
@@ -186,7 +253,46 @@ router.get('/:id/lubricacion', async (req, res, next) => {
             },
             orderBy: [{ eje: 'asc' }, { id: 'asc' }],
         });
-        res.json({ modeloId, lubricacion: rows });
+        if (rows.length > 0) {
+            res.json({ modeloId, lubricacion: rows, fuente: 'lubricacion' });
+            return;
+        }
+        // Fallback a lubricacion_reductora por nombre del modelo
+        const modelo = await database_1.prisma.modeloComponente.findUnique({
+            where: { id: modeloId },
+            select: { nombre: true, fabricanteId: true, familia: true },
+        });
+        if (!modelo) {
+            res.json({ modeloId, lubricacion: [], fuente: 'ninguna' });
+            return;
+        }
+        const legacy = await database_1.prisma.lubricacionReductora.findMany({
+            where: {
+                fabricanteId: modelo.fabricanteId,
+                OR: [
+                    { varianteTrm: { contains: modelo.nombre } },
+                    modelo.familia ? { varianteTrm: { contains: modelo.familia } } : { id: -1 },
+                ],
+            },
+            orderBy: [{ eje: 'asc' }, { id: 'asc' }],
+            take: 200,
+        });
+        // Mapear a formato similar
+        const mapped = legacy.map((r) => ({
+            id: -r.id, // negativo para identificar legacy
+            modeloComponenteId: modeloId,
+            eje: r.eje,
+            cantidadValor: null,
+            cantidadUnidad: null,
+            cantidadTextoLegacy: r.cantidad,
+            varianteTrmLegacy: r.varianteTrm,
+            tipoLubricanteLegacy: r.tipoLubricante,
+            webConfig: r.webConfig,
+            notas: null,
+            aceite: null,
+            consumible: null,
+        }));
+        res.json({ modeloId, lubricacion: mapped, fuente: 'lubricacion_reductora_legacy' });
     }
     catch (err) {
         next(err);
@@ -227,28 +333,63 @@ router.put('/:id/lubricacion/:lubId', (0, role_middleware_1.requireRole)('admin'
 // GET /api/v1/modelos/:id/actividades?nivel=X
 // Devuelve las actividades preventivas de la familia del modelo, opcionalmente
 // filtradas por nivel (CSV niveles incluye o esta vacio).
+// Fallback a actividades_mantenimiento (legacy) si la familia v2 esta vacia.
 router.get('/:id/actividades', async (req, res, next) => {
     try {
         const modeloId = Number(req.params.id);
         const nivel = req.query.nivel?.trim() || null;
         const modelo = await database_1.prisma.modeloComponente.findUnique({
             where: { id: modeloId },
-            select: { familiaId: true },
+            select: { familiaId: true, fabricanteId: true, familia: true, nombre: true },
         });
-        if (!modelo?.familiaId) {
-            res.json({ modeloId, actividades: [] });
+        if (!modelo) {
+            res.status(404).json({ error: 'Modelo no encontrado' });
             return;
         }
-        const actividades = await database_1.prisma.actividadPreventiva.findMany({
-            where: { familiaId: modelo.familiaId },
-            include: {
-                tipoActividad: { select: { codigo: true, nombre: true, categoria: true } },
-                consumibles: {
-                    include: { consumible: { select: { id: true, nombre: true, tipo: true, unidad: true, coste: true, precio: true } } },
+        let actividades = [];
+        if (modelo.familiaId) {
+            actividades = await database_1.prisma.actividadPreventiva.findMany({
+                where: { familiaId: modelo.familiaId },
+                include: {
+                    tipoActividad: { select: { codigo: true, nombre: true, categoria: true } },
+                    consumibles: {
+                        include: { consumible: { select: { id: true, nombre: true, tipo: true, unidad: true, coste: true, precio: true } } },
+                    },
                 },
-            },
-            orderBy: { id: 'asc' },
-        });
+                orderBy: { id: 'asc' },
+            });
+        }
+        let fuente = 'actividad_preventiva';
+        if (actividades.length === 0) {
+            // Fallback a actividades_mantenimiento (legacy)
+            const legacy = await database_1.prisma.actividadMantenimiento.findMany({
+                where: {
+                    fabricanteId: modelo.fabricanteId,
+                    OR: [
+                        modelo.familia ? { familiaRobot: { contains: modelo.familia } } : { id: -1 },
+                        { familiaRobot: { contains: modelo.nombre } },
+                    ],
+                },
+                orderBy: { id: 'asc' },
+                take: 200,
+            });
+            actividades = legacy.map((a) => ({
+                id: -a.id,
+                familiaId: null,
+                componente: a.componente,
+                intervaloHoras: null,
+                intervaloMeses: null,
+                intervaloCondicion: 'periodico',
+                intervaloTextoLegacy: a.intervaloEstandar,
+                intervaloFoundryHoras: null,
+                intervaloFoundryMeses: null,
+                niveles: null,
+                notas: a.notas,
+                tipoActividad: { codigo: 'legacy', nombre: a.tipoActividad, categoria: 'otro' },
+                consumibles: [],
+            }));
+            fuente = actividades.length > 0 ? 'actividades_mantenimiento_legacy' : 'ninguna';
+        }
         const filtered = nivel
             ? actividades.filter((a) => {
                 if (!a.niveles || a.niveles.trim() === '')
@@ -256,7 +397,7 @@ router.get('/:id/actividades', async (req, res, next) => {
                 return a.niveles.split(',').map((s) => s.trim()).includes(nivel);
             })
             : actividades;
-        res.json({ modeloId, nivel, actividades: filtered });
+        res.json({ modeloId, nivel, actividades: filtered, fuente });
     }
     catch (err) {
         next(err);
