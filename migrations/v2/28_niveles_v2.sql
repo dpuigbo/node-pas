@@ -118,11 +118,13 @@ SET @sql = (SELECT IF(
 ));
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
--- Marcar las filas pre-existentes con horas cargadas como revisado=TRUE
--- (alguien las metio a proposito). Las nuevas que vengan del seed quedan FALSE.
+-- Todas las filas migradas quedan revisado=FALSE (pendientes de validar
+-- contra los datos del Excel de Daniel). Cuando se valide cada una, se
+-- marca true desde la UI o un UPDATE manual.
+-- (revisado ya tiene DEFAULT FALSE; este UPDATE es no-op explicito documental)
 UPDATE mantenimiento_horas_familia
-SET revisado = TRUE
-WHERE horas IS NOT NULL AND revisado = FALSE;
+SET revisado = FALSE
+WHERE revisado IS NULL OR revisado = TRUE;
 
 UPDATE mantenimiento_horas_familia mhf
 SET nivel_id = (
