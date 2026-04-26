@@ -16,6 +16,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.calcularComponenteOferta = calcularComponenteOferta;
 exports.getNivelesAplicablesModelo = getNivelesAplicablesModelo;
 const database_1 = require("../config/database");
+const niveles_1 = require("./niveles");
 const LIMPIEZA_OIL_FACTOR = 1.15; // 15% extra para limpieza y merma
 function dec(v) {
     if (v == null)
@@ -177,6 +178,7 @@ async function getNivelesAplicablesModelo(modeloId) {
     const modelo = await database_1.prisma.modeloComponente.findUnique({
         where: { id: modeloId },
         select: {
+            tipo: true,
             niveles: true,
             nivelesAplicables: {
                 include: { nivel: true },
@@ -204,10 +206,14 @@ async function getNivelesAplicablesModelo(modeloId) {
         }));
     }
     // Fallback: parsear CSV legacy + buscar metadatos en lu_nivel_mantenimiento
-    const codigos = (modelo.niveles ?? '')
+    let codigos = (modelo.niveles ?? '')
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean);
+    // Ultimo fallback: niveles permitidos por tipo de componente
+    if (codigos.length === 0) {
+        codigos = (0, niveles_1.getNivelesPermitidos)(modelo.tipo);
+    }
     if (codigos.length === 0)
         return [];
     const niveles = await database_1.prisma.luNivelMantenimiento.findMany({
@@ -220,7 +226,7 @@ async function getNivelesAplicablesModelo(modeloId) {
         const n = nivelMap.get(cod);
         return {
             codigo: cod,
-            nombre: n?.nombre ?? cod,
+            nombre: n?.nombre ?? `Nivel ${cod}`,
             orden: n?.orden ?? idx,
             horas: dec(horasMap.get(cod)?.horas),
             costeLimpieza: dec(horasMap.get(cod)?.costeLimpieza),
