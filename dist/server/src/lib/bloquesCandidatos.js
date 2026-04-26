@@ -71,11 +71,12 @@ async function getBloquesCandidatos(ofertaId) {
         }
     }
     const candidatos = [];
-    // Componentes con horas asignadas
+    // Componentes con nivel asignado (mostramos incluso si horas=0 para visibilidad)
     for (const oc of oferta.componentes) {
+        if (!oc.nivel)
+            continue; // sin nivel no es candidato
         const horasTotal = dec(oc.horas);
-        if (horasTotal <= 0)
-            continue;
+        const sinHoras = horasTotal <= 0;
         const colocadas = horasPorComponente.get(oc.id) ?? 0;
         const pendientes = Math.max(0, horasTotal - colocadas);
         candidatos.push({
@@ -84,9 +85,10 @@ async function getBloquesCandidatos(ofertaId) {
             origenTipo: 'componente',
             ofertaComponenteId: oc.id,
             label: `${oc.componenteSistema.modeloComponente.nombre} · ${oc.componenteSistema.etiqueta}`,
-            horasTotal,
+            horasTotal: +horasTotal.toFixed(2),
             horasColocadas: +colocadas.toFixed(2),
             horasPendientes: +pendientes.toFixed(2),
+            sinHoras,
             meta: {
                 sistemaNombre: oc.componenteSistema.sistema.nombre,
                 componenteEtiqueta: oc.componenteSistema.etiqueta,
@@ -111,6 +113,7 @@ async function getBloquesCandidatos(ofertaId) {
             horasTotal: horasTotalIdaVuelta,
             horasColocadas: +colocadas.toFixed(2),
             horasPendientes: +pendientes.toFixed(2),
+            sinHoras: false,
             meta: {},
         });
     }

@@ -2,6 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateMaquinaSchema = exports.createMaquinaSchema = exports.updateClienteSchema = exports.createClienteSchema = void 0;
 const zod_1 = require("zod");
+// Redondea horas al ceil del multiplo de 0.5h
+// (50 min = 0.83h → 1.0h, 9:37h = 9.62h → 10h, 9:30h = 9.5h → 9.5h)
+function ceilHalfHour(h) {
+    return Math.ceil(h * 2) / 2;
+}
+const horasTrayectoTransformer = zod_1.z.number().min(0).transform(ceilHalfHour);
 exports.createClienteSchema = zod_1.z.object({
     nombre: zod_1.z.string().min(1, 'El nombre es obligatorio').max(200),
     sede: zod_1.z.string().max(200).optional().nullable(),
@@ -17,7 +23,7 @@ exports.createClienteSchema = zod_1.z.object({
     tarifaHoraViaje: zod_1.z.number().min(0).optional().nullable(),
     dietas: zod_1.z.number().min(0).optional().nullable(),
     gestionAccesos: zod_1.z.number().min(0).optional().nullable(),
-    horasTrayecto: zod_1.z.number().min(0).optional().nullable(),
+    horasTrayecto: horasTrayectoTransformer.optional().nullable(),
     diasViaje: zod_1.z.number().min(0).optional().nullable(),
     km: zod_1.z.number().min(0).optional().nullable(),
     peajes: zod_1.z.number().min(0).optional().nullable(),

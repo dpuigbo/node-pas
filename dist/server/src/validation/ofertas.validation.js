@@ -14,7 +14,7 @@ exports.createOfertaSchema = zod_1.z.object({
     tipoOferta: zod_1.z.enum(['mantenimiento', 'solo_limpieza']).default('mantenimiento'),
     validezDias: zod_1.z.number().int().min(1).default(30),
     notas: zod_1.z.string().optional().nullable(),
-    sistemas: zod_1.z.array(ofertaSistemaSchema).min(1, 'Debe incluir al menos un sistema'),
+    sistemas: zod_1.z.array(ofertaSistemaSchema).min(0),
     // Planificacion horaria (opcional)
     fechaInicio: zod_1.z.string().datetime().optional().nullable(),
     fechaFin: zod_1.z.string().datetime().optional().nullable(),
