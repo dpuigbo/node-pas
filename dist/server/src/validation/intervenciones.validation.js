@@ -4,7 +4,8 @@ exports.updateEstadoIntervencionSchema = exports.updateIntervencionSchema = expo
 const zod_1 = require("zod");
 const sistemaNivelSchema = zod_1.z.object({
     sistemaId: zod_1.z.number().int().positive(),
-    nivel: zod_1.z.enum(['1', '2_inferior', '2_superior', '3']).default('1'),
+    // Codigo canonico (N1, N2_INF, ...) o legacy (1, 2_inferior, ...) - backend traduce a nivelId
+    nivel: zod_1.z.string().min(1).max(20).default('N1'),
 });
 exports.createIntervencionSchema = zod_1.z.object({
     clienteId: zod_1.z.number().int().positive(),

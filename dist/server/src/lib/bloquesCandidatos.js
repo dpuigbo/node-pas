@@ -36,6 +36,7 @@ async function getBloquesCandidatos(ofertaId) {
             cliente: { select: { horasTrayecto: true } },
             componentes: {
                 include: {
+                    nivel: { select: { codigo: true } },
                     componenteSistema: {
                         include: {
                             sistema: { select: { id: true, nombre: true } },
@@ -58,40 +59,49 @@ async function getBloquesCandidatos(ofertaId) {
     });
     if (!oferta)
         return [];
-    // Cargar actividades por familia (para todos los componentes de una vez)
+    // Cargar actividades por (familia, nivel) usando actividad_nivel
     const familiaIds = Array.from(new Set(oferta.componentes
         .map((oc) => oc.componenteSistema.modeloComponente.familiaId)
         .filter((id) => id != null)));
-    const actividadesPorFamilia = new Map();
+    // Indice: familiaId -> nivelCodigo -> string[] (nombres de actividades)
+    const actividadesPorFamiliaNivel = new Map();
     if (familiaIds.length > 0) {
-        const acts = await database_1.prisma.actividadPreventiva.findMany({
-            where: { familiaId: { in: familiaIds } },
-            select: {
-                familiaId: true,
-                niveles: true,
-                tipoActividad: { select: { nombre: true } },
-                componente: true,
+        const links = await database_1.prisma.actividadNivel.findMany({
+            where: {
+                actividad: { familiaId: { in: familiaIds } },
+            },
+            include: {
+                actividad: {
+                    select: {
+                        familiaId: true,
+                        componente: true,
+                        tipoActividad: { select: { nombre: true } },
+                    },
+                },
+                nivel: { select: { codigo: true } },
             },
         });
-        for (const a of acts) {
-            const list = actividadesPorFamilia.get(a.familiaId) ?? [];
-            list.push({
-                nombre: `${a.tipoActividad.nombre}${a.componente ? ` — ${a.componente}` : ''}`,
-                niveles: a.niveles,
-            });
-            actividadesPorFamilia.set(a.familiaId, list);
+        for (const link of links) {
+            const fId = link.actividad.familiaId;
+            const cod = link.nivel.codigo;
+            const nombre = `${link.actividad.tipoActividad.nombre}${link.actividad.componente ? ` — ${link.actividad.componente}` : ''}`;
+            let porNivel = actividadesPorFamiliaNivel.get(fId);
+            if (!porNivel) {
+                porNivel = new Map();
+                actividadesPorFamiliaNivel.set(fId, porNivel);
+            }
+            const list = porNivel.get(cod) ?? [];
+            list.push(nombre);
+            porNivel.set(cod, list);
         }
     }
-    // Fallback legacy: para componentes con familia vacia o sin actividades v2,
-    // buscar en actividades_mantenimiento por fabricante + familia (texto)
-    // Indexado por componenteSistemaId (no por familia, porque legacy usa string)
+    // Fallback legacy on-demand para componentes sin actividades v2
     const actividadesLegacyPorComp = new Map();
     for (const oc of oferta.componentes) {
         const familiaId = oc.componenteSistema.modeloComponente.familiaId;
-        const tieneV2 = familiaId != null && (actividadesPorFamilia.get(familiaId)?.length ?? 0) > 0;
+        const tieneV2 = familiaId != null && (actividadesPorFamiliaNivel.get(familiaId)?.size ?? 0) > 0;
         if (tieneV2)
             continue;
-        // Cargar legacy on-demand para este componente
         const modelo = await database_1.prisma.modeloComponente.findUnique({
             where: { id: oc.componenteSistema.modeloComponenteId },
             select: { fabricanteId: true, familia: true, nombre: true },
@@ -113,21 +123,13 @@ async function getBloquesCandidatos(ofertaId) {
             actividadesLegacyPorComp.set(oc.id, legacy.map((a) => `${a.tipoActividad}${a.componente ? ` — ${a.componente}` : ''}`));
         }
     }
-    function actividadesParaNivel(familiaId, nivel, ofertaCompId) {
-        // V2 path
+    function actividadesParaNivel(familiaId, nivelCodigo, ofertaCompId) {
         if (familiaId != null) {
-            const lista = actividadesPorFamilia.get(familiaId) ?? [];
-            const filtradas = lista
-                .filter((a) => {
-                if (!a.niveles || a.niveles.trim() === '')
-                    return true;
-                return a.niveles.split(',').map((s) => s.trim()).includes(nivel);
-            })
-                .map((a) => a.nombre);
-            if (filtradas.length > 0)
-                return filtradas;
+            const porNivel = actividadesPorFamiliaNivel.get(familiaId);
+            const fromV2 = porNivel?.get(nivelCodigo) ?? [];
+            if (fromV2.length > 0)
+                return fromV2;
         }
-        // Fallback legacy (sin filtro de nivel — la tabla legacy no lo tiene)
         return actividadesLegacyPorComp.get(ofertaCompId) ?? [];
     }
     // Index horas colocadas por componente
@@ -145,7 +147,8 @@ async function getBloquesCandidatos(ofertaId) {
     const candidatos = [];
     // Componentes con nivel asignado (mostramos incluso si horas=0 para visibilidad)
     for (const oc of oferta.componentes) {
-        if (!oc.nivel)
+        const nivelCodigo = oc.nivel?.codigo ?? null;
+        if (!nivelCodigo)
             continue; // sin nivel no es candidato
         const horasTotal = dec(oc.horas);
         const sinHoras = horasTotal <= 0;
@@ -162,12 +165,12 @@ async function getBloquesCandidatos(ofertaId) {
             horasColocadas: +colocadas.toFixed(2),
             horasPendientes: +pendientes.toFixed(2),
             sinHoras,
-            actividades: actividadesParaNivel(familiaId, oc.nivel, oc.id),
+            actividades: actividadesParaNivel(familiaId, nivelCodigo, oc.id),
             meta: {
                 sistemaNombre: oc.componenteSistema.sistema.nombre,
                 componenteEtiqueta: oc.componenteSistema.etiqueta,
                 componenteTipo: oc.componenteSistema.tipo,
-                nivel: oc.nivel ?? undefined,
+                nivel: nivelCodigo,
             },
         });
     }

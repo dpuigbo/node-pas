@@ -2,9 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.bulkBloquesSchema = exports.updateBloqueSchema = exports.createBloqueSchema = exports.upsertOfertaComponenteSchema = exports.generarIntervencionSchema = exports.updateEstadoOfertaSchema = exports.updateOfertaSchema = exports.createOfertaSchema = void 0;
 const zod_1 = require("zod");
+// Codigo de nivel: canonico (N1, N2_INF, N2_SUP, N3, N_CTRL, N_DU, N0_EJE,
+// N1_EJE, N2_EJE) o legacy (1, 2_inferior, 2_superior, 3) — el backend
+// los normaliza al guardar.
+const nivelCodigoSchema = zod_1.z.string().min(1).max(20);
 const ofertaSistemaSchema = zod_1.z.object({
     sistemaId: zod_1.z.number().int().positive(),
-    nivel: zod_1.z.enum(['1', '2_inferior', '2_superior', '3']).default('1'),
+    nivel: nivelCodigoSchema.default('N1'),
 });
 exports.createOfertaSchema = zod_1.z.object({
     clienteId: zod_1.z.number().int().positive(),

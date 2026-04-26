@@ -1,69 +1,78 @@
 "use strict";
 // Logica de calculo para ofertas de mantenimiento por componente.
 //
+// El frontend trabaja con codigos canonicos de nivel (N1, N2_INF, N3, N_CTRL,
+// N_DU, N1_EJE, N2_EJE). Internamente buscamos por nivel_id (FK) en BD.
+//
 // Reglas:
 // - tipo_oferta='mantenimiento': aceites/grasas/baterias extraidos de
-//   actividad_preventiva (filtrados por nivel) + consumibles de limpieza
-//   por modelo + 15% extra de aceite para limpieza/merma.
+//   actividad_preventiva.consumibles, filtrados por actividad_nivel(nivel actual)
+//   con respeto del flag obligatoria + opciones conBaterias/conAceite.
 // - tipo_oferta='solo_limpieza': solo 15% extra de aceite (merma) +
-//   consumibles de limpieza.
+//   consumibles de limpieza del modelo.
 //
-// Horas:
-// - mantenimiento_horas_familia: por (familia, modelo opcional, nivel).
-//   Para mech_unit/eje/drive se busca con modelo=NULL (toda la familia).
-//   Para controlador se busca por modelo concreto (variante).
-// - Fallback legacy: mantenimiento_horas_modelo y consumibles_nivel.horas
+// Horas en cascada: familia+modelo+controlador > familia+modelo > familia >
+//                   legacy modelo > legacy consumibles_nivel.horas
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.normalizarCodigoNivel = void 0;
 exports.calcularComponenteOferta = calcularComponenteOferta;
 exports.getNivelesAplicablesModelo = getNivelesAplicablesModelo;
 const database_1 = require("../config/database");
 const niveles_1 = require("./niveles");
-const LIMPIEZA_OIL_FACTOR = 1.15; // 15% extra para limpieza y merma
+Object.defineProperty(exports, "normalizarCodigoNivel", { enumerable: true, get: function () { return niveles_1.normalizarCodigoNivel; } });
+const LIMPIEZA_OIL_FACTOR = 1.15;
 function dec(v) {
     if (v == null)
         return null;
     return Number(v);
 }
-function nivelMatches(actividadNiveles, nivelActual) {
-    // Vacio = aplica siempre
-    if (!actividadNiveles || actividadNiveles.trim() === '')
-        return true;
-    const niveles = actividadNiveles.split(',').map((s) => s.trim()).filter(Boolean);
-    return niveles.length === 0 || niveles.includes(nivelActual);
-}
-/** Lookup horas en cascada: familia+modelo > familia > legacy modelo > legacy nivel */
-async function lookupHoras(modeloId, familiaId, nivel) {
-    // Por variante (controlador): familia + modelo concreto
+/** Lookup horas en cascada con nivelId */
+async function lookupHoras(modeloId, familiaId, nivelId, controladorModeloId) {
     if (familiaId != null) {
+        // (familia, modelo, controlador) - mas especifica
+        if (controladorModeloId != null) {
+            const v = await database_1.prisma.mantenimientoHorasFamilia.findFirst({
+                where: { familiaId, modeloComponenteId: modeloId, controladorModeloId, nivelId },
+            });
+            if (v?.horas != null)
+                return Number(v.horas);
+        }
+        // (familia, modelo) - variante de controlador
         const variante = await database_1.prisma.mantenimientoHorasFamilia.findFirst({
-            where: { familiaId, modeloComponenteId: modeloId, nivel },
+            where: { familiaId, modeloComponenteId: modeloId, controladorModeloId: null, nivelId },
         });
         if (variante?.horas != null)
             return Number(variante.horas);
-        // Por familia (mech_unit/eje/drive)
+        // (familia, controlador) - manipulador con cabinet sin variante propia
+        if (controladorModeloId != null) {
+            const fc = await database_1.prisma.mantenimientoHorasFamilia.findFirst({
+                where: { familiaId, modeloComponenteId: null, controladorModeloId, nivelId },
+            });
+            if (fc?.horas != null)
+                return Number(fc.horas);
+        }
+        // (familia) - generica
         const familia = await database_1.prisma.mantenimientoHorasFamilia.findFirst({
-            where: { familiaId, modeloComponenteId: null, nivel },
+            where: { familiaId, modeloComponenteId: null, controladorModeloId: null, nivelId },
         });
         if (familia?.horas != null)
             return Number(familia.horas);
     }
-    // Legacy: mantenimiento_horas_modelo
+    // Legacy
     const legacy = await database_1.prisma.mantenimientoHorasModelo.findUnique({
-        where: { modeloComponenteId_nivel: { modeloComponenteId: modeloId, nivel } },
+        where: { modeloComponenteId_nivelId: { modeloComponenteId: modeloId, nivelId } },
     });
     if (legacy?.horas != null)
         return Number(legacy.horas);
-    // Legacy ultimo: consumibles_nivel.horas
     const cn = await database_1.prisma.consumibleNivel.findUnique({
-        where: { modeloId_nivel: { modeloId, nivel } },
+        where: { modeloId_nivelId: { modeloId, nivelId } },
     });
     if (cn?.horas != null)
         return Number(cn.horas);
     return 0;
 }
-/** Suma coste/precio de los consumibles de limpieza del modelo */
+/** Coste/precio de los consumibles de limpieza del modelo */
 async function calcLimpieza(modeloId, tipoOferta) {
-    // Path nuevo: consumibles_limpieza_modelo
     const items = await database_1.prisma.consumibleLimpiezaModelo.findMany({
         where: { modeloComponenteId: modeloId },
         include: { consumible: true },
@@ -73,43 +82,63 @@ async function calcLimpieza(modeloId, tipoOferta) {
         let precio = 0;
         for (const it of items) {
             const cant = Number(it.cantidad);
-            coste += (Number(it.consumible.coste ?? 0)) * cant;
-            precio += (Number(it.consumible.precio ?? 0)) * cant;
+            coste += Number(it.consumible.coste ?? 0) * cant;
+            precio += Number(it.consumible.precio ?? 0) * cant;
         }
         return { coste: +coste.toFixed(2), precio: +precio.toFixed(2) };
     }
-    // Fallback legacy: mantenimiento_horas_modelo.coste_limpieza
+    // Fallback legacy
     const legacy = await database_1.prisma.mantenimientoHorasModelo.findFirst({
         where: { modeloComponenteId: modeloId },
         select: { costeLimpieza: true },
     });
+    void tipoOferta;
     const costeLegacy = dec(legacy?.costeLimpieza) ?? 0;
-    // Sin precio_venta separado en legacy: usar el mismo
-    return tipoOferta === 'mantenimiento'
-        ? { coste: costeLegacy, precio: costeLegacy }
-        : { coste: costeLegacy, precio: costeLegacy };
+    return { coste: costeLegacy, precio: costeLegacy };
 }
 /**
- * Suma consumibles (aceites/grasas/baterias/etc) extraidos de actividad_preventiva
- * de la familia del modelo, filtrados por nivel.
+ * Suma consumibles (aceites/grasas/baterias) de actividades preventivas de la
+ * familia, filtradas por actividad_nivel(nivel actual) y respetando opciones.
+ *
+ * Las actividades opcionales (obligatoria=false) se incluyen solo si su
+ * categoria coincide con la opcion activa (conBaterias para tipo bateria, etc).
  */
-async function calcConsumiblesActividad(familiaId, nivel, conBaterias, conAceite, tipoOferta) {
-    const actividades = await database_1.prisma.actividadPreventiva.findMany({
-        where: { familiaId },
-        select: {
-            niveles: true,
-            consumibles: {
-                include: { consumible: true },
+async function calcConsumiblesActividad(familiaId, nivelId, conBaterias, conAceite, tipoOferta) {
+    // Cargar actividades de la familia con su flag obligatoria + tipoActividad + consumibles
+    const links = await database_1.prisma.actividadNivel.findMany({
+        where: {
+            nivelId,
+            actividad: { familiaId },
+        },
+        include: {
+            actividad: {
+                include: {
+                    tipoActividad: { select: { categoria: true } },
+                    consumibles: { include: { consumible: true } },
+                },
             },
         },
     });
     let coste = 0;
     let precio = 0;
-    for (const act of actividades) {
-        if (!nivelMatches(act.niveles, nivel))
-            continue;
+    for (const link of links) {
+        const act = link.actividad;
+        const cat = act.tipoActividad.categoria;
+        // Filtrar opcionales segun toggles. Si no es obligatoria y la opcion del
+        // toggle de su categoria esta off, saltar.
+        if (!link.obligatoria) {
+            if (cat === 'bateria' && !conBaterias)
+                continue;
+            if (cat === 'lubricacion' && !conAceite)
+                continue;
+            // Otras categorias opcionales: por defecto se incluyen como extras
+            // (correa, filtro, desiccant, reemplazo, overhaul, otro). Ajustar si
+            // anadimos toggles especificos en el futuro.
+        }
         for (const ac of act.consumibles) {
             const tipo = ac.consumible.tipo;
+            // Para actividades obligatorias, los toggles tambien aplican (excluir
+            // baterias/aceite si el operario lo quita)
             if (tipo === 'bateria' && !conBaterias)
                 continue;
             if (tipo === 'aceite' && !conAceite)
@@ -118,7 +147,6 @@ async function calcConsumiblesActividad(familiaId, nivel, conBaterias, conAceite
             const costeUnit = Number(ac.consumible.coste ?? 0);
             const precioUnit = Number(ac.consumible.precio ?? 0);
             if (tipoOferta === 'solo_limpieza') {
-                // Solo contamos la merma del aceite (15%)
                 if (tipo === 'aceite') {
                     const cant = cantBase * (LIMPIEZA_OIL_FACTOR - 1);
                     coste += costeUnit * cant;
@@ -136,30 +164,31 @@ async function calcConsumiblesActividad(familiaId, nivel, conBaterias, conAceite
 }
 /**
  * Calcula horas + costes para un componente concreto en un nivel dado.
+ * @param nivelCodigo codigo canonico del nivel (N1, N3, etc.)
  */
-async function calcularComponenteOferta(modeloId, nivel, opts) {
+async function calcularComponenteOferta(modeloId, nivelCodigo, opts, controladorModeloId) {
     const { tipoOferta, conBaterias, conAceite } = opts;
+    const nivelId = await (0, niveles_1.nivelIdFromCodigo)(nivelCodigo);
+    if (nivelId == null) {
+        return { horas: 0, costeConsumibles: 0, precioConsumibles: 0, costeLimpieza: 0 };
+    }
     const modelo = await database_1.prisma.modeloComponente.findUnique({
         where: { id: modeloId },
         select: { familiaId: true },
     });
     const familiaId = modelo?.familiaId ?? null;
-    // 1. Horas con cascada de fallbacks
-    const horas = await lookupHoras(modeloId, familiaId, nivel);
-    // 2. Consumibles de limpieza
+    const horas = await lookupHoras(modeloId, familiaId, nivelId, controladorModeloId);
     const limpieza = await calcLimpieza(modeloId, tipoOferta);
-    const costeLimpieza = limpieza.coste;
-    // 3. Consumibles aceite/grasa/baterias desde actividad_preventiva (familia)
     let costeConsumibles = 0;
     let precioConsumibles = 0;
     if (familiaId != null) {
-        const desdeActividad = await calcConsumiblesActividad(familiaId, nivel, conBaterias, conAceite, tipoOferta);
+        const desdeActividad = await calcConsumiblesActividad(familiaId, nivelId, conBaterias, conAceite, tipoOferta);
         costeConsumibles += desdeActividad.coste;
         precioConsumibles += desdeActividad.precio;
     }
-    // 4. Si no hubo actividades con niveles definidos, fallback a consumibles_nivel.consumibles
+    // Fallback legacy si no hubo actividades
     if (costeConsumibles === 0 && precioConsumibles === 0) {
-        const fallback = await calcConsumiblesNivelLegacy(modeloId, nivel, opts);
+        const fallback = await calcConsumiblesNivelLegacy(modeloId, nivelId, opts);
         costeConsumibles += fallback.coste;
         precioConsumibles += fallback.precio;
     }
@@ -167,17 +196,13 @@ async function calcularComponenteOferta(modeloId, nivel, opts) {
         horas: +horas.toFixed(2),
         costeConsumibles: +costeConsumibles.toFixed(2),
         precioConsumibles: +precioConsumibles.toFixed(2),
-        costeLimpieza: +costeLimpieza.toFixed(2),
+        costeLimpieza: +limpieza.coste.toFixed(2),
     };
 }
-/**
- * Fallback legacy: leer consumibles_nivel.consumibles (formato JSON con
- * referencias a aceites/consumibles legacy o consumible_catalogo)
- */
-async function calcConsumiblesNivelLegacy(modeloId, nivel, opts) {
+async function calcConsumiblesNivelLegacy(modeloId, nivelId, opts) {
     const { tipoOferta, conBaterias, conAceite } = opts;
     const cn = await database_1.prisma.consumibleNivel.findUnique({
-        where: { modeloId_nivel: { modeloId, nivel } },
+        where: { modeloId_nivelId: { modeloId, nivelId } },
     });
     if (!cn?.consumibles)
         return { coste: 0, precio: 0 };
@@ -274,7 +299,6 @@ async function calcConsumiblesNivelLegacy(modeloId, nivel, opts) {
             precio += precioUnit * cant;
         }
     }
-    // precioOtros (legacy): solo en mantenimiento
     if (tipoOferta === 'mantenimiento') {
         const otros = dec(cn.precioOtros) ?? 0;
         coste += otros;
@@ -283,59 +307,55 @@ async function calcConsumiblesNivelLegacy(modeloId, nivel, opts) {
     return { coste, precio };
 }
 /**
- * Devuelve los niveles aplicables para un modelo (ordenados por orden).
+ * Devuelve los niveles aplicables para un modelo (codigos canonicos + horas).
  *
  * Prioridad:
- * 1. modelo_nivel_aplicable (v2 catalog explicit)
- * 2. Fallback al CSV legacy `niveles` del modelo
- * 3. Fallback ultimo: niveles permitidos para el tipo
+ * 1. modelo_nivel_aplicable (explicit)
+ * 2. niveles permitidos para el tipo
  */
 async function getNivelesAplicablesModelo(modeloId) {
     const modelo = await database_1.prisma.modeloComponente.findUnique({
         where: { id: modeloId },
         select: {
             tipo: true,
-            niveles: true,
             familiaId: true,
             nivelesAplicables: {
                 include: { nivel: true },
                 orderBy: { nivel: { orden: 'asc' } },
             },
-            mantenimientoHoras: true,
-            mantenimientoHorasFamilia: true,
-            consumiblesNivel: { select: { nivel: true, consumibles: true } },
+            mantenimientoHoras: { include: { nivel: { select: { codigo: true } } } },
+            mantenimientoHorasFamilia: { include: { nivel: { select: { codigo: true } } } },
+            consumiblesNivel: { include: { nivel: { select: { codigo: true } } } },
         },
     });
     if (!modelo)
         return [];
-    // Mapa de horas: prioridad modelo (legacy) > familia (modelo concreto) > familia (general)
+    // Map codigo -> horas (en cascada: legacy modelo > horasFamilia con modelo > horasFamilia generica)
     const horasMap = new Map();
-    // Legacy modelo
     for (const h of modelo.mantenimientoHoras) {
-        horasMap.set(h.nivel, dec(h.horas));
+        horasMap.set(h.nivel.codigo, dec(h.horas));
     }
-    // Familia con modelo concreto (variante de controlador)
     for (const h of modelo.mantenimientoHorasFamilia) {
         if (h.modeloComponenteId === modeloId) {
-            const cur = horasMap.get(h.nivel);
+            const cur = horasMap.get(h.nivel.codigo);
             if (cur == null)
-                horasMap.set(h.nivel, dec(h.horas));
+                horasMap.set(h.nivel.codigo, dec(h.horas));
         }
     }
-    // Si tiene familia, traer tambien las horas de la familia genericas (modelo=null)
     if (modelo.familiaId) {
         const generales = await database_1.prisma.mantenimientoHorasFamilia.findMany({
-            where: { familiaId: modelo.familiaId, modeloComponenteId: null },
+            where: { familiaId: modelo.familiaId, modeloComponenteId: null, controladorModeloId: null },
+            include: { nivel: { select: { codigo: true } } },
         });
         for (const h of generales) {
-            if (!horasMap.has(h.nivel))
-                horasMap.set(h.nivel, dec(h.horas));
+            if (!horasMap.has(h.nivel.codigo))
+                horasMap.set(h.nivel.codigo, dec(h.horas));
         }
     }
     const consumiblesSet = new Set(modelo.consumiblesNivel
         .filter((c) => c.consumibles && Array.isArray(c.consumibles) && c.consumibles.length > 0)
-        .map((c) => c.nivel));
-    // Si hay datos explicitos en nivelesAplicables, usar esos
+        .map((c) => c.nivel.codigo));
+    // 1. Explicit nivelesAplicables
     if (modelo.nivelesAplicables.length > 0) {
         return modelo.nivelesAplicables.map((na) => ({
             codigo: na.nivel.codigo,
@@ -346,15 +366,8 @@ async function getNivelesAplicablesModelo(modeloId) {
             tieneConsumibles: consumiblesSet.has(na.nivel.codigo),
         }));
     }
-    // Fallback: parsear CSV legacy + buscar metadatos en lu_nivel_mantenimiento
-    let codigos = (modelo.niveles ?? '')
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean);
-    // Ultimo fallback: niveles permitidos por tipo de componente
-    if (codigos.length === 0) {
-        codigos = (0, niveles_1.getNivelesPermitidos)(modelo.tipo);
-    }
+    // 2. Fallback: niveles permitidos por tipo
+    const codigos = (0, niveles_1.getNivelesPermitidos)(modelo.tipo);
     if (codigos.length === 0)
         return [];
     const niveles = await database_1.prisma.luNivelMantenimiento.findMany({

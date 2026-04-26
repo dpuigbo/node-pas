@@ -16,7 +16,8 @@ const consumibleItemLegacySchema = zod_1.z.object({
 const consumibleItemSchema = zod_1.z.union([consumibleItemV2Schema, consumibleItemLegacySchema]);
 exports.upsertConsumibleNivelSchema = zod_1.z.object({
     modeloId: zod_1.z.number().int().positive(),
-    nivel: zod_1.z.enum(['1', '2', '2_inferior', '2_superior', '3']),
+    // Codigo canonico (N1, N2_INF, ...) o legacy (1, 2_inferior, ...) - backend normaliza a nivelId
+    nivel: zod_1.z.string().min(1).max(20),
     horas: zod_1.z.number().min(0).optional().nullable(),
     precioOtros: zod_1.z.number().min(0).optional().nullable(),
     consumibles: zod_1.z.array(consumibleItemSchema).optional().nullable(),
