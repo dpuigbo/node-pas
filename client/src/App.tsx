@@ -14,6 +14,7 @@ import CatalogosPage from './pages/CatalogosPage';
 import ConsumiblesNivelPage from './pages/ConsumiblesNivelPage';
 import ConfiguracionPage from './pages/ConfiguracionPage';
 import OfertasPage from './pages/OfertasPage';
+import OfertaEditorPage from './pages/OfertaEditorPage';
 import PlantillasPage from './pages/PlantillasPage';
 
 /**
@@ -149,6 +150,7 @@ export default function App() {
             }
           />
           <Route path="/ofertas" element={<OfertasPage />} />
+          <Route path="/ofertas/:id" element={<OfertaEditorPage />} />
           <Route path="/catalogos" element={<CatalogosPage />} />
           <Route path="/consumibles-nivel" element={<ConsumiblesNivelPage />} />
           <Route path="/configuracion" element={<ConfiguracionPage />} />
