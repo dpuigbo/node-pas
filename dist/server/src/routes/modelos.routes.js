@@ -173,6 +173,57 @@ router.get('/:id/niveles-aplicables', async (req, res, next) => {
         next(err);
     }
 });
+// GET /api/v1/modelos/:id/lubricacion
+// Devuelve la tabla de lubricacion del modelo (ejes con aceite, cantidad, unidad)
+router.get('/:id/lubricacion', async (req, res, next) => {
+    try {
+        const modeloId = Number(req.params.id);
+        const rows = await database_1.prisma.lubricacion.findMany({
+            where: { modeloComponenteId: modeloId },
+            include: {
+                aceite: { select: { id: true, nombre: true, fabricante: true } },
+                consumible: { select: { id: true, nombre: true, tipo: true, unidad: true } },
+            },
+            orderBy: [{ eje: 'asc' }, { id: 'asc' }],
+        });
+        res.json({ modeloId, lubricacion: rows });
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// PUT /api/v1/modelos/:id/lubricacion/:lubId (admin) — editar fila
+router.put('/:id/lubricacion/:lubId', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
+    try {
+        const lubId = Number(req.params.lubId);
+        const { eje, cantidadValor, cantidadUnidad, notas } = req.body;
+        const updateData = {};
+        if (eje !== undefined)
+            updateData.eje = String(eje).trim();
+        if (cantidadValor !== undefined) {
+            updateData.cantidadValor = cantidadValor === null || cantidadValor === ''
+                ? null
+                : Number(cantidadValor);
+        }
+        if (cantidadUnidad !== undefined) {
+            updateData.cantidadUnidad = cantidadUnidad || null;
+        }
+        if (notas !== undefined)
+            updateData.notas = notas || null;
+        const row = await database_1.prisma.lubricacion.update({
+            where: { id: lubId },
+            data: updateData,
+            include: {
+                aceite: { select: { id: true, nombre: true, fabricante: true } },
+                consumible: { select: { id: true, nombre: true, tipo: true, unidad: true } },
+            },
+        });
+        res.json(row);
+    }
+    catch (err) {
+        next(err);
+    }
+});
 // GET /api/v1/modelos/:id/actividades?nivel=X
 // Devuelve las actividades preventivas de la familia del modelo, opcionalmente
 // filtradas por nivel (CSV niveles incluye o esta vacio).

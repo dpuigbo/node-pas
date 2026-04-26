@@ -39,7 +39,7 @@ async function getBloquesCandidatos(ofertaId) {
                     componenteSistema: {
                         include: {
                             sistema: { select: { id: true, nombre: true } },
-                            modeloComponente: { select: { nombre: true } },
+                            modeloComponente: { select: { nombre: true, familiaId: true } },
                         },
                     },
                 },
@@ -58,6 +58,43 @@ async function getBloquesCandidatos(ofertaId) {
     });
     if (!oferta)
         return [];
+    // Cargar actividades por familia (para todos los componentes de una vez)
+    const familiaIds = Array.from(new Set(oferta.componentes
+        .map((oc) => oc.componenteSistema.modeloComponente.familiaId)
+        .filter((id) => id != null)));
+    const actividadesPorFamilia = new Map();
+    if (familiaIds.length > 0) {
+        const acts = await database_1.prisma.actividadPreventiva.findMany({
+            where: { familiaId: { in: familiaIds } },
+            select: {
+                familiaId: true,
+                niveles: true,
+                tipoActividad: { select: { nombre: true } },
+                componente: true,
+            },
+        });
+        for (const a of acts) {
+            const list = actividadesPorFamilia.get(a.familiaId) ?? [];
+            // Etiqueta humana: "Cambio aceite — Eje 1"
+            list.push({
+                nombre: `${a.tipoActividad.nombre}${a.componente ? ` — ${a.componente}` : ''}`,
+                niveles: a.niveles,
+            });
+            actividadesPorFamilia.set(a.familiaId, list);
+        }
+    }
+    function actividadesParaNivel(familiaId, nivel) {
+        if (familiaId == null)
+            return [];
+        const lista = actividadesPorFamilia.get(familiaId) ?? [];
+        return lista
+            .filter((a) => {
+            if (!a.niveles || a.niveles.trim() === '')
+                return true;
+            return a.niveles.split(',').map((s) => s.trim()).includes(nivel);
+        })
+            .map((a) => a.nombre);
+    }
     // Index horas colocadas por componente
     const horasPorComponente = new Map();
     let horasDesplazamientoColocadas = 0;
@@ -79,6 +116,7 @@ async function getBloquesCandidatos(ofertaId) {
         const sinHoras = horasTotal <= 0;
         const colocadas = horasPorComponente.get(oc.id) ?? 0;
         const pendientes = Math.max(0, horasTotal - colocadas);
+        const familiaId = oc.componenteSistema.modeloComponente.familiaId;
         candidatos.push({
             id: `comp-${oc.id}`,
             tipo: 'trabajo',
@@ -89,6 +127,7 @@ async function getBloquesCandidatos(ofertaId) {
             horasColocadas: +colocadas.toFixed(2),
             horasPendientes: +pendientes.toFixed(2),
             sinHoras,
+            actividades: actividadesParaNivel(familiaId, oc.nivel),
             meta: {
                 sistemaNombre: oc.componenteSistema.sistema.nombre,
                 componenteEtiqueta: oc.componenteSistema.etiqueta,
@@ -114,6 +153,7 @@ async function getBloquesCandidatos(ofertaId) {
             horasColocadas: +colocadas.toFixed(2),
             horasPendientes: +pendientes.toFixed(2),
             sinHoras: false,
+            actividades: [],
             meta: {},
         });
     }
