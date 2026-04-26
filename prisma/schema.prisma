@@ -801,14 +801,14 @@ model OfertaComponente {
 model OfertaSistema {
   ofertaId          Int      @map("oferta_id")
   sistemaId         Int      @map("sistema_id")
-  nivelId           Int      @map("nivel_id")
+  nivelId           Int?     @map("nivel_id")
   horas             Decimal? @db.Decimal(8, 2)
   costeConsumibles  Decimal? @db.Decimal(10, 2) @map("coste_consumibles")
   precioConsumibles Decimal? @db.Decimal(10, 2) @map("precio_consumibles")
 
-  oferta  Oferta              @relation(fields: [ofertaId], references: [id], onDelete: Cascade)
-  sistema Sistema             @relation(fields: [sistemaId], references: [id], onDelete: Cascade)
-  nivel   LuNivelMantenimiento @relation(fields: [nivelId], references: [id])
+  oferta  Oferta                @relation(fields: [ofertaId], references: [id], onDelete: Cascade)
+  sistema Sistema               @relation(fields: [sistemaId], references: [id], onDelete: Cascade)
+  nivel   LuNivelMantenimiento? @relation(fields: [nivelId], references: [id])
 
   @@id([ofertaId, sistemaId])
   @@map("oferta_sistema")

@@ -19,10 +19,12 @@ import { calcularPlanificacion } from '../lib/ofertaPlanificacion';
 import { getBloquesCandidatos } from '../lib/bloquesCandidatos';
 import { nivelIdFromCodigo, normalizarCodigoNivel } from '../lib/niveles';
 
-/** Resolver codigos canonicos a IDs en batch. Lanza si algun codigo no existe. */
-async function resolveNivelCodigos(codigos: string[]): Promise<Map<string, number>> {
+/** Resolver codigos canonicos a IDs en batch. Lanza si algun codigo no existe.
+ * Acepta null/undefined entries y los ignora. */
+async function resolveNivelCodigos(codigos: (string | null | undefined)[]): Promise<Map<string, number>> {
   const out = new Map<string, number>();
   for (const c of codigos) {
+    if (!c) continue;
     const norm = normalizarCodigoNivel(c) ?? c;
     if (out.has(norm)) continue;
     const id = await nivelIdFromCodigo(norm);
@@ -316,7 +318,7 @@ async function calculateRecargos(params: {
  * Returns per-system costs and overall totals.
  */
 async function calculateOfertaTotals(
-  sistemas: { sistemaId: number; nivel: string }[]
+  sistemas: { sistemaId: number; nivel: string | null | undefined }[]
 ): Promise<{
   sistemaTotals: Map<number, { horas: number; coste: number; precio: number }>;
   totalHoras: number;
@@ -355,6 +357,7 @@ async function calculateOfertaTotals(
   const catalogoIds = new Set<number>();
 
   for (const { sistemaId, nivel } of sistemas) {
+    if (!nivel) continue; // sin nivel global, no contribuye al total
     const sistema = sistemaMap.get(sistemaId);
     if (!sistema) continue;
 
@@ -407,6 +410,7 @@ async function calculateOfertaTotals(
 
   // Calculate per system
   for (const { sistemaId, nivel } of sistemas) {
+    if (!nivel) continue;
     const sistema = sistemaMap.get(sistemaId);
     if (!sistema) continue;
 
@@ -474,7 +478,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     // Serializar nivel objeto -> codigo string para mantener compat con frontend
     res.json(ofertas.map((o) => ({
       ...o,
-      sistemas: o.sistemas.map((s) => ({ ...s, nivel: s.nivel.codigo, nivelNombre: s.nivel.nombre })),
+      sistemas: o.sistemas.map((s) => ({ ...s, nivel: s.nivel?.codigo ?? null, nivelNombre: s.nivel?.nombre ?? null })),
     })));
   } catch (err) { next(err); }
 });
@@ -510,7 +514,7 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
     }
     res.json({
       ...oferta,
-      sistemas: oferta.sistemas.map((s) => ({ ...s, nivel: s.nivel.codigo, nivelNombre: s.nivel.nombre })),
+      sistemas: oferta.sistemas.map((s) => ({ ...s, nivel: s.nivel?.codigo ?? null, nivelNombre: s.nivel?.nombre ?? null })),
     });
   } catch (err) { next(err); }
 });
@@ -573,7 +577,7 @@ router.post('/', requireRole('admin'), async (req: Request, res: Response, next:
             const totals = sistemaTotals.get(s.sistemaId);
             return {
               sistemaId: s.sistemaId,
-              nivelId: sistemaNivelMap.get(s.nivel)!,
+              nivelId: s.nivel ? (sistemaNivelMap.get(s.nivel) ?? null) : null,
               horas: totals?.horas ?? null,
               costeConsumibles: totals?.coste ?? null,
               precioConsumibles: totals?.precio ?? null,
@@ -678,7 +682,7 @@ router.put('/:id', requireRole('admin'), async (req: Request, res: Response, nex
                 const totals = sistemaTotals.get(s.sistemaId);
                 return {
                   sistemaId: s.sistemaId,
-                  nivelId: sistemaNivelMapPut.get(s.nivel)!,
+                  nivelId: s.nivel ? (sistemaNivelMapPut.get(s.nivel) ?? null) : null,
                   horas: totals?.horas ?? null,
                   costeConsumibles: totals?.coste ?? null,
                   precioConsumibles: totals?.precio ?? null,
@@ -824,7 +828,7 @@ router.post('/:id/recalcular', requireRole('admin'), async (req: Request, res: R
       return;
     }
 
-    const sistemas = oferta.sistemas.map((s) => ({ sistemaId: s.sistemaId, nivel: s.nivel.codigo }));
+    const sistemas = oferta.sistemas.map((s) => ({ sistemaId: s.sistemaId, nivel: s.nivel?.codigo ?? null }));
     const { sistemaTotals, totalHoras, totalCoste, totalPrecio } =
       await calculateOfertaTotals(sistemas);
 

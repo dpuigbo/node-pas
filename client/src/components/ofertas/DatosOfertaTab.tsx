@@ -10,7 +10,7 @@ import { useCreateOferta, useUpdateOferta } from '@/hooks/useOfertas';
 
 interface SistemaItem {
   sistemaId: number;
-  nivel: string;
+  nivel: string | null;
 }
 
 interface Props {
@@ -59,7 +59,7 @@ export function DatosOfertaTab({ oferta, onCreated, readOnly }: Props) {
   }, [clienteSistemas, sistemas]);
 
   const addSistema = (sistemaId: number) => {
-    setSistemas((prev) => [...prev, { sistemaId, nivel: 'N1' }]);
+    setSistemas((prev) => [...prev, { sistemaId, nivel: null }]);
   };
   const removeSistema = (sistemaId: number) => {
     setSistemas((prev) => prev.filter((s) => s.sistemaId !== sistemaId));

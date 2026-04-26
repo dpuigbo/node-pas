@@ -2,12 +2,11 @@ import { z } from 'zod';
 
 // Codigo de nivel: canonico (N1, N2_INF, N2_SUP, N3, N_CTRL, N_DU, N0_EJE,
 // N1_EJE, N2_EJE) o legacy (1, 2_inferior, 2_superior, 3) — el backend
-// los normaliza al guardar.
-const nivelCodigoSchema = z.string().min(1).max(20);
-
+// los normaliza al guardar. Nullable: el sistema puede no tener nivel global;
+// los niveles reales viven en oferta_componente (Tab 1).
 const ofertaSistemaSchema = z.object({
   sistemaId: z.number().int().positive(),
-  nivel: nivelCodigoSchema.default('N1'),
+  nivel: z.string().min(1).max(20).optional().nullable(),
 });
 
 export const createOfertaSchema = z.object({
