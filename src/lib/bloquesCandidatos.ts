@@ -12,16 +12,17 @@
 import { prisma } from '../config/database';
 
 export interface CandidatoBloque {
-  id: string;                  // identificador logico (ej: "comp-12-ida", "viaje-ida")
+  id: string;                  // identificador logico (ej: "sis-12", "viaje-total")
   tipo: 'trabajo' | 'desplazamiento';
   origenTipo: 'componente' | 'desplazamiento';
-  ofertaComponenteId: number | null;
+  ofertaComponenteId: number | null;     // primer componente del sistema (puntero)
+  componenteIds: number[];               // todos los oferta_componente_id del sistema
   label: string;
   horasTotal: number;
   horasColocadas: number;
   horasPendientes: number;
-  sinHoras: boolean;           // true si no hay horas configuradas para este modelo+nivel
-  actividades: string[];       // nombres de actividades aplicables a este componente+nivel
+  sinHoras: boolean;
+  actividades: string[];
   meta: {
     sistemaNombre?: string;
     componenteEtiqueta?: string;
@@ -176,31 +177,63 @@ export async function getBloquesCandidatos(ofertaId: number): Promise<CandidatoB
 
   const candidatos: CandidatoBloque[] = [];
 
-  // Componentes con nivel asignado (mostramos incluso si horas=0 para visibilidad)
+  // Agrupar componentes con nivel asignado por sistema. Cada sistema produce
+  // UN candidato. Las horas se suman; el bloque colocado se vincula al primer
+  // componente del sistema (sirve como "puntero al sistema"). Las horas
+  // colocadas se calculan sumando bloques de cualquiera de los componentes.
+  type CompList = typeof oferta.componentes;
+  const porSistema = new Map<number, { sistemaNombre: string; componentes: CompList }>();
   for (const oc of oferta.componentes) {
     const nivelCodigo = oc.nivel?.codigo ?? null;
-    if (!nivelCodigo) continue; // sin nivel no es candidato
-    const horasTotal = dec(oc.horas);
-    const sinHoras = horasTotal <= 0;
-    const colocadas = horasPorComponente.get(oc.id) ?? 0;
+    if (!nivelCodigo) continue;
+    const sId = oc.componenteSistema.sistema.id;
+    let bucket = porSistema.get(sId);
+    if (!bucket) {
+      bucket = { sistemaNombre: oc.componenteSistema.sistema.nombre, componentes: [] };
+      porSistema.set(sId, bucket);
+    }
+    bucket.componentes.push(oc);
+  }
+
+  for (const [sistemaId, { sistemaNombre, componentes }] of porSistema.entries()) {
+    if (componentes.length === 0) continue;
+    let horasTotal = 0;
+    let colocadas = 0;
+    const desglosePartes: string[] = [];
+    const actividadesUnion = new Set<string>();
+    let primerOcId: number | null = null;
+    const componenteIds: number[] = [];
+    const niveles = new Set<string>();
+    for (const oc of componentes) {
+      const ht = dec(oc.horas);
+      horasTotal += ht;
+      colocadas += horasPorComponente.get(oc.id) ?? 0;
+      const nivelCodigo = oc.nivel!.codigo;
+      niveles.add(nivelCodigo);
+      const familiaId = oc.componenteSistema.modeloComponente.familiaId;
+      for (const a of actividadesParaNivel(familiaId, nivelCodigo, oc.id)) actividadesUnion.add(a);
+      desglosePartes.push(`${oc.componenteSistema.modeloComponente.nombre} · ${oc.componenteSistema.etiqueta} (${nivelCodigo}, ${ht.toFixed(1)}h)`);
+      if (primerOcId == null) primerOcId = oc.id;
+      componenteIds.push(oc.id);
+    }
     const pendientes = Math.max(0, horasTotal - colocadas);
-    const familiaId = oc.componenteSistema.modeloComponente.familiaId;
     candidatos.push({
-      id: `comp-${oc.id}`,
+      id: `sis-${sistemaId}`,
       tipo: 'trabajo',
       origenTipo: 'componente',
-      ofertaComponenteId: oc.id,
-      label: `${oc.componenteSistema.modeloComponente.nombre} · ${oc.componenteSistema.etiqueta}`,
+      ofertaComponenteId: primerOcId,
+      componenteIds,
+      label: `${sistemaNombre}`,
       horasTotal: +horasTotal.toFixed(2),
       horasColocadas: +colocadas.toFixed(2),
       horasPendientes: +pendientes.toFixed(2),
-      sinHoras,
-      actividades: actividadesParaNivel(familiaId, nivelCodigo, oc.id),
+      sinHoras: horasTotal <= 0,
+      actividades: Array.from(actividadesUnion),
       meta: {
-        sistemaNombre: oc.componenteSistema.sistema.nombre,
-        componenteEtiqueta: oc.componenteSistema.etiqueta,
-        componenteTipo: oc.componenteSistema.tipo,
-        nivel: nivelCodigo,
+        sistemaNombre,
+        componenteEtiqueta: desglosePartes.join(' + '),
+        componenteTipo: 'sistema',
+        nivel: Array.from(niveles).join('+'),
       },
     });
   }
@@ -217,6 +250,7 @@ export async function getBloquesCandidatos(ofertaId: number): Promise<CandidatoB
       tipo: 'desplazamiento',
       origenTipo: 'desplazamiento',
       ofertaComponenteId: null,
+      componenteIds: [],
       label: `Trayecto cliente (ida ${horasTrayectoUna}h + vuelta ${horasTrayectoUna}h)`,
       horasTotal: horasTotalIdaVuelta,
       horasColocadas: +colocadas.toFixed(2),

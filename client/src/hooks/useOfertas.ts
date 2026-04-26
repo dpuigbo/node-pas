@@ -272,6 +272,7 @@ export interface CandidatoBloque {
   tipo: 'trabajo' | 'desplazamiento';
   origenTipo: 'componente' | 'desplazamiento';
   ofertaComponenteId: number | null;
+  componenteIds: number[];
   label: string;
   horasTotal: number;
   horasColocadas: number;

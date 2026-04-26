@@ -177,18 +177,25 @@ export function MantenimientoComponentes({ ofertaId, readOnly = false }: Props) 
                       <Select
                         value={nivelValue}
                         onValueChange={(v) => handleNivelChange(c.componenteSistemaId, v, c)}
-                        disabled={readOnly || isLoading || c.nivelesAplicables.length === 0}
+                        disabled={readOnly || isLoading}
                       >
                         <SelectTrigger className="h-8 text-xs">
-                          <SelectValue placeholder="—" />
+                          <SelectValue placeholder="— Sin nivel —" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="__none__">— Sin nivel —</SelectItem>
-                          {c.nivelesAplicables.map((n) => (
-                            <SelectItem key={n.codigo} value={n.codigo}>
-                              {n.nombre}
-                            </SelectItem>
-                          ))}
+                          {c.nivelesAplicables.length === 0 ? (
+                            <div className="px-2 py-1.5 text-xs text-muted-foreground italic">
+                              No hay niveles configurados
+                            </div>
+                          ) : (
+                            c.nivelesAplicables.map((n) => (
+                              <SelectItem key={n.codigo} value={n.codigo}>
+                                {n.nombre}
+                                <span className="ml-1 text-muted-foreground text-[10px]">({n.codigo})</span>
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                     </td>

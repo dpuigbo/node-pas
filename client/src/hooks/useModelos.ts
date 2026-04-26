@@ -112,6 +112,22 @@ export function useLubricacion(modeloId: number | undefined) {
   });
 }
 
+export function useUpdateLubricacionFila(modeloId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ lubId, ...body }: {
+      lubId: number;
+      eje?: string;
+      cantidadValor?: number | null;
+      cantidadUnidad?: string | null;
+      notas?: string | null;
+    }) => api.put(`/v1/modelos/${modeloId}/lubricacion/${lubId}`, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['modelos', modeloId, 'lubricacion'] });
+    },
+  });
+}
+
 export function useMantenimiento(modeloId: number | undefined) {
   return useQuery({
     queryKey: ['modelos', modeloId, 'mantenimiento'],

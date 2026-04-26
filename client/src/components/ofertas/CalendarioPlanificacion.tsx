@@ -90,11 +90,20 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
 
   const candidatos = candidatosData?.candidatos ?? [];
 
-  // Mapa para resolver bloque → candidato (label + sistema + nivel)
+  // Mapa para resolver bloque → candidato (label + sistema + nivel).
+  // Indexa por TODOS los componenteIds que cubre el candidato, no solo el primero
+  // (porque un sistema agrupa varios oferta_componente y un bloque puede vincular
+  // a cualquiera de ellos).
   const candidatoPorOC = useMemo(() => {
     const map = new Map<number, CandidatoBloque>();
     for (const c of candidatos) {
-      if (c.ofertaComponenteId != null) map.set(c.ofertaComponenteId, c);
+      for (const ocId of c.componenteIds) {
+        map.set(ocId, c);
+      }
+      // fallback: si no hay componenteIds (ej. viaje), usar ofertaComponenteId
+      if (c.componenteIds.length === 0 && c.ofertaComponenteId != null) {
+        map.set(c.ofertaComponenteId, c);
+      }
     }
     return map;
   }, [candidatos]);

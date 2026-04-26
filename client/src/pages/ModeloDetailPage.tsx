@@ -19,8 +19,10 @@ import {
 import {
   useModelo, useUpdateModelo, useVersiones, useCreateVersion, useActivateVersion,
   useModelos, useUpdateCompatibilidad, useLubricacion, useMantenimiento,
-  useModeloCompatibilidad,
+  useModeloCompatibilidad, useUpdateLubricacionFila,
 } from '@/hooks/useModelos';
+import { Input } from '@/components/ui/input';
+import { Select as USelect, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { getNivelesForTipo, getNivelesFijos, tieneNivelesEditables, NIVEL_SHORT } from '@/lib/niveles';
 
@@ -84,6 +86,33 @@ export default function ModeloDetailPage() {
   const { data: lubricacionData, isLoading: loadingLub } = useLubricacion(
     activeTab === 'lubricacion' ? modeloId : undefined,
   );
+  const updateLub = useUpdateLubricacionFila(modeloId);
+  const [editingLubId, setEditingLubId] = useState<number | null>(null);
+  const [lubDraft, setLubDraft] = useState<{ cantidadValor: string; cantidadUnidad: string; notas: string }>({
+    cantidadValor: '', cantidadUnidad: '', notas: '',
+  });
+  const startEditLub = (item: any) => {
+    setEditingLubId(item.id);
+    setLubDraft({
+      cantidadValor: item.cantidadValor != null ? String(item.cantidadValor) : '',
+      cantidadUnidad: item.cantidadUnidad ?? '',
+      notas: item.notas ?? '',
+    });
+  };
+  const saveEditLub = async () => {
+    if (editingLubId == null) return;
+    try {
+      await updateLub.mutateAsync({
+        lubId: editingLubId,
+        cantidadValor: lubDraft.cantidadValor === '' ? null : Number(lubDraft.cantidadValor),
+        cantidadUnidad: lubDraft.cantidadUnidad || null,
+        notas: lubDraft.notas || null,
+      });
+      setEditingLubId(null);
+    } catch (err: any) {
+      alert(err?.response?.data?.error ?? 'Error al guardar');
+    }
+  };
   const { data: mantenimientoData, isLoading: loadingMant } = useMantenimiento(
     activeTab === 'mantenimiento' ? modeloId : undefined,
   );
@@ -545,17 +574,19 @@ export default function ModeloDetailPage() {
                         <th className="px-4 py-2 text-left font-medium w-20">Eje</th>
                         <th className="px-4 py-2 text-left font-medium">Lubricante</th>
                         <th className="px-4 py-2 text-left font-medium w-32">Cantidad</th>
-                        <th className="px-4 py-2 text-left font-medium w-36">WebConfig</th>
+                        <th className="px-4 py-2 text-left font-medium w-24">Unidad</th>
+                        <th className="px-4 py-2 text-left font-medium">Notas</th>
+                        {isAdmin && lubricacionData?.source === 'v2' && (
+                          <th className="px-4 py-2 w-20"></th>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
                       {group.items.map((item: any) => {
-                        // Prioridad: consumible_catalogo > aceite legacy > texto
                         const consumible = item.consumible;
                         const lubricante = consumible?.nombre ?? item.aceite?.nombre ?? item.tipoLubricanteLegacy ?? item.tipoLubricante ?? 'N/A';
-                        const cantidad = item.cantidadValor != null
-                          ? `${item.cantidadValor} ${item.cantidadUnidad ?? ''}`.trim()
-                          : item.cantidadTextoLegacy ?? item.cantidad ?? 'N/A';
+                        const isEditing = editingLubId === item.id;
+                        const isV2 = lubricacionData?.source === 'v2' && item.id > 0;
                         return (
                           <tr key={item.id} className="border-b last:border-b-0">
                             <td className="px-4 py-2 font-mono font-medium">{item.eje}</td>
@@ -575,15 +606,68 @@ export default function ModeloDetailPage() {
                               )}
                             </td>
                             <td className="px-4 py-2">
-                              {cantidad === 'N/A' ? (
-                                <span className="text-muted-foreground">N/A</span>
+                              {isEditing ? (
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  className="h-8 text-sm"
+                                  value={lubDraft.cantidadValor}
+                                  onChange={(e) => setLubDraft({ ...lubDraft, cantidadValor: e.target.value })}
+                                />
                               ) : (
-                                cantidad
+                                item.cantidadValor != null
+                                  ? Number(item.cantidadValor).toFixed(2)
+                                  : (item.cantidadTextoLegacy ?? item.cantidad ?? <span className="text-muted-foreground">N/A</span>)
                               )}
                             </td>
-                            <td className="px-4 py-2 text-muted-foreground font-mono text-xs">
-                              {item.webConfig || '—'}
+                            <td className="px-4 py-2">
+                              {isEditing ? (
+                                <USelect
+                                  value={lubDraft.cantidadUnidad}
+                                  onValueChange={(v) => setLubDraft({ ...lubDraft, cantidadUnidad: v })}
+                                >
+                                  <SelectTrigger className="h-8 text-sm w-20">
+                                    <SelectValue placeholder="—" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {['ml', 'l', 'g', 'kg', 'pcs', 'n_a'].map((u) => (
+                                      <SelectItem key={u} value={u}>{u}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </USelect>
+                              ) : (
+                                item.cantidadUnidad ?? <span className="text-muted-foreground">—</span>
+                              )}
                             </td>
+                            <td className="px-4 py-2 text-xs">
+                              {isEditing ? (
+                                <Input
+                                  className="h-8 text-sm"
+                                  value={lubDraft.notas}
+                                  onChange={(e) => setLubDraft({ ...lubDraft, notas: e.target.value })}
+                                />
+                              ) : (
+                                item.notas ?? <span className="text-muted-foreground">—</span>
+                              )}
+                            </td>
+                            {isAdmin && lubricacionData?.source === 'v2' && (
+                              <td className="px-4 py-2 text-right">
+                                {isEditing ? (
+                                  <div className="flex gap-1">
+                                    <Button size="sm" variant="ghost" onClick={saveEditLub} disabled={updateLub.isPending} className="h-7 w-7 p-0">
+                                      <Save className="h-3.5 w-3.5" />
+                                    </Button>
+                                    <Button size="sm" variant="ghost" onClick={() => setEditingLubId(null)} className="h-7 w-7 p-0">
+                                      <X className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
+                                ) : isV2 ? (
+                                  <Button size="sm" variant="ghost" onClick={() => startEditLub(item)} className="h-7 px-2 text-xs">
+                                    <Pencil className="h-3 w-3 mr-1" /> Editar
+                                  </Button>
+                                ) : null}
+                              </td>
+                            )}
                           </tr>
                         );
                       })}
