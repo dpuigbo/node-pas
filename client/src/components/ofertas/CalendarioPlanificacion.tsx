@@ -436,13 +436,23 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
                     ? candidatoPorOC.get(b.ofertaComponenteId)
                     : null;
                   const horasBloque = (endMin - startMin) / 60;
+                  const tooltipText = candidato
+                    ? [
+                        candidato.label,
+                        candidato.meta.sistemaNombre,
+                        candidato.meta.nivel ? `Nivel ${candidato.meta.nivel}` : null,
+                        candidato.actividades.length > 0
+                          ? `\nActividades:\n  • ${candidato.actividades.join('\n  • ')}`
+                          : null,
+                      ].filter(Boolean).join(' · ')
+                    : undefined;
                   return (
                     <div
                       key={b.id}
                       className={`absolute left-0.5 right-0.5 rounded border ${c.bg} ${c.border} ${c.text} px-1 py-0.5 text-[11px] overflow-hidden group`}
                       style={{ top, height }}
                       onMouseDown={(e) => e.stopPropagation()}
-                      title={candidato ? `${candidato.label} · ${candidato.meta.sistemaNombre ?? ''}${candidato.meta.nivel ? ` · Nivel ${candidato.meta.nivel}` : ''}` : undefined}
+                      title={tooltipText}
                     >
                       <div className="flex items-center gap-1 font-medium leading-tight">
                         <Icon className="h-3 w-3 flex-shrink-0" />
@@ -464,6 +474,16 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
                       )}
                       {candidato && height >= SLOT_PX * 3 && candidato.meta.sistemaNombre && (
                         <div className="text-[10px] opacity-70 truncate">{candidato.meta.sistemaNombre}</div>
+                      )}
+                      {candidato && candidato.actividades.length > 0 && height >= SLOT_PX * 4 && (
+                        <div className="text-[10px] opacity-80 mt-0.5 leading-tight border-t border-white/40 pt-0.5">
+                          {candidato.actividades.slice(0, Math.max(1, Math.floor((height - SLOT_PX * 3) / 14))).map((a, i) => (
+                            <div key={i} className="truncate">• {a}</div>
+                          ))}
+                          {candidato.actividades.length > Math.max(1, Math.floor((height - SLOT_PX * 3) / 14)) && (
+                            <div className="text-[9px] opacity-70">+{candidato.actividades.length - Math.max(1, Math.floor((height - SLOT_PX * 3) / 14))} mas</div>
+                          )}
+                        </div>
                       )}
                       {b.tipo === 'desplazamiento' && b.origenTipo === 'desplazamiento' && height >= SLOT_PX * 2 && (
                         <div className="leading-tight mt-0.5 opacity-90 truncate">Trayecto cliente</div>

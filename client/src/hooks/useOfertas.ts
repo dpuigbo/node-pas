@@ -159,6 +159,50 @@ export function useDeleteOfertaComponente(ofertaId: number) {
   });
 }
 
+export interface LubricacionFila {
+  id: number;
+  modeloComponenteId: number;
+  eje: string;
+  cantidadValor: number | null;
+  cantidadUnidad: 'ml' | 'l' | 'g' | 'kg' | 'pcs' | 'n_a' | null;
+  cantidadTextoLegacy: string | null;
+  varianteTrmLegacy: string | null;
+  tipoLubricanteLegacy: string | null;
+  webConfig: string | null;
+  notas: string | null;
+  aceite: { id: number; nombre: string; fabricante: string | null } | null;
+  consumible: { id: number; nombre: string; tipo: string; unidad: string | null } | null;
+}
+
+export function useModeloLubricacion(modeloId: number | undefined) {
+  return useQuery({
+    queryKey: ['modelos', modeloId, 'lubricacion'],
+    queryFn: async () => {
+      const { data } = await api.get<{ modeloId: number; lubricacion: LubricacionFila[] }>(
+        `/v1/modelos/${modeloId}/lubricacion`
+      );
+      return data;
+    },
+    enabled: !!modeloId,
+  });
+}
+
+export function useUpdateLubricacion(modeloId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ lubId, ...body }: {
+      lubId: number;
+      eje?: string;
+      cantidadValor?: number | null;
+      cantidadUnidad?: string | null;
+      notas?: string | null;
+    }) => api.put(`/v1/modelos/${modeloId}/lubricacion/${lubId}`, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['modelos', modeloId, 'lubricacion'] });
+    },
+  });
+}
+
 export interface ActividadModelo {
   id: number;
   componente: string;
@@ -229,6 +273,7 @@ export interface CandidatoBloque {
   horasColocadas: number;
   horasPendientes: number;
   sinHoras: boolean;
+  actividades: string[];
   meta: {
     sistemaNombre?: string;
     componenteEtiqueta?: string;

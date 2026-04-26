@@ -1,12 +1,16 @@
 import { useState, Fragment } from 'react';
-import { Loader2, Wrench, Battery, Droplet, ChevronDown, ChevronRight, ListChecks } from 'lucide-react';
+import { Loader2, Wrench, Battery, Droplet, ChevronDown, ChevronRight, ListChecks, Save, X as XIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   useOfertaComponentesDisponibles,
   useUpsertOfertaComponente,
   useModeloActividades,
+  useModeloLubricacion,
+  useUpdateLubricacion,
   type OfertaComponenteItem,
+  type LubricacionFila,
 } from '@/hooks/useOfertas';
 
 interface Props {
@@ -194,14 +198,14 @@ export function MantenimientoComponentes({ ofertaId, readOnly = false }: Props) 
                     <td className="px-3 py-2 text-center">
                       <button
                         type="button"
-                        disabled={readOnly || isLoading || !sel?.nivel}
+                        disabled={readOnly || isLoading}
                         onClick={() => handleToggle(c.componenteSistemaId, 'conBaterias', !(sel?.conBaterias ?? true), c)}
-                        className={`inline-flex items-center justify-center h-7 w-7 rounded ${
-                          sel?.conBaterias ?? true
-                            ? 'bg-amber-100 text-amber-700'
-                            : 'bg-gray-100 text-gray-400 line-through'
+                        className={`inline-flex items-center justify-center h-7 w-7 rounded transition-colors ${
+                          (sel?.conBaterias ?? true)
+                            ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                            : 'bg-gray-100 text-gray-400 line-through hover:bg-gray-200'
                         } disabled:opacity-50`}
-                        title={(sel?.conBaterias ?? true) ? 'Cambiar baterias' : 'Sin baterias'}
+                        title={(sel?.conBaterias ?? true) ? 'Cambiar baterias (click para excluir)' : 'Baterias excluidas (click para incluir)'}
                       >
                         <Battery className="h-3.5 w-3.5" />
                       </button>
@@ -209,14 +213,14 @@ export function MantenimientoComponentes({ ofertaId, readOnly = false }: Props) 
                     <td className="px-3 py-2 text-center">
                       <button
                         type="button"
-                        disabled={readOnly || isLoading || !sel?.nivel}
+                        disabled={readOnly || isLoading}
                         onClick={() => handleToggle(c.componenteSistemaId, 'conAceite', !(sel?.conAceite ?? true), c)}
-                        className={`inline-flex items-center justify-center h-7 w-7 rounded ${
-                          sel?.conAceite ?? true
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-gray-100 text-gray-400 line-through'
+                        className={`inline-flex items-center justify-center h-7 w-7 rounded transition-colors ${
+                          (sel?.conAceite ?? true)
+                            ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                            : 'bg-gray-100 text-gray-400 line-through hover:bg-gray-200'
                         } disabled:opacity-50`}
-                        title={(sel?.conAceite ?? true) ? 'Cambiar aceite' : 'Sin aceite'}
+                        title={(sel?.conAceite ?? true) ? 'Cambiar aceite (click para excluir)' : 'Aceite excluido (click para incluir)'}
                       >
                         <Droplet className="h-3.5 w-3.5" />
                       </button>
@@ -233,8 +237,11 @@ export function MantenimientoComponentes({ ofertaId, readOnly = false }: Props) 
                   </tr>
                   {isExpanded && (
                     <tr className="border-b last:border-0 bg-muted/5">
-                      <td colSpan={8} className="px-6 py-3">
+                      <td colSpan={8} className="px-6 py-3 space-y-4">
                         <ActividadesComponente modeloId={c.modeloId} nivel={sel?.nivel ?? null} />
+                        {c.tipo === 'mechanical_unit' && (
+                          <LubricacionEditor modeloId={c.modeloId} readOnly={readOnly} />
+                        )}
                       </td>
                     </tr>
                   )}
@@ -259,6 +266,177 @@ export function MantenimientoComponentes({ ofertaId, readOnly = false }: Props) 
           <span className="text-muted-foreground">Precio:</span>{' '}
           <span className="font-mono font-medium">{formatEuros(totales.precio)}</span>
         </div>
+      </div>
+    </div>
+  );
+}
+
+const UNIDADES_LUB = ['ml', 'l', 'g', 'kg', 'pcs', 'n_a'] as const;
+
+function LubricacionEditor({ modeloId, readOnly }: { modeloId: number; readOnly: boolean }) {
+  const { data, isLoading } = useModeloLubricacion(modeloId);
+  const update = useUpdateLubricacion(modeloId);
+
+  const [editId, setEditId] = useState<number | null>(null);
+  const [draft, setDraft] = useState<{ eje: string; cantidadValor: string; cantidadUnidad: string; notas: string }>({
+    eje: '', cantidadValor: '', cantidadUnidad: '', notas: '',
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Loader2 className="h-3 w-3 animate-spin" /> Cargando lubricacion...
+      </div>
+    );
+  }
+
+  const filas = data?.lubricacion ?? [];
+  if (filas.length === 0) {
+    return (
+      <div className="text-xs text-muted-foreground italic">
+        No hay datos de lubricacion configurados para este modelo.
+      </div>
+    );
+  }
+
+  const startEdit = (f: LubricacionFila) => {
+    setEditId(f.id);
+    setDraft({
+      eje: f.eje,
+      cantidadValor: f.cantidadValor != null ? String(f.cantidadValor) : '',
+      cantidadUnidad: f.cantidadUnidad ?? '',
+      notas: f.notas ?? '',
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditId(null);
+  };
+
+  const saveEdit = async () => {
+    if (editId == null) return;
+    await update.mutateAsync({
+      lubId: editId,
+      eje: draft.eje.trim() || undefined,
+      cantidadValor: draft.cantidadValor === '' ? null : Number(draft.cantidadValor),
+      cantidadUnidad: draft.cantidadUnidad || null,
+      notas: draft.notas || null,
+    });
+    setEditId(null);
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+        <Droplet className="h-3.5 w-3.5" />
+        Lubricacion del modelo
+        <span className="text-muted-foreground">({filas.length} ejes)</span>
+      </div>
+      <div className="rounded border bg-background overflow-hidden">
+        <table className="w-full text-xs">
+          <thead className="bg-muted/30">
+            <tr>
+              <th className="px-2 py-1 text-left">Eje</th>
+              <th className="px-2 py-1 text-left">Aceite/Consumible</th>
+              <th className="px-2 py-1 text-right">Cantidad</th>
+              <th className="px-2 py-1 text-left">Unidad</th>
+              <th className="px-2 py-1 text-left">Notas</th>
+              {!readOnly && <th className="px-2 py-1 w-16"></th>}
+            </tr>
+          </thead>
+          <tbody>
+            {filas.map((f) => {
+              const editing = editId === f.id;
+              return (
+                <tr key={f.id} className="border-t">
+                  <td className="px-2 py-1 font-medium">
+                    {editing ? (
+                      <Input
+                        className="h-7 text-xs"
+                        value={draft.eje}
+                        onChange={(e) => setDraft({ ...draft, eje: e.target.value })}
+                      />
+                    ) : (
+                      f.eje
+                    )}
+                  </td>
+                  <td className="px-2 py-1 text-muted-foreground">
+                    {f.consumible?.nombre ?? f.aceite?.nombre ?? f.tipoLubricanteLegacy ?? '—'}
+                  </td>
+                  <td className="px-2 py-1 text-right font-mono">
+                    {editing ? (
+                      <Input
+                        type="number"
+                        step="0.01"
+                        className="h-7 text-xs text-right"
+                        value={draft.cantidadValor}
+                        onChange={(e) => setDraft({ ...draft, cantidadValor: e.target.value })}
+                      />
+                    ) : (
+                      f.cantidadValor != null ? Number(f.cantidadValor).toFixed(2) : (f.cantidadTextoLegacy ?? '—')
+                    )}
+                  </td>
+                  <td className="px-2 py-1">
+                    {editing ? (
+                      <Select value={draft.cantidadUnidad} onValueChange={(v) => setDraft({ ...draft, cantidadUnidad: v })}>
+                        <SelectTrigger className="h-7 text-xs w-20"><SelectValue placeholder="—" /></SelectTrigger>
+                        <SelectContent>
+                          {UNIDADES_LUB.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      f.cantidadUnidad ?? '—'
+                    )}
+                  </td>
+                  <td className="px-2 py-1 text-muted-foreground">
+                    {editing ? (
+                      <Input
+                        className="h-7 text-xs"
+                        value={draft.notas}
+                        onChange={(e) => setDraft({ ...draft, notas: e.target.value })}
+                      />
+                    ) : (
+                      f.notas ?? '—'
+                    )}
+                  </td>
+                  {!readOnly && (
+                    <td className="px-2 py-1">
+                      {editing ? (
+                        <div className="flex gap-1">
+                          <button
+                            type="button"
+                            onClick={saveEdit}
+                            disabled={update.isPending}
+                            className="h-6 w-6 inline-flex items-center justify-center rounded bg-green-100 text-green-700 hover:bg-green-200"
+                            title="Guardar"
+                          >
+                            <Save className="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={cancelEdit}
+                            className="h-6 w-6 inline-flex items-center justify-center rounded bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            title="Cancelar"
+                          >
+                            <XIcon className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => startEdit(f)}
+                          className="text-xs text-primary hover:underline"
+                        >
+                          Editar
+                        </button>
+                      )}
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );
