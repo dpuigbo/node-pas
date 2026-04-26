@@ -13,6 +13,7 @@
 // Las opciones conBaterias y conAceite permiten al operario excluir esos costes.
 
 import { prisma } from '../config/database';
+import { getNivelesPermitidos } from './niveles';
 
 const LIMPIEZA_OIL_FACTOR = 1.15; // 15% extra para limpieza y merma
 
@@ -205,6 +206,7 @@ export async function getNivelesAplicablesModelo(modeloId: number): Promise<{
   const modelo = await prisma.modeloComponente.findUnique({
     where: { id: modeloId },
     select: {
+      tipo: true,
       niveles: true,
       nivelesAplicables: {
         include: { nivel: true },
@@ -236,10 +238,15 @@ export async function getNivelesAplicablesModelo(modeloId: number): Promise<{
   }
 
   // Fallback: parsear CSV legacy + buscar metadatos en lu_nivel_mantenimiento
-  const codigos = (modelo.niveles ?? '')
+  let codigos = (modelo.niveles ?? '')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
+
+  // Ultimo fallback: niveles permitidos por tipo de componente
+  if (codigos.length === 0) {
+    codigos = getNivelesPermitidos(modelo.tipo);
+  }
 
   if (codigos.length === 0) return [];
 
@@ -254,7 +261,7 @@ export async function getNivelesAplicablesModelo(modeloId: number): Promise<{
       const n = nivelMap.get(cod);
       return {
         codigo: cod,
-        nombre: n?.nombre ?? cod,
+        nombre: n?.nombre ?? `Nivel ${cod}`,
         orden: n?.orden ?? idx,
         horas: dec(horasMap.get(cod)?.horas),
         costeLimpieza: dec(horasMap.get(cod)?.costeLimpieza),

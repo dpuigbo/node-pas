@@ -85,9 +85,19 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
   const [candidatoActivo, setCandidatoActivo] = useState<CandidatoBloque | null>(null);
   const [drag, setDrag] = useState<null | { dayIdx: number; startSlot: number; endSlot: number }>(null);
   const [busy, setBusy] = useState(false);
+  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
   const dragRef = useRef<{ dayIdx: number; startSlot: number; endSlot: number } | null>(null);
 
   const candidatos = candidatosData?.candidatos ?? [];
+
+  // Mapa para resolver bloque → candidato (label + sistema + nivel)
+  const candidatoPorOC = useMemo(() => {
+    const map = new Map<number, CandidatoBloque>();
+    for (const c of candidatos) {
+      if (c.ofertaComponenteId != null) map.set(c.ofertaComponenteId, c);
+    }
+    return map;
+  }, [candidatos]);
 
   // Si el candidato activo se queda sin horas pendientes, deseleccionar
   const activoActualizado = candidatoActivo
@@ -141,6 +151,7 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
     const { dayIdx, startSlot, endSlot } = dragRef.current;
     setDrag(null);
     dragRef.current = null;
+    setMousePos(null);
     const fecha = fechasStr[dayIdx]!;
     let slotsLen = endSlot - startSlot;
 
@@ -335,9 +346,15 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
 
       {/* Calendar grid */}
       <div
-        className="rounded-lg border overflow-hidden select-none"
+        className="rounded-lg border overflow-hidden select-none relative"
         onMouseUp={handleMouseUp}
-        onMouseLeave={() => { if (drag) handleMouseUp(); }}
+        onMouseMove={(e) => {
+          if (drag) setMousePos({ x: e.clientX, y: e.clientY });
+        }}
+        onMouseLeave={() => {
+          if (drag) handleMouseUp();
+          setMousePos(null);
+        }}
       >
         {/* Header dias */}
         <div className="grid bg-muted/40 text-xs font-medium border-b" style={{ gridTemplateColumns: '60px repeat(7, 1fr)' }}>
@@ -415,17 +432,42 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
                   const height = ((endMin - startMin) / SLOT_MINUTES) * SLOT_PX;
                   const c = TIPO_COLOR[b.tipo];
                   const Icon = c.icon;
+                  const candidato = b.ofertaComponenteId != null
+                    ? candidatoPorOC.get(b.ofertaComponenteId)
+                    : null;
+                  const horasBloque = (endMin - startMin) / 60;
                   return (
                     <div
                       key={b.id}
                       className={`absolute left-0.5 right-0.5 rounded border ${c.bg} ${c.border} ${c.text} px-1 py-0.5 text-[11px] overflow-hidden group`}
                       style={{ top, height }}
                       onMouseDown={(e) => e.stopPropagation()}
+                      title={candidato ? `${candidato.label} · ${candidato.meta.sistemaNombre ?? ''}${candidato.meta.nivel ? ` · Nivel ${candidato.meta.nivel}` : ''}` : undefined}
                     >
                       <div className="flex items-center gap-1 font-medium leading-tight">
                         <Icon className="h-3 w-3 flex-shrink-0" />
-                        <span className="truncate">{b.horaInicio}-{b.horaFin}</span>
+                        <span className="truncate">
+                          {b.horaInicio}-{b.horaFin}
+                          {' · '}
+                          <span className="font-mono">{horasBloque.toFixed(1)}h</span>
+                        </span>
                       </div>
+                      {candidato && height >= SLOT_PX * 2 && (
+                        <div className="leading-tight mt-0.5 opacity-90 truncate">
+                          {candidato.meta.componenteEtiqueta ?? candidato.label}
+                          {candidato.meta.nivel && (
+                            <span className="ml-1 inline-block px-1 rounded bg-white/60 text-[10px] font-medium">
+                              N{candidato.meta.nivel}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      {candidato && height >= SLOT_PX * 3 && candidato.meta.sistemaNombre && (
+                        <div className="text-[10px] opacity-70 truncate">{candidato.meta.sistemaNombre}</div>
+                      )}
+                      {b.tipo === 'desplazamiento' && b.origenTipo === 'desplazamiento' && height >= SLOT_PX * 2 && (
+                        <div className="leading-tight mt-0.5 opacity-90 truncate">Trayecto cliente</div>
+                      )}
                       {!readOnly && (
                         <div className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-100 flex gap-0.5">
                           <Select value={b.tipo} onValueChange={(v: any) => handleChangeTipoBloque(b, v)}>
@@ -454,6 +496,40 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
           })}
         </div>
       </div>
+
+      {/* Tooltip flotante al lado del cursor durante drag */}
+      {drag && mousePos && (() => {
+        const slotsLen = drag.endSlot - drag.startSlot;
+        const horasSel = slotsLen * (SLOT_MINUTES / 60);
+        const horasPend = candidatoActivo?.horasPendientes ?? null;
+        const horasFinal = horasPend != null ? Math.min(horasSel, horasPend) : horasSel;
+        const restantes = horasPend != null ? Math.max(0, horasPend - horasFinal) : null;
+        return (
+          <div
+            className="fixed z-50 pointer-events-none rounded-md bg-black/85 text-white text-xs px-2 py-1.5 shadow-lg"
+            style={{ left: mousePos.x + 14, top: mousePos.y + 14 }}
+          >
+            <div className="font-medium">
+              <span className="font-mono">{horasFinal.toFixed(1)}h</span> seleccionadas
+              {horasPend != null && horasFinal < horasSel && (
+                <span className="text-amber-300"> (clamp a maximo)</span>
+              )}
+            </div>
+            {candidatoActivo && (
+              <>
+                <div className="text-[10px] text-white/70 truncate max-w-[260px]">
+                  {candidatoActivo.label}
+                </div>
+                <div className="text-[11px]">
+                  Restantes: <span className="font-mono">{restantes!.toFixed(1)}h</span>
+                  {' / '}
+                  <span className="text-white/60">{candidatoActivo.horasTotal.toFixed(1)}h total</span>
+                </div>
+              </>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Resumen rapido */}
       {totales && (
