@@ -1092,6 +1092,21 @@ router.get('/:id/planificacion', async (req: Request, res: Response, next: NextF
     const bloques = await prisma.ofertaBloqueCalendario.findMany({
       where: { ofertaId },
       orderBy: [{ fecha: 'asc' }, { horaInicio: 'asc' }],
+      include: {
+        ofertaComponente: {
+          include: {
+            nivel: { select: { codigo: true, nombre: true } },
+            componenteSistema: {
+              select: {
+                etiqueta: true,
+                tipo: true,
+                sistema: { select: { id: true, nombre: true } },
+                modeloComponente: { select: { nombre: true } },
+              },
+            },
+          },
+        },
+      },
     });
     const totales = await calcularPlanificacion(ofertaId);
     res.json({
@@ -1102,7 +1117,17 @@ router.get('/:id/planificacion', async (req: Request, res: Response, next: NextF
         horaInicio: b.horaInicio,
         horaFin: b.horaFin,
         tipo: b.tipo,
+        ofertaComponenteId: b.ofertaComponenteId,
+        origenTipo: b.origenTipo,
         notas: b.notas,
+        // Info derivada para UI (sin requerir lookup contra candidatos)
+        sistemaId: b.ofertaComponente?.componenteSistema.sistema.id ?? null,
+        sistemaNombre: b.ofertaComponente?.componenteSistema.sistema.nombre ?? null,
+        componenteEtiqueta: b.ofertaComponente?.componenteSistema.etiqueta ?? null,
+        componenteTipo: b.ofertaComponente?.componenteSistema.tipo ?? null,
+        modeloNombre: b.ofertaComponente?.componenteSistema.modeloComponente.nombre ?? null,
+        nivelCodigo: b.ofertaComponente?.nivel?.codigo ?? null,
+        nivelNombre: b.ofertaComponente?.nivel?.nombre ?? null,
       })),
       totales,
     });

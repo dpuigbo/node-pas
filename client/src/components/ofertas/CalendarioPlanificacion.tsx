@@ -441,20 +441,27 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
                   const height = ((endMin - startMin) / SLOT_MINUTES) * SLOT_PX;
                   const c = TIPO_COLOR[b.tipo];
                   const Icon = c.icon;
+                  // Lookup info: priorizar datos del bloque (rellenos por backend),
+                  // fallback a candidatoPorOC para actividades.
                   const candidato = b.ofertaComponenteId != null
                     ? candidatoPorOC.get(b.ofertaComponenteId)
                     : null;
+                  const sistemaNombre = b.sistemaNombre ?? candidato?.meta.sistemaNombre ?? null;
+                  const nivelLabel = b.nivelCodigo ?? candidato?.meta.nivel ?? null;
+                  const componenteLabel = (b.componenteEtiqueta || b.modeloNombre)
+                    ? [b.modeloNombre, b.componenteEtiqueta].filter(Boolean).join(' · ')
+                    : (candidato?.meta.componenteEtiqueta ?? null);
+                  const actividades = candidato?.actividades ?? [];
                   const horasBloque = (endMin - startMin) / 60;
-                  const tooltipText = candidato
-                    ? [
-                        candidato.label,
-                        candidato.meta.sistemaNombre,
-                        candidato.meta.nivel ? `Nivel ${candidato.meta.nivel}` : null,
-                        candidato.actividades.length > 0
-                          ? `\nActividades:\n  • ${candidato.actividades.join('\n  • ')}`
-                          : null,
-                      ].filter(Boolean).join(' · ')
-                    : undefined;
+                  const sinVincular = b.tipo === 'trabajo' && !sistemaNombre;
+                  const tooltipText = [
+                    sistemaNombre,
+                    componenteLabel,
+                    nivelLabel ? `Nivel ${nivelLabel}` : null,
+                    actividades.length > 0
+                      ? `\nActividades:\n  • ${actividades.join('\n  • ')}`
+                      : null,
+                  ].filter(Boolean).join(' · ') || undefined;
                   return (
                     <div
                       key={b.id}
@@ -471,36 +478,36 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
                           <span className="font-mono">{horasBloque.toFixed(1)}h</span>
                         </span>
                       </div>
-                      {/* Nombre del sistema siempre visible si hay candidato (incluso bloque corto) */}
-                      {candidato && candidato.meta.sistemaNombre && (
-                        <div className="leading-tight mt-0.5 opacity-95 font-medium truncate flex items-center gap-1">
-                          <span className="truncate">{candidato.meta.sistemaNombre}</span>
-                          {candidato.meta.nivel && (
+                      {/* Sistema (siempre visible si hay info) */}
+                      {sistemaNombre && (
+                        <div className="leading-tight mt-0.5 opacity-95 font-semibold truncate flex items-center gap-1">
+                          <span className="truncate">{sistemaNombre}</span>
+                          {nivelLabel && (
                             <span className="inline-block px-1 rounded bg-white/70 text-[10px] font-semibold flex-shrink-0">
-                              {candidato.meta.nivel}
+                              {nivelLabel}
                             </span>
                           )}
                         </div>
                       )}
-                      {/* Desglose de componentes solo si hay altura */}
-                      {candidato && height >= SLOT_PX * 3 && candidato.meta.componenteEtiqueta && (
-                        <div className="text-[10px] opacity-70 leading-tight line-clamp-2">
-                          {candidato.meta.componenteEtiqueta}
+                      {/* Componente (modelo + etiqueta) */}
+                      {componenteLabel && height >= SLOT_PX * 2 && (
+                        <div className="text-[10px] opacity-80 leading-tight truncate">
+                          {componenteLabel}
                         </div>
                       )}
-                      {/* Fallback si no encontramos candidato pero el bloque tiene oferta_componente */}
-                      {!candidato && b.ofertaComponenteId != null && height >= SLOT_PX * 2 && (
-                        <div className="leading-tight mt-0.5 opacity-70 italic text-[10px]">
-                          Componente #{b.ofertaComponenteId}
+                      {/* Aviso si bloque trabajo sin sistema */}
+                      {sinVincular && (
+                        <div className="text-[10px] italic text-amber-700 mt-0.5">
+                          ⚠ Sin sistema vinculado
                         </div>
                       )}
-                      {candidato && candidato.actividades.length > 0 && height >= SLOT_PX * 4 && (
+                      {actividades.length > 0 && height >= SLOT_PX * 4 && (
                         <div className="text-[10px] opacity-80 mt-0.5 leading-tight border-t border-white/40 pt-0.5">
-                          {candidato.actividades.slice(0, Math.max(1, Math.floor((height - SLOT_PX * 3) / 14))).map((a, i) => (
+                          {actividades.slice(0, Math.max(1, Math.floor((height - SLOT_PX * 3) / 14))).map((a, i) => (
                             <div key={i} className="truncate">• {a}</div>
                           ))}
-                          {candidato.actividades.length > Math.max(1, Math.floor((height - SLOT_PX * 3) / 14)) && (
-                            <div className="text-[9px] opacity-70">+{candidato.actividades.length - Math.max(1, Math.floor((height - SLOT_PX * 3) / 14))} mas</div>
+                          {actividades.length > Math.max(1, Math.floor((height - SLOT_PX * 3) / 14)) && (
+                            <div className="text-[9px] opacity-70">+{actividades.length - Math.max(1, Math.floor((height - SLOT_PX * 3) / 14))} mas</div>
                           )}
                         </div>
                       )}

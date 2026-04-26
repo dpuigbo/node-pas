@@ -265,6 +265,14 @@ export interface BloqueCalendario {
   ofertaComponenteId: number | null;
   origenTipo: 'componente' | 'desplazamiento' | 'manual' | 'comida';
   notas: string | null;
+  // Info derivada del componente vinculado (rellena por el backend)
+  sistemaId: number | null;
+  sistemaNombre: string | null;
+  componenteEtiqueta: string | null;
+  componenteTipo: string | null;
+  modeloNombre: string | null;
+  nivelCodigo: string | null;
+  nivelNombre: string | null;
 }
 
 export interface CandidatoBloque {
