@@ -134,6 +134,7 @@ model LuFamilia {
   compatEjePermitida     CompatibilidadEjePermitida[]
   compatEjeExcluye       CompatibilidadEjeExcluye[]
   compatRobotCtrl        CompatibilidadRobotControlador[]
+  mantenimientoHoras     MantenimientoHorasFamilia[]
 
   @@unique([fabricanteId, codigo, tipo], map: "uq_fam_fab_cod")
   @@map("lu_familia")
@@ -233,6 +234,8 @@ model ModeloComponente {
   componentes              ComponenteSistema[]
   consumiblesNivel         ConsumibleNivel[]
   mantenimientoHoras       MantenimientoHorasModelo[]
+  mantenimientoHorasFamilia MantenimientoHorasFamilia[]
+  consumiblesLimpieza      ConsumibleLimpiezaModelo[]
   nivelesAplicables        ModeloNivelAplicable[]
   lubricaciones            Lubricacion[]
   actividadesCabinet       ActividadCabinet[]
@@ -562,6 +565,7 @@ model ConsumibleCatalogo {
   puntosControl      PuntoControlGenerico[]
   aceitesLegacy      Aceite[]
   consumiblesLegacy  Consumible[]
+  limpiezaModelo     ConsumibleLimpiezaModelo[]
 
   @@map("consumible_catalogo")
 }
@@ -606,7 +610,8 @@ enum TipoBateriaMedida {
   eib
 }
 
-// Horas de trabajo + coste consumibles de limpieza por (modelo, nivel)
+// Horas de trabajo + coste consumibles de limpieza por (modelo, nivel) — LEGACY
+// Sustituida por MantenimientoHorasFamilia + ConsumibleLimpiezaModelo
 model MantenimientoHorasModelo {
   id                  Int      @id @default(autoincrement())
   modeloComponenteId  Int      @map("modelo_componente_id")
@@ -621,6 +626,47 @@ model MantenimientoHorasModelo {
 
   @@unique([modeloComponenteId, nivel], map: "uq_mhm")
   @@map("mantenimiento_horas_modelo")
+}
+
+// Horas de trabajo por (familia, nivel). Para mech_unit/external_axis/drive_unit
+// se usa solo familia (modelo=null). Para controlador se usa modelo concreto
+// (variante de la familia, p.ej. IRC5 Compact vs IRC5 Single).
+model MantenimientoHorasFamilia {
+  id                  Int      @id @default(autoincrement())
+  familiaId           Int      @map("familia_id")
+  modeloComponenteId  Int?     @map("modelo_componente_id")
+  nivel               String   @db.VarChar(20)
+  horas               Decimal? @db.Decimal(8, 2)
+  notas               String?  @db.VarChar(500)
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  familia LuFamilia         @relation(fields: [familiaId], references: [id], onDelete: Cascade)
+  modelo  ModeloComponente? @relation(fields: [modeloComponenteId], references: [id], onDelete: Cascade)
+
+  @@unique([familiaId, modeloComponenteId, nivel], map: "uq_mhf")
+  @@index([familiaId])
+  @@index([modeloComponenteId])
+  @@map("mantenimiento_horas_familia")
+}
+
+// Consumibles de limpieza vinculados al modelo (no por nivel; aplican siempre)
+model ConsumibleLimpiezaModelo {
+  id                  Int      @id @default(autoincrement())
+  modeloComponenteId  Int      @map("modelo_componente_id")
+  consumibleId        Int      @map("consumible_id")
+  cantidad            Decimal  @db.Decimal(10, 3) @default(1)
+  unidad              String?  @db.VarChar(20)
+  notas               String?  @db.VarChar(255)
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  modelo     ModeloComponente   @relation(fields: [modeloComponenteId], references: [id], onDelete: Cascade)
+  consumible ConsumibleCatalogo @relation(fields: [consumibleId], references: [id], onDelete: Cascade)
+
+  @@unique([modeloComponenteId, consumibleId], map: "uq_clm")
+  @@index([modeloComponenteId])
+  @@map("consumibles_limpieza_modelo")
 }
 
 enum TipoOferta {
@@ -836,6 +882,7 @@ model ActividadPreventiva {
   intervaloTextoLegacy   String?                   @map("intervalo_texto_legacy") @db.VarChar(200)
   intervaloFoundryHoras  Int?                      @map("intervalo_foundry_horas")
   intervaloFoundryMeses  Int?                      @map("intervalo_foundry_meses") @db.SmallInt
+  niveles                String?                   @db.VarChar(50)
   notas                  String?                   @db.Text
 
   familia       LuFamilia            @relation(fields: [familiaId], references: [id])
