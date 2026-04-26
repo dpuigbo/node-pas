@@ -17,6 +17,21 @@ import {
 } from '../lib/ofertaMantenimiento';
 import { calcularPlanificacion } from '../lib/ofertaPlanificacion';
 import { getBloquesCandidatos } from '../lib/bloquesCandidatos';
+import { nivelIdFromCodigo, normalizarCodigoNivel } from '../lib/niveles';
+
+/** Resolver codigos canonicos a IDs en batch. Lanza si algun codigo no existe. */
+async function resolveNivelCodigos(codigos: string[]): Promise<Map<string, number>> {
+  const out = new Map<string, number>();
+  for (const c of codigos) {
+    const norm = normalizarCodigoNivel(c) ?? c;
+    if (out.has(norm)) continue;
+    const id = await nivelIdFromCodigo(norm);
+    if (id == null) throw new Error(`Nivel desconocido: ${c}`);
+    out.set(norm, id);
+    if (norm !== c) out.set(c, id); // alias para codigos legacy
+  }
+  return out;
+}
 
 const router = Router();
 
@@ -321,7 +336,11 @@ async function calculateOfertaTotals(
       componentes: {
         include: {
           modeloComponente: {
-            include: { consumiblesNivel: true },
+            include: {
+              consumiblesNivel: {
+                include: { nivel: { select: { codigo: true } } },
+              },
+            },
           },
         },
       },
@@ -340,7 +359,7 @@ async function calculateOfertaTotals(
     if (!sistema) continue;
 
     for (const comp of sistema.componentes) {
-      const cn = comp.modeloComponente.consumiblesNivel.find((c) => c.nivel === nivel);
+      const cn = comp.modeloComponente.consumiblesNivel.find((c) => c.nivel.codigo === nivel);
       if (!cn?.consumibles) continue;
       const items = cn.consumibles as unknown as ConsumibleItem[];
       for (const item of items) {
@@ -396,7 +415,7 @@ async function calculateOfertaTotals(
     let sysPrecio = 0;
 
     for (const comp of sistema.componentes) {
-      const cn = comp.modeloComponente.consumiblesNivel.find((c) => c.nivel === nivel);
+      const cn = comp.modeloComponente.consumiblesNivel.find((c) => c.nivel.codigo === nivel);
       if (!cn) continue;
 
       // Add hours
@@ -447,11 +466,16 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         sistemas: {
           include: {
             sistema: { select: { id: true, nombre: true } },
+            nivel: { select: { codigo: true, nombre: true } },
           },
         },
       },
     });
-    res.json(ofertas);
+    // Serializar nivel objeto -> codigo string para mantener compat con frontend
+    res.json(ofertas.map((o) => ({
+      ...o,
+      sistemas: o.sistemas.map((s) => ({ ...s, nivel: s.nivel.codigo, nivelNombre: s.nivel.nombre })),
+    })));
   } catch (err) { next(err); }
 });
 
@@ -464,6 +488,7 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
         cliente: { select: { id: true, nombre: true, sede: true, tarifaHoraTrabajo: true } },
         sistemas: {
           include: {
+            nivel: { select: { codigo: true, nombre: true } },
             sistema: {
               select: {
                 id: true,
@@ -483,7 +508,10 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
       res.status(404).json({ error: 'Oferta no encontrada' });
       return;
     }
-    res.json(oferta);
+    res.json({
+      ...oferta,
+      sistemas: oferta.sistemas.map((s) => ({ ...s, nivel: s.nivel.codigo, nivelNombre: s.nivel.nombre })),
+    });
   } catch (err) { next(err); }
 });
 
@@ -520,6 +548,7 @@ router.post('/', requireRole('admin'), async (req: Request, res: Response, next:
       }
     }
 
+    const sistemaNivelMap = await resolveNivelCodigos(data.sistemas.map((s) => s.nivel));
     const oferta = await prisma.oferta.create({
       data: {
         clienteId: data.clienteId,
@@ -544,7 +573,7 @@ router.post('/', requireRole('admin'), async (req: Request, res: Response, next:
             const totals = sistemaTotals.get(s.sistemaId);
             return {
               sistemaId: s.sistemaId,
-              nivel: s.nivel,
+              nivelId: sistemaNivelMap.get(s.nivel)!,
               horas: totals?.horas ?? null,
               costeConsumibles: totals?.coste ?? null,
               precioConsumibles: totals?.precio ?? null,
@@ -557,6 +586,7 @@ router.post('/', requireRole('admin'), async (req: Request, res: Response, next:
         sistemas: {
           include: {
             sistema: { select: { id: true, nombre: true } },
+            nivel: { select: { codigo: true, nombre: true } },
           },
         },
       },
@@ -601,6 +631,7 @@ router.put('/:id', requireRole('admin'), async (req: Request, res: Response, nex
       // Recalculate totals
       const { sistemaTotals, totalHoras, totalCoste, totalPrecio } =
         await calculateOfertaTotals(data.sistemas);
+      const sistemaNivelMapPut = await resolveNivelCodigos(data.sistemas.map((s) => s.nivel));
 
       updateData.totalHoras = totalHoras || null;
       updateData.totalCoste = totalCoste || null;
@@ -647,7 +678,7 @@ router.put('/:id', requireRole('admin'), async (req: Request, res: Response, nex
                 const totals = sistemaTotals.get(s.sistemaId);
                 return {
                   sistemaId: s.sistemaId,
-                  nivel: s.nivel,
+                  nivelId: sistemaNivelMapPut.get(s.nivel)!,
                   horas: totals?.horas ?? null,
                   costeConsumibles: totals?.coste ?? null,
                   precioConsumibles: totals?.precio ?? null,
@@ -699,6 +730,7 @@ router.put('/:id', requireRole('admin'), async (req: Request, res: Response, nex
         sistemas: {
           include: {
             sistema: { select: { id: true, nombre: true } },
+            nivel: { select: { codigo: true, nombre: true } },
           },
         },
       },
@@ -743,7 +775,7 @@ router.post('/:id/generar-intervencion', requireRole('admin'), async (req: Reque
       return;
     }
 
-    // Create intervencion with sistemas from oferta
+    // Create intervencion with sistemas from oferta (heredan nivelId)
     const intervencion = await prisma.intervencion.create({
       data: {
         clienteId: oferta.clienteId,
@@ -758,7 +790,7 @@ router.post('/:id/generar-intervencion', requireRole('admin'), async (req: Reque
         sistemas: {
           create: oferta.sistemas.map((s) => ({
             sistemaId: s.sistemaId,
-            nivel: s.nivel,
+            nivelId: s.nivelId,
           })),
         },
       },
@@ -767,6 +799,7 @@ router.post('/:id/generar-intervencion', requireRole('admin'), async (req: Reque
         sistemas: {
           include: {
             sistema: { select: { id: true, nombre: true } },
+            nivel: { select: { codigo: true, nombre: true } },
           },
         },
       },
@@ -783,7 +816,7 @@ router.post('/:id/recalcular', requireRole('admin'), async (req: Request, res: R
     const id = Number(req.params.id);
     const oferta = await prisma.oferta.findUnique({
       where: { id },
-      include: { sistemas: true },
+      include: { sistemas: { include: { nivel: { select: { codigo: true } } } } },
     });
 
     if (!oferta) {
@@ -791,7 +824,7 @@ router.post('/:id/recalcular', requireRole('admin'), async (req: Request, res: R
       return;
     }
 
-    const sistemas = oferta.sistemas.map((s) => ({ sistemaId: s.sistemaId, nivel: s.nivel }));
+    const sistemas = oferta.sistemas.map((s) => ({ sistemaId: s.sistemaId, nivel: s.nivel.codigo }));
     const { sistemaTotals, totalHoras, totalCoste, totalPrecio } =
       await calculateOfertaTotals(sistemas);
 
@@ -850,6 +883,7 @@ router.post('/:id/recalcular', requireRole('admin'), async (req: Request, res: R
         sistemas: {
           include: {
             sistema: { select: { id: true, nombre: true } },
+            nivel: { select: { codigo: true, nombre: true } },
           },
         },
       },
@@ -890,7 +924,7 @@ router.get('/:id/componentes-disponibles', async (req: Request, res: Response, n
             },
           },
         },
-        componentes: true,
+        componentes: { include: { nivel: { select: { codigo: true } } } },
       },
     });
     if (!oferta) {
@@ -922,7 +956,7 @@ router.get('/:id/componentes-disponibles', async (req: Request, res: Response, n
           tipoBateriaMedida: comp.modeloComponente.tipoBateriaMedida,
           nivelesAplicables: niveles,
           seleccion: sel ? {
-            nivel: sel.nivel,
+            nivel: sel.nivel?.codigo ?? null,
             conBaterias: sel.conBaterias,
             conAceite: sel.conAceite,
             horas: dec(sel.horas),
@@ -976,12 +1010,13 @@ router.put('/:id/componente/:cmpId', requireRole('admin'), async (req: Request, 
     // Defaults: con baterias y con aceite TRUE si no se especifica
     const conBaterias = data.conBaterias ?? true;
     const conAceite = data.conAceite ?? true;
-    const nivel = data.nivel ?? null;
+    const nivelCodigo = data.nivel ?? null;
+    const nivelId = nivelCodigo ? await nivelIdFromCodigo(nivelCodigo) : null;
 
     // Calcular horas + costes solo si hay nivel definido
     let calc = { horas: 0, costeConsumibles: 0, precioConsumibles: 0, costeLimpieza: 0 };
-    if (nivel) {
-      calc = await calcularComponenteOferta(comp.modeloComponenteId, nivel, {
+    if (nivelCodigo) {
+      calc = await calcularComponenteOferta(comp.modeloComponenteId, nivelCodigo, {
         tipoOferta: oferta.tipoOferta,
         conBaterias,
         conAceite,
@@ -993,7 +1028,7 @@ router.put('/:id/componente/:cmpId', requireRole('admin'), async (req: Request, 
       create: {
         ofertaId,
         componenteSistemaId,
-        nivel,
+        nivelId,
         conBaterias,
         conAceite,
         horas: calc.horas || null,
@@ -1003,7 +1038,7 @@ router.put('/:id/componente/:cmpId', requireRole('admin'), async (req: Request, 
         notas: data.notas ?? null,
       },
       update: {
-        nivel,
+        nivelId,
         conBaterias,
         conAceite,
         horas: calc.horas || null,
@@ -1012,10 +1047,12 @@ router.put('/:id/componente/:cmpId', requireRole('admin'), async (req: Request, 
         costeLimpieza: calc.costeLimpieza || null,
         notas: data.notas ?? null,
       },
+      include: { nivel: { select: { codigo: true } } },
     });
 
     res.json({
       ...upserted,
+      nivel: upserted.nivel?.codigo ?? null,
       horas: dec(upserted.horas),
       costeConsumibles: dec(upserted.costeConsumibles),
       precioConsumibles: dec(upserted.precioConsumibles),

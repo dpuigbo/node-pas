@@ -391,14 +391,18 @@ function ActividadesComponente({ modeloId, nivel }: { modeloId: number; nivel: s
                   {!a.intervaloHoras && !a.intervaloMeses && '—'}
                 </td>
                 <td className="px-2 py-1">
-                  {a.niveles ? (
-                    a.niveles.split(',').map((n) => (
-                      <Badge key={n.trim()} variant="outline" className="text-[10px] mr-0.5">
-                        {n.trim()}
+                  {a.nivelesAsignados && a.nivelesAsignados.length > 0 ? (
+                    a.nivelesAsignados.map((n) => (
+                      <Badge
+                        key={n}
+                        variant={a.obligatoria === false ? 'outline' : 'secondary'}
+                        className="text-[10px] mr-0.5"
+                      >
+                        {n}{a.obligatoria === false && ' *'}
                       </Badge>
                     ))
                   ) : (
-                    <span className="text-muted-foreground italic text-[10px]">todos</span>
+                    <span className="text-muted-foreground italic text-[10px]">sin asignar</span>
                   )}
                 </td>
                 <td className="px-2 py-1">

@@ -4,16 +4,29 @@ import { prisma } from '../config/database';
 import {
   createIntervencionSchema, updateIntervencionSchema, updateEstadoIntervencionSchema,
 } from '../validation/intervenciones.validation';
+import { nivelIdFromCodigo } from '../lib/niveles';
 
 const router = Router();
 
-/** Build sistema rows from either `sistemas` (new) or `sistemaIds` (legacy) */
-function buildSistemaRows(data: { sistemas?: { sistemaId: number; nivel: string }[]; sistemaIds?: number[] }) {
+/** Build sistema rows from either `sistemas` (new) or `sistemaIds` (legacy).
+ * Each row carries nivelId resolved from the codigo (default 'N1'). */
+async function buildSistemaRows(data: { sistemas?: { sistemaId: number; nivel: string }[]; sistemaIds?: number[] }) {
+  const defaultNivelId = await nivelIdFromCodigo('N1');
+  const resolveNivel = async (codigo: string): Promise<number> => {
+    const id = await nivelIdFromCodigo(codigo);
+    if (id == null) throw new Error(`Nivel desconocido: ${codigo}`);
+    return id;
+  };
   if (data.sistemas && data.sistemas.length > 0) {
-    return data.sistemas.map((s) => ({ sistemaId: s.sistemaId, nivel: s.nivel }));
+    const out = [];
+    for (const s of data.sistemas) {
+      out.push({ sistemaId: s.sistemaId, nivelId: await resolveNivel(s.nivel) });
+    }
+    return out;
   }
   if (data.sistemaIds && data.sistemaIds.length > 0) {
-    return data.sistemaIds.map((id) => ({ sistemaId: id, nivel: '1' }));
+    if (defaultNivelId == null) throw new Error('Nivel default N1 no existe');
+    return data.sistemaIds.map((id) => ({ sistemaId: id, nivelId: defaultNivelId }));
   }
   return [];
 }
@@ -33,6 +46,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         sistemas: {
           include: {
             sistema: { select: { id: true, nombre: true } },
+            nivel: { select: { codigo: true, nombre: true } },
           },
         },
         _count: { select: { informes: true } },
@@ -51,6 +65,7 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
         cliente: { select: { id: true, nombre: true } },
         sistemas: {
           include: {
+            nivel: { select: { codigo: true, nombre: true } },
             sistema: {
               include: {
                 fabricante: { select: { id: true, nombre: true } },
@@ -79,7 +94,7 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
 router.post('/', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { sistemaIds, sistemas, ...data } = createIntervencionSchema.parse(req.body);
-    const rows = buildSistemaRows({ sistemas, sistemaIds });
+    const rows = await buildSistemaRows({ sistemas, sistemaIds });
 
     // If logistics fields not provided, copy from client (snapshot pattern)
     const logisticsFields = [
@@ -132,7 +147,7 @@ router.post('/', requireRole('admin'), async (req: Request, res: Response, next:
       },
       include: {
         cliente: { select: { id: true, nombre: true } },
-        sistemas: { include: { sistema: { select: { id: true, nombre: true } } } },
+        sistemas: { include: { sistema: { select: { id: true, nombre: true } }, nivel: { select: { codigo: true, nombre: true } } } },
       },
     });
     res.status(201).json(intervencion);
@@ -155,7 +170,7 @@ router.put('/:id', requireRole('admin'), async (req: Request, res: Response, nex
     // If sistemas or sistemaIds provided, replace the junction table
     const hasSistemaChanges = (sistemas && sistemas.length > 0) || (sistemaIds && sistemaIds.length > 0);
     if (hasSistemaChanges) {
-      const rows = buildSistemaRows({ sistemas, sistemaIds });
+      const rows = await buildSistemaRows({ sistemas, sistemaIds });
       await prisma.$transaction([
         prisma.intervencionSistema.deleteMany({ where: { intervencionId: id } }),
         prisma.intervencion.update({
@@ -174,7 +189,7 @@ router.put('/:id', requireRole('admin'), async (req: Request, res: Response, nex
       where: { id },
       include: {
         cliente: { select: { id: true, nombre: true } },
-        sistemas: { include: { sistema: { select: { id: true, nombre: true } } } },
+        sistemas: { include: { sistema: { select: { id: true, nombre: true } }, nivel: { select: { codigo: true, nombre: true } } } },
       },
     });
     res.json(intervencion);

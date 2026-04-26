@@ -59,7 +59,7 @@ export function DatosOfertaTab({ oferta, onCreated, readOnly }: Props) {
   }, [clienteSistemas, sistemas]);
 
   const addSistema = (sistemaId: number) => {
-    setSistemas((prev) => [...prev, { sistemaId, nivel: '1' }]);
+    setSistemas((prev) => [...prev, { sistemaId, nivel: 'N1' }]);
   };
   const removeSistema = (sistemaId: number) => {
     setSistemas((prev) => prev.filter((s) => s.sistemaId !== sistemaId));

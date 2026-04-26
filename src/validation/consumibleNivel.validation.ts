@@ -17,7 +17,8 @@ const consumibleItemSchema = z.union([consumibleItemV2Schema, consumibleItemLega
 
 export const upsertConsumibleNivelSchema = z.object({
   modeloId: z.number().int().positive(),
-  nivel: z.enum(['1', '2', '2_inferior', '2_superior', '3']),
+  // Codigo canonico (N1, N2_INF, ...) o legacy (1, 2_inferior, ...) - backend normaliza a nivelId
+  nivel: z.string().min(1).max(20),
   horas: z.number().min(0).optional().nullable(),
   precioOtros: z.number().min(0).optional().nullable(),
   consumibles: z.array(consumibleItemSchema).optional().nullable(),

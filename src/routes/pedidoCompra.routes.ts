@@ -54,13 +54,16 @@ router.post('/generar/:intervencionId', requireRole('admin'), async (req: Reques
       include: {
         sistemas: {
           include: {
+            nivel: { select: { codigo: true } },
             sistema: {
               include: {
                 componentes: {
                   include: {
                     modeloComponente: {
                       include: {
-                        consumiblesNivel: true,
+                        consumiblesNivel: {
+                          include: { nivel: { select: { codigo: true } } },
+                        },
                       },
                     },
                   },
@@ -92,11 +95,11 @@ router.post('/generar/:intervencionId', requireRole('admin'), async (req: Reques
 
     for (const intSistema of intervencion.sistemas) {
       const sistema = intSistema.sistema;
-      const nivel = intSistema.nivel;
+      const nivel = intSistema.nivel.codigo;
 
       for (const comp of sistema.componentes) {
         const modelo = comp.modeloComponente;
-        const cn = modelo.consumiblesNivel.find((c) => c.nivel === nivel);
+        const cn = modelo.consumiblesNivel.find((c) => c.nivel.codigo === nivel);
         if (!cn || !cn.consumibles) continue;
 
         const items = cn.consumibles as unknown as ConsumibleItem[];

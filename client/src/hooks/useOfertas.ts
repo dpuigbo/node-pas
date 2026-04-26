@@ -208,7 +208,9 @@ export function useUpdateLubricacion(modeloId: number) {
 export interface ActividadModelo {
   id: number;
   componente: string;
-  niveles: string | null;
+  niveles: string | null;            // legacy CSV (deprecated)
+  nivelesAsignados: string[];        // codigos canonicos asignados via actividad_nivel
+  obligatoria: boolean | null;       // solo si se filtra por nivel concreto
   intervaloHoras: number | null;
   intervaloMeses: number | null;
   intervaloCondicion: string;

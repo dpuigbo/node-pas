@@ -2,7 +2,8 @@ import { z } from 'zod';
 
 const sistemaNivelSchema = z.object({
   sistemaId: z.number().int().positive(),
-  nivel: z.enum(['1', '2_inferior', '2_superior', '3']).default('1'),
+  // Codigo canonico (N1, N2_INF, ...) o legacy (1, 2_inferior, ...) - backend traduce a nivelId
+  nivel: z.string().min(1).max(20).default('N1'),
 });
 
 export const createIntervencionSchema = z.object({

@@ -348,17 +348,41 @@ router.get('/:id/actividades', async (req: Request, res: Response, next: NextFun
       return;
     }
 
+    // Resolver nivel codigo -> id para filtrar via actividad_nivel
+    const nivelRow = nivel
+      ? await prisma.luNivelMantenimiento.findUnique({ where: { codigo: nivel } })
+      : null;
+    const nivelId = nivelRow?.id ?? null;
+
     let actividades: any[] = [];
     if (modelo.familiaId) {
+      const where: any = { familiaId: modelo.familiaId };
+      // Filtrar por actividad_nivel si nivel especificado
+      if (nivelId != null) {
+        where.nivelesActividad = { some: { nivelId } };
+      }
       actividades = await prisma.actividadPreventiva.findMany({
-        where: { familiaId: modelo.familiaId },
+        where,
         include: {
           tipoActividad: { select: { codigo: true, nombre: true, categoria: true } },
           consumibles: {
             include: { consumible: { select: { id: true, nombre: true, tipo: true, unidad: true, coste: true, precio: true } } },
           },
+          nivelesActividad: {
+            include: { nivel: { select: { codigo: true } } },
+          },
         },
         orderBy: { id: 'asc' },
+      });
+      // Si filtramos por nivelId, anadir info "obligatoria" del link concreto
+      actividades = actividades.map((a) => {
+        const link = nivelId != null ? a.nivelesActividad.find((l: any) => l.nivelId === nivelId) : null;
+        return {
+          ...a,
+          obligatoria: link?.obligatoria ?? null,
+          // Niveles asignados a esta actividad (codigos)
+          nivelesAsignados: a.nivelesActividad.map((l: any) => l.nivel.codigo),
+        };
       });
     }
 
@@ -387,6 +411,8 @@ router.get('/:id/actividades', async (req: Request, res: Response, next: NextFun
         intervaloFoundryHoras: null,
         intervaloFoundryMeses: null,
         niveles: null,
+        nivelesAsignados: [],
+        obligatoria: null,
         notas: a.notas,
         tipoActividad: { codigo: 'legacy', nombre: a.tipoActividad, categoria: 'otro' },
         consumibles: [],
@@ -394,13 +420,7 @@ router.get('/:id/actividades', async (req: Request, res: Response, next: NextFun
       fuente = actividades.length > 0 ? 'actividades_mantenimiento_legacy' : 'ninguna';
     }
 
-    const filtered = nivel
-      ? actividades.filter((a: any) => {
-          if (!a.niveles || a.niveles.trim() === '') return true;
-          return a.niveles.split(',').map((s: string) => s.trim()).includes(nivel);
-        })
-      : actividades;
-    res.json({ modeloId, nivel, actividades: filtered, fuente });
+    res.json({ modeloId, nivel, actividades, fuente });
   } catch (err) { next(err); }
 });
 

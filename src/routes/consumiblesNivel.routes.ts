@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { requireRole } from '../middleware/role.middleware';
 import { prisma } from '../config/database';
 import { upsertConsumibleNivelSchema, batchUpsertSchema } from '../validation/consumibleNivel.validation';
+import { nivelIdFromCodigo } from '../lib/niveles';
 
 const router = Router();
 
@@ -13,9 +14,10 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     if (req.query.modeloId) where.modeloId = Number(req.query.modeloId);
     const rows = await prisma.consumibleNivel.findMany({
       where,
-      orderBy: [{ modeloId: 'asc' }, { nivel: 'asc' }],
+      include: { nivel: { select: { codigo: true, nombre: true, orden: true } } },
+      orderBy: [{ modeloId: 'asc' }, { nivel: { orden: 'asc' } }],
     });
-    res.json(rows);
+    res.json(rows.map((r) => ({ ...r, nivel: r.nivel.codigo })));
   } catch (err) { next(err); }
 });
 
@@ -26,20 +28,35 @@ router.get('/por-fabricante/:fabricanteId', async (req: Request, res: Response, 
     const fabricanteId = Number(req.params.fabricanteId);
     const modelos = await prisma.modeloComponente.findMany({
       where: { fabricanteId },
-      include: { consumiblesNivel: true },
+      include: {
+        consumiblesNivel: {
+          include: { nivel: { select: { codigo: true, nombre: true, orden: true } } },
+        },
+      },
       orderBy: [{ tipo: 'asc' }, { nombre: 'asc' }],
     });
-    res.json(modelos);
+    // Aplanar: serializar nivel.codigo a string en cada fila
+    res.json(modelos.map((m) => ({
+      ...m,
+      consumiblesNivel: m.consumiblesNivel.map((c) => ({ ...c, nivel: c.nivel.codigo })),
+    })));
   } catch (err) { next(err); }
 });
+
+async function resolveNivelOrThrow(codigo: string): Promise<number> {
+  const id = await nivelIdFromCodigo(codigo);
+  if (id == null) throw new Error(`Nivel desconocido: ${codigo}`);
+  return id;
+}
 
 // PUT /api/v1/consumibles-nivel (admin) — upsert single
 router.put('/', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = upsertConsumibleNivelSchema.parse(req.body);
+    const nivelId = await resolveNivelOrThrow(data.nivel);
     const row = await prisma.consumibleNivel.upsert({
       where: {
-        modeloId_nivel: { modeloId: data.modeloId, nivel: data.nivel },
+        modeloId_nivelId: { modeloId: data.modeloId, nivelId },
       },
       update: {
         horas: data.horas ?? null,
@@ -48,13 +65,14 @@ router.put('/', requireRole('admin'), async (req: Request, res: Response, next: 
       },
       create: {
         modeloId: data.modeloId,
-        nivel: data.nivel,
+        nivelId,
         horas: data.horas ?? null,
         precioOtros: data.precioOtros ?? null,
         consumibles: data.consumibles ?? undefined,
       },
+      include: { nivel: { select: { codigo: true } } },
     });
-    res.json(row);
+    res.json({ ...row, nivel: row.nivel.codigo });
   } catch (err) { next(err); }
 });
 
@@ -62,11 +80,17 @@ router.put('/', requireRole('admin'), async (req: Request, res: Response, next: 
 router.put('/batch', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const items = batchUpsertSchema.parse(req.body);
+    const itemsWithIds = await Promise.all(
+      items.map(async (data) => ({
+        ...data,
+        nivelId: await resolveNivelOrThrow(data.nivel),
+      }))
+    );
     const results = await prisma.$transaction(
-      items.map((data) =>
+      itemsWithIds.map((data) =>
         prisma.consumibleNivel.upsert({
           where: {
-            modeloId_nivel: { modeloId: data.modeloId, nivel: data.nivel },
+            modeloId_nivelId: { modeloId: data.modeloId, nivelId: data.nivelId },
           },
           update: {
             horas: data.horas ?? null,
@@ -75,15 +99,16 @@ router.put('/batch', requireRole('admin'), async (req: Request, res: Response, n
           },
           create: {
             modeloId: data.modeloId,
-            nivel: data.nivel,
+            nivelId: data.nivelId,
             horas: data.horas ?? null,
             precioOtros: data.precioOtros ?? null,
             consumibles: data.consumibles ?? undefined,
           },
+          include: { nivel: { select: { codigo: true } } },
         })
       )
     );
-    res.json(results);
+    res.json(results.map((r) => ({ ...r, nivel: r.nivel.codigo })));
   } catch (err) { next(err); }
 });
 

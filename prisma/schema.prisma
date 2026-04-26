@@ -161,7 +161,19 @@ enum LuTipoActividadCategoria {
   reemplazo
   overhaul
   analisis
+  bateria
+  correa
+  filtro
+  desiccant
+  limpieza
   otro
+}
+
+enum LuNivelMantenimientoAmbito {
+  manipulador
+  controlador
+  drive_unit
+  eje_externo
 }
 
 model LuUnidadIntervalo {
@@ -175,13 +187,21 @@ model LuUnidadIntervalo {
 }
 
 model LuNivelMantenimiento {
-  id          Int     @id @default(autoincrement())
-  codigo      String  @unique @db.VarChar(20)
-  nombre      String  @db.VarChar(50)
-  descripcion String? @db.VarChar(255)
+  id          Int                       @id @default(autoincrement())
+  codigo      String                    @unique @db.VarChar(20)
+  nombre      String                    @db.VarChar(50)
+  descripcion String?                   @db.VarChar(255)
+  ambito      LuNivelMantenimientoAmbito @default(manipulador)
   orden       Int
 
-  modelosAplicables ModeloNivelAplicable[]
+  modelosAplicables   ModeloNivelAplicable[]
+  actividades         ActividadNivel[]
+  horasFamilia        MantenimientoHorasFamilia[]
+  horasModelo         MantenimientoHorasModelo[]
+  consumiblesNivel    ConsumibleNivel[]
+  ofertaComponentes   OfertaComponente[]
+  ofertaSistemas      OfertaSistema[]
+  intervencionSistemas IntervencionSistema[]
 
   @@map("lu_nivel_mantenimiento")
 }
@@ -234,7 +254,8 @@ model ModeloComponente {
   componentes              ComponenteSistema[]
   consumiblesNivel         ConsumibleNivel[]
   mantenimientoHoras       MantenimientoHorasModelo[]
-  mantenimientoHorasFamilia MantenimientoHorasFamilia[]
+  mantenimientoHorasFamilia MantenimientoHorasFamilia[]   @relation("HorasFamiliaModelo")
+  mantenimientoHorasComoCtrl MantenimientoHorasFamilia[]  @relation("HorasFamiliaCtrl")
   consumiblesLimpieza      ConsumibleLimpiezaModelo[]
   nivelesAplicables        ModeloNivelAplicable[]
   lubricaciones            Lubricacion[]
@@ -411,12 +432,13 @@ enum EstadoIntervencion {
 }
 
 model IntervencionSistema {
-  intervencionId Int    @map("intervencion_id")
-  sistemaId      Int    @map("sistema_id")
-  nivel          String @default("1")
+  intervencionId Int @map("intervencion_id")
+  sistemaId      Int @map("sistema_id")
+  nivelId        Int @map("nivel_id")
 
-  intervencion Intervencion @relation(fields: [intervencionId], references: [id], onDelete: Cascade)
-  sistema      Sistema      @relation(fields: [sistemaId], references: [id], onDelete: Cascade)
+  intervencion Intervencion         @relation(fields: [intervencionId], references: [id], onDelete: Cascade)
+  sistema      Sistema              @relation(fields: [sistemaId], references: [id], onDelete: Cascade)
+  nivel        LuNivelMantenimiento @relation(fields: [nivelId], references: [id])
 
   @@id([intervencionId, sistemaId])
   @@map("intervencion_sistema")
@@ -590,16 +612,17 @@ enum ConsumibleTipo {
 model ConsumibleNivel {
   id              Int            @id @default(autoincrement())
   modeloId        Int            @map("modelo_id")
-  nivel           String
+  nivelId         Int            @map("nivel_id")
   horas           Decimal?       @db.Decimal(8, 2)
   precioOtros     Decimal?       @db.Decimal(10, 2) @map("precio_otros")
   consumibles     Json?
   createdAt       DateTime       @default(now()) @map("created_at")
   updatedAt       DateTime       @updatedAt @map("updated_at")
 
-  modelo ModeloComponente @relation(fields: [modeloId], references: [id], onDelete: Cascade)
+  modelo ModeloComponente     @relation(fields: [modeloId], references: [id], onDelete: Cascade)
+  nivel  LuNivelMantenimiento @relation(fields: [nivelId], references: [id])
 
-  @@unique([modeloId, nivel])
+  @@unique([modeloId, nivelId], map: "uq_cn_modelo_nivel")
   @@map("consumibles_nivel")
 }
 
@@ -615,38 +638,46 @@ enum TipoBateriaMedida {
 model MantenimientoHorasModelo {
   id                  Int      @id @default(autoincrement())
   modeloComponenteId  Int      @map("modelo_componente_id")
-  nivel               String   @db.VarChar(20)
+  nivelId             Int      @map("nivel_id")
   horas               Decimal? @db.Decimal(8, 2)
   costeLimpieza       Decimal? @map("coste_limpieza") @db.Decimal(10, 2)
   notas               String?  @db.VarChar(500)
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @updatedAt @map("updated_at")
 
-  modelo ModeloComponente @relation(fields: [modeloComponenteId], references: [id], onDelete: Cascade)
+  modelo ModeloComponente     @relation(fields: [modeloComponenteId], references: [id], onDelete: Cascade)
+  nivel  LuNivelMantenimiento @relation(fields: [nivelId], references: [id])
 
-  @@unique([modeloComponenteId, nivel], map: "uq_mhm")
+  @@unique([modeloComponenteId, nivelId], map: "uq_mhm")
   @@map("mantenimiento_horas_modelo")
 }
 
 // Horas de trabajo por (familia, nivel). Para mech_unit/external_axis/drive_unit
 // se usa solo familia (modelo=null). Para controlador se usa modelo concreto
 // (variante de la familia, p.ej. IRC5 Compact vs IRC5 Single).
+// controladorModeloId: solo aplica a manipulador (las horas dependen del cabinet).
+// revisado: marca filas validadas manualmente vs pendientes de revisar en seed.
 model MantenimientoHorasFamilia {
-  id                  Int      @id @default(autoincrement())
-  familiaId           Int      @map("familia_id")
-  modeloComponenteId  Int?     @map("modelo_componente_id")
-  nivel               String   @db.VarChar(20)
-  horas               Decimal? @db.Decimal(8, 2)
-  notas               String?  @db.VarChar(500)
-  createdAt           DateTime @default(now()) @map("created_at")
-  updatedAt           DateTime @updatedAt @map("updated_at")
+  id                    Int      @id @default(autoincrement())
+  familiaId             Int      @map("familia_id")
+  modeloComponenteId    Int?     @map("modelo_componente_id")
+  controladorModeloId   Int?     @map("controlador_modelo_id")
+  nivelId               Int      @map("nivel_id")
+  horas                 Decimal? @db.Decimal(8, 2)
+  revisado              Boolean  @default(false)
+  notas                 String?  @db.VarChar(500)
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
 
-  familia LuFamilia         @relation(fields: [familiaId], references: [id], onDelete: Cascade)
-  modelo  ModeloComponente? @relation(fields: [modeloComponenteId], references: [id], onDelete: Cascade)
+  familia      LuFamilia            @relation(fields: [familiaId], references: [id], onDelete: Cascade)
+  modelo       ModeloComponente?    @relation("HorasFamiliaModelo", fields: [modeloComponenteId], references: [id], onDelete: Cascade)
+  controlador  ModeloComponente?    @relation("HorasFamiliaCtrl", fields: [controladorModeloId], references: [id], onDelete: Cascade)
+  nivel        LuNivelMantenimiento @relation(fields: [nivelId], references: [id])
 
-  @@unique([familiaId, modeloComponenteId, nivel], map: "uq_mhf")
+  @@unique([familiaId, modeloComponenteId, controladorModeloId, nivelId], map: "uq_mhf")
   @@index([familiaId])
   @@index([modeloComponenteId])
+  @@index([controladorModeloId])
   @@map("mantenimiento_horas_familia")
 }
 
@@ -747,7 +778,7 @@ model OfertaComponente {
   id                    Int      @id @default(autoincrement())
   ofertaId              Int      @map("oferta_id")
   componenteSistemaId   Int      @map("componente_sistema_id")
-  nivel                 String?  @db.VarChar(20)
+  nivelId               Int?     @map("nivel_id")
   conBaterias           Boolean  @default(true) @map("con_baterias")
   conAceite             Boolean  @default(true) @map("con_aceite")
   horas                 Decimal? @db.Decimal(8, 2)
@@ -758,8 +789,9 @@ model OfertaComponente {
   createdAt             DateTime @default(now()) @map("created_at")
   updatedAt             DateTime @updatedAt @map("updated_at")
 
-  oferta            Oferta            @relation(fields: [ofertaId], references: [id], onDelete: Cascade)
-  componenteSistema ComponenteSistema @relation(fields: [componenteSistemaId], references: [id], onDelete: Cascade)
+  oferta            Oferta                @relation(fields: [ofertaId], references: [id], onDelete: Cascade)
+  componenteSistema ComponenteSistema     @relation(fields: [componenteSistemaId], references: [id], onDelete: Cascade)
+  nivel             LuNivelMantenimiento? @relation(fields: [nivelId], references: [id])
   bloques           OfertaBloqueCalendario[]
 
   @@unique([ofertaId, componenteSistemaId], map: "uq_oc")
@@ -769,13 +801,14 @@ model OfertaComponente {
 model OfertaSistema {
   ofertaId          Int      @map("oferta_id")
   sistemaId         Int      @map("sistema_id")
-  nivel             String   @default("1")
+  nivelId           Int      @map("nivel_id")
   horas             Decimal? @db.Decimal(8, 2)
   costeConsumibles  Decimal? @db.Decimal(10, 2) @map("coste_consumibles")
   precioConsumibles Decimal? @db.Decimal(10, 2) @map("precio_consumibles")
 
-  oferta  Oferta  @relation(fields: [ofertaId], references: [id], onDelete: Cascade)
-  sistema Sistema @relation(fields: [sistemaId], references: [id], onDelete: Cascade)
+  oferta  Oferta              @relation(fields: [ofertaId], references: [id], onDelete: Cascade)
+  sistema Sistema             @relation(fields: [sistemaId], references: [id], onDelete: Cascade)
+  nivel   LuNivelMantenimiento @relation(fields: [nivelId], references: [id])
 
   @@id([ofertaId, sistemaId])
   @@map("oferta_sistema")
@@ -876,22 +909,45 @@ model ActividadPreventiva {
   tipoActividadId        Int                       @map("tipo_actividad_id")
   documento              String?                   @db.VarChar(80)
   componente             String                    @db.VarChar(500)
+  ejes                   String?                   @db.VarChar(50)
   intervaloHoras         Int?                      @map("intervalo_horas")
   intervaloMeses         Int?                      @map("intervalo_meses") @db.SmallInt
   intervaloCondicion     IntervaloCondicion         @default(periodico) @map("intervalo_condicion")
   intervaloTextoLegacy   String?                   @map("intervalo_texto_legacy") @db.VarChar(200)
   intervaloFoundryHoras  Int?                      @map("intervalo_foundry_horas")
   intervaloFoundryMeses  Int?                      @map("intervalo_foundry_meses") @db.SmallInt
+  // niveles VARCHAR legacy (deprecated): se elimina en una migracion futura
   niveles                String?                   @db.VarChar(50)
   notas                  String?                   @db.Text
 
   familia       LuFamilia            @relation(fields: [familiaId], references: [id])
   tipoActividad LuTipoActividad      @relation(fields: [tipoActividadId], references: [id])
   consumibles   ActividadConsumible[]
+  nivelesActividad ActividadNivel[]
 
   @@index([familiaId])
   @@index([tipoActividadId])
   @@map("actividad_preventiva")
+}
+
+// M:N entre actividad_preventiva y lu_nivel_mantenimiento.
+// obligatoria=false marca extras opcionales (baterias, correas, etc).
+model ActividadNivel {
+  id              Int      @id @default(autoincrement())
+  actividadId     Int      @map("actividad_id")
+  nivelId         Int      @map("nivel_id")
+  obligatoria     Boolean  @default(true)
+  observaciones   String?  @db.VarChar(500)
+  orden           Int      @default(0)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  actividad ActividadPreventiva  @relation(fields: [actividadId], references: [id], onDelete: Cascade)
+  nivel     LuNivelMantenimiento @relation(fields: [nivelId], references: [id], onDelete: Cascade)
+
+  @@unique([actividadId, nivelId], map: "uq_an")
+  @@index([nivelId])
+  @@index([actividadId])
+  @@map("actividad_nivel")
 }
 
 model ActividadConsumible {
