@@ -173,6 +173,44 @@ router.get('/:id/niveles-aplicables', async (req, res, next) => {
         next(err);
     }
 });
+// GET /api/v1/modelos/:id/actividades?nivel=X
+// Devuelve las actividades preventivas de la familia del modelo, opcionalmente
+// filtradas por nivel (CSV niveles incluye o esta vacio).
+router.get('/:id/actividades', async (req, res, next) => {
+    try {
+        const modeloId = Number(req.params.id);
+        const nivel = req.query.nivel?.trim() || null;
+        const modelo = await database_1.prisma.modeloComponente.findUnique({
+            where: { id: modeloId },
+            select: { familiaId: true },
+        });
+        if (!modelo?.familiaId) {
+            res.json({ modeloId, actividades: [] });
+            return;
+        }
+        const actividades = await database_1.prisma.actividadPreventiva.findMany({
+            where: { familiaId: modelo.familiaId },
+            include: {
+                tipoActividad: { select: { codigo: true, nombre: true, categoria: true } },
+                consumibles: {
+                    include: { consumible: { select: { id: true, nombre: true, tipo: true, unidad: true, coste: true, precio: true } } },
+                },
+            },
+            orderBy: { id: 'asc' },
+        });
+        const filtered = nivel
+            ? actividades.filter((a) => {
+                if (!a.niveles || a.niveles.trim() === '')
+                    return true;
+                return a.niveles.split(',').map((s) => s.trim()).includes(nivel);
+            })
+            : actividades;
+        res.json({ modeloId, nivel, actividades: filtered });
+    }
+    catch (err) {
+        next(err);
+    }
+});
 // GET /api/v1/modelos/:id
 router.get('/:id', async (req, res, next) => {
     try {
