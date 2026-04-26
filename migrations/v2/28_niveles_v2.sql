@@ -183,7 +183,23 @@ SET @sql = (SELECT IF(
 ));
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
--- Reemplazar UNIQUE: drop por nombre conocido (uq_mhf) + crear nuevo si no existe
+-- Reemplazar UNIQUE: PRIMERO crear el nuevo (cubre familia_id como prefijo
+-- izquierdo, util para FK), LUEGO dropear el viejo. InnoDB rechaza dropear
+-- un unique si es el unico indice cubriendo una columna FK.
+-- Nombre temporal uq_mhf_new para no chocar con el viejo uq_mhf.
+SET @sql = (SELECT IF(
+  (SELECT COUNT(*) FROM information_schema.statistics
+   WHERE table_schema=DATABASE() AND table_name='mantenimiento_horas_familia' AND index_name='uq_mhf_new') = 0
+  AND
+  (SELECT COUNT(*) FROM information_schema.columns
+   WHERE table_schema=DATABASE() AND table_name='mantenimiento_horas_familia' AND column_name='nivel_id') > 0,
+  'ALTER TABLE mantenimiento_horas_familia
+     ADD UNIQUE KEY uq_mhf_new (familia_id, modelo_componente_id, controlador_modelo_id, nivel_id)',
+  'SELECT 1'
+));
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- Drop viejo uq_mhf (si todavia existe y referencia columna 'nivel')
 SET @sql = (SELECT IF(
   (SELECT COUNT(*) FROM information_schema.statistics
    WHERE table_schema=DATABASE() AND table_name='mantenimiento_horas_familia'
@@ -194,11 +210,14 @@ SET @sql = (SELECT IF(
 ));
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
+-- Renombrar uq_mhf_new -> uq_mhf (limpieza)
 SET @sql = (SELECT IF(
   (SELECT COUNT(*) FROM information_schema.statistics
+   WHERE table_schema=DATABASE() AND table_name='mantenimiento_horas_familia' AND index_name='uq_mhf_new') > 0
+  AND
+  (SELECT COUNT(*) FROM information_schema.statistics
    WHERE table_schema=DATABASE() AND table_name='mantenimiento_horas_familia' AND index_name='uq_mhf') = 0,
-  'ALTER TABLE mantenimiento_horas_familia
-     ADD UNIQUE KEY uq_mhf (familia_id, modelo_componente_id, controlador_modelo_id, nivel_id)',
+  'ALTER TABLE mantenimiento_horas_familia RENAME INDEX uq_mhf_new TO uq_mhf',
   'SELECT 1'
 ));
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
@@ -260,7 +279,20 @@ SET @sql = (SELECT IF(
 ));
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
--- Reemplazar UNIQUE
+-- Reemplazar UNIQUE: crear nuevo PRIMERO (cubre modelo_componente_id como
+-- prefijo izquierdo, FK necesita indice), luego drop viejo, luego rename.
+SET @sql = (SELECT IF(
+  (SELECT COUNT(*) FROM information_schema.statistics
+   WHERE table_schema=DATABASE() AND table_name='mantenimiento_horas_modelo' AND index_name='uq_mhm_new') = 0
+  AND
+  (SELECT COUNT(*) FROM information_schema.columns
+   WHERE table_schema=DATABASE() AND table_name='mantenimiento_horas_modelo' AND column_name='nivel_id') > 0,
+  'ALTER TABLE mantenimiento_horas_modelo
+     ADD UNIQUE KEY uq_mhm_new (modelo_componente_id, nivel_id)',
+  'SELECT 1'
+));
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
 SET @sql = (SELECT IF(
   (SELECT COUNT(*) FROM information_schema.statistics
    WHERE table_schema=DATABASE() AND table_name='mantenimiento_horas_modelo'
@@ -272,9 +304,11 @@ PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 SET @sql = (SELECT IF(
   (SELECT COUNT(*) FROM information_schema.statistics
+   WHERE table_schema=DATABASE() AND table_name='mantenimiento_horas_modelo' AND index_name='uq_mhm_new') > 0
+  AND
+  (SELECT COUNT(*) FROM information_schema.statistics
    WHERE table_schema=DATABASE() AND table_name='mantenimiento_horas_modelo' AND index_name='uq_mhm') = 0,
-  'ALTER TABLE mantenimiento_horas_modelo
-     ADD UNIQUE KEY uq_mhm (modelo_componente_id, nivel_id)',
+  'ALTER TABLE mantenimiento_horas_modelo RENAME INDEX uq_mhm_new TO uq_mhm',
   'SELECT 1'
 ));
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
@@ -335,7 +369,22 @@ SET @sql = (SELECT IF(
 ));
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
--- Drop unique antiguo (busca por columna 'nivel') y crear nuevo
+-- Reemplazar UNIQUE: crear nuevo PRIMERO (cubre modelo_id como prefijo
+-- izquierdo, util para FK consumiblesNivel.modeloId), luego drop viejo.
+-- InnoDB rechaza dropear el unique si era el unico indice cubriendo modelo_id.
+SET @sql = (SELECT IF(
+  (SELECT COUNT(*) FROM information_schema.statistics
+   WHERE table_schema=DATABASE() AND table_name='consumibles_nivel' AND index_name='uq_cn_modelo_nivel') = 0
+  AND
+  (SELECT COUNT(*) FROM information_schema.columns
+   WHERE table_schema=DATABASE() AND table_name='consumibles_nivel' AND column_name='nivel_id') > 0,
+  'ALTER TABLE consumibles_nivel
+     ADD UNIQUE KEY uq_cn_modelo_nivel (modelo_id, nivel_id)',
+  'SELECT 1'
+));
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- Drop unique antiguo por columna 'nivel' (cualquier nombre)
 SET @old_uq := (SELECT index_name FROM information_schema.statistics
   WHERE table_schema=DATABASE() AND table_name='consumibles_nivel'
     AND non_unique=0 AND column_name='nivel'
@@ -343,15 +392,6 @@ SET @old_uq := (SELECT index_name FROM information_schema.statistics
 SET @sql = IF(@old_uq IS NOT NULL,
   CONCAT('ALTER TABLE consumibles_nivel DROP INDEX `', @old_uq, '`'),
   'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-SET @sql = (SELECT IF(
-  (SELECT COUNT(*) FROM information_schema.statistics
-   WHERE table_schema=DATABASE() AND table_name='consumibles_nivel' AND index_name='uq_cn_modelo_nivel') = 0,
-  'ALTER TABLE consumibles_nivel
-     ADD UNIQUE KEY uq_cn_modelo_nivel (modelo_id, nivel_id)',
-  'SELECT 1'
-));
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 SET @sql = (SELECT IF(
