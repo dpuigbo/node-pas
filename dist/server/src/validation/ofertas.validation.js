@@ -57,6 +57,8 @@ exports.createBloqueSchema = zod_1.z.object({
     horaInicio: zod_1.z.string().regex(/^\d{2}:\d{2}$/, 'Formato HH:MM'),
     horaFin: zod_1.z.string().regex(/^\d{2}:\d{2}$/, 'Formato HH:MM'),
     tipo: zod_1.z.enum(['trabajo', 'desplazamiento', 'comida']),
+    ofertaComponenteId: zod_1.z.number().int().positive().optional().nullable(),
+    origenTipo: zod_1.z.enum(['componente', 'desplazamiento', 'manual', 'comida']).optional(),
     notas: zod_1.z.string().max(500).optional().nullable(),
 });
 exports.updateBloqueSchema = exports.createBloqueSchema.partial();

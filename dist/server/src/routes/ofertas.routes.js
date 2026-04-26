@@ -6,6 +6,7 @@ const database_1 = require("../config/database");
 const ofertas_validation_1 = require("../validation/ofertas.validation");
 const ofertaMantenimiento_1 = require("../lib/ofertaMantenimiento");
 const ofertaPlanificacion_1 = require("../lib/ofertaPlanificacion");
+const bloquesCandidatos_1 = require("../lib/bloquesCandidatos");
 const router = (0, express_1.Router)();
 /** Helper: convert Decimal | null to number | null */
 function dec(v) {
@@ -986,6 +987,18 @@ router.get('/:id/planificacion', async (req, res, next) => {
         next(err);
     }
 });
+// GET /api/v1/ofertas/:id/bloques-candidatos
+// Devuelve los bloques pendientes de colocar (componentes con horas + viaje cliente)
+router.get('/:id/bloques-candidatos', async (req, res, next) => {
+    try {
+        const ofertaId = Number(req.params.id);
+        const candidatos = await (0, bloquesCandidatos_1.getBloquesCandidatos)(ofertaId);
+        res.json({ ofertaId, candidatos });
+    }
+    catch (err) {
+        next(err);
+    }
+});
 // POST /api/v1/ofertas/:id/bloques (admin) — crear bloque
 router.post('/:id/bloques', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
     try {
@@ -998,6 +1011,8 @@ router.post('/:id/bloques', (0, role_middleware_1.requireRole)('admin'), async (
                 horaInicio: data.horaInicio,
                 horaFin: data.horaFin,
                 tipo: data.tipo,
+                ofertaComponenteId: data.ofertaComponenteId ?? null,
+                origenTipo: data.origenTipo ?? 'manual',
                 notas: data.notas ?? null,
             },
         });
