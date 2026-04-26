@@ -126,17 +126,15 @@ UPDATE mantenimiento_horas_familia
 SET revisado = FALSE
 WHERE revisado IS NULL OR revisado = TRUE;
 
-UPDATE mantenimiento_horas_familia mhf
-SET nivel_id = (
-  SELECT id FROM lu_nivel_mantenimiento WHERE codigo = CASE mhf.nivel
-    WHEN '1' THEN 'N1'
-    WHEN '2_inferior' THEN 'N2_INF'
-    WHEN '2_superior' THEN 'N2_SUP'
-    WHEN '3' THEN 'N3'
-    ELSE mhf.nivel
-  END
-)
-WHERE nivel_id IS NULL;
+-- UPDATE idempotente: solo si la columna 'nivel' string aun existe.
+-- (En re-ejecuciones, ya fue dropeada y los rows ya tienen nivel_id mapeado.)
+SET @sql = (SELECT IF(
+  (SELECT COUNT(*) FROM information_schema.columns
+   WHERE table_schema=DATABASE() AND table_name='mantenimiento_horas_familia' AND column_name='nivel') > 0,
+  'UPDATE mantenimiento_horas_familia mhf SET nivel_id = (SELECT id FROM lu_nivel_mantenimiento WHERE codigo = CASE mhf.nivel WHEN ''1'' THEN ''N1'' WHEN ''2_inferior'' THEN ''N2_INF'' WHEN ''2_superior'' THEN ''N2_SUP'' WHEN ''3'' THEN ''N3'' ELSE mhf.nivel END) WHERE nivel_id IS NULL',
+  'SELECT 1'
+));
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 -- Fail-fast: abortar con DIV/0 si quedan rows sin mapeo. Mensaje en alias.
 SELECT IF(
@@ -244,17 +242,13 @@ SET @sql = (SELECT IF(
 ));
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
-UPDATE mantenimiento_horas_modelo mhm
-SET nivel_id = (
-  SELECT id FROM lu_nivel_mantenimiento WHERE codigo = CASE mhm.nivel
-    WHEN '1' THEN 'N1'
-    WHEN '2_inferior' THEN 'N2_INF'
-    WHEN '2_superior' THEN 'N2_SUP'
-    WHEN '3' THEN 'N3'
-    ELSE mhm.nivel
-  END
-)
-WHERE nivel_id IS NULL;
+SET @sql = (SELECT IF(
+  (SELECT COUNT(*) FROM information_schema.columns
+   WHERE table_schema=DATABASE() AND table_name='mantenimiento_horas_modelo' AND column_name='nivel') > 0,
+  'UPDATE mantenimiento_horas_modelo mhm SET nivel_id = (SELECT id FROM lu_nivel_mantenimiento WHERE codigo = CASE mhm.nivel WHEN ''1'' THEN ''N1'' WHEN ''2_inferior'' THEN ''N2_INF'' WHEN ''2_superior'' THEN ''N2_SUP'' WHEN ''3'' THEN ''N3'' ELSE mhm.nivel END) WHERE nivel_id IS NULL',
+  'SELECT 1'
+));
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 SELECT IF(
   (SELECT COUNT(*) FROM mantenimiento_horas_modelo WHERE nivel_id IS NULL) = 0,
@@ -334,17 +328,13 @@ SET @sql = (SELECT IF(
 ));
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
-UPDATE consumibles_nivel cn
-SET nivel_id = (
-  SELECT id FROM lu_nivel_mantenimiento WHERE codigo = CASE cn.nivel
-    WHEN '1' THEN 'N1'
-    WHEN '2_inferior' THEN 'N2_INF'
-    WHEN '2_superior' THEN 'N2_SUP'
-    WHEN '3' THEN 'N3'
-    ELSE cn.nivel
-  END
-)
-WHERE nivel_id IS NULL;
+SET @sql = (SELECT IF(
+  (SELECT COUNT(*) FROM information_schema.columns
+   WHERE table_schema=DATABASE() AND table_name='consumibles_nivel' AND column_name='nivel') > 0,
+  'UPDATE consumibles_nivel cn SET nivel_id = (SELECT id FROM lu_nivel_mantenimiento WHERE codigo = CASE cn.nivel WHEN ''1'' THEN ''N1'' WHEN ''2_inferior'' THEN ''N2_INF'' WHEN ''2_superior'' THEN ''N2_SUP'' WHEN ''3'' THEN ''N3'' ELSE cn.nivel END) WHERE nivel_id IS NULL',
+  'SELECT 1'
+));
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 SELECT IF(
   (SELECT COUNT(*) FROM consumibles_nivel WHERE nivel_id IS NULL) = 0,
@@ -415,25 +405,22 @@ SET @sql = (SELECT IF(
 ));
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
-UPDATE oferta_componente oc
-SET nivel_id = (
-  SELECT id FROM lu_nivel_mantenimiento WHERE codigo = CASE oc.nivel
-    WHEN '1' THEN 'N1'
-    WHEN '2_inferior' THEN 'N2_INF'
-    WHEN '2_superior' THEN 'N2_SUP'
-    WHEN '3' THEN 'N3'
-    ELSE oc.nivel
-  END
-)
-WHERE oc.nivel IS NOT NULL AND oc.nivel_id IS NULL;
+SET @sql = (SELECT IF(
+  (SELECT COUNT(*) FROM information_schema.columns
+   WHERE table_schema=DATABASE() AND table_name='oferta_componente' AND column_name='nivel') > 0,
+  'UPDATE oferta_componente oc SET nivel_id = (SELECT id FROM lu_nivel_mantenimiento WHERE codigo = CASE oc.nivel WHEN ''1'' THEN ''N1'' WHEN ''2_inferior'' THEN ''N2_INF'' WHEN ''2_superior'' THEN ''N2_SUP'' WHEN ''3'' THEN ''N3'' ELSE oc.nivel END) WHERE oc.nivel IS NOT NULL AND oc.nivel_id IS NULL',
+  'SELECT 1'
+));
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
--- Fail-fast solo si hay rows con nivel string SET y nivel_id NULL
-SELECT IF(
-  (SELECT COUNT(*) FROM oferta_componente
-   WHERE nivel IS NOT NULL AND nivel_id IS NULL) = 0,
-  'OK',
-  (SELECT 1/0 AS abort_rows_sin_mapeo_en_oferta_componente)
-) AS check_oc;
+-- Fail-fast: solo si la columna nivel string aun existe y hay rows sin mapeo
+SET @sql = (SELECT IF(
+  (SELECT COUNT(*) FROM information_schema.columns
+   WHERE table_schema=DATABASE() AND table_name='oferta_componente' AND column_name='nivel') > 0,
+  'SELECT IF((SELECT COUNT(*) FROM oferta_componente WHERE nivel IS NOT NULL AND nivel_id IS NULL) = 0, ''OK'', (SELECT 1/0 AS abort_rows_sin_mapeo_en_oferta_componente)) AS check_oc',
+  'SELECT ''skip'' AS check_oc'
+));
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 SET @sql = (SELECT IF(
   (SELECT COUNT(*) FROM information_schema.table_constraints
@@ -465,17 +452,13 @@ SET @sql = (SELECT IF(
 ));
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
-UPDATE oferta_sistema os
-SET nivel_id = (
-  SELECT id FROM lu_nivel_mantenimiento WHERE codigo = CASE os.nivel
-    WHEN '1' THEN 'N1'
-    WHEN '2_inferior' THEN 'N2_INF'
-    WHEN '2_superior' THEN 'N2_SUP'
-    WHEN '3' THEN 'N3'
-    ELSE os.nivel
-  END
-)
-WHERE nivel_id IS NULL;
+SET @sql = (SELECT IF(
+  (SELECT COUNT(*) FROM information_schema.columns
+   WHERE table_schema=DATABASE() AND table_name='oferta_sistema' AND column_name='nivel') > 0,
+  'UPDATE oferta_sistema os SET nivel_id = (SELECT id FROM lu_nivel_mantenimiento WHERE codigo = CASE os.nivel WHEN ''1'' THEN ''N1'' WHEN ''2_inferior'' THEN ''N2_INF'' WHEN ''2_superior'' THEN ''N2_SUP'' WHEN ''3'' THEN ''N3'' ELSE os.nivel END) WHERE nivel_id IS NULL',
+  'SELECT 1'
+));
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 SELECT IF(
   (SELECT COUNT(*) FROM oferta_sistema WHERE nivel_id IS NULL) = 0,
@@ -521,17 +504,13 @@ SET @sql = (SELECT IF(
 ));
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
-UPDATE intervencion_sistema is_
-SET nivel_id = (
-  SELECT id FROM lu_nivel_mantenimiento WHERE codigo = CASE is_.nivel
-    WHEN '1' THEN 'N1'
-    WHEN '2_inferior' THEN 'N2_INF'
-    WHEN '2_superior' THEN 'N2_SUP'
-    WHEN '3' THEN 'N3'
-    ELSE is_.nivel
-  END
-)
-WHERE nivel_id IS NULL;
+SET @sql = (SELECT IF(
+  (SELECT COUNT(*) FROM information_schema.columns
+   WHERE table_schema=DATABASE() AND table_name='intervencion_sistema' AND column_name='nivel') > 0,
+  'UPDATE intervencion_sistema is_ SET nivel_id = (SELECT id FROM lu_nivel_mantenimiento WHERE codigo = CASE is_.nivel WHEN ''1'' THEN ''N1'' WHEN ''2_inferior'' THEN ''N2_INF'' WHEN ''2_superior'' THEN ''N2_SUP'' WHEN ''3'' THEN ''N3'' ELSE is_.nivel END) WHERE nivel_id IS NULL',
+  'SELECT 1'
+));
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 SELECT IF(
   (SELECT COUNT(*) FROM intervencion_sistema WHERE nivel_id IS NULL) = 0,
