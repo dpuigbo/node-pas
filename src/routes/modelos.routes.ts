@@ -256,7 +256,6 @@ router.get('/:id/lubricacion', async (req: Request, res: Response, next: NextFun
       where: { modeloComponenteId: modeloId },
       include: {
         aceite: { select: { id: true, nombre: true, fabricante: true } },
-        consumible: { select: { id: true, nombre: true, tipo: true, unidad: true } },
       },
       orderBy: [{ eje: 'asc' }, { id: 'asc' }],
     });
@@ -344,7 +343,6 @@ router.put('/:id/lubricacion/:lubId', requireRole('admin'), async (req: Request,
         data: updateData,
         include: {
           aceite: { select: { id: true, nombre: true, fabricante: true } },
-          consumible: { select: { id: true, nombre: true, tipo: true, unidad: true } },
         },
       });
       res.json(row);
@@ -381,7 +379,6 @@ router.put('/:id/lubricacion/:lubId', requireRole('admin'), async (req: Request,
         data: dataPayload,
         include: {
           aceite: { select: { id: true, nombre: true, fabricante: true } },
-          consumible: { select: { id: true, nombre: true, tipo: true, unidad: true } },
         },
       });
     } else {
@@ -389,7 +386,6 @@ router.put('/:id/lubricacion/:lubId', requireRole('admin'), async (req: Request,
         data: dataPayload,
         include: {
           aceite: { select: { id: true, nombre: true, fabricante: true } },
-          consumible: { select: { id: true, nombre: true, tipo: true, unidad: true } },
         },
       });
     }

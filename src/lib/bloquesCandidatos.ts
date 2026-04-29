@@ -107,7 +107,11 @@ export async function getBloquesCandidatos(ofertaId: number): Promise<CandidatoB
       },
     });
     for (const link of links) {
+      // Saltamos genéricas (familiaId NULL): este map indexa por familia.
+      // Las genéricas se cubren por otros caminos (actividad_preventiva con
+      // tipo_componente_aplicable, ver journal SQL 32).
       const fId = link.actividad.familiaId;
+      if (fId == null) continue;
       const cod = link.nivel.codigo;
       const nombre = `${link.actividad.tipoActividad.nombre}${link.actividad.componente ? ` — ${link.actividad.componente}` : ''}`;
       let porNivel = actividadesPorFamiliaNivel.get(fId);
