@@ -249,7 +249,6 @@ router.get('/:id/lubricacion', async (req, res, next) => {
             where: { modeloComponenteId: modeloId },
             include: {
                 aceite: { select: { id: true, nombre: true, fabricante: true } },
-                consumible: { select: { id: true, nombre: true, tipo: true, unidad: true } },
             },
             orderBy: [{ eje: 'asc' }, { id: 'asc' }],
         });
@@ -340,7 +339,6 @@ router.put('/:id/lubricacion/:lubId', (0, role_middleware_1.requireRole)('admin'
                 data: updateData,
                 include: {
                     aceite: { select: { id: true, nombre: true, fabricante: true } },
-                    consumible: { select: { id: true, nombre: true, tipo: true, unidad: true } },
                 },
             });
             res.json(row);
@@ -376,7 +374,6 @@ router.put('/:id/lubricacion/:lubId', (0, role_middleware_1.requireRole)('admin'
                 data: dataPayload,
                 include: {
                     aceite: { select: { id: true, nombre: true, fabricante: true } },
-                    consumible: { select: { id: true, nombre: true, tipo: true, unidad: true } },
                 },
             });
         }
@@ -385,7 +382,6 @@ router.put('/:id/lubricacion/:lubId', (0, role_middleware_1.requireRole)('admin'
                 data: dataPayload,
                 include: {
                     aceite: { select: { id: true, nombre: true, fabricante: true } },
-                    consumible: { select: { id: true, nombre: true, tipo: true, unidad: true } },
                 },
             });
         }
@@ -731,12 +727,21 @@ router.delete('/:id', (0, role_middleware_1.requireRole)('admin'), async (req, r
 //   drive_unit       → actividad_drive_module
 //   mechanical_unit  → actividad_preventiva
 //   external_axis    → actividad_preventiva
-// Mapeo tipo modelo → categoria de punto_control_generico
-const TIPO_TO_CATEGORIA = {
-    mechanical_unit: ['manipulador', 'cabling', 'seguridad'],
-    controller: ['controladora', 'cabling', 'seguridad'],
-    drive_unit: ['drive_module', 'cabling', 'seguridad'],
-    external_axis: ['eje_externo', 'cabling', 'seguridad'],
+// Mapeo tipo modelo → tipo_componente_aplicable de actividad_preventiva genérica.
+// Tras SQL 32 los puntos genéricos viven en actividad_preventiva; consultamos
+// los del tipo del modelo + los 'todos' (transversales: cabling, seguridad).
+const TIPO_TO_TIPO_APLICABLE = {
+    mechanical_unit: ['mechanical_unit', 'todos'],
+    controller: ['controller', 'todos'],
+    drive_unit: ['drive_unit', 'todos'],
+    external_axis: ['external_axis', 'todos'],
+};
+const TIPO_APLICABLE_TO_CATEGORIA = {
+    mechanical_unit: 'manipulador',
+    controller: 'controladora',
+    drive_unit: 'drive_module',
+    external_axis: 'eje_externo',
+    todos: 'cabling',
 };
 router.get('/:id/mantenimiento', async (req, res, next) => {
     try {
@@ -749,17 +754,43 @@ router.get('/:id/mantenimiento', async (req, res, next) => {
             res.status(404).json({ error: 'Modelo no encontrado' });
             return;
         }
-        // Puntos genericos del tipo (read-only, comunes a todos los modelos del tipo)
-        const categorias = TIPO_TO_CATEGORIA[modelo.tipo] ?? [];
-        const genericos = categorias.length > 0
-            ? await database_1.prisma.puntoControlGenerico.findMany({
-                where: { categoria: { in: categorias } },
-                orderBy: [{ categoria: 'asc' }, { orden: 'asc' }, { componente: 'asc' }],
+        // Puntos genéricos del tipo (read-only, comunes a todos los modelos del tipo).
+        // Procedemos de actividad_preventiva con familia_id=NULL.
+        const tiposAplicables = TIPO_TO_TIPO_APLICABLE[modelo.tipo] ?? [];
+        const genericosRaw = tiposAplicables.length > 0
+            ? await database_1.prisma.actividadPreventiva.findMany({
+                where: { familiaId: null, tipoComponenteAplicable: { in: tiposAplicables } },
+                orderBy: [{ tipoComponenteAplicable: 'asc' }, { orden: 'asc' }, { componente: 'asc' }],
                 include: {
-                    consumible: { select: { id: true, nombre: true, tipo: true, codigoAbb: true } },
+                    consumibles: {
+                        include: {
+                            consumible: { select: { id: true, nombre: true, tipo: true, codigoAbb: true } },
+                        },
+                        take: 1,
+                    },
                 },
             })
             : [];
+        // Adaptamos al shape histórico (PuntoControlGenerico) que espera el frontend.
+        const genericos = genericosRaw.map((it) => {
+            const notas = it.notas ?? '';
+            const condIdx = notas.indexOf('Condición:');
+            const firstConsumible = it.consumibles[0]?.consumible ?? null;
+            return {
+                id: it.id,
+                categoria: TIPO_APLICABLE_TO_CATEGORIA[it.tipoComponenteAplicable ?? 'todos'] ?? 'cabling',
+                componente: it.componente,
+                descripcionAccion: condIdx >= 0 ? notas.slice(0, condIdx).trim() : notas,
+                intervaloTexto: it.intervaloTextoLegacy,
+                condicion: condIdx >= 0 ? notas.slice(condIdx + 'Condición:'.length).trim() : null,
+                generacionAplica: null,
+                notas: it.notas,
+                orden: it.orden,
+                consumibleId: firstConsumible?.id ?? null,
+                consumible: firstConsumible,
+            };
+        });
+        const categorias = tiposAplicables.map((t) => TIPO_APLICABLE_TO_CATEGORIA[t]).filter(Boolean);
         // Especificas: depende del tipo
         let specificSource = 'v2';
         let specificRecords = [];
