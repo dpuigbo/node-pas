@@ -208,18 +208,14 @@ router.delete('/actividad/:tipo(preventiva|cabinet|drive-module)/:id/consumibles
     } catch (err) { next(err); }
   });
 
-// PUT /api/v1/lookups/punto-control/:id/consumible
-router.put('/punto-control/:id/consumible', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const id = Number(req.params.id);
-    const { consumibleId } = req.body;
-    const punto = await prisma.puntoControlGenerico.update({
-      where: { id },
-      data: { consumibleId: consumibleId ?? null },
-      include: { consumible: true },
-    });
-    res.json(punto);
-  } catch (err) { next(err); }
+// PUT /api/v1/lookups/punto-control/:id/consumible — DEPRECATED 2026-04
+// La tabla `punto_control_generico` se droppeó (ver journal SQL 32). Los datos
+// se migraron a `actividad_preventiva` (genéricas) y los consumibles se
+// vinculan ahora vía `actividad_consumible` (M:N). Endpoint retirado.
+router.put('/punto-control/:id/consumible', async (_req: Request, res: Response) => {
+  res.status(410).json({
+    error: 'Endpoint retirado. punto_control_generico fue migrado a actividad_preventiva (genéricas). Usar actividad_consumible para vincular consumibles.',
+  });
 });
 
 // GET /api/v1/lookups/consumibles-catalogo?tipo=aceite&subtipo=engranaje&q=...
@@ -291,15 +287,56 @@ router.get('/equivalencias', async (req: Request, res: Response, next: NextFunct
 });
 
 // GET /api/v1/lookups/puntos-control?categoria=manipulador
+// Tras SQL 32 los puntos genéricos viven en actividad_preventiva con
+// familia_id=NULL y tipo_componente_aplicable poblado. Mapeo categoria legacy:
+//   manipulador  → mechanical_unit
+//   controladora → controller
+//   drive_module → drive_unit
+//   eje_externo  → external_axis
+//   cabling/seguridad → 'todos' (se fusionaron al migrar)
+const CATEGORIA_TO_TIPO_APLICABLE: Record<string, 'mechanical_unit' | 'controller' | 'drive_unit' | 'external_axis' | 'todos'> = {
+  manipulador: 'mechanical_unit',
+  controladora: 'controller',
+  drive_module: 'drive_unit',
+  eje_externo: 'external_axis',
+  cabling: 'todos',
+  seguridad: 'todos',
+};
+const TIPO_APLICABLE_TO_CATEGORIA: Record<string, string> = {
+  mechanical_unit: 'manipulador',
+  controller: 'controladora',
+  drive_unit: 'drive_module',
+  external_axis: 'eje_externo',
+  todos: 'cabling',
+};
+
 router.get('/puntos-control', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const where: any = {};
-    if (req.query.categoria) where.categoria = String(req.query.categoria);
-    const puntos = await prisma.puntoControlGenerico.findMany({
+    const where: any = { familiaId: null, tipoComponenteAplicable: { not: null } };
+    if (req.query.categoria) {
+      const tipo = CATEGORIA_TO_TIPO_APLICABLE[String(req.query.categoria)];
+      if (tipo) where.tipoComponenteAplicable = tipo;
+    }
+    const items = await prisma.actividadPreventiva.findMany({
       where,
-      orderBy: { orden: 'asc' },
+      orderBy: [{ orden: 'asc' }, { componente: 'asc' }],
     });
-    res.json(puntos);
+    // Adaptamos al shape histórico esperado por el frontend (CatalogosPage)
+    res.json(items.map((it) => {
+      const notas = it.notas ?? '';
+      const condIdx = notas.indexOf('Condición:');
+      return {
+        id: it.id,
+        categoria: TIPO_APLICABLE_TO_CATEGORIA[it.tipoComponenteAplicable ?? 'todos'] ?? 'cabling',
+        componente: it.componente,
+        descripcionAccion: condIdx >= 0 ? notas.slice(0, condIdx).trim() : notas,
+        intervaloTexto: it.intervaloTextoLegacy,
+        condicion: condIdx >= 0 ? notas.slice(condIdx + 'Condición:'.length).trim() : null,
+        generacionAplica: null,
+        notas: it.notas,
+        orden: it.orden,
+      };
+    }));
   } catch (err) { next(err); }
 });
 

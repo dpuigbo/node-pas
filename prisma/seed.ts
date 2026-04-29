@@ -68,7 +68,6 @@ async function main() {
     prisma.maquina.deleteMany(),
     prisma.cliente.deleteMany(),
     prisma.consumibleNivel.deleteMany(),
-    prisma.consumible.deleteMany(),
     prisma.aceite.deleteMany(),
   ]);
   console.log('Datos de prueba eliminados OK');

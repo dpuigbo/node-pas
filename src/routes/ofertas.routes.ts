@@ -398,13 +398,14 @@ async function calculateOfertaTotals(
     });
   }
   if (consumibleIds.size > 0) {
-    const consumibles = await prisma.consumible.findMany({
+    // Legacy 'consumible' items: best-effort lookup contra consumible_catalogo
+    // (tabla legacy droppeada 2026-04, ver journal P-005).
+    const consumibles = await prisma.consumibleCatalogo.findMany({
       where: { id: { in: Array.from(consumibleIds) } },
-      include: { consumible: true },
     });
     for (const c of consumibles) consumibleMap.set(c.id, {
-      coste: dec(c.consumible?.coste ?? c.coste),
-      precio: dec(c.consumible?.precio ?? c.precio),
+      coste: dec(c.coste),
+      precio: dec(c.precio),
     });
   }
 

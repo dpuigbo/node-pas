@@ -23,10 +23,10 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
   const label = (c.label as string) || 'Bateria manipulador';
   const required = !!c.required;
 
-  // Fetch batteries compatible with mechanical units (or universal)
+  // Baterías para mechanical_unit: subtipos smb_* (v2 ConsumibleCatalogo).
   const { data: allBaterias } = useConsumibles({ tipo: 'bateria' });
-  const baterias = (allBaterias as { id: number; nombre: string; activo: boolean; compatibleCon: string | null }[] || [])
-    .filter((b) => b.activo && (b.compatibleCon === 'mechanical_unit' || b.compatibleCon === null));
+  const baterias = (allBaterias as { id: number; nombre: string; activo: boolean; subtipo: string | null }[] || [])
+    .filter((b) => b.activo && (b.subtipo?.startsWith('smb_') || b.subtipo === null));
 
   const data: BatteryData = (value as BatteryData) || DEFAULT_DATA;
 

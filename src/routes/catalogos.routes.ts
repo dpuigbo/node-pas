@@ -48,15 +48,26 @@ router.delete('/aceites/:id', requireRole('admin'), async (req: Request, res: Re
   } catch (err) { next(err); }
 });
 
-// ===== CONSUMIBLES =====
+// ===== CONSUMIBLES (v2: ConsumibleCatalogo) =====
 
-// GET /api/v1/catalogos/consumibles?tipo=bateria&compatibleCon=mechanical_unit
+// GET /api/v1/catalogos/consumibles?tipo=bateria&compatibleCon=mechanical_unit|controller
+// `compatibleCon` se traduce a filtro por `subtipo` (campo nuevo en
+// consumible_catalogo v2). Mapeo:
+//   - mechanical_unit → subtipos `smb_*`
+//   - controller      → subtipos `cmos_rtc` / `memory_backup`
 router.get('/consumibles', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const where: Record<string, unknown> = {};
     if (req.query.tipo) where.tipo = String(req.query.tipo);
-    if (req.query.compatibleCon) where.compatibleCon = String(req.query.compatibleCon);
-    const consumibles = await prisma.consumible.findMany({ where, orderBy: { nombre: 'asc' } });
+    if (req.query.compatibleCon) {
+      const compat = String(req.query.compatibleCon);
+      if (compat === 'mechanical_unit') {
+        where.subtipo = { startsWith: 'smb_' };
+      } else if (compat === 'controller') {
+        where.subtipo = { in: ['cmos_rtc', 'memory_backup'] };
+      }
+    }
+    const consumibles = await prisma.consumibleCatalogo.findMany({ where, orderBy: { nombre: 'asc' } });
     res.json(consumibles);
   } catch (err) { next(err); }
 });
@@ -65,7 +76,7 @@ router.get('/consumibles', async (req: Request, res: Response, next: NextFunctio
 router.post('/consumibles', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = createConsumibleSchema.parse(req.body);
-    const consumible = await prisma.consumible.create({ data });
+    const consumible = await prisma.consumibleCatalogo.create({ data });
     res.status(201).json(consumible);
   } catch (err) { next(err); }
 });
@@ -74,7 +85,7 @@ router.post('/consumibles', requireRole('admin'), async (req: Request, res: Resp
 router.put('/consumibles/:id', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = updateConsumibleSchema.parse(req.body);
-    const consumible = await prisma.consumible.update({ where: { id: Number(req.params.id) }, data });
+    const consumible = await prisma.consumibleCatalogo.update({ where: { id: Number(req.params.id) }, data });
     res.json(consumible);
   } catch (err) { next(err); }
 });
@@ -82,7 +93,7 @@ router.put('/consumibles/:id', requireRole('admin'), async (req: Request, res: R
 // DELETE /api/v1/catalogos/consumibles/:id (admin) - soft delete
 router.delete('/consumibles/:id', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const consumible = await prisma.consumible.update({
+    const consumible = await prisma.consumibleCatalogo.update({
       where: { id: Number(req.params.id) },
       data: { activo: false },
     });

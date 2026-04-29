@@ -168,16 +168,18 @@ router.post('/generar/:intervencionId', requireRole('admin'), async (req: Reques
     }
 
     if (consumibleIds.size > 0) {
-      const consumibles = await prisma.consumible.findMany({
+      // Legacy 'consumible' items (no consumibleId v2): best-effort match contra
+      // consumible_catalogo. La tabla legacy `consumibles` se droppeó en
+      // 2026-04 (ver journal P-005). Items que no resuelvan se reportan abajo
+      // como "no encontrado".
+      const consumibles = await prisma.consumibleCatalogo.findMany({
         where: { id: { in: Array.from(consumibleIds) } },
-        include: { consumible: true },
       });
       for (const c of consumibles) {
-        const cat = c.consumible;
         consumibleMap.set(c.id, {
-          nombre: cat?.nombre ?? c.nombre,
-          coste: dec(cat?.coste ?? c.coste),
-          precio: dec(cat?.precio ?? c.precio),
+          nombre: c.nombre,
+          coste: dec(c.coste),
+          precio: dec(c.precio),
         });
       }
     }

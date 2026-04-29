@@ -288,13 +288,14 @@ async function calcConsumiblesNivelLegacy(
     });
   }
   if (consumibleIds.size > 0) {
-    const rows = await prisma.consumible.findMany({
+    // Legacy 'consumible' items: best-effort lookup contra consumible_catalogo
+    // (tabla legacy droppeada 2026-04, ver journal P-005).
+    const rows = await prisma.consumibleCatalogo.findMany({
       where: { id: { in: Array.from(consumibleIds) } },
-      include: { consumible: true },
     });
     for (const r of rows) consumibleMap.set(r.id, {
-      coste: dec(r.consumible?.coste ?? r.coste),
-      precio: dec(r.consumible?.precio ?? r.precio),
+      coste: dec(r.coste),
+      precio: dec(r.precio),
       tipo: r.tipo as string,
     });
   }
@@ -349,9 +350,12 @@ async function calcConsumiblesNivelLegacy(
 /**
  * Devuelve los niveles aplicables para un modelo (codigos canonicos + horas).
  *
- * Prioridad:
- * 1. modelo_nivel_aplicable (explicit)
- * 2. niveles permitidos para el tipo
+ * Tras el refactor v2 (journal D-003/D-004) la fuente de verdad para niveles
+ * aplicables son las booleanas en `modelos_componente`:
+ *   nivelN1, nivelN2Inf, nivelN2Sup, nivelN3 (manipulador)
+ *
+ * Para tipos no-manipulador (controller, drive_unit, external_axis) se usa
+ * el fallback `getNivelesPermitidos(tipo)`.
  */
 export async function getNivelesAplicablesModelo(modeloId: number): Promise<{
   codigo: string;
@@ -366,10 +370,10 @@ export async function getNivelesAplicablesModelo(modeloId: number): Promise<{
     select: {
       tipo: true,
       familiaId: true,
-      nivelesAplicables: {
-        include: { nivel: true },
-        orderBy: { nivel: { orden: 'asc' } },
-      },
+      nivelN1: true,
+      nivelN2Inf: true,
+      nivelN2Sup: true,
+      nivelN3: true,
       mantenimientoHoras: { include: { nivel: { select: { codigo: true } } } },
       mantenimientoHorasFamilia: { include: { nivel: { select: { codigo: true } } } },
       consumiblesNivel: { include: { nivel: { select: { codigo: true } } } },
@@ -404,38 +408,18 @@ export async function getNivelesAplicablesModelo(modeloId: number): Promise<{
       .map((c) => c.nivel.codigo)
   );
 
-  // 1. Explicit nivelesAplicables — normaliza codigos legacy a canonicos
-  //    y deduplica (modelo_nivel_aplicable puede tener rows apuntando tanto
-  //    a niveles legacy '1' como nuevos 'N1'; nos quedamos con el canonico).
-  if (modelo.nivelesAplicables.length > 0) {
-    const seen = new Set<string>();
-    const items: { codigo: string; nombre: string; orden: number; horas: number | null; costeLimpieza: number | null; tieneConsumibles: boolean }[] = [];
-    for (const na of modelo.nivelesAplicables) {
-      const canon = normalizarCodigoNivel(na.nivel.codigo) ?? na.nivel.codigo;
-      if (seen.has(canon)) continue;
-      seen.add(canon);
-      // Si el codigo era legacy, buscar el row canonico para tener nombre/orden actualizados
-      let nivel = na.nivel;
-      if (canon !== na.nivel.codigo) {
-        const canonRow = await prisma.luNivelMantenimiento.findUnique({ where: { codigo: canon } });
-        if (canonRow) nivel = canonRow as any;
-      }
-      items.push({
-        codigo: canon,
-        nombre: nivel.nombre,
-        orden: nivel.orden,
-        horas: horasMap.get(canon) ?? horasMap.get(na.nivel.codigo) ?? null,
-        costeLimpieza: null,
-        tieneConsumibles: consumiblesSet.has(canon) || consumiblesSet.has(na.nivel.codigo),
-      });
-    }
-    if (items.length > 0) {
-      return items.sort((a, b) => a.orden - b.orden);
-    }
+  // Codigos derivados: para mech_unit usar las booleanas v2; para otros tipos usar fallback por tipo.
+  let codigos: string[];
+  if (modelo.tipo === 'mechanical_unit') {
+    codigos = [];
+    if (modelo.nivelN1)    codigos.push('N1');
+    if (modelo.nivelN2Inf) codigos.push('N2_INF');
+    if (modelo.nivelN2Sup) codigos.push('N2_SUP');
+    if (modelo.nivelN3)    codigos.push('N3');
+    if (codigos.length === 0) codigos = getNivelesPermitidos(modelo.tipo);
+  } else {
+    codigos = getNivelesPermitidos(modelo.tipo);
   }
-
-  // 2. Fallback: niveles permitidos por tipo
-  const codigos = getNivelesPermitidos(modelo.tipo);
   if (codigos.length === 0) return [];
 
   const niveles = await prisma.luNivelMantenimiento.findMany({
