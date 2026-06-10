@@ -211,6 +211,32 @@ export function nivelEfectivoParaTipo(tipo: string, nivelSeleccionado: string | 
   }
 }
 
+// ===== UNIDADES =====
+
+/**
+ * Convierte una cantidad a la unidad del consumible del catalogo, donde
+ * coste/precio son por unidad base (€/L, €/kg, €/ud). La lubricacion guarda
+ * cantidades en ml/g; el catalogo usa L/kg.
+ */
+export function convertirCantidadAUnidadConsumible(
+  cantidad: number,
+  unidadOrigen: string | null | undefined,
+  unidadConsumible: string | null | undefined,
+): number {
+  const from = (unidadOrigen ?? '').toLowerCase().trim();
+  const to = (unidadConsumible ?? '').toLowerCase().trim();
+  if (!from || !to || from === to) return cantidad;
+  if (from === 'ml' && to === 'l') return cantidad / 1000;
+  if (from === 'l' && to === 'ml') return cantidad * 1000;
+  if (from === 'g' && to === 'kg') return cantidad / 1000;
+  if (from === 'kg' && to === 'g') return cantidad * 1000;
+  // ml→kg / g→L: aproximar densidad 1 (aceites ≈0.9; margen aceptable en oferta)
+  if (from === 'ml' && to === 'kg') return cantidad / 1000;
+  if (from === 'g' && to === 'l') return cantidad / 1000;
+  if ((from === 'pcs' || from === 'ud') && (to === 'pcs' || to === 'ud')) return cantidad;
+  return cantidad;
+}
+
 // ===== CONSUMIBLES DEL PLAN =====
 
 export interface ConsumiblePlanItem {
@@ -238,16 +264,21 @@ export async function getConsumiblesPlan(
 ): Promise<ConsumiblePlanItem[]> {
   const items: ConsumiblePlanItem[] = [];
 
+  // Las cantidades se convierten a la unidad del catalogo (coste/precio son
+  // por unidad base: €/L, €/kg, €/ud).
   const lubRows = await getLubricacionPlan(modeloId, nivelCodigo, cohorte);
   for (const row of lubRows) {
     if (!row.consumible) continue;
+    const cantidad = convertirCantidadAUnidadConsumible(
+      Number(row.cantidadValor ?? 0), row.cantidadUnidad, row.consumible.unidad,
+    );
     items.push({
       consumibleId: row.consumible.id,
       codigoInterno: row.consumible.codigoInterno,
       nombre: row.consumible.nombre,
       tipo: row.consumible.tipo,
-      unidad: row.cantidadUnidad ?? row.consumible.unidad,
-      cantidad: Number(row.cantidadValor ?? 0),
+      unidad: row.consumible.unidad ?? row.cantidadUnidad,
+      cantidad,
       coste: row.consumible.coste != null ? Number(row.consumible.coste) : null,
       precio: row.consumible.precio != null ? Number(row.consumible.precio) : null,
       origen: 'lubricacion',
@@ -259,13 +290,16 @@ export async function getConsumiblesPlan(
   const actividades = await getActividadesPlan(modeloId, nivelCodigo, cohorte);
   for (const act of actividades) {
     for (const ac of act.consumibles) {
+      const cantidad = convertirCantidadAUnidadConsumible(
+        Number(ac.cantidad ?? 0), ac.unidad, ac.consumible.unidad,
+      );
       items.push({
         consumibleId: ac.consumible.id,
         codigoInterno: ac.consumible.codigoInterno,
         nombre: ac.consumible.nombre,
         tipo: ac.consumible.tipo,
-        unidad: ac.unidad ?? ac.consumible.unidad,
-        cantidad: Number(ac.cantidad ?? 0),
+        unidad: ac.consumible.unidad ?? ac.unidad,
+        cantidad,
         coste: ac.consumible.coste != null ? Number(ac.consumible.coste) : null,
         precio: ac.consumible.precio != null ? Number(ac.consumible.precio) : null,
         origen: 'actividad',

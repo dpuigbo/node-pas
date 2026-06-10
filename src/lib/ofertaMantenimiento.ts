@@ -17,6 +17,7 @@ import { prisma } from '../config/database';
 import { getNivelesPermitidos, nivelIdFromCodigo, normalizarCodigoNivel } from './niveles';
 import {
   Cohorte,
+  convertirCantidadAUnidadConsumible,
   getActividadesPlan,
   getLubricacionPlan,
   getHorasModelo,
@@ -53,12 +54,15 @@ interface Acumulador {
 
 function acumularConsumible(
   acc: Acumulador,
-  consumible: { tipo: string; coste: any; precio: any },
-  cantidadBase: number,
+  consumible: { tipo: string; coste: any; precio: any; unidad?: string | null },
+  cantidadOrigen: number,
+  unidadOrigen: string | null | undefined,
   opts: CalcOptions,
 ) {
   const { tipoOferta, conBaterias, conAceite } = opts;
   const tipo = consumible.tipo;
+  // coste/precio del catalogo son por unidad base (€/L, €/kg, €/ud)
+  const cantidadBase = convertirCantidadAUnidadConsumible(cantidadOrigen, unidadOrigen, consumible.unidad);
   const esLubricante = tipo === 'aceite' || tipo === 'grasa';
 
   if (tipo === 'bateria' && !conBaterias) return;
@@ -118,7 +122,7 @@ export async function calcularComponenteOferta(
   const lubRows = await getLubricacionPlan(modeloId, nivelCodigo, cohorte);
   for (const row of lubRows) {
     if (!row.consumible) continue;
-    acumularConsumible(acc, row.consumible, Number(row.cantidadValor ?? 0), opts);
+    acumularConsumible(acc, row.consumible, Number(row.cantidadValor ?? 0), row.cantidadUnidad, opts);
   }
 
   // 2) Consumibles de las actividades preventivas aplicables
@@ -131,7 +135,7 @@ export async function calcularComponenteOferta(
       if (cat === 'lubricacion' && !opts.conAceite) continue;
     }
     for (const ac of act.consumibles) {
-      acumularConsumible(acc, ac.consumible, Number(ac.cantidad ?? 0), opts);
+      acumularConsumible(acc, ac.consumible, Number(ac.cantidad ?? 0), ac.unidad, opts);
     }
   }
 

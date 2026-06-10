@@ -28,9 +28,11 @@ function dec(v) {
         return null;
     return Number(v);
 }
-function acumularConsumible(acc, consumible, cantidadBase, opts) {
+function acumularConsumible(acc, consumible, cantidadOrigen, unidadOrigen, opts) {
     const { tipoOferta, conBaterias, conAceite } = opts;
     const tipo = consumible.tipo;
+    // coste/precio del catalogo son por unidad base (€/L, €/kg, €/ud)
+    const cantidadBase = (0, planMantenimiento_1.convertirCantidadAUnidadConsumible)(cantidadOrigen, unidadOrigen, consumible.unidad);
     const esLubricante = tipo === 'aceite' || tipo === 'grasa';
     if (tipo === 'bateria' && !conBaterias)
         return;
@@ -81,7 +83,7 @@ async function calcularComponenteOferta(modeloId, nivelCodigo, opts, controlador
     for (const row of lubRows) {
         if (!row.consumible)
             continue;
-        acumularConsumible(acc, row.consumible, Number(row.cantidadValor ?? 0), opts);
+        acumularConsumible(acc, row.consumible, Number(row.cantidadValor ?? 0), row.cantidadUnidad, opts);
     }
     // 2) Consumibles de las actividades preventivas aplicables
     const actividades = await (0, planMantenimiento_1.getActividadesPlan)(modeloId, nivelCodigo, cohorte);
@@ -95,7 +97,7 @@ async function calcularComponenteOferta(modeloId, nivelCodigo, opts, controlador
                 continue;
         }
         for (const ac of act.consumibles) {
-            acumularConsumible(acc, ac.consumible, Number(ac.cantidad ?? 0), opts);
+            acumularConsumible(acc, ac.consumible, Number(ac.cantidad ?? 0), ac.unidad, opts);
         }
     }
     return {
