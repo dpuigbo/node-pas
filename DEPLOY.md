@@ -1,92 +1,53 @@
-# Guía de Despliegue — PAS Robotics Manage en Hostinger VPS
+# Guía de Despliegue — PAS Robotics Manage en Hostinger
 
-## Requisitos previos
+Esta guía cubre dos escenarios:
 
-- VPS de Hostinger con Ubuntu/Debian
-- Acceso SSH al servidor
-- Dominio/subdominio apuntando a la IP del VPS (ej: `pas.tudominio.com`)
-- Repositorio en GitHub
+- **Opción A** — Hostinger **Node.js Web App** (hosting gestionado, sin SSH)
+- **Opción B** — Hostinger **VPS** (control total con SSH, PM2, Nginx)
 
----
-
-## Paso 1: Configurar el VPS (primera vez)
-
-### 1.1 Conectarse por SSH
-
-```bash
-ssh root@TU_IP_VPS
-```
-
-### 1.2 Instalar Node.js (v20 LTS)
-
-```bash
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt-get install -y nodejs
-node --version   # debería mostrar v20.x
-npm --version
-```
-
-### 1.3 Instalar PM2 (gestor de procesos)
-
-```bash
-sudo npm install -g pm2
-```
-
-### 1.4 Instalar Nginx (reverse proxy)
-
-```bash
-sudo apt-get install -y nginx
-```
-
-### 1.5 Instalar Git
-
-```bash
-sudo apt-get install -y git
-```
-
-### 1.6 Crear un usuario para la app (recomendado)
-
-```bash
-sudo adduser pasapp
-sudo usermod -aG sudo pasapp
-su - pasapp
-```
+Elige la que corresponda a tu plan de Hostinger.
 
 ---
 
-## Paso 2: Clonar y configurar la aplicación
+## Opción A: Hostinger Node.js Web App (recomendado)
 
-### 2.1 Clonar el repositorio
+Hostinger ofrece hosting gestionado para Node.js en los planes Business y Cloud.
+No necesitas configurar Nginx, PM2 ni certificados SSL — todo está incluido.
 
-```bash
-cd /home/pasapp
-git clone https://github.com/dpuigbo/node-pas.git
-cd node-pas
-```
+### A.1 Crear la aplicación en hPanel
 
-### 2.2 Crear el archivo .env
+1. Entra en **hPanel** → **Websites** → **Add Website** → **Node.js Apps**
+2. Conecta tu cuenta de GitHub (OAuth) e instala la extensión de Hostinger
+3. Selecciona el repositorio `dpuigbo/node-pas` y la rama `main`
 
-```bash
-cp .env.example .env
-nano .env
-```
+### A.2 Configurar los ajustes de build
 
-Edita los valores con los datos de tu base de datos MySQL de Hostinger
-(hPanel > **Bases de datos** > MySQL; si la app corre en el mismo hosting,
-`DB_HOST` es `127.0.0.1`; si conectas desde fuera, activa **MySQL remoto**
-en hPanel y usa el host que te indique):
+| Campo | Valor |
+|-------|-------|
+| Install command | `npm run setup` |
+| Build command | `npm run build` |
+| Start command | `npm start` |
+| Entry point | `server/src/index.js` |
+| Output directory | `client/dist` |
 
-```
-NODE_ENV=production
-PORT=3000
-SESSION_SECRET=genera-un-secreto-largo-y-aleatorio-aqui
+> El script `npm run setup` instala dependencias del root, server y client, y
+> compila el frontend. `npm start` arranca Express, que sirve el frontend
+> compilado y la API.
 
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_USER=u306143177_admin_db_user
-DB_PASSWORD=tu-password-mysql
-DB_NAME=u306143177_admin_db
-```
+### A.3 Variables de entorno
+
+Configúralas en hPanel → **Environment Variables**:
+
+| Variable | Valor |
+|----------|-------|
+| `NODE_ENV` | `production` |
+| `PORT` | `3000` (o el que asigne Hostinger) |
+| `SESSION_SECRET` | Un string largo aleatorio |
+| `DB_HOST` | `127.0.0.1` (si la BD está en el mismo hosting) |
+| `DB_PORT` | `3306` |
+| `DB_USER` | `u306143177_admin_db_user` |
+| `DB_PASSWORD` | Tu contraseña de MySQL |
+| `DB_NAME` | `u306143177_admin_db` |
 
 Para generar un secreto seguro:
 
@@ -94,56 +55,79 @@ Para generar un secreto seguro:
 node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 
-### 2.3 Preparar la base de datos
+### A.4 Despliegue automático
 
-La aplicación usa la base de datos MySQL existente. Si es la primera vez,
-ejecuta el script de saneamiento (una sola vez, con backup previo) —
-ver `DB.md` para los detalles:
+Cada push a `main` en GitHub dispara automáticamente un redeploy en Hostinger.
+No necesitas GitHub Actions: Hostinger detecta los cambios vía su integración con GitHub.
 
-```bash
-mysql -h 127.0.0.1 -u USUARIO -p NOMBRE_BD < server/src/db/sql/limpieza_produccion.sql
-```
+### A.5 Configurar el subdominio
 
-Para crear una BD vacía desde cero (entorno nuevo):
-
-```bash
-mysql -h 127.0.0.1 -u USUARIO -p NOMBRE_BD < server/src/db/sql/schema_limpio.sql
-```
-
-### 2.4 Instalar dependencias y compilar
-
-```bash
-npm install
-cd server && npm install && cd ..
-cd client && npm install && npx vite build && cd ..
-```
-
-### 2.5 Iniciar con PM2
-
-```bash
-pm2 start ecosystem.config.js
-pm2 save
-pm2 startup    # sigue las instrucciones que muestra para auto-inicio al reiniciar el VPS
-```
-
-Verificar que funciona:
-
-```bash
-curl http://localhost:3000/api/health
-# Debería devolver: {"status":"ok","timestamp":"..."}
-```
+1. En hPanel → **Dominios** → tu dominio → **DNS / Zona DNS**
+2. Añade un registro **A**: nombre = `pas`, apunta a = IP del hosting
+3. En la config de la app Node.js, asocia el subdominio `pas.tudominio.com`
 
 ---
 
-## Paso 3: Configurar Nginx como reverse proxy
+## Opción B: Hostinger VPS (control total)
 
-### 3.1 Crear configuración del sitio
+### B.1 Conectarse por SSH
+
+```bash
+ssh root@TU_IP_VPS
+```
+
+### B.2 Instalar Node.js (v20 LTS)
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+
+### B.3 Instalar PM2 y Nginx
+
+```bash
+sudo npm install -g pm2
+sudo apt-get install -y nginx git
+```
+
+### B.4 Crear un usuario para la app
+
+```bash
+sudo adduser pasapp
+sudo usermod -aG sudo pasapp
+su - pasapp
+```
+
+### B.5 Clonar y configurar
+
+```bash
+cd /home/pasapp
+git clone https://github.com/dpuigbo/node-pas.git
+cd node-pas
+cp .env.example .env
+nano .env          # rellena con los datos de tu BD MySQL
+```
+
+### B.6 Instalar, compilar y arrancar
+
+```bash
+npm run setup      # instala todo y compila el frontend
+pm2 start ecosystem.config.js
+pm2 save
+pm2 startup        # sigue las instrucciones para auto-inicio
+```
+
+Verificar:
+
+```bash
+curl http://localhost:3000/api/health
+```
+
+### B.7 Configurar Nginx como reverse proxy
 
 ```bash
 sudo nano /etc/nginx/sites-available/pas-robotics
 ```
-
-Contenido (reemplaza `pas.tudominio.com`):
 
 ```nginx
 server {
@@ -164,98 +148,73 @@ server {
 }
 ```
 
-### 3.2 Activar el sitio
-
 ```bash
 sudo ln -s /etc/nginx/sites-available/pas-robotics /etc/nginx/sites-enabled/
-sudo nginx -t           # verificar que no hay errores de sintaxis
+sudo nginx -t
 sudo systemctl restart nginx
 ```
 
-### 3.3 Instalar certificado SSL (Let's Encrypt)
+### B.8 Certificado SSL
 
 ```bash
 sudo apt-get install -y certbot python3-certbot-nginx
 sudo certbot --nginx -d pas.tudominio.com
 ```
 
-Certbot renovará el certificado automáticamente.
+### B.9 Deploy automático con GitHub Actions
 
----
+El workflow `.github/workflows/deploy.yml` usa SSH. Configura estos secretos en
+GitHub → **Settings** → **Secrets and variables** → **Actions**:
 
-## Paso 4: Configurar deploys automáticos desde GitHub
+| Secret | Valor |
+|--------|-------|
+| `VPS_HOST` | IP de tu VPS |
+| `VPS_USER` | `pasapp` |
+| `VPS_SSH_KEY` | Contenido de `~/.ssh/deploy_key` (clave privada) |
+| `VPS_PORT` | `22` |
 
-### 4.1 Crear clave SSH en el VPS
-
-En el VPS, como el usuario `pasapp`:
+Genera la clave en el VPS:
 
 ```bash
 ssh-keygen -t ed25519 -C "deploy@pas-robotics" -f ~/.ssh/deploy_key -N ""
 cat ~/.ssh/deploy_key.pub >> ~/.ssh/authorized_keys
 chmod 600 ~/.ssh/authorized_keys
+cat ~/.ssh/deploy_key   # copia esto a GitHub Secret VPS_SSH_KEY
 ```
 
-Copia la clave privada (la necesitarás en GitHub):
+### B.10 Configurar el subdominio
 
-```bash
-cat ~/.ssh/deploy_key
-```
-
-### 4.2 Configurar GitHub Secrets
-
-Ve a tu repositorio en GitHub > **Settings** > **Secrets and variables** > **Actions** y añade:
-
-| Secret | Valor |
-|--------|-------|
-| `VPS_HOST` | La IP de tu VPS (ej: `123.45.67.89`) |
-| `VPS_USER` | `pasapp` (o el usuario que hayas creado) |
-| `VPS_SSH_KEY` | El contenido completo de `~/.ssh/deploy_key` (la clave privada) |
-| `VPS_PORT` | `22` (o el puerto SSH si lo cambiaste) |
-
-### 4.3 Verificar el workflow
-
-El archivo `.github/workflows/deploy.yml` ya está configurado. Cada vez que hagas push a `main`:
-
-1. GitHub se conecta por SSH a tu VPS
-2. Hace `git pull` para descargar los cambios
-3. Instala dependencias
-4. Compila el frontend
-5. Ejecuta migraciones de base de datos
-6. Reinicia la aplicación con PM2
-
-### 4.4 Probar el deploy
-
-Haz un cambio, commit, y push a `main`. Ve a tu repositorio > **Actions** para ver el progreso del deploy.
+1. En hPanel → **Dominios** → tu dominio → **DNS / Zona DNS**
+2. Registro **A**: nombre = `pas`, apunta a = IP del VPS, TTL = 14400
 
 ---
 
-## Paso 5: Configurar el subdominio en Hostinger
+## Preparar la base de datos
 
-### 5.1 En el panel de Hostinger (hPanel)
+La app usa la BD MySQL existente (`u306143177_admin_db`). Ver `DB.md` para
+detalles de la auditoría.
 
-1. Ve a **Dominios** > tu dominio principal
-2. Busca **DNS / Zona DNS**
-3. Añade un registro **A**:
-   - Nombre: `pas` (o el subdominio que quieras)
-   - Apunta a: la IP de tu VPS
-   - TTL: 14400
-4. Espera a que propague (puede tardar hasta 24h, normalmente minutos)
-
-### 5.2 Verificar
+Si es la primera vez, ejecuta el script de saneamiento (una sola vez, con
+backup previo):
 
 ```bash
-ping pas.tudominio.com   # debería resolver a la IP de tu VPS
+mysql -h 127.0.0.1 -u USUARIO -p NOMBRE_BD < server/src/db/sql/limpieza_produccion.sql
+```
+
+Para crear una BD vacía desde cero:
+
+```bash
+mysql -h 127.0.0.1 -u USUARIO -p NOMBRE_BD < server/src/db/sql/schema_limpio.sql
 ```
 
 ---
 
-## Comandos útiles de PM2
+## Comandos útiles de PM2 (solo VPS)
 
 ```bash
-pm2 status              # ver estado de las apps
-pm2 logs pas-robotics   # ver logs en tiempo real
-pm2 restart pas-robotics # reiniciar
-pm2 stop pas-robotics    # detener
+pm2 status              # ver estado
+pm2 logs pas-robotics   # logs en tiempo real
+pm2 restart pas-robotics
 pm2 monit               # monitor interactivo
 ```
 
@@ -268,21 +227,21 @@ node-pas/
 ├── .env                    # Variables de entorno (NO se sube a git)
 ├── .github/workflows/      # CI/CD con GitHub Actions
 │   └── deploy.yml
-├── ecosystem.config.js     # Configuración PM2
-├── package.json            # Scripts raíz
-├── DB.md                   # Auditoría y guía de la base de datos
+├── ecosystem.config.js     # Configuración PM2 (solo VPS)
+├── package.json            # Scripts raíz (setup, build, start)
+├── DB.md                   # Auditoría de la base de datos
 ├── server/                 # Backend Express + MySQL (knex)
 │   ├── src/
 │   │   ├── index.js        # Punto de entrada
 │   │   ├── config/         # Configuración BD
 │   │   ├── db/sql/         # schema_limpio.sql, limpieza_produccion.sql
 │   │   ├── routes/         # Endpoints API
-│   │   └── middleware/     # Error handler, etc.
+│   │   └── middleware/     # Error handler
 │   └── package.json
 └── client/                 # Frontend React + Vite + Tailwind
     ├── src/
-    │   ├── pages/          # Páginas (Dashboard, Clientes, Modelos, etc.)
-    │   └── components/     # Componentes reutilizables
+    │   ├── pages/          # Dashboard, Clientes, Modelos, etc.
+    │   └── components/     # Sidebar, etc.
     ├── index.html
     └── package.json
 ```

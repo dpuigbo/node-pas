@@ -23,3 +23,37 @@ jobs:
             cd client && npm install && npx vite build && cd ..
             pm2 restart pas-robotics || pm2 start ecosystem.config.js
             pm2 save
+
+  # --- Alternative: FTP deploy (for shared hosting without SSH) ---
+  # Uncomment this job and comment out the SSH job above if using
+  # Hostinger shared hosting with FTP only.
+  #
+  # deploy-ftp:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 20
+  #
+  #     - name: Install and build
+  #       run: |
+  #         npm install
+  #         cd server && npm install && cd ..
+  #         cd client && npm install && npx vite build && cd ..
+  #
+  #     - name: Deploy via FTP
+  #       uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+  #       with:
+  #         server: ${{ secrets.FTP_HOST }}
+  #         username: ${{ secrets.FTP_USER }}
+  #         password: ${{ secrets.FTP_PASSWORD }}
+  #         local-dir: ./
+  #         server-dir: ./public_html/
+  #         exclude: |
+  #           **/.git*
+  #           **/.git*/**
+  #           **/node_modules/**
+  #           .env
+  #           **/.DS_Store
