@@ -2,20 +2,34 @@ import { z } from 'zod';
 
 const tipoComponenteEnum = z.enum(['controller', 'mechanical_unit', 'drive_unit', 'external_axis']);
 
+const idArray = z.array(z.number().int().positive());
+
 export const createModeloSchema = z.object({
   fabricanteId: z.number().int().positive(),
   tipo: tipoComponenteEnum,
-  familia: z.string().max(200).optional().nullable(),
   familiaId: z.number().int().positive().optional().nullable(),
   generacionControladorId: z.number().int().positive().optional().nullable(),
-  nombre: z.string().min(1, 'El nombre es obligatorio').max(200),
+  nombre: z.string().min(1, 'El nombre es obligatorio').max(191),
+  typeVariant: z.string().max(50).optional().nullable(),
   notas: z.string().optional().nullable(),
-  aceitesConfig: z.any().optional().nullable(),
-  niveles: z.string().max(100).optional().nullable(),
-  controladorIds: z.array(z.number().int().positive()).optional().default([]),
+  activa: z.boolean().optional(),
+  // Flags de niveles aplicables (fuente de verdad, D-075)
+  nivelN1: z.boolean().optional(),
+  nivelN2Inf: z.boolean().optional(),
+  nivelN2Sup: z.boolean().optional(),
+  nivelN3: z.boolean().optional(),
+  // Arrays JSON de IDs
+  montajesDisponibles: idArray.optional().nullable(),
+  proteccionesDisponibles: idArray.optional().nullable(),
+  controladoresCompatibles: idArray.optional().nullable(),
+  // Capacidades de controladora
+  soportaMultimove: z.boolean().optional().nullable(),
+  maxRobotsMultimove: z.number().int().optional().nullable(),
+  maxEjesExternos: z.number().int().optional().nullable(),
+  tipoBateriaMedida: z.enum(['smb', 'eib']).optional().nullable(),
 });
 
-export const updateModeloSchema = createModeloSchema.partial().omit({ fabricanteId: true, controladorIds: true });
+export const updateModeloSchema = createModeloSchema.partial().omit({ fabricanteId: true });
 
 export const updateCompatibilidadSchema = z.object({
   controladorIds: z.array(z.number().int().positive()),

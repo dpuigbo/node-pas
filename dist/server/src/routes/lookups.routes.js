@@ -2,49 +2,56 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const database_1 = require("../config/database");
+const validarCompatibilidadEje_1 = require("../lib/validarCompatibilidadEje");
+const planMantenimiento_1 = require("../lib/planMantenimiento");
 const router = (0, express_1.Router)();
 // GET /api/v1/lookups/familias/:id/controladores-compatibles
-// Devuelve los controladores compatibles con la familia robot (matriz cabinet-especifica).
+// Controladores compatibles con la familia robot (union de los JSON
+// controladores_compatibles de sus modelos activos).
 router.get('/familias/:id/controladores-compatibles', async (req, res, next) => {
     try {
         const familiaId = Number(req.params.id);
-        const items = await database_1.prisma.compatibilidadRobotControlador.findMany({
-            where: { robotFamiliaId: familiaId },
-            include: {
-                controlador: {
-                    select: {
-                        id: true, nombre: true, familia: true,
-                        soportaMultimove: true, maxRobotsMultimove: true, maxEjesExternos: true,
-                    },
-                },
+        const controladores = await (0, validarCompatibilidadEje_1.getControladoresCompatiblesFamilia)(familiaId);
+        if (controladores.length === 0) {
+            res.json([]);
+            return;
+        }
+        const detalles = await database_1.prisma.modeloComponente.findMany({
+            where: { id: { in: controladores.map((c) => c.id) } },
+            select: {
+                id: true, nombre: true,
+                soportaMultimove: true, maxRobotsMultimove: true, maxEjesExternos: true,
+                familiaRel: { select: { codigo: true } },
             },
+            orderBy: { nombre: 'asc' },
         });
-        res.json(items.map(i => ({
-            ...i.controlador,
-            notas: i.notas,
-            fuenteDoc: i.fuenteDoc,
-        })));
+        res.json(detalles.map((d) => ({ ...d, familia: d.familiaRel?.codigo ?? null })));
     }
     catch (err) {
         next(err);
     }
 });
 // GET /api/v1/lookups/controladores/:id/familias-compatibles
-// Inverso: dado un controlador, lista de familias robot que documentadamente soporta.
+// Inverso: familias robot cuyos modelos declaran este controlador en su JSON.
 router.get('/controladores/:id/familias-compatibles', async (req, res, next) => {
     try {
         const controladorId = Number(req.params.id);
-        const items = await database_1.prisma.compatibilidadRobotControlador.findMany({
-            where: { controladorModeloId: controladorId },
-            include: {
-                robotFamilia: { select: { id: true, codigo: true, descripcion: true } },
+        const modelos = await database_1.prisma.modeloComponente.findMany({
+            where: { tipo: 'mechanical_unit', activa: true, familiaId: { not: null } },
+            select: {
+                familiaId: true,
+                controladoresCompatibles: true,
+                familiaRel: { select: { id: true, codigo: true, descripcion: true } },
             },
         });
-        res.json(items.map(i => ({
-            ...i.robotFamilia,
-            notas: i.notas,
-            fuenteDoc: i.fuenteDoc,
-        })));
+        const familias = new Map();
+        for (const m of modelos) {
+            if (!((0, planMantenimiento_1.parseIdArray)(m.controladoresCompatibles) ?? []).includes(controladorId))
+                continue;
+            if (m.familiaRel)
+                familias.set(m.familiaRel.id, m.familiaRel);
+        }
+        res.json(Array.from(familias.values()).sort((a, b) => a.codigo.localeCompare(b.codigo)));
     }
     catch (err) {
         next(err);
@@ -106,144 +113,141 @@ router.get('/niveles-mantenimiento', async (_req, res, next) => {
         next(err);
     }
 });
-// GET /api/v1/lookups/unidades-intervalo
-router.get('/unidades-intervalo', async (_req, res, next) => {
+// GET /api/v1/lookups/montajes
+router.get('/montajes', async (_req, res, next) => {
     try {
-        const unidades = await database_1.prisma.luUnidadIntervalo.findMany({
-            orderBy: { orden: 'asc' },
+        const montajes = await database_1.prisma.luMontaje.findMany({ orderBy: { id: 'asc' } });
+        res.json(montajes);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// GET /api/v1/lookups/protecciones
+router.get('/protecciones', async (_req, res, next) => {
+    try {
+        const protecciones = await database_1.prisma.luProteccion.findMany({
+            where: { activa: true },
+            orderBy: { id: 'asc' },
         });
-        res.json(unidades);
+        res.json(protecciones);
     }
     catch (err) {
         next(err);
     }
 });
 // GET /api/v1/lookups/aceites?q=kyodo
+// Compat: la tabla `aceites` fue eliminada en v2.9. Devuelve consumibles de
+// tipo aceite/grasa del catalogo unificado.
 router.get('/aceites', async (req, res, next) => {
     try {
         const q = req.query.q ? String(req.query.q) : '';
+        const where = { activo: true, tipo: { in: ['aceite', 'grasa'] } };
         if (q) {
-            // Buscar por alias (incluye nombre original)
-            const aliases = await database_1.prisma.aceiteAlias.findMany({
-                where: { alias: { contains: q } },
-                include: {
-                    aceite: true,
-                },
-            });
-            // Deduplicar aceites
-            const seen = new Set();
-            const aceites = aliases
-                .map(a => a.aceite)
-                .filter(a => {
-                if (seen.has(a.id))
-                    return false;
-                seen.add(a.id);
-                return true;
-            });
-            res.json(aceites);
+            where.OR = [
+                { nombre: { contains: q } },
+                { codigoInterno: { contains: q } },
+                { codigoFabricante: { contains: q } },
+                { equivalencias: { contains: q } },
+            ];
         }
-        else {
-            const aceites = await database_1.prisma.aceite.findMany({
-                where: { activo: true },
-                orderBy: { nombre: 'asc' },
-            });
-            res.json(aceites);
-        }
+        const aceites = await database_1.prisma.consumibleCatalogo.findMany({
+            where,
+            orderBy: { nombre: 'asc' },
+        });
+        res.json(aceites);
     }
     catch (err) {
         next(err);
     }
 });
 // ===== ACTIVIDAD ↔ CONSUMIBLE (M:N) =====
-// GET /api/v1/lookups/actividad/:id/consumibles
-router.get('/actividad/:tipo(preventiva|cabinet|drive-module)/:id/consumibles', async (req, res, next) => {
+// v2.9: actividad_cabinet y actividad_drive_module se fusionaron en
+// actividad_preventiva; solo queda el tipo 'preventiva'.
+// GET /api/v1/lookups/actividad/preventiva/:id/consumibles
+router.get('/actividad/:tipo(preventiva)/:id/consumibles', async (req, res, next) => {
     try {
         const id = Number(req.params.id);
-        const tipo = req.params.tipo;
-        let items = [];
-        if (tipo === 'preventiva') {
-            items = await database_1.prisma.actividadConsumible.findMany({
-                where: { actividadPreventivaId: id },
-                include: { consumible: true },
-            });
-        }
-        else if (tipo === 'cabinet') {
-            items = await database_1.prisma.actividadCabinetConsumible.findMany({
-                where: { actividadCabinetId: id },
-                include: { consumible: true },
-            });
-        }
-        else {
-            items = await database_1.prisma.actividadDriveModuleConsumible.findMany({
-                where: { actividadDriveModuleId: id },
-                include: { consumible: true },
-            });
-        }
+        const items = await database_1.prisma.actividadConsumible.findMany({
+            where: { actividadPreventivaId: id },
+            include: { consumible: true },
+        });
         res.json(items);
     }
     catch (err) {
         next(err);
     }
 });
-// POST /api/v1/lookups/actividad/:tipo/:id/consumibles
-router.post('/actividad/:tipo(preventiva|cabinet|drive-module)/:id/consumibles', async (req, res, next) => {
+// POST /api/v1/lookups/actividad/preventiva/:id/consumibles
+router.post('/actividad/:tipo(preventiva)/:id/consumibles', async (req, res, next) => {
     try {
         const id = Number(req.params.id);
-        const tipo = req.params.tipo;
         const { consumibleId, cantidad, unidad, notas } = req.body;
-        let item;
-        if (tipo === 'preventiva') {
-            item = await database_1.prisma.actividadConsumible.create({
-                data: { actividadPreventivaId: id, consumibleId, cantidad, unidad, notas },
-                include: { consumible: true },
-            });
-        }
-        else if (tipo === 'cabinet') {
-            item = await database_1.prisma.actividadCabinetConsumible.create({
-                data: { actividadCabinetId: id, consumibleId, cantidad, unidad, notas },
-                include: { consumible: true },
-            });
-        }
-        else {
-            item = await database_1.prisma.actividadDriveModuleConsumible.create({
-                data: { actividadDriveModuleId: id, consumibleId, cantidad, unidad, notas },
-                include: { consumible: true },
-            });
-        }
+        const item = await database_1.prisma.actividadConsumible.create({
+            data: { actividadPreventivaId: id, consumibleId, cantidad, unidad, notas },
+            include: { consumible: true },
+        });
         res.status(201).json(item);
     }
     catch (err) {
         next(err);
     }
 });
-// DELETE /api/v1/lookups/actividad/:tipo/:id/consumibles/:linkId
-router.delete('/actividad/:tipo(preventiva|cabinet|drive-module)/:id/consumibles/:linkId', async (req, res, next) => {
+// DELETE /api/v1/lookups/actividad/preventiva/:id/consumibles/:linkId
+router.delete('/actividad/:tipo(preventiva)/:id/consumibles/:linkId', async (req, res, next) => {
     try {
         const linkId = Number(req.params.linkId);
-        const tipo = req.params.tipo;
-        if (tipo === 'preventiva') {
-            await database_1.prisma.actividadConsumible.delete({ where: { id: linkId } });
-        }
-        else if (tipo === 'cabinet') {
-            await database_1.prisma.actividadCabinetConsumible.delete({ where: { id: linkId } });
-        }
-        else {
-            await database_1.prisma.actividadDriveModuleConsumible.delete({ where: { id: linkId } });
-        }
+        await database_1.prisma.actividadConsumible.delete({ where: { id: linkId } });
         res.json({ message: 'Eliminado' });
     }
     catch (err) {
         next(err);
     }
 });
-// PUT /api/v1/lookups/punto-control/:id/consumible — DEPRECATED 2026-04
-// La tabla `punto_control_generico` se droppeó (ver journal SQL 32). Los datos
-// se migraron a `actividad_preventiva` (genéricas) y los consumibles se
-// vinculan ahora vía `actividad_consumible` (M:N). Endpoint retirado.
-router.put('/punto-control/:id/consumible', async (_req, res) => {
-    res.status(410).json({
-        error: 'Endpoint retirado. punto_control_generico fue migrado a actividad_preventiva (genéricas). Usar actividad_consumible para vincular consumibles.',
-    });
+// GET /api/v1/lookups/actividades-preventivas?tipoComponente=mechanical_unit&nivel=N3
+// Catalogo completo de actividades preventivas (v2.9, unificadas).
+router.get('/actividades-preventivas', async (req, res, next) => {
+    try {
+        const where = {};
+        if (req.query.tipoComponente)
+            where.tipoComponenteAplicable = String(req.query.tipoComponente);
+        const items = await database_1.prisma.actividadPreventiva.findMany({
+            where,
+            include: {
+                tipoActividad: { select: { id: true, codigo: true, nombre: true, categoria: true } },
+                nivel: { select: { id: true, codigo: true, nombre: true } },
+                consumibles: {
+                    include: {
+                        consumible: { select: { id: true, codigoInterno: true, nombre: true, tipo: true } },
+                    },
+                },
+            },
+            orderBy: [{ tipoComponenteAplicable: 'asc' }, { orden: 'asc' }, { id: 'asc' }],
+        });
+        const nivelCodigo = req.query.nivel ? String(req.query.nivel) : null;
+        const filtered = nivelCodigo ? items.filter((i) => i.nivel?.codigo === nivelCodigo) : items;
+        // Resolver nombres de modelos aplicables en batch
+        const modeloIds = new Set();
+        for (const it of filtered) {
+            for (const id of (0, planMantenimiento_1.parseIdArray)(it.modelosAplicables) ?? [])
+                modeloIds.add(id);
+        }
+        const modelos = modeloIds.size > 0
+            ? await database_1.prisma.modeloComponente.findMany({
+                where: { id: { in: Array.from(modeloIds) } },
+                select: { id: true, nombre: true },
+            })
+            : [];
+        const modeloMap = new Map(modelos.map((m) => [m.id, m.nombre]));
+        res.json(filtered.map((it) => ({
+            ...it,
+            modelosAplicablesInfo: ((0, planMantenimiento_1.parseIdArray)(it.modelosAplicables) ?? [])
+                .map((id) => ({ id, nombre: modeloMap.get(id) ?? `#${id}` })),
+        })));
+    }
+    catch (err) {
+        next(err);
+    }
 });
 // GET /api/v1/lookups/consumibles-catalogo?tipo=aceite&subtipo=engranaje&q=...
 router.get('/consumibles-catalogo', async (req, res, next) => {
@@ -258,7 +262,8 @@ router.get('/consumibles-catalogo', async (req, res, next) => {
         if (req.query.q) {
             where.OR = [
                 { nombre: { contains: String(req.query.q) } },
-                { codigoAbb: { contains: String(req.query.q) } },
+                { codigoInterno: { contains: String(req.query.q) } },
+                { codigoFabricante: { contains: String(req.query.q) } },
             ];
         }
         const items = await database_1.prisma.consumibleCatalogo.findMany({
@@ -302,83 +307,6 @@ router.delete('/consumibles-catalogo/:id', async (req, res, next) => {
             data: { activo: false },
         });
         res.json(item);
-    }
-    catch (err) {
-        next(err);
-    }
-});
-// GET /api/v1/lookups/equivalencias?familiaId=X&tipo=lubricacion
-router.get('/equivalencias', async (req, res, next) => {
-    try {
-        const where = {};
-        if (req.query.familiaId)
-            where.familiaId = Number(req.query.familiaId);
-        if (req.query.tipo)
-            where.tipoEquivalencia = String(req.query.tipo);
-        const equivalencias = await database_1.prisma.equivalenciaFamilia.findMany({
-            where,
-            orderBy: { id: 'asc' },
-            include: {
-                familia: { select: { id: true, codigo: true, tipo: true } },
-            },
-        });
-        res.json(equivalencias);
-    }
-    catch (err) {
-        next(err);
-    }
-});
-// GET /api/v1/lookups/puntos-control?categoria=manipulador
-// Tras SQL 32 los puntos genéricos viven en actividad_preventiva con
-// familia_id=NULL y tipo_componente_aplicable poblado. Mapeo categoria legacy:
-//   manipulador  → mechanical_unit
-//   controladora → controller
-//   drive_module → drive_unit
-//   eje_externo  → external_axis
-//   cabling/seguridad → 'todos' (se fusionaron al migrar)
-const CATEGORIA_TO_TIPO_APLICABLE = {
-    manipulador: 'mechanical_unit',
-    controladora: 'controller',
-    drive_module: 'drive_unit',
-    eje_externo: 'external_axis',
-    cabling: 'todos',
-    seguridad: 'todos',
-};
-const TIPO_APLICABLE_TO_CATEGORIA = {
-    mechanical_unit: 'manipulador',
-    controller: 'controladora',
-    drive_unit: 'drive_module',
-    external_axis: 'eje_externo',
-    todos: 'cabling',
-};
-router.get('/puntos-control', async (req, res, next) => {
-    try {
-        const where = { familiaId: null, tipoComponenteAplicable: { not: null } };
-        if (req.query.categoria) {
-            const tipo = CATEGORIA_TO_TIPO_APLICABLE[String(req.query.categoria)];
-            if (tipo)
-                where.tipoComponenteAplicable = tipo;
-        }
-        const items = await database_1.prisma.actividadPreventiva.findMany({
-            where,
-            orderBy: [{ orden: 'asc' }, { componente: 'asc' }],
-        });
-        // Adaptamos al shape histórico esperado por el frontend (CatalogosPage)
-        res.json(items.map((it) => {
-            const notas = it.notas ?? '';
-            const condIdx = notas.indexOf('Condición:');
-            return {
-                id: it.id,
-                categoria: TIPO_APLICABLE_TO_CATEGORIA[it.tipoComponenteAplicable ?? 'todos'] ?? 'cabling',
-                componente: it.componente,
-                descripcionAccion: condIdx >= 0 ? notas.slice(0, condIdx).trim() : notas,
-                intervaloTexto: it.intervaloTextoLegacy,
-                condicion: condIdx >= 0 ? notas.slice(condIdx + 'Condición:'.length).trim() : null,
-                generacionAplica: null,
-                notas: it.notas,
-                orden: it.orden,
-            };
-        }));
     }
     catch (err) {
         next(err);

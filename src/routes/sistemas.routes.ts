@@ -58,22 +58,16 @@ router.get('/ejes-compatibles', async (req: Request, res: Response, next: NextFu
     }
 
     const candidatos = await prisma.modeloComponente.findMany({
-      where: {
-        tipo: 'external_axis',
-        controladoresCompatibles: { some: { controladorId } },
-      },
-      orderBy: [{ familia: 'asc' }, { nombre: 'asc' }],
+      where: { tipo: 'external_axis', activa: true },
+      orderBy: [{ familiaId: 'asc' }, { nombre: 'asc' }],
       include: {
         fabricante: { select: { id: true, nombre: true } },
-        compatEjePermitida: { select: { familiaId: true } },
-        compatEjeExcluye: { select: { familiaId: true, motivo: true } },
-        compatEjeControladorEje: { select: { controladorModeloId: true } },
+        familiaRel: { select: { id: true, codigo: true } },
       },
     });
 
     const compatibles = filtrarEjesCompatibles(candidatos, robotFamiliaId, controladorId);
-    const result = compatibles.map(({ compatEjePermitida, compatEjeExcluye, compatEjeControladorEje, ...rest }) => rest);
-    res.json(result);
+    res.json(compatibles);
   } catch (err) { next(err); }
 });
 

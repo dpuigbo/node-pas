@@ -1,7 +1,8 @@
-// Niveles de mantenimiento por tipo de componente
-// controller/drive_unit: solo N1 (fijo)
-// external_axis: N1 (fijo) + N2 (opcional, cambio aceite del eje)
-// mechanical_unit: N1 (fijo) + N2 Inf / N2 Sup / N3 (opcionales según modelo)
+// Niveles de mantenimiento por tipo de componente (codigos canonicos v2.9).
+//
+// Fuente de verdad (D-075): flags nivel_n1/n2_inf/n2_sup/n3 en
+// modelos_componente para manipuladores. Para controller/drive_unit/
+// external_axis el nivel es fijo por tipo (N_CTRL, N_DU, N*_EJE).
 
 export interface NivelOption {
   value: string;
@@ -11,24 +12,35 @@ export interface NivelOption {
 
 export const NIVELES_POR_TIPO: Record<string, NivelOption[]> = {
   controller: [
-    { value: '1', label: 'Nivel 1', fixed: true },
+    { value: 'N_CTRL', label: 'Nivel Controlador', fixed: true },
   ],
   drive_unit: [
-    { value: '1', label: 'Nivel 1', fixed: true },
+    { value: 'N_DU', label: 'Nivel Drive Unit', fixed: true },
   ],
   external_axis: [
-    { value: '1', label: 'Nivel 1', fixed: true },
-    { value: '2', label: 'Nivel 2', fixed: false },
+    { value: 'N0_EJE', label: 'Eje sin revisión', fixed: false },
+    { value: 'N1_EJE', label: 'Eje N1', fixed: true },
+    { value: 'N2_EJE', label: 'Eje N2', fixed: false },
   ],
   mechanical_unit: [
-    { value: '1', label: 'Nivel 1', fixed: true },
-    { value: '2_inferior', label: 'Nivel 2 Inferior', fixed: false },
-    { value: '2_superior', label: 'Nivel 2 Superior', fixed: false },
-    { value: '3', label: 'Nivel 3', fixed: false },
+    { value: 'N1', label: 'Nivel 1', fixed: true },
+    { value: 'N2_INF', label: 'Nivel 2 Inferior', fixed: false },
+    { value: 'N2_SUP', label: 'Nivel 2 Superior', fixed: false },
+    { value: 'N3', label: 'Nivel 3', fixed: false },
   ],
 };
 
 export const NIVEL_SHORT: Record<string, string> = {
+  N1: 'N1',
+  N2_INF: 'N2 Inf',
+  N2_SUP: 'N2 Sup',
+  N3: 'N3',
+  N_CTRL: 'N Ctrl',
+  N_DU: 'N DU',
+  N0_EJE: 'N0 Eje',
+  N1_EJE: 'N1 Eje',
+  N2_EJE: 'N2 Eje',
+  // legacy (pre-v2.9), por si quedan datos antiguos en caches
   '1': 'N1',
   '2': 'N2',
   '2_inferior': 'N2 Inf',
@@ -38,12 +50,25 @@ export const NIVEL_SHORT: Record<string, string> = {
 
 /** Todos los valores de nivel posibles en el sistema */
 export const NIVELES_ALL = [
-  { value: '1', label: 'Nivel 1' },
-  { value: '2', label: 'Nivel 2' },
-  { value: '2_inferior', label: 'Nivel 2 Inf.' },
-  { value: '2_superior', label: 'Nivel 2 Sup.' },
-  { value: '3', label: 'Nivel 3' },
+  { value: 'N1', label: 'Nivel 1' },
+  { value: 'N2_INF', label: 'Nivel 2 Inf.' },
+  { value: 'N2_SUP', label: 'Nivel 2 Sup.' },
+  { value: 'N3', label: 'Nivel 3' },
+  { value: 'N_CTRL', label: 'Nivel Controlador' },
+  { value: 'N_DU', label: 'Nivel Drive Unit' },
+  { value: 'N0_EJE', label: 'Eje sin revisión' },
+  { value: 'N1_EJE', label: 'Eje N1' },
+  { value: 'N2_EJE', label: 'Eje N2' },
 ] as const;
+
+/** Flags de nivel del modelo (campos de modelos_componente) */
+export interface ModeloNivelFlags {
+  tipo: string;
+  nivelN1?: boolean;
+  nivelN2Inf?: boolean;
+  nivelN2Sup?: boolean;
+  nivelN3?: boolean;
+}
 
 /** Devuelve las opciones de nivel permitidas para un tipo de componente */
 export function getNivelesForTipo(tipo: string): NivelOption[] {
@@ -56,14 +81,31 @@ export function getNivelesFijos(tipo: string): string[] {
 }
 
 /**
- * Dado un tipo y un CSV de niveles del modelo, devuelve solo los niveles
- * válidos (intersección entre lo configurado y lo permitido por el tipo).
+ * Niveles aplicables de un modelo segun sus flags (D-075). Para tipos
+ * no-manipulador devuelve los niveles fijos del tipo.
  */
-export function getNivelesValidos(tipo: string, nivelesCSV: string | null | undefined): string[] {
-  const permitidos = getNivelesForTipo(tipo).map((n) => n.value);
-  if (!nivelesCSV) return permitidos.filter((v) => getNivelesForTipo(tipo).find((n) => n.value === v)?.fixed);
-  const configurados = nivelesCSV.split(',').map((s) => s.trim()).filter(Boolean);
-  return permitidos.filter((v) => configurados.includes(v));
+export function getNivelesModelo(modelo: ModeloNivelFlags): string[] {
+  if (modelo.tipo === 'mechanical_unit') {
+    const out: string[] = [];
+    if (modelo.nivelN1 !== false) out.push('N1');
+    if (modelo.nivelN2Inf) out.push('N2_INF');
+    if (modelo.nivelN2Sup) out.push('N2_SUP');
+    if (modelo.nivelN3) out.push('N3');
+    return out;
+  }
+  return getNivelesFijos(modelo.tipo);
+}
+
+/** Convierte una seleccion de codigos a flags para guardar en el modelo */
+export function nivelesToFlags(niveles: string[]): {
+  nivelN1: boolean; nivelN2Inf: boolean; nivelN2Sup: boolean; nivelN3: boolean;
+} {
+  return {
+    nivelN1: niveles.includes('N1'),
+    nivelN2Inf: niveles.includes('N2_INF'),
+    nivelN2Sup: niveles.includes('N2_SUP'),
+    nivelN3: niveles.includes('N3'),
+  };
 }
 
 /** Comprueba si un tipo tiene algún nivel no-fijo (editable por admin) */

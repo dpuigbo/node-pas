@@ -17,7 +17,7 @@ import { useModelos, useCreateModelo, useDeleteModelo } from '@/hooks/useModelos
 import { useFabricantes } from '@/hooks/useFabricantes';
 import { useAuth } from '@/hooks/useAuth';
 import { useFamilias, useGeneracionesControlador } from '@/hooks/useLookups';
-import { getNivelesForTipo, getNivelesFijos, tieneNivelesEditables } from '@/lib/niveles';
+import { getNivelesForTipo, getNivelesFijos, nivelesToFlags, tieneNivelesEditables } from '@/lib/niveles';
 
 const TIPO_LABELS: Record<string, string> = {
   controller: 'Controlador',
@@ -100,9 +100,8 @@ export default function ModelosPage() {
       let generacionKey = '_all';
       if (useGeneracionLevel) {
         const ctrlFamilias = new Set<string>();
-        for (const cc of (modelo.controladoresCompatibles ?? [])) {
-          const fam = cc.controlador?.familia;
-          if (fam) ctrlFamilias.add(fam);
+        for (const cc of (modelo.controladoresCompatiblesInfo ?? [])) {
+          if (cc.familia) ctrlFamilias.add(cc.familia);
         }
         generacionKey = ctrlFamilias.size > 0
           ? [...ctrlFamilias].sort().join(' / ')
@@ -185,17 +184,15 @@ export default function ModelosPage() {
 
   const handleSubmit = async () => {
     try {
-      const nivelesStr = form.niveles.length > 0 ? form.niveles.join(',') : null;
       const res = await createMutation.mutateAsync({
         fabricanteId: form.fabricanteId,
         tipo: tipoFilter!,
-        familia: form.familia || null,
         familiaId: form.familiaId || null,
         generacionControladorId: form.generacionControladorId || null,
         nombre: form.nombre,
         notas: form.notas || null,
-        niveles: nivelesStr,
-        controladorIds: form.controladorIds,
+        ...nivelesToFlags(form.niveles),
+        controladoresCompatibles: form.controladorIds,
       });
       setFormOpen(false);
       // Navigate to the new modelo's detail page
@@ -226,8 +223,8 @@ export default function ModelosPage() {
           // Controllers: don't show associated units (too noisy)
           return <span className="text-xs text-muted-foreground">—</span>;
         }
-        // Non-controller: show linked controllers (via junction)
-        const controllers = (m.controladoresCompatibles ?? []).map((c: any) => c.controlador);
+        // Non-controller: show linked controllers (v2.9: JSON resuelto en *Info)
+        const controllers = m.controladoresCompatiblesInfo ?? [];
         if (controllers.length === 0) return <span className="text-xs text-muted-foreground">—</span>;
         return (
           <div className="flex flex-wrap gap-1">

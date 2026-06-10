@@ -4,13 +4,8 @@ const express_1 = require("express");
 const role_middleware_1 = require("../middleware/role.middleware");
 const database_1 = require("../config/database");
 const pedidoCompra_validation_1 = require("../validation/pedidoCompra.validation");
+const planMantenimiento_1 = require("../lib/planMantenimiento");
 const router = (0, express_1.Router)();
-/** Helper: convert Decimal | null to number | null */
-function dec(v) {
-    if (v == null)
-        return null;
-    return Number(v);
-}
 // POST /api/v1/pedidos-compra/generar/:intervencionId (admin)
 // Generates purchase order from intervention's systems + niveles + ConsumibleNivel data
 router.post('/generar/:intervencionId', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
@@ -35,13 +30,7 @@ router.post('/generar/:intervencionId', (0, role_middleware_1.requireRole)('admi
                             include: {
                                 componentes: {
                                     include: {
-                                        modeloComponente: {
-                                            include: {
-                                                consumiblesNivel: {
-                                                    include: { nivel: { select: { codigo: true } } },
-                                                },
-                                            },
-                                        },
+                                        modeloComponente: { select: { id: true, nombre: true } },
                                     },
                                 },
                             },
@@ -58,151 +47,40 @@ router.post('/generar/:intervencionId', (0, role_middleware_1.requireRole)('admi
             res.status(400).json({ error: 'La intervencion no tiene sistemas asignados' });
             return;
         }
-        // Collect all aceite IDs and consumible IDs we need to resolve
-        const aceiteIds = new Set();
-        const consumibleIds = new Set();
-        const catalogoIds = new Set();
-        // Build detailed lines (mix v2 + legacy)
+        // Build lines v2.9: lubricacion + consumibles de actividades por
+        // (modelo, nivel efectivo) de cada componente del sistema.
         const lineas = [];
         for (const intSistema of intervencion.sistemas) {
             const sistema = intSistema.sistema;
             const nivel = intSistema.nivel?.codigo ?? null;
             if (!nivel)
                 continue; // sistema sin nivel asignado, no genera lineas
+            const ctrl = sistema.componentes.find((c) => c.tipo === 'controller');
             for (const comp of sistema.componentes) {
-                const modelo = comp.modeloComponente;
-                const cn = modelo.consumiblesNivel.find((c) => c.nivel.codigo === nivel);
-                if (!cn || !cn.consumibles)
+                const nivelEfectivo = (0, planMantenimiento_1.nivelEfectivoParaTipo)(comp.tipo, nivel);
+                if (!nivelEfectivo)
                     continue;
-                const items = cn.consumibles;
+                const items = await (0, planMantenimiento_1.getConsumiblesPlan)(comp.modeloComponenteId, nivelEfectivo, {
+                    controladorId: ctrl?.modeloComponenteId ?? null,
+                });
                 for (const item of items) {
-                    // Formato v2 (consumibleId)
-                    if (item.consumibleId && item.consumibleId > 0) {
-                        catalogoIds.add(item.consumibleId);
-                        lineas.push({
-                            tipo: 'catalogo',
-                            itemId: item.consumibleId,
-                            nombre: '',
-                            cantidad: item.cantidad,
-                            unidad: null,
-                            coste: null,
-                            precio: null,
-                            sistemaId: sistema.id,
-                            sistemaNombre: sistema.nombre,
-                            componenteTipo: comp.tipo,
-                            modeloNombre: modelo.nombre,
-                            nivel,
-                        });
-                        continue;
-                    }
-                    // Formato legacy (tipo+id)
-                    if (!item.id || item.id <= 0)
-                        continue;
-                    if (item.tipo === 'aceite')
-                        aceiteIds.add(item.id);
-                    else
-                        consumibleIds.add(item.id);
                     lineas.push({
-                        tipo: item.tipo ?? 'consumible',
-                        itemId: item.id,
-                        nombre: '',
+                        tipo: item.tipo,
+                        itemId: item.consumibleId,
+                        codigoInterno: item.codigoInterno,
+                        nombre: item.nombre,
                         cantidad: item.cantidad,
-                        unidad: null,
-                        coste: null,
-                        precio: null,
+                        unidad: item.unidad,
+                        coste: item.coste,
+                        precio: item.precio,
                         sistemaId: sistema.id,
                         sistemaNombre: sistema.nombre,
                         componenteTipo: comp.tipo,
-                        modeloNombre: modelo.nombre,
-                        nivel,
+                        modeloNombre: comp.modeloComponente.nombre,
+                        nivel: nivelEfectivo,
+                        origen: item.origen,
+                        detalle: item.detalle,
                     });
-                }
-            }
-        }
-        // Resolve aceite and consumible names/prices
-        const aceiteMap = new Map();
-        const consumibleMap = new Map();
-        if (aceiteIds.size > 0) {
-            const aceites = await database_1.prisma.aceite.findMany({
-                where: { id: { in: Array.from(aceiteIds) } },
-                include: { consumible: true },
-            });
-            for (const a of aceites) {
-                // Prefiere datos del consumible_catalogo si esta linkado
-                const cat = a.consumible;
-                aceiteMap.set(a.id, {
-                    nombre: cat?.nombre ?? a.nombre,
-                    unidad: cat?.unidad ?? a.unidad,
-                    coste: dec(cat?.coste ?? a.coste),
-                    precio: dec(cat?.precio ?? a.precio),
-                });
-            }
-        }
-        if (consumibleIds.size > 0) {
-            // Legacy 'consumible' items (no consumibleId v2): best-effort match contra
-            // consumible_catalogo. La tabla legacy `consumibles` se droppeó en
-            // 2026-04 (ver journal P-005). Items que no resuelvan se reportan abajo
-            // como "no encontrado".
-            const consumibles = await database_1.prisma.consumibleCatalogo.findMany({
-                where: { id: { in: Array.from(consumibleIds) } },
-            });
-            for (const c of consumibles) {
-                consumibleMap.set(c.id, {
-                    nombre: c.nombre,
-                    coste: dec(c.coste),
-                    precio: dec(c.precio),
-                });
-            }
-        }
-        // Catalogo unificado (formato v2)
-        const catalogoMap = new Map();
-        if (catalogoIds.size > 0) {
-            const items = await database_1.prisma.consumibleCatalogo.findMany({
-                where: { id: { in: Array.from(catalogoIds) } },
-            });
-            for (const it of items)
-                catalogoMap.set(it.id, {
-                    nombre: it.nombre,
-                    unidad: it.unidad,
-                    coste: dec(it.coste),
-                    precio: dec(it.precio),
-                });
-        }
-        // Fill in names and prices
-        for (const linea of lineas) {
-            if (linea.tipo === 'catalogo') {
-                const info = catalogoMap.get(linea.itemId);
-                if (info) {
-                    linea.nombre = info.nombre;
-                    linea.unidad = info.unidad;
-                    linea.coste = info.coste;
-                    linea.precio = info.precio;
-                }
-                else {
-                    linea.nombre = `Consumible #${linea.itemId} (no encontrado)`;
-                }
-            }
-            else if (linea.tipo === 'aceite') {
-                const info = aceiteMap.get(linea.itemId);
-                if (info) {
-                    linea.nombre = info.nombre;
-                    linea.unidad = info.unidad;
-                    linea.coste = info.coste;
-                    linea.precio = info.precio;
-                }
-                else {
-                    linea.nombre = `Aceite #${linea.itemId} (no encontrado)`;
-                }
-            }
-            else {
-                const info = consumibleMap.get(linea.itemId);
-                if (info) {
-                    linea.nombre = info.nombre;
-                    linea.coste = info.coste;
-                    linea.precio = info.precio;
-                }
-                else {
-                    linea.nombre = `Consumible #${linea.itemId} (no encontrado)`;
                 }
             }
         }

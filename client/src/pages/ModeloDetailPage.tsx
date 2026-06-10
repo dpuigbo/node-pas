@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Plus, FileText, Play, Pause,
   AlertCircle, Loader2, Pencil, Save, X,
-  Droplets, Wrench, Link2, Cpu, Bot, Cog, Ban, CheckCircle2,
+  Droplets, Wrench, Link2, Cpu, Bot, Cog,
 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, Column } from '@/components/shared/DataTable';
@@ -24,7 +24,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Select as USelect, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
-import { getNivelesForTipo, getNivelesFijos, tieneNivelesEditables, NIVEL_SHORT } from '@/lib/niveles';
+import { getNivelesForTipo, getNivelesFijos, getNivelesModelo, nivelesToFlags, tieneNivelesEditables, NIVEL_SHORT } from '@/lib/niveles';
 
 const TIPO_LABELS: Record<string, string> = {
   controller: 'Controlador',
@@ -175,7 +175,7 @@ export default function ModeloDetailPage() {
   const [nivelesForm, setNivelesForm] = useState<string[]>([]);
 
   const startEditNiveles = () => {
-    const current = modelo?.niveles ? modelo.niveles.split(',').filter(Boolean) : [];
+    const current = modelo ? getNivelesModelo(modelo) : [];
     const fijos = modelo ? getNivelesFijos(modelo.tipo) : [];
     const merged = [...new Set([...fijos, ...current])];
     setNivelesForm(merged);
@@ -193,8 +193,7 @@ export default function ModeloDetailPage() {
 
   const handleSaveNiveles = async () => {
     try {
-      const nivelesStr = nivelesForm.length > 0 ? nivelesForm.join(',') : null;
-      await updateModelo.mutateAsync({ id: modeloId, niveles: nivelesStr });
+      await updateModelo.mutateAsync({ id: modeloId, ...nivelesToFlags(nivelesForm) });
       setEditingNiveles(false);
     } catch (err: any) {
       alert(err?.response?.data?.error ?? 'Error al guardar niveles');
@@ -213,7 +212,8 @@ export default function ModeloDetailPage() {
   const [compatForm, setCompatForm] = useState<number[]>([]);
 
   const startEditCompat = () => {
-    const current = (modelo?.controladoresCompatibles ?? []).map((c: any) => c.controlador.id);
+    // v2.9: controladoresCompatiblesInfo viene resuelto del backend ([{id, nombre}])
+    const current = (modelo?.controladoresCompatiblesInfo ?? []).map((c: any) => c.id);
     setCompatForm(current);
     setEditingCompat(true);
   };
@@ -231,21 +231,10 @@ export default function ModeloDetailPage() {
     }
   };
 
-  // Group lubricacion by varianteTrm
+  // v2.9: todas las filas son del modelo; agrupar en un unico bloque por eje
   const lubricacionGrouped = useMemo(() => {
-    if (!lubricacionData?.records) return [];
-    if (lubricacionData.source === 'v2') {
-      // v2: group by modelo (all same modelo, just list by eje)
-      return [{ variante: modelo?.nombre ?? '', items: lubricacionData.records }];
-    }
-    // legacy: group by varianteTrm
-    const groups = new Map<string, any[]>();
-    for (const item of lubricacionData.records) {
-      const key = item.varianteTrm ?? '';
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key)!.push(item);
-    }
-    return [...groups.entries()].map(([variante, items]) => ({ variante, items }));
+    if (!lubricacionData?.records || lubricacionData.records.length === 0) return [];
+    return [{ variante: modelo?.nombre ?? '', items: lubricacionData.records }];
   }, [lubricacionData, modelo]);
 
   if (loadingModelo) {
@@ -267,7 +256,7 @@ export default function ModeloDetailPage() {
   }
 
   const versionList: any[] = versiones ?? [];
-  const currentNiveles = modelo.niveles ? modelo.niveles.split(',').filter(Boolean) : [];
+  const currentNiveles = getNivelesModelo(modelo);
   const isNonController = modelo.tipo !== 'controller';
 
   const handleCreateVersion = async () => {
@@ -520,6 +509,37 @@ export default function ModeloDetailPage() {
             </CardContent>
           </Card>
 
+          {/* Montajes y protecciones disponibles (v2.9) */}
+          {isNonController && ((modelo.montajesDisponiblesInfo ?? []).length > 0 || (modelo.proteccionesDisponiblesInfo ?? []).length > 0) && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Configuraciones disponibles</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {(modelo.montajesDisponiblesInfo ?? []).length > 0 && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1.5">Montajes</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {modelo.montajesDisponiblesInfo.map((m: any) => (
+                        <Badge key={m.id} variant="outline">{m.descripcion ?? m.codigo}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {(modelo.proteccionesDisponiblesInfo ?? []).length > 0 && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1.5">Protecciones</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {modelo.proteccionesDisponiblesInfo.map((p: any) => (
+                        <Badge key={p.id} variant="outline">{p.nombre ?? p.codigo}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Controladoras asociadas (only for non-controllers) */}
           {isNonController && (
             <Card>
@@ -577,9 +597,9 @@ export default function ModeloDetailPage() {
                   </div>
                 ) : (
                   <div className="flex flex-wrap gap-1.5">
-                    {(modelo.controladoresCompatibles ?? []).length > 0 ? (
-                      (modelo.controladoresCompatibles ?? []).map((c: any) => (
-                        <Badge key={c.controlador.id} variant="secondary">{c.controlador.nombre}</Badge>
+                    {(modelo.controladoresCompatiblesInfo ?? []).length > 0 ? (
+                      (modelo.controladoresCompatiblesInfo ?? []).map((c: any) => (
+                        <Badge key={c.id} variant="secondary">{c.nombre}</Badge>
                       ))
                     ) : (
                       <span className="text-sm text-muted-foreground">Sin controladoras asociadas</span>
@@ -642,35 +662,28 @@ export default function ModeloDetailPage() {
                           <th className="px-4 py-2 text-left font-medium">Lubricante</th>
                           <th className="px-4 py-2 text-left font-medium w-32">Cantidad</th>
                           <th className="px-4 py-2 text-left font-medium w-24">Unidad</th>
+                          <th className="px-4 py-2 text-left font-medium w-28">Cambio</th>
+                          <th className="px-4 py-2 text-left font-medium w-20">Nivel</th>
                           <th className="px-4 py-2 text-left font-medium">Notas</th>
                         </tr>
                       </thead>
                       <tbody>
                         {group.items.map((item: any) => {
                           const consumible = item.consumible;
-                          const lubricante = consumible?.nombre ?? item.aceite?.nombre ?? item.tipoLubricanteLegacy ?? item.tipoLubricante ?? 'N/A';
+                          const lubricante = consumible?.nombre ?? 'N/A';
                           const draft = lubDrafts.get(item.id);
-                          const isV2 = lubricacionData?.source === 'v2' && item.id > 0;
                           return (
                             <tr key={item.id} className="border-b last:border-b-0">
-                              <td className="px-4 py-2 font-mono font-medium">
-                                {item.eje}
-                                {!isV2 && lubEditMode && (
-                                  <span className="ml-1 text-[10px] text-amber-600" title="Se promovera a v2 al guardar">*</span>
-                                )}
-                              </td>
+                              <td className="px-4 py-2 font-mono font-medium">{item.eje}</td>
                               <td className="px-4 py-2">
                                 {lubricante === 'N/A' ? (
                                   <span className="text-muted-foreground">N/A</span>
                                 ) : (
                                   <div className="flex flex-col gap-0.5">
                                     <span>{lubricante}</span>
-                                    {consumible?.codigoAbb && (
-                                      <span className="text-[10px] font-mono text-muted-foreground">{consumible.codigoAbb}</span>
-                                    )}
-                                    {consumible?.fabricante && !consumible?.codigoAbb && (
-                                      <span className="text-[10px] text-muted-foreground">{consumible.fabricante}</span>
-                                    )}
+                                    <span className="text-[10px] font-mono text-muted-foreground">
+                                      {[consumible?.codigoInterno, consumible?.fabricante].filter(Boolean).join(' · ')}
+                                    </span>
                                   </div>
                                 )}
                               </td>
@@ -686,7 +699,7 @@ export default function ModeloDetailPage() {
                                 ) : (
                                   item.cantidadValor != null
                                     ? Number(item.cantidadValor).toFixed(2)
-                                    : (item.cantidadTextoLegacy ?? item.cantidad ?? <span className="text-muted-foreground">N/A</span>)
+                                    : <span className="text-muted-foreground">N/A</span>
                                 )}
                               </td>
                               <td className="px-4 py-2">
@@ -709,6 +722,22 @@ export default function ModeloDetailPage() {
                                 )}
                               </td>
                               <td className="px-4 py-2 text-xs">
+                                {item.lifetime ? (
+                                  <Badge variant="outline" className="text-[10px]">Lifetime</Badge>
+                                ) : item.intervaloHoras ? (
+                                  <span>{Number(item.intervaloHoras).toLocaleString('es-ES')} h</span>
+                                ) : (
+                                  <span className="text-muted-foreground">—</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-2 text-xs">
+                                {item.nivel?.codigo ? (
+                                  <Badge variant="secondary" className="text-[10px]">{NIVEL_SHORT[item.nivel.codigo] ?? item.nivel.codigo}</Badge>
+                                ) : (
+                                  <span className="text-muted-foreground">—</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-2 text-xs">
                                 {lubEditMode && draft ? (
                                   <Input
                                     className="h-8 text-sm"
@@ -727,11 +756,6 @@ export default function ModeloDetailPage() {
                   </CardContent>
                 </Card>
               ))}
-              {lubEditMode && lubricacionData?.source === 'legacy' && (
-                <div className="text-xs text-amber-700 bg-amber-50 border border-amber-300 rounded p-2">
-                  * Las filas marcadas se promoveran a la tabla v2 (editable) al guardar.
-                </div>
-              )}
             </>
           )}
         </div>
@@ -881,91 +905,7 @@ export default function ModeloDetailPage() {
             <div className="text-center text-muted-foreground py-8">
               No hay datos de compatibilidad disponibles.
             </div>
-          ) : compatibilidadData.tipo === 'external_axis' ? (
-            <>
-              {/* Whitelist familias robot permitidas */}
-              {compatibilidadData.familiasPermitidas && compatibilidadData.familiasPermitidas.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      Familias robot permitidas ({compatibilidadData.familiasPermitidas.length})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Este eje externo solo es compatible con robots de las siguientes familias.
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {compatibilidadData.familiasPermitidas.map(f => (
-                        <Badge key={f.id} variant="secondary" className="gap-1">
-                          <Bot className="h-3 w-3" /> {f.codigo}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Blacklist familias robot excluidas */}
-              {compatibilidadData.familiasExcluidas && compatibilidadData.familiasExcluidas.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <Ban className="h-4 w-4 text-destructive" />
-                      Familias robot excluidas ({compatibilidadData.familiasExcluidas.length})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Compatible con cualquier robot ABB EXCEPTO estas familias.
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {compatibilidadData.familiasExcluidas.map(f => (
-                        <Badge key={f.id} variant="destructive" className="gap-1">
-                          <Bot className="h-3 w-3" /> {f.codigo}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Whitelist controladores requeridos */}
-              {compatibilidadData.controladoresRequeridos && compatibilidadData.controladoresRequeridos.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <Cpu className="h-4 w-4 text-blue-500" />
-                      Controladores requeridos ({compatibilidadData.controladoresRequeridos.length})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Este eje requiere obligatoriamente uno de estos controladores.
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {compatibilidadData.controladoresRequeridos.map(c => (
-                        <Badge key={c.id} variant="default" className="gap-1">
-                          <Cpu className="h-3 w-3" /> {c.nombre}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {(!compatibilidadData.familiasPermitidas?.length &&
-                !compatibilidadData.familiasExcluidas?.length &&
-                !compatibilidadData.controladoresRequeridos?.length) && (
-                <div className="p-4 rounded-lg bg-muted/30 text-sm text-muted-foreground">
-                  Este eje externo no tiene reglas de compatibilidad especificas.
-                  Es compatible con cualquier combinacion robot+controlador
-                  segun la tabla de <code>compatibilidad_controlador</code>.
-                </div>
-              )}
-            </>
-          ) : (compatibilidadData.tipo === 'mechanical_unit' || compatibilidadData.tipo === 'drive_unit') ? (
+          ) : (compatibilidadData.tipo === 'mechanical_unit' || compatibilidadData.tipo === 'drive_unit' || compatibilidadData.tipo === 'external_axis') ? (
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm flex items-center gap-2">

@@ -1,27 +1,19 @@
 /**
  * Validador de compatibilidad eje externo ↔ robot+controlador.
  *
- * Modelo tri-via (script 03_seed_catalogo.sql):
+ * v2.9: las tablas tri-via (compatibilidad_eje_permitida / _excluye /
+ * _eje_controlador) y compatibilidad_robot_controlador fueron eliminadas.
+ * La compatibilidad vive ahora en modelos_componente.controladores_compatibles
+ * (array JSON de IDs de controladores).
  *
- *   1. compatibilidad_eje_permitida — whitelist de familias robot
- *      "Este eje funciona SOLO con estas familias"
- *      Ej: IRBT 4004 → solo IRB 4400, 4450S, 4600
- *
- *   2. compatibilidad_eje_excluye — blacklist de familias robot
- *      "Este eje funciona con TODOS EXCEPTO estas familias"
- *      Ej: IRBP A/B/C/D/K/L/R → excluyen IRB 120 (motivo: pequeño)
- *
- *   3. compatibilidad_eje_controlador — whitelist de controladores
- *      "Este eje requiere uno de estos controladores especificos"
- *      Ej: IRP A/B/... → V250XT o V400XT
- *
- * Las tres reglas se aplican en paralelo. Tabla vacia = no aplica.
- *
- * Orden de evaluacion:
- *   whitelist familias → blacklist familias → whitelist controladores
+ * Se conservan las funciones puras evaluarReglas / evaluarRobotControlador
+ * (con sus tests); los cargadores de BD construyen las reglas desde el JSON:
+ *   - whitelist de controladores del eje = controladores_compatibles del eje
+ *   - whitelist/blacklist de familias: sin datos en v2.9 (vacias = no aplican)
  */
 
 import { prisma } from '../config/database';
+import { parseIdArray } from './planMantenimiento';
 
 // ============================================================================
 // Validador robot↔controlador (matriz a granularidad de variante de cabinet)
@@ -61,6 +53,30 @@ export function evaluarRobotControlador(
 }
 
 /**
+ * Carga los controladores compatibles de una familia robot: union de los
+ * arrays JSON controladores_compatibles de sus modelos activos.
+ */
+export async function getControladoresCompatiblesFamilia(
+  robotFamiliaId: number,
+): Promise<{ id: number; nombre: string }[]> {
+  const modelos = await prisma.modeloComponente.findMany({
+    where: { familiaId: robotFamiliaId, activa: true },
+    select: { controladoresCompatibles: true },
+  });
+  const ids = new Set<number>();
+  for (const m of modelos) {
+    for (const id of parseIdArray(m.controladoresCompatibles) ?? []) ids.add(id);
+  }
+  if (ids.size === 0) return [];
+  const controladores = await prisma.modeloComponente.findMany({
+    where: { id: { in: Array.from(ids) } },
+    select: { id: true, nombre: true },
+    orderBy: { nombre: 'asc' },
+  });
+  return controladores;
+}
+
+/**
  * Wrapper async que carga los controladores compatibles de la familia desde BD.
  */
 export async function validarRobotControlador(
@@ -71,13 +87,10 @@ export async function validarRobotControlador(
     where: { id: robotFamiliaId },
     select: { codigo: true },
   });
-  const compatibles = await prisma.compatibilidadRobotControlador.findMany({
-    where: { robotFamiliaId },
-    include: { controlador: { select: { nombre: true } } },
-  });
+  const compatibles = await getControladoresCompatiblesFamilia(robotFamiliaId);
   return evaluarRobotControlador(
     controladorModeloId,
-    compatibles.map(c => ({ id: c.controladorModeloId, nombre: c.controlador.nombre })),
+    compatibles,
     familia?.codigo,
   );
 }
@@ -176,33 +189,31 @@ export function evaluarReglas(
 }
 
 /**
- * Carga las reglas tri-via para un eje desde BD y aplica el validador.
+ * Carga las reglas para un eje desde BD (v2.9: solo whitelist de
+ * controladores via JSON) y aplica el validador.
  */
 export async function validarCompatibilidadEje(
   input: ValidationInput,
 ): Promise<CompatibilidadResult> {
   const { ejeId, robotFamiliaId, controladorModeloId } = input;
 
-  const [permitidas, excluidas, ctrlReq] = await Promise.all([
-    prisma.compatibilidadEjePermitida.findMany({
-      where: { ejeModeloId: ejeId },
-      include: { familia: { select: { codigo: true } } },
-    }),
-    prisma.compatibilidadEjeExcluye.findMany({
-      where: { ejeModeloId: ejeId },
-      include: { familia: { select: { codigo: true } } },
-    }),
-    prisma.compatibilidadEjeControlador.findMany({
-      where: { ejeModeloId: ejeId },
-      include: { controlador: { select: { nombre: true } } },
-    }),
-  ]);
+  const eje = await prisma.modeloComponente.findUnique({
+    where: { id: ejeId },
+    select: { controladoresCompatibles: true },
+  });
+  const ctrlIds = parseIdArray(eje?.controladoresCompatibles) ?? [];
+  const controladores = ctrlIds.length > 0
+    ? await prisma.modeloComponente.findMany({
+        where: { id: { in: ctrlIds } },
+        select: { id: true, nombre: true },
+      })
+    : [];
 
   return evaluarReglas(
     {
-      permitidas: permitidas.map(p => ({ familiaId: p.familiaId, codigo: p.familia.codigo })),
-      excluidas: excluidas.map(e => ({ familiaId: e.familiaId, codigo: e.familia.codigo, motivo: e.motivo })),
-      controladoresRequeridos: ctrlReq.map(c => ({ id: c.controladorModeloId, nombre: c.controlador.nombre })),
+      permitidas: [],
+      excluidas: [],
+      controladoresRequeridos: controladores,
     },
     robotFamiliaId ?? null,
     controladorModeloId,
@@ -210,28 +221,24 @@ export async function validarCompatibilidadEje(
 }
 
 /**
- * Filtra una lista de candidatos (ejes externos) aplicando el validador
- * a cada uno. Devuelve solo los que pasan las 3 reglas.
- *
- * Asume que cada candidato ya viene con las relaciones tri-via incluidas:
- *   compatEjePermitida, compatEjeExcluye, compatEjeControladorEje
+ * Filtra una lista de candidatos (ejes externos) aplicando el validador a
+ * cada uno. Los candidatos llevan el JSON controladoresCompatibles cargado.
  */
 export function filtrarEjesCompatibles<T extends {
   id: number;
-  compatEjePermitida: { familiaId: number }[];
-  compatEjeExcluye: { familiaId: number; motivo?: string | null }[];
-  compatEjeControladorEje: { controladorModeloId: number }[];
+  controladoresCompatibles?: unknown;
 }>(
   candidatos: T[],
   robotFamiliaId: number | null | undefined,
   controladorModeloId: number,
 ): T[] {
   return candidatos.filter(eje => {
+    const ctrlIds = parseIdArray(eje.controladoresCompatibles) ?? [];
     const result = evaluarReglas(
       {
-        permitidas: eje.compatEjePermitida.map(p => ({ familiaId: p.familiaId })),
-        excluidas: eje.compatEjeExcluye.map(e => ({ familiaId: e.familiaId, motivo: e.motivo })),
-        controladoresRequeridos: eje.compatEjeControladorEje.map(c => ({ id: c.controladorModeloId })),
+        permitidas: [],
+        excluidas: [],
+        controladoresRequeridos: ctrlIds.map(id => ({ id })),
       },
       robotFamiliaId,
       controladorModeloId,

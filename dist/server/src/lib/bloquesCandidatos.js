@@ -12,6 +12,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getBloquesCandidatos = getBloquesCandidatos;
 const database_1 = require("../config/database");
+const planMantenimiento_1 = require("./planMantenimiento");
 function dec(v) {
     if (v == null)
         return 0;
@@ -59,83 +60,24 @@ async function getBloquesCandidatos(ofertaId) {
     });
     if (!oferta)
         return [];
-    // Cargar actividades por (familia, nivel) usando actividad_nivel
-    const familiaIds = Array.from(new Set(oferta.componentes
-        .map((oc) => oc.componenteSistema.modeloComponente.familiaId)
-        .filter((id) => id != null)));
-    // Indice: familiaId -> nivelCodigo -> string[] (nombres de actividades)
-    const actividadesPorFamiliaNivel = new Map();
-    if (familiaIds.length > 0) {
-        const links = await database_1.prisma.actividadNivel.findMany({
-            where: {
-                actividad: { familiaId: { in: familiaIds } },
-            },
-            include: {
-                actividad: {
-                    select: {
-                        familiaId: true,
-                        componente: true,
-                        tipoActividad: { select: { nombre: true } },
-                    },
-                },
-                nivel: { select: { codigo: true } },
-            },
-        });
-        for (const link of links) {
-            // Saltamos genéricas (familiaId NULL): este map indexa por familia.
-            // Las genéricas se cubren por otros caminos (actividad_preventiva con
-            // tipo_componente_aplicable, ver journal SQL 32).
-            const fId = link.actividad.familiaId;
-            if (fId == null)
-                continue;
-            const cod = link.nivel.codigo;
-            const nombre = `${link.actividad.tipoActividad.nombre}${link.actividad.componente ? ` — ${link.actividad.componente}` : ''}`;
-            let porNivel = actividadesPorFamiliaNivel.get(fId);
-            if (!porNivel) {
-                porNivel = new Map();
-                actividadesPorFamiliaNivel.set(fId, porNivel);
-            }
-            const list = porNivel.get(cod) ?? [];
-            list.push(nombre);
-            porNivel.set(cod, list);
-        }
-    }
-    // Fallback legacy on-demand para componentes sin actividades v2
-    const actividadesLegacyPorComp = new Map();
-    for (const oc of oferta.componentes) {
-        const familiaId = oc.componenteSistema.modeloComponente.familiaId;
-        const tieneV2 = familiaId != null && (actividadesPorFamiliaNivel.get(familiaId)?.size ?? 0) > 0;
-        if (tieneV2)
-            continue;
-        const modelo = await database_1.prisma.modeloComponente.findUnique({
-            where: { id: oc.componenteSistema.modeloComponenteId },
-            select: { fabricanteId: true, familia: true, nombre: true },
-        });
-        if (!modelo)
-            continue;
-        const legacy = await database_1.prisma.actividadMantenimiento.findMany({
-            where: {
-                fabricanteId: modelo.fabricanteId,
-                OR: [
-                    modelo.familia ? { familiaRobot: { contains: modelo.familia } } : { id: -1 },
-                    { familiaRobot: { contains: modelo.nombre } },
-                ],
-            },
-            select: { tipoActividad: true, componente: true },
-            take: 50,
-        });
-        if (legacy.length > 0) {
-            actividadesLegacyPorComp.set(oc.id, legacy.map((a) => `${a.tipoActividad}${a.componente ? ` — ${a.componente}` : ''}`));
-        }
-    }
-    function actividadesParaNivel(familiaId, nivelCodigo, ofertaCompId) {
-        if (familiaId != null) {
-            const porNivel = actividadesPorFamiliaNivel.get(familiaId);
-            const fromV2 = porNivel?.get(nivelCodigo) ?? [];
-            if (fromV2.length > 0)
-                return fromV2;
-        }
-        return actividadesLegacyPorComp.get(ofertaCompId) ?? [];
+    // Actividades v2.9: el filtro principal es modelos_aplicables (JSON de IDs).
+    // La tabla es pequeña (~60 filas): se carga una vez y se filtra en JS.
+    const todasActividades = await database_1.prisma.actividadPreventiva.findMany({
+        select: {
+            componente: true,
+            modelosAplicables: true,
+            nivel: { select: { codigo: true } },
+            tipoActividad: { select: { nombre: true } },
+        },
+        orderBy: [{ orden: 'asc' }, { id: 'asc' }],
+    });
+    function actividadesParaNivel(modeloId, nivelCodigo) {
+        const cubiertos = new Set((0, planMantenimiento_1.nivelesCubiertos)(nivelCodigo));
+        return todasActividades
+            .filter((a) => (0, planMantenimiento_1.actividadAplicaAModelo)(a, modeloId)
+            && a.nivel?.codigo != null
+            && cubiertos.has(a.nivel.codigo))
+            .map((a) => `${a.tipoActividad.nombre}${a.componente ? ` — ${a.componente}` : ''}`);
     }
     // Index horas colocadas por componente
     const horasPorComponente = new Map();
@@ -179,8 +121,7 @@ async function getBloquesCandidatos(ofertaId) {
             colocadas += horasPorComponente.get(oc.id) ?? 0;
             const nivelCodigo = oc.nivel.codigo;
             niveles.add(nivelCodigo);
-            const familiaId = oc.componenteSistema.modeloComponente.familiaId;
-            for (const a of actividadesParaNivel(familiaId, nivelCodigo, oc.id))
+            for (const a of actividadesParaNivel(oc.componenteSistema.modeloComponenteId, nivelCodigo))
                 actividadesUnion.add(a);
             desglosePartes.push(`${oc.componenteSistema.modeloComponente.nombre} · ${oc.componenteSistema.etiqueta} (${nivelCodigo}, ${ht.toFixed(1)}h)`);
             if (primerOcId == null)

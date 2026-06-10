@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import {
-  usePuntosControl, useEquivalencias, useConsumiblesCatalogo,
+  useActividadesPreventivas, useConsumiblesCatalogo,
   useCreateConsumibleCatalogo, useUpdateConsumibleCatalogo, useDeleteConsumibleCatalogo,
 } from '@/hooks/useLookups';
 import { useAuth } from '@/hooks/useAuth';
@@ -42,7 +42,7 @@ const emptyForm = () => ({
   tipo: 'aceite' as string,
   subtipo: '',
   nombre: '',
-  codigoAbb: '',
+  codigoFabricante: '',
   fabricante: '',
   unidad: '',
   equivalencias: '',
@@ -82,7 +82,7 @@ function ConsumiblesCatalogoSection({ isAdmin }: { isAdmin: boolean }) {
       tipo: item.tipo,
       subtipo: item.subtipo ?? '',
       nombre: item.nombre,
-      codigoAbb: item.codigoAbb ?? '',
+      codigoFabricante: item.codigoFabricante ?? '',
       fabricante: item.fabricante ?? '',
       unidad: item.unidad ?? '',
       equivalencias: item.equivalencias ?? '',
@@ -101,7 +101,7 @@ function ConsumiblesCatalogoSection({ isAdmin }: { isAdmin: boolean }) {
       tipo: form.tipo,
       subtipo: form.subtipo || null,
       nombre: form.nombre,
-      codigoAbb: form.codigoAbb || null,
+      codigoFabricante: form.codigoFabricante || null,
       fabricante: form.fabricante || null,
       unidad: form.unidad || null,
       equivalencias: form.equivalencias || null,
@@ -137,10 +137,10 @@ function ConsumiblesCatalogoSection({ isAdmin }: { isAdmin: boolean }) {
     },
     { key: 'nombre', header: 'Nombre' },
     {
-      key: 'codigoAbb',
-      header: 'Codigo ABB',
-      render: (c) => c.codigoAbb
-        ? <span className="font-mono text-xs">{c.codigoAbb}</span>
+      key: 'codigoFabricante',
+      header: 'Codigo fabricante',
+      render: (c) => c.codigoFabricante
+        ? <span className="font-mono text-xs">{c.codigoFabricante}</span>
         : <span className="text-muted-foreground">—</span>,
     },
     {
@@ -255,8 +255,8 @@ function ConsumiblesCatalogoSection({ isAdmin }: { isAdmin: boolean }) {
               <Input value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} placeholder="Ej: Kyodo Yushi TMO 150" />
             </div>
             <div>
-              <Label>Codigo ABB</Label>
-              <Input value={form.codigoAbb} onChange={(e) => setForm({ ...form, codigoAbb: e.target.value })} placeholder="3HAB 9999-1" />
+              <Label>Codigo fabricante</Label>
+              <Input value={form.codigoFabricante} onChange={(e) => setForm({ ...form, codigoFabricante: e.target.value })} placeholder="3HAB 9999-1" />
             </div>
             <div>
               <Label>Fabricante</Label>
@@ -321,108 +321,86 @@ function ConsumiblesCatalogoSection({ isAdmin }: { isAdmin: boolean }) {
   );
 }
 
-// ===== Equivalencias entre Familias =====
-const TIPO_EQUIV_LABELS: Record<string, string> = {
-  lubricacion: 'Lubricacion',
-  mantenimiento: 'Mantenimiento',
-  hardware: 'Hardware',
-  completa: 'Completa',
+// ===== Actividades Preventivas (v2.9 unificadas) =====
+const TIPO_COMPONENTE_LABELS: Record<string, string> = {
+  mechanical_unit: 'Manipulador',
+  controller: 'Controladora',
+  drive_unit: 'Drive Unit',
+  external_axis: 'Eje externo',
+  todos: 'Todos',
 };
 
-function EquivalenciasSection() {
-  const [tipo, setTipo] = useState<string>('');
-  const { data: equivalencias, isLoading } = useEquivalencias(tipo ? { tipo } : undefined);
-
-  const cols: Column<any>[] = [
-    {
-      key: 'familia',
-      header: 'Familia',
-      render: (e) => <Badge variant="secondary">{e.familia?.codigo ?? '—'}</Badge>,
-    },
-    {
-      key: 'tipo',
-      header: 'Tipo',
-      render: (e) => <Badge variant="outline">{TIPO_EQUIV_LABELS[e.tipoEquivalencia] ?? e.tipoEquivalencia}</Badge>,
-    },
-    { key: 'descripcion', header: 'Descripcion' },
-    {
-      key: 'fuenteDoc',
-      header: 'Fuente',
-      render: (e) => e.fuenteDoc
-        ? <span className="text-xs font-mono text-muted-foreground">{e.fuenteDoc}</span>
-        : <span className="text-muted-foreground">—</span>,
-    },
-    {
-      key: 'notas',
-      header: 'Notas',
-      render: (e) => e.notas
-        ? <span className="text-xs line-clamp-2" title={e.notas}>{e.notas}</span>
-        : <span className="text-muted-foreground">—</span>,
-    },
-  ];
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold">Equivalencias entre Familias</h2>
-          <p className="text-sm text-muted-foreground">
-            Reglas que indican cuando una familia/variante hereda mantenimiento o lubricacion
-          </p>
-        </div>
-        <select
-          value={tipo}
-          onChange={(e) => setTipo(e.target.value)}
-          className={SELECT_CLASS + ' w-48'}
-        >
-          <option value="">Todos los tipos</option>
-          {Object.entries(TIPO_EQUIV_LABELS).map(([k, v]) => (
-            <option key={k} value={k}>{v}</option>
-          ))}
-        </select>
-      </div>
-      <DataTable
-        columns={cols}
-        data={equivalencias || []}
-        isLoading={isLoading}
-        emptyMessage="Sin equivalencias"
-        rowKey={(e) => e.id}
-      />
-    </div>
-  );
+function formatIntervaloActividad(a: any): string {
+  const parts: string[] = [];
+  if (a.intervaloHoras) parts.push(`${Number(a.intervaloHoras).toLocaleString('es-ES')} h`);
+  if (a.intervaloMeses) parts.push(`${a.intervaloMeses} meses`);
+  if (parts.length === 0) {
+    if (a.intervaloCondicion === 'condicion') return 'Según condición';
+    if (a.intervaloCondicion === 'alerta_baja') return 'Alerta baja';
+    return '—';
+  }
+  return parts.join(' / ');
 }
 
-// ===== Puntos de Control =====
-const CATEGORIA_LABELS: Record<string, string> = {
-  manipulador: 'Manipulador',
-  controladora: 'Controladora',
-  drive_module: 'Drive Module',
-  cabling: 'Cableado',
-  eje_externo: 'Eje externo',
-  seguridad: 'Seguridad',
-};
-
-function PuntosControlSection() {
-  const [categoria, setCategoria] = useState<string>('');
-  const { data: puntos, isLoading } = usePuntosControl(categoria || undefined);
+function ActividadesPreventivasSection() {
+  const [tipoComponente, setTipoComponente] = useState<string>('');
+  const { data: actividades, isLoading } = useActividadesPreventivas(
+    tipoComponente ? { tipoComponente } : undefined,
+  );
 
   const cols: Column<any>[] = [
     {
-      key: 'categoria',
-      header: 'Categoria',
-      render: (p) => <Badge variant="secondary">{CATEGORIA_LABELS[p.categoria] ?? p.categoria}</Badge>,
+      key: 'tipoComponente',
+      header: 'Aplica a',
+      render: (a) => <Badge variant="secondary">{TIPO_COMPONENTE_LABELS[a.tipoComponenteAplicable] ?? a.tipoComponenteAplicable}</Badge>,
+    },
+    {
+      key: 'tipoActividad',
+      header: 'Actividad',
+      render: (a) => <Badge variant="outline">{a.tipoActividad?.nombre ?? '—'}</Badge>,
     },
     { key: 'componente', header: 'Componente' },
-    { key: 'descripcionAccion', header: 'Accion' },
     {
-      key: 'intervaloTexto',
-      header: 'Intervalo',
-      render: (p) => p.intervaloTexto || <span className="text-muted-foreground">—</span>,
+      key: 'nivel',
+      header: 'Nivel',
+      render: (a) => a.nivel
+        ? <Badge variant="secondary" className="text-[10px]">{a.nivel.codigo}</Badge>
+        : <span className="text-muted-foreground">—</span>,
     },
     {
-      key: 'generacionAplica',
-      header: 'Generacion',
-      render: (p) => p.generacionAplica || <span className="text-muted-foreground">—</span>,
+      key: 'intervalo',
+      header: 'Intervalo',
+      render: (a) => <span className="text-xs">{formatIntervaloActividad(a)}</span>,
+    },
+    {
+      key: 'consumibles',
+      header: 'Consumibles',
+      render: (a) => (a.consumibles?.length ?? 0) > 0 ? (
+        <div className="flex flex-wrap gap-1">
+          {a.consumibles.map((c: any) => (
+            <Badge key={c.id} variant="outline" className="text-[10px] font-mono">
+              {c.consumible?.codigoInterno ?? c.consumible?.nombre}
+            </Badge>
+          ))}
+        </div>
+      ) : <span className="text-muted-foreground">—</span>,
+    },
+    {
+      key: 'modelos',
+      header: 'Modelos',
+      render: (a) => {
+        const n = a.modelosAplicablesInfo?.length ?? 0;
+        if (n === 0) return <span className="text-muted-foreground">—</span>;
+        const nombres = a.modelosAplicablesInfo.map((m: any) => m.nombre).join(', ');
+        return <span className="text-xs" title={nombres}>{n} modelo{n !== 1 ? 's' : ''}</span>;
+      },
+    },
+    {
+      key: 'obligatoria',
+      header: '',
+      render: (a) => a.obligatoria
+        ? null
+        : <Badge variant="outline" className="text-[10px]">Opcional</Badge>,
     },
   ];
 
@@ -430,28 +408,28 @@ function PuntosControlSection() {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">Puntos de Control Genericos</h2>
+          <h2 className="text-xl font-semibold">Actividades Preventivas</h2>
           <p className="text-sm text-muted-foreground">
-            Verificaciones transversales aplicables a varios componentes
+            Actividades de mantenimiento no-lubricación (inspecciones, baterías, mech stops, limpieza...)
           </p>
         </div>
         <select
-          value={categoria}
-          onChange={(e) => setCategoria(e.target.value)}
+          value={tipoComponente}
+          onChange={(e) => setTipoComponente(e.target.value)}
           className={SELECT_CLASS + ' w-48'}
         >
-          <option value="">Todas las categorias</option>
-          {Object.entries(CATEGORIA_LABELS).map(([k, v]) => (
+          <option value="">Todos los componentes</option>
+          {Object.entries(TIPO_COMPONENTE_LABELS).map(([k, v]) => (
             <option key={k} value={k}>{v}</option>
           ))}
         </select>
       </div>
       <DataTable
         columns={cols}
-        data={puntos || []}
+        data={actividades || []}
         isLoading={isLoading}
-        emptyMessage="Sin puntos de control"
-        rowKey={(p) => p.id}
+        emptyMessage="Sin actividades preventivas"
+        rowKey={(a) => a.id}
       />
     </div>
   );
@@ -462,10 +440,9 @@ export default function CatalogosPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title="Catalogos" description="Consumibles, equivalencias y puntos de control" />
+      <PageHeader title="Catalogos" description="Consumibles y actividades preventivas" />
       <ConsumiblesCatalogoSection isAdmin={isAdmin} />
-      <EquivalenciasSection />
-      <PuntosControlSection />
+      <ActividadesPreventivasSection />
     </div>
   );
 }

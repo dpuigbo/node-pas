@@ -1,4 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import { Prisma } from '@prisma/client';
 import { requireRole } from '../middleware/role.middleware';
 import { prisma } from '../config/database';
 import {
@@ -6,10 +7,35 @@ import {
   createVersionSchema, updateVersionSchema, activateVersionSchema,
 } from '../validation/modelos.validation';
 import { getSeedTemplate } from '../lib/templateSeeds';
-import { ensureNivelesFijos, getNivelesFijos } from '../lib/niveles';
 import { getNivelesAplicablesModelo } from '../lib/ofertaMantenimiento';
+import {
+  Cohorte,
+  getActividadesPlan,
+  getLubricacionModelo,
+  parseIdArray,
+} from '../lib/planMantenimiento';
 
 const router = Router();
+
+/** Cohorte desde query params (?montajeId=&proteccionId=&controladorId=) */
+function cohorteFromQuery(req: Request): Cohorte | undefined {
+  const montajeId = req.query.montajeId ? Number(req.query.montajeId) : null;
+  const proteccionId = req.query.proteccionId ? Number(req.query.proteccionId) : null;
+  const controladorId = req.query.controladorId ? Number(req.query.controladorId) : null;
+  if (montajeId == null && proteccionId == null && controladorId == null) return undefined;
+  return { montajeId, proteccionId, controladorId };
+}
+
+/** Resuelve nombres de controladores para arrays JSON de IDs */
+async function resolveControladores(ids: number[]): Promise<{ id: number; nombre: string; familia: string | null }[]> {
+  if (ids.length === 0) return [];
+  const rows = await prisma.modeloComponente.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, nombre: true, familiaRel: { select: { codigo: true } } },
+    orderBy: { nombre: 'asc' },
+  });
+  return rows.map((r) => ({ id: r.id, nombre: r.nombre, familia: r.familiaRel?.codigo ?? null }));
+}
 
 // ===== MODELOS COMPONENTE =====
 
@@ -19,24 +45,41 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     const where: any = {};
     if (req.query.fabricanteId) where.fabricanteId = Number(req.query.fabricanteId);
     if (req.query.tipo) where.tipo = req.query.tipo;
+    if (req.query.incluirInactivos !== '1') where.activa = true;
 
     const modelos = await prisma.modeloComponente.findMany({
       where,
-      orderBy: [{ familia: 'asc' }, { nombre: 'asc' }],
+      orderBy: [{ familiaId: 'asc' }, { nombre: 'asc' }],
       include: {
         fabricante: { select: { id: true, nombre: true } },
-        controladoresCompatibles: {
-          include: { controlador: { select: { id: true, nombre: true, familia: true } } },
-        },
+        familiaRel: { select: { id: true, codigo: true, tipoCinematica: true } },
         _count: { select: { versiones: true } },
       },
     });
-    res.json(modelos);
+
+    // Resolver nombres de los controladores compatibles (JSON de IDs) en batch
+    const allCtrlIds = new Set<number>();
+    for (const m of modelos) {
+      for (const id of parseIdArray(m.controladoresCompatibles) ?? []) allCtrlIds.add(id);
+    }
+    const ctrlMap = new Map(
+      (await resolveControladores(Array.from(allCtrlIds))).map((c) => [c.id, c])
+    );
+
+    res.json(modelos.map((m) => ({
+      ...m,
+      // compat: campo `familia` legacy que el frontend usaba como texto
+      familia: m.familiaRel?.codigo ?? null,
+      controladoresCompatiblesInfo: (parseIdArray(m.controladoresCompatibles) ?? [])
+        .map((id) => ctrlMap.get(id))
+        .filter(Boolean),
+    })));
   } catch (err) { next(err); }
 });
 
 // GET /api/v1/modelos/compatible?sistemaId=X&tipo=Y
-// Returns models whose controladorId matches a controller in the system
+// Modelos compatibles con las controladoras presentes en el sistema
+// (v2.9: modelos_componente.controladores_compatibles, array JSON de IDs).
 router.get('/compatible', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const sistemaId = Number(req.query.sistemaId);
@@ -55,7 +98,7 @@ router.get('/compatible', async (req: Request, res: Response, next: NextFunction
     // For controllers: return all controllers of the system's fabricante
     if (tipo === 'controller') {
       const modelos = await prisma.modeloComponente.findMany({
-        where: { fabricanteId: sistema.fabricanteId, tipo: 'controller' },
+        where: { fabricanteId: sistema.fabricanteId, tipo: 'controller', activa: true },
         orderBy: { nombre: 'asc' },
         include: { fabricante: { select: { id: true, nombre: true } } },
       });
@@ -69,34 +112,26 @@ router.get('/compatible', async (req: Request, res: Response, next: NextFunction
       select: { modeloComponenteId: true },
     });
 
-    if (controladores.length === 0) {
-      const modelos = await prisma.modeloComponente.findMany({
-        where: { fabricanteId: sistema.fabricanteId, tipo },
-        orderBy: { nombre: 'asc' },
-        include: { fabricante: { select: { id: true, nombre: true } } },
-      });
-      res.json({ modelos, warning: 'No hay controladoras en el sistema. Se muestran todos los modelos.' });
-      return;
-    }
-
-    const controllerModelIds = [...new Set(controladores.map((c: { modeloComponenteId: number }) => c.modeloComponenteId))];
-
-    // Query through junction table: models compatible with any controller in the system
-    const modelos = await prisma.modeloComponente.findMany({
-      where: {
-        tipo,
-        controladoresCompatibles: {
-          some: { controladorId: { in: controllerModelIds } },
-        },
-      },
+    const candidatos = await prisma.modeloComponente.findMany({
+      where: { tipo, activa: true },
       orderBy: { nombre: 'asc' },
       include: { fabricante: { select: { id: true, nombre: true } } },
     });
 
+    if (controladores.length === 0) {
+      const delFabricante = candidatos.filter((m) => m.fabricanteId === sistema.fabricanteId);
+      res.json({ modelos: delFabricante, warning: 'No hay controladoras en el sistema. Se muestran todos los modelos.' });
+      return;
+    }
+
+    const controllerModelIds = new Set(controladores.map((c) => c.modeloComponenteId));
+    const modelos = candidatos.filter((m) => {
+      const ids = parseIdArray(m.controladoresCompatibles) ?? [];
+      return ids.some((id) => controllerModelIds.has(id));
+    });
+
     if (modelos.length === 0) {
-      const totalSinConfig = await prisma.modeloComponente.count({
-        where: { tipo, fabricanteId: sistema.fabricanteId },
-      });
+      const totalSinConfig = candidatos.filter((m) => m.fabricanteId === sistema.fabricanteId).length;
       res.json({
         modelos: [],
         warning: `Ninguno de los ${totalSinConfig} modelos de este tipo tiene compatibilidad con las controladoras del sistema.`,
@@ -109,10 +144,7 @@ router.get('/compatible', async (req: Request, res: Response, next: NextFunction
 });
 
 // GET /api/v1/modelos/compatible-con?controladorId=X&tipo=Y
-// Devuelve modelos compatibles con una controladora especifica.
-// Para tipo='mechanical_unit' usa la matriz nueva compatibilidad_robot_controlador
-// (cabinet-especifica, verificada Daniel). Para los demas tipos usa la tabla
-// legacy compatibilidad_controlador.
+// Modelos compatibles con una controladora especifica (JSON controladores_compatibles).
 router.get('/compatible-con', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const controladorId = Number(req.query.controladorId);
@@ -122,51 +154,23 @@ router.get('/compatible-con', async (req: Request, res: Response, next: NextFunc
       return;
     }
 
-    if (tipo === 'mechanical_unit') {
-      // Matriz nueva: familia robot ↔ variante de cabinet
-      const familiasOk = await prisma.compatibilidadRobotControlador.findMany({
-        where: { controladorModeloId: controladorId },
-        select: { robotFamiliaId: true },
-      });
-      const familiaIds = familiasOk.map(f => f.robotFamiliaId);
-      if (familiaIds.length === 0) {
-        res.json([]);
-        return;
-      }
-      const modelos = await prisma.modeloComponente.findMany({
-        where: {
-          tipo: 'mechanical_unit',
-          familiaId: { in: familiaIds },
-        },
-        orderBy: [{ familia: 'asc' }, { nombre: 'asc' }],
-        include: {
-          fabricante: { select: { id: true, nombre: true } },
-        },
-      });
-      res.json(modelos);
-      return;
-    }
-
-    // Otros tipos (drive_unit, external_axis): tabla legacy
-    const modelos = await prisma.modeloComponente.findMany({
-      where: {
-        tipo: tipo as any,
-        controladoresCompatibles: {
-          some: { controladorId },
-        },
-      },
-      orderBy: [{ familia: 'asc' }, { nombre: 'asc' }],
+    const candidatos = await prisma.modeloComponente.findMany({
+      where: { tipo: tipo as any, activa: true },
+      orderBy: [{ familiaId: 'asc' }, { nombre: 'asc' }],
       include: {
         fabricante: { select: { id: true, nombre: true } },
+        familiaRel: { select: { id: true, codigo: true } },
       },
     });
-    res.json(modelos);
+    const modelos = candidatos.filter((m) =>
+      (parseIdArray(m.controladoresCompatibles) ?? []).includes(controladorId)
+    );
+    res.json(modelos.map((m) => ({ ...m, familia: m.familiaRel?.codigo ?? null })));
   } catch (err) { next(err); }
 });
 
 // GET /api/v1/modelos/:id/niveles-aplicables
-// Niveles aplicables para un modelo + horas + costes limpieza desde mantenimiento_horas_modelo.
-// Va antes de /:id para evitar conflicto de Express.
+// Niveles aplicables (flags nivel_n*, D-075) + horas (mantenimiento_horas_modelo).
 router.get('/:id/niveles-aplicables', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const modeloId = Number(req.params.id);
@@ -176,12 +180,7 @@ router.get('/:id/niveles-aplicables', async (req: Request, res: Response, next: 
 });
 
 // GET /api/v1/modelos/:id/diagnostico
-// Devuelve estadisticas para diagnosticar por que faltan datos:
-//   - familiaId del modelo + nombre de familia
-//   - conteo de actividades preventivas (v2) por familia
-//   - conteo de actividades mantenimiento (legacy) por nombre familia
-//   - conteo de lubricacion (v2) por modelo
-//   - conteo de lubricacion_reductora (legacy) por fabricante + variante
+// Estadisticas de cobertura de datos para el modelo (v2.9).
 router.get('/:id/diagnostico', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const modeloId = Number(req.params.id);
@@ -197,292 +196,116 @@ router.get('/:id/diagnostico', async (req: Request, res: Response, next: NextFun
       return;
     }
 
-    const familiaIdNum = modelo.familiaId;
-    const [
-      actividadesV2,
-      lubricacionV2,
-      actividadesLegacy,
-      lubricacionLegacy,
-    ] = await Promise.all([
-      familiaIdNum ? prisma.actividadPreventiva.count({ where: { familiaId: familiaIdNum } }) : Promise.resolve(0),
+    const [lubricacionCount, horasCount, actividades] = await Promise.all([
       prisma.lubricacion.count({ where: { modeloComponenteId: modeloId } }),
-      prisma.actividadMantenimiento.count({
-        where: {
-          fabricanteId: modelo.fabricanteId,
-          OR: [
-            modelo.familia ? { familiaRobot: { contains: modelo.familia } } : { id: -1 },
-            { familiaRobot: { contains: modelo.nombre } },
-          ],
-        },
-      }),
-      prisma.lubricacionReductora.count({
-        where: {
-          fabricanteId: modelo.fabricanteId,
-          OR: [
-            { varianteTrm: { contains: modelo.nombre } },
-            modelo.familia ? { varianteTrm: { contains: modelo.familia } } : { id: -1 },
-          ],
-        },
-      }),
+      prisma.mantenimientoHorasModelo.count({ where: { modeloComponenteId: modeloId } }),
+      getActividadesPlan(modeloId, null),
     ]);
 
     res.json({
       modeloId,
       modeloNombre: modelo.nombre,
       modeloTipo: modelo.tipo,
-      modeloFamiliaTexto: modelo.familia,
-      familiaId: familiaIdNum,
+      typeVariant: modelo.typeVariant,
+      familiaId: modelo.familiaId,
       familia: modelo.familiaRel
-        ? { codigo: modelo.familiaRel.codigo, descripcion: modelo.familiaRel.descripcion }
+        ? { codigo: modelo.familiaRel.codigo, descripcion: modelo.familiaRel.descripcion, tipoCinematica: modelo.familiaRel.tipoCinematica }
         : null,
       fabricante: modelo.fabricante,
       conteos: {
-        actividades_preventiva_v2: actividadesV2,
-        actividades_mantenimiento_legacy: actividadesLegacy,
-        lubricacion_v2: lubricacionV2,
-        lubricacion_reductora_legacy: lubricacionLegacy,
+        lubricacion: lubricacionCount,
+        actividades_preventivas: actividades.length,
+        horas_por_nivel: horasCount,
       },
     });
   } catch (err) { next(err); }
 });
 
-// GET /api/v1/modelos/:id/lubricacion
-// Devuelve la tabla de lubricacion del modelo (ejes con aceite, cantidad, unidad).
-// Fallback a lubricacion_reductora (legacy) si tabla v2 esta vacia para el modelo.
+// GET /api/v1/modelos/:id/lubricacion?montajeId=&proteccionId=&controladorId=
+// Tabla de lubricacion del modelo (v2.9: consumible_catalogo + cohortes).
 router.get('/:id/lubricacion', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const modeloId = Number(req.params.id);
-    const rows = await prisma.lubricacion.findMany({
-      where: { modeloComponenteId: modeloId },
-      include: {
-        aceite: { select: { id: true, nombre: true, fabricante: true } },
-      },
-      orderBy: [{ eje: 'asc' }, { id: 'asc' }],
-    });
-    if (rows.length > 0) {
-      // Shape dual: `lubricacion/fuente` (oferta) + `records/source` (modelos)
-      res.json({
-        modeloId,
-        lubricacion: rows,
-        records: rows,
-        fuente: 'lubricacion',
-        source: 'v2',
-      });
-      return;
-    }
-    // Fallback a lubricacion_reductora por nombre del modelo
-    const modelo = await prisma.modeloComponente.findUnique({
-      where: { id: modeloId },
-      select: { nombre: true, fabricanteId: true, familia: true },
-    });
-    if (!modelo) {
-      res.json({ modeloId, lubricacion: [], records: [], fuente: 'ninguna', source: 'v2' });
-      return;
-    }
-    const legacy = await prisma.lubricacionReductora.findMany({
-      where: {
-        fabricanteId: modelo.fabricanteId,
-        OR: [
-          { varianteTrm: { contains: modelo.nombre } },
-          modelo.familia ? { varianteTrm: { contains: modelo.familia } } : { id: -1 },
-        ],
-      },
-      orderBy: [{ eje: 'asc' }, { id: 'asc' }],
-      take: 200,
-    });
-    // Mapear a formato similar
-    const mapped = legacy.map((r) => ({
-      id: -r.id, // negativo para identificar legacy
-      modeloComponenteId: modeloId,
-      eje: r.eje,
-      cantidadValor: null,
-      cantidadUnidad: null,
-      cantidadTextoLegacy: r.cantidad,
-      varianteTrmLegacy: r.varianteTrm,
-      tipoLubricanteLegacy: r.tipoLubricante,
-      webConfig: r.webConfig,
-      notas: null,
-      aceite: null,
-      consumible: null,
-    }));
+    const cohorte = cohorteFromQuery(req);
+    const rows = await getLubricacionModelo(modeloId, cohorte);
     res.json({
       modeloId,
-      lubricacion: mapped,
-      records: mapped,
-      fuente: 'lubricacion_reductora_legacy',
-      source: 'legacy',
+      lubricacion: rows,
+      records: rows,
+      fuente: rows.length > 0 ? 'lubricacion' : 'ninguna',
+      source: 'v2',
     });
   } catch (err) { next(err); }
 });
 
-// PUT /api/v1/modelos/:id/lubricacion/:lubId (admin) — editar fila.
-// Si lubId > 0 → update fila v2.
-// Si lubId < 0 → crear fila v2 nueva clonando datos de lubricacion_reductora
-//   (id = -lubId). Sirve para "promover" datos legacy a editables.
+// PUT /api/v1/modelos/:id/lubricacion/:lubId (admin) — editar fila v2.9
 router.put('/:id/lubricacion/:lubId', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const modeloId = Number(req.params.id);
     const lubId = Number(req.params.lubId);
-    const { eje, cantidadValor, cantidadUnidad, notas } = req.body;
+    const {
+      eje, cantidadValor, cantidadUnidad, notas,
+      consumibleId, lifetime, intervaloHoras, nivelId,
+    } = req.body;
 
-    if (lubId > 0) {
-      // Update v2 directo
-      const updateData: any = {};
-      if (eje !== undefined) updateData.eje = String(eje).trim();
-      if (cantidadValor !== undefined) {
-        updateData.cantidadValor = cantidadValor === null || cantidadValor === ''
-          ? null
-          : Number(cantidadValor);
-      }
-      if (cantidadUnidad !== undefined) {
-        updateData.cantidadUnidad = cantidadUnidad || null;
-      }
-      if (notas !== undefined) updateData.notas = notas || null;
-      const row = await prisma.lubricacion.update({
-        where: { id: lubId },
-        data: updateData,
-        include: {
-          aceite: { select: { id: true, nombre: true, fabricante: true } },
-        },
-      });
-      res.json(row);
-      return;
+    const updateData: any = {};
+    if (eje !== undefined) updateData.eje = String(eje).trim();
+    if (cantidadValor !== undefined) {
+      updateData.cantidadValor = cantidadValor === null || cantidadValor === ''
+        ? null
+        : Number(cantidadValor);
     }
+    if (cantidadUnidad !== undefined) updateData.cantidadUnidad = cantidadUnidad || null;
+    if (notas !== undefined) updateData.notas = notas || null;
+    if (consumibleId !== undefined) updateData.consumibleId = consumibleId ? Number(consumibleId) : null;
+    if (lifetime !== undefined) updateData.lifetime = Boolean(lifetime);
+    if (intervaloHoras !== undefined) {
+      updateData.intervaloHoras = intervaloHoras === null || intervaloHoras === ''
+        ? null
+        : Number(intervaloHoras);
+    }
+    if (nivelId !== undefined) updateData.nivelId = nivelId ? Number(nivelId) : null;
 
-    // Legacy → clonar a v2
-    const legacyId = -lubId;
-    const legacy = await prisma.lubricacionReductora.findUnique({ where: { id: legacyId } });
-    if (!legacy) {
-      res.status(404).json({ error: 'Fila legacy no encontrada' });
-      return;
-    }
-    // Si ya existe una fila v2 para (modelo, eje), updatear esa en vez de duplicar
-    const existing = await prisma.lubricacion.findFirst({
-      where: { modeloComponenteId: modeloId, eje: eje !== undefined ? String(eje).trim() : legacy.eje },
+    const row = await prisma.lubricacion.update({
+      where: { id: lubId },
+      data: updateData,
+      include: {
+        consumible: { select: { id: true, codigoInterno: true, nombre: true, tipo: true, fabricante: true } },
+        nivel: { select: { id: true, codigo: true, nombre: true } },
+      },
     });
-    const dataPayload: any = {
-      modeloComponenteId: modeloId,
-      eje: eje !== undefined ? String(eje).trim() : legacy.eje,
-      cantidadValor: cantidadValor === null || cantidadValor === '' || cantidadValor === undefined
-        ? null : Number(cantidadValor),
-      cantidadUnidad: cantidadUnidad || null,
-      cantidadTextoLegacy: legacy.cantidad,
-      varianteTrmLegacy: legacy.varianteTrm,
-      tipoLubricanteLegacy: legacy.tipoLubricante,
-      webConfig: legacy.webConfig,
-      notas: notas || null,
-    };
-    let row;
-    if (existing) {
-      row = await prisma.lubricacion.update({
-        where: { id: existing.id },
-        data: dataPayload,
-        include: {
-          aceite: { select: { id: true, nombre: true, fabricante: true } },
-        },
-      });
-    } else {
-      row = await prisma.lubricacion.create({
-        data: dataPayload,
-        include: {
-          aceite: { select: { id: true, nombre: true, fabricante: true } },
-        },
-      });
-    }
     res.json(row);
   } catch (err) { next(err); }
 });
 
-// GET /api/v1/modelos/:id/actividades?nivel=X
-// Devuelve las actividades preventivas de la familia del modelo, opcionalmente
-// filtradas por nivel (CSV niveles incluye o esta vacio).
-// Fallback a actividades_mantenimiento (legacy) si la familia v2 esta vacia.
+// GET /api/v1/modelos/:id/actividades?nivel=X&montajeId=&proteccionId=&controladorId=
+// Actividades preventivas aplicables al modelo (modelos_aplicables JSON),
+// opcionalmente filtradas por nivel (con cobertura N3 ⊇ N2_INF+N2_SUP+N1).
 router.get('/:id/actividades', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const modeloId = Number(req.params.id);
     const nivel = (req.query.nivel as string | undefined)?.trim() || null;
+    const cohorte = cohorteFromQuery(req);
+
     const modelo = await prisma.modeloComponente.findUnique({
       where: { id: modeloId },
-      select: { familiaId: true, fabricanteId: true, familia: true, nombre: true },
+      select: { id: true },
     });
     if (!modelo) {
       res.status(404).json({ error: 'Modelo no encontrado' });
       return;
     }
 
-    // Resolver nivel codigo -> id para filtrar via actividad_nivel
-    const nivelRow = nivel
-      ? await prisma.luNivelMantenimiento.findUnique({ where: { codigo: nivel } })
-      : null;
-    const nivelId = nivelRow?.id ?? null;
-
-    let actividades: any[] = [];
-    if (modelo.familiaId) {
-      const where: any = { familiaId: modelo.familiaId };
-      // Filtrar por actividad_nivel si nivel especificado
-      if (nivelId != null) {
-        where.nivelesActividad = { some: { nivelId } };
-      }
-      actividades = await prisma.actividadPreventiva.findMany({
-        where,
-        include: {
-          tipoActividad: { select: { codigo: true, nombre: true, categoria: true } },
-          consumibles: {
-            include: { consumible: { select: { id: true, nombre: true, tipo: true, unidad: true, coste: true, precio: true } } },
-          },
-          nivelesActividad: {
-            include: { nivel: { select: { codigo: true } } },
-          },
-        },
-        orderBy: { id: 'asc' },
-      });
-      // Si filtramos por nivelId, anadir info "obligatoria" del link concreto
-      actividades = actividades.map((a) => {
-        const link = nivelId != null ? a.nivelesActividad.find((l: any) => l.nivelId === nivelId) : null;
-        return {
-          ...a,
-          obligatoria: link?.obligatoria ?? null,
-          // Niveles asignados a esta actividad (codigos)
-          nivelesAsignados: a.nivelesActividad.map((l: any) => l.nivel.codigo),
-        };
-      });
-    }
-
-    let fuente: 'actividad_preventiva' | 'actividades_mantenimiento_legacy' | 'ninguna' = 'actividad_preventiva';
-    if (actividades.length === 0) {
-      // Fallback a actividades_mantenimiento (legacy)
-      const legacy = await prisma.actividadMantenimiento.findMany({
-        where: {
-          fabricanteId: modelo.fabricanteId,
-          OR: [
-            modelo.familia ? { familiaRobot: { contains: modelo.familia } } : { id: -1 },
-            { familiaRobot: { contains: modelo.nombre } },
-          ],
-        },
-        orderBy: { id: 'asc' },
-        take: 200,
-      });
-      actividades = legacy.map((a) => ({
-        id: -a.id,
-        familiaId: null,
-        componente: a.componente,
-        intervaloHoras: null,
-        intervaloMeses: null,
-        intervaloCondicion: 'periodico',
-        intervaloTextoLegacy: a.intervaloEstandar,
-        intervaloFoundryHoras: null,
-        intervaloFoundryMeses: null,
-        niveles: null,
-        nivelesAsignados: [],
-        obligatoria: null,
-        notas: a.notas,
-        tipoActividad: { codigo: 'legacy', nombre: a.tipoActividad, categoria: 'otro' },
-        consumibles: [],
-      }));
-      fuente = actividades.length > 0 ? 'actividades_mantenimiento_legacy' : 'ninguna';
-    }
-
-    res.json({ modeloId, nivel, actividades, fuente });
+    const actividades = await getActividadesPlan(modeloId, nivel, cohorte);
+    res.json({
+      modeloId,
+      nivel,
+      actividades: actividades.map((a) => ({
+        ...a,
+        nivelCodigo: a.nivel?.codigo ?? null,
+        nivelesAsignados: a.nivel?.codigo ? [a.nivel.codigo] : [],
+      })),
+      fuente: actividades.length > 0 ? 'actividad_preventiva' : 'ninguna',
+    });
   } catch (err) { next(err); }
 });
 
@@ -493,135 +316,117 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
       where: { id: Number(req.params.id) },
       include: {
         fabricante: { select: { id: true, nombre: true } },
-        familiaRel: { select: { id: true, codigo: true, tipo: true, descripcion: true } },
+        familiaRel: { select: { id: true, codigo: true, tipo: true, descripcion: true, tipoCinematica: true } },
         generacion: { select: { id: true, codigo: true, nombre: true } },
         versiones: { orderBy: { version: 'desc' } },
-        controladoresCompatibles: {
-          include: { controlador: { select: { id: true, nombre: true } } },
-        },
-        componentesCompatibles: {
-          include: { componente: { select: { id: true, nombre: true, tipo: true } } },
-        },
       },
     });
     if (!modelo) { res.status(404).json({ error: 'Modelo no encontrado' }); return; }
-    res.json(modelo);
+
+    // Resolver lookups de los arrays JSON
+    const montajeIds = parseIdArray(modelo.montajesDisponibles) ?? [];
+    const proteccionIds = parseIdArray(modelo.proteccionesDisponibles) ?? [];
+    const controladorIds = parseIdArray(modelo.controladoresCompatibles) ?? [];
+
+    const [montajes, protecciones, controladores] = await Promise.all([
+      montajeIds.length > 0
+        ? prisma.luMontaje.findMany({ where: { id: { in: montajeIds } } })
+        : Promise.resolve([]),
+      proteccionIds.length > 0
+        ? prisma.luProteccion.findMany({ where: { id: { in: proteccionIds } } })
+        : Promise.resolve([]),
+      resolveControladores(controladorIds),
+    ]);
+
+    res.json({
+      ...modelo,
+      familia: modelo.familiaRel?.codigo ?? null,
+      montajesDisponiblesInfo: montajes,
+      proteccionesDisponiblesInfo: protecciones,
+      controladoresCompatiblesInfo: controladores,
+    });
   } catch (err) { next(err); }
 });
 
 // GET /api/v1/modelos/:id/compatibilidad
-// Devuelve la compatibilidad completa segun tipo:
-//   external_axis: tri-via (whitelist familias, blacklist familias, whitelist controladores)
-//   mechanical_unit: controllers compatibles
-//   controller: modelos compatibles (robots + ejes)
-//   drive_unit: controllers compatibles
+// v2.9: compatibilidad via modelos_componente.controladores_compatibles (JSON).
 router.get('/:id/compatibilidad', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const modeloId = Number(req.params.id);
     const modelo = await prisma.modeloComponente.findUnique({
       where: { id: modeloId },
-      select: { id: true, nombre: true, tipo: true, familia: true, familiaId: true },
+      select: {
+        id: true, nombre: true, tipo: true, familiaId: true,
+        controladoresCompatibles: true,
+        familiaRel: { select: { codigo: true } },
+      },
     });
     if (!modelo) { res.status(404).json({ error: 'Modelo no encontrado' }); return; }
 
-    if (modelo.tipo === 'external_axis') {
-      const [permitidas, excluidas, controladores] = await Promise.all([
-        prisma.compatibilidadEjePermitida.findMany({
-          where: { ejeModeloId: modeloId },
-          include: { familia: { select: { id: true, codigo: true, descripcion: true } } },
-        }),
-        prisma.compatibilidadEjeExcluye.findMany({
-          where: { ejeModeloId: modeloId },
-          include: { familia: { select: { id: true, codigo: true, descripcion: true } } },
-        }),
-        prisma.compatibilidadEjeControlador.findMany({
-          where: { ejeModeloId: modeloId },
-          include: { controlador: { select: { id: true, nombre: true, familia: true } } },
-        }),
-      ]);
-
-      res.json({
-        tipo: 'external_axis',
-        modelo,
-        familiasPermitidas: permitidas.map(p => p.familia),
-        familiasExcluidas: excluidas.map(e => e.familia),
-        controladoresRequeridos: controladores.map(c => c.controlador),
-      });
-      return;
-    }
-
-    if (modelo.tipo === 'mechanical_unit' || modelo.tipo === 'drive_unit') {
-      const compat = await prisma.compatibilidadControlador.findMany({
-        where: { componenteId: modeloId },
-        include: { controlador: { select: { id: true, nombre: true, familia: true } } },
-      });
-      res.json({
-        tipo: modelo.tipo,
-        modelo,
-        controladoresCompatibles: compat.map(c => c.controlador),
-      });
-      return;
-    }
+    const base = {
+      id: modelo.id,
+      nombre: modelo.nombre,
+      tipo: modelo.tipo,
+      familiaId: modelo.familiaId,
+      familia: modelo.familiaRel?.codigo ?? null,
+    };
 
     if (modelo.tipo === 'controller') {
-      const [robots, ejes] = await Promise.all([
-        prisma.compatibilidadControlador.findMany({
-          where: { controladorId: modeloId },
-          include: { componente: { select: { id: true, nombre: true, familia: true, tipo: true } } },
-        }).then(rows => rows.filter(r => r.componente.tipo === 'mechanical_unit')),
-        prisma.compatibilidadControlador.findMany({
-          where: { controladorId: modeloId },
-          include: { componente: { select: { id: true, nombre: true, familia: true, tipo: true } } },
-        }).then(rows => rows.filter(r => r.componente.tipo === 'external_axis')),
-      ]);
+      // Inverso: modelos cuyo JSON contiene este controlador
+      const candidatos = await prisma.modeloComponente.findMany({
+        where: { activa: true, tipo: { in: ['mechanical_unit', 'external_axis', 'drive_unit'] } },
+        select: {
+          id: true, nombre: true, tipo: true, controladoresCompatibles: true,
+          familiaRel: { select: { codigo: true } },
+        },
+        orderBy: { nombre: 'asc' },
+      });
+      const compatibles = candidatos
+        .filter((m) => (parseIdArray(m.controladoresCompatibles) ?? []).includes(modeloId))
+        .map((m) => ({ id: m.id, nombre: m.nombre, tipo: m.tipo, familia: m.familiaRel?.codigo ?? null }));
 
       res.json({
         tipo: 'controller',
-        modelo,
-        robotsCompatibles: robots.map(r => r.componente),
-        ejesCompatibles: ejes.map(r => r.componente),
+        modelo: base,
+        robotsCompatibles: compatibles.filter((m) => m.tipo === 'mechanical_unit'),
+        ejesCompatibles: compatibles.filter((m) => m.tipo === 'external_axis'),
+        drivesCompatibles: compatibles.filter((m) => m.tipo === 'drive_unit'),
       });
       return;
     }
 
-    res.json({ tipo: modelo.tipo, modelo });
+    const controladores = await resolveControladores(parseIdArray(modelo.controladoresCompatibles) ?? []);
+    res.json({
+      tipo: modelo.tipo,
+      modelo: base,
+      controladoresCompatibles: controladores,
+    });
   } catch (err) { next(err); }
 });
 
 // POST /api/v1/modelos (admin)
 router.post('/', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { controladorIds, ...modelData } = createModeloSchema.parse(req.body);
-    // Auto-assign fixed levels based on component type
-    modelData.niveles = ensureNivelesFijos(modelData.tipo, modelData.niveles);
+    const data = createModeloSchema.parse(req.body);
 
-    // Application-level duplicate check: same (fabricanteId, tipo, familia, nombre) + same controller set
-    const existing = await prisma.modeloComponente.findMany({
-      where: { fabricanteId: modelData.fabricanteId, tipo: modelData.tipo, familia: modelData.familia ?? null, nombre: modelData.nombre },
-      include: { controladoresCompatibles: { select: { controladorId: true } } },
+    const existing = await prisma.modeloComponente.findFirst({
+      where: { fabricanteId: data.fabricanteId, tipo: data.tipo, nombre: data.nombre },
     });
-    const sortedNew = [...(controladorIds ?? [])].sort((a, b) => a - b);
-    const isDuplicate = existing.some((e) => {
-      const sortedExisting = e.controladoresCompatibles.map((c) => c.controladorId).sort((a, b) => a - b);
-      return JSON.stringify(sortedExisting) === JSON.stringify(sortedNew);
-    });
-    if (isDuplicate) {
-      res.status(409).json({ error: 'Ya existe un modelo identico con las mismas controladoras asociadas.' });
+    if (existing) {
+      res.status(409).json({ error: 'Ya existe un modelo con ese nombre para este fabricante y tipo.' });
       return;
     }
 
     const modelo = await prisma.modeloComponente.create({
       data: {
-        ...modelData,
-        controladoresCompatibles: {
-          create: (controladorIds ?? []).map((cId: number) => ({ controladorId: cId })),
-        },
+        ...data,
+        montajesDisponibles: data.montajesDisponibles ?? Prisma.DbNull,
+        proteccionesDisponibles: data.proteccionesDisponibles ?? Prisma.DbNull,
+        controladoresCompatibles: data.controladoresCompatibles ?? Prisma.DbNull,
       },
       include: {
         fabricante: { select: { id: true, nombre: true } },
-        controladoresCompatibles: {
-          include: { controlador: { select: { id: true, nombre: true } } },
-        },
+        familiaRel: { select: { id: true, codigo: true } },
       },
     });
     res.status(201).json(modelo);
@@ -632,77 +437,37 @@ router.post('/', requireRole('admin'), async (req: Request, res: Response, next:
 router.put('/:id', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = updateModeloSchema.parse(req.body);
-    // If niveles is being updated, ensure fixed levels are included
-    if (data.niveles !== undefined) {
-      // Need to know the tipo — either from body or from existing record
-      const existing = await prisma.modeloComponente.findUnique({
-        where: { id: Number(req.params.id) },
-        select: { tipo: true },
-      });
-      if (existing) {
-        data.niveles = ensureNivelesFijos(existing.tipo, data.niveles);
-      }
-    }
     const modelo = await prisma.modeloComponente.update({
       where: { id: Number(req.params.id) },
-      data,
+      data: {
+        ...data,
+        montajesDisponibles: data.montajesDisponibles === undefined
+          ? undefined : (data.montajesDisponibles ?? Prisma.DbNull),
+        proteccionesDisponibles: data.proteccionesDisponibles === undefined
+          ? undefined : (data.proteccionesDisponibles ?? Prisma.DbNull),
+        controladoresCompatibles: data.controladoresCompatibles === undefined
+          ? undefined : (data.controladoresCompatibles ?? Prisma.DbNull),
+      },
     });
     res.json(modelo);
   } catch (err) { next(err); }
 });
 
-// PUT /api/v1/modelos/:id/compatibilidad (admin) — sync controller associations
+// PUT /api/v1/modelos/:id/compatibilidad (admin) — set controladores compatibles (JSON)
 router.put('/:id/compatibilidad', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { controladorIds } = updateCompatibilidadSchema.parse(req.body);
     const id = Number(req.params.id);
 
-    // Get current model info for duplicate check
-    const modelo = await prisma.modeloComponente.findUnique({
-      where: { id },
-      select: { fabricanteId: true, tipo: true, familia: true, nombre: true },
-    });
+    const modelo = await prisma.modeloComponente.findUnique({ where: { id }, select: { id: true } });
     if (!modelo) { res.status(404).json({ error: 'Modelo no encontrado' }); return; }
 
-    // Duplicate check: another model with same familia+name + same controller set
-    const existing = await prisma.modeloComponente.findMany({
-      where: { fabricanteId: modelo.fabricanteId, tipo: modelo.tipo, familia: modelo.familia, nombre: modelo.nombre, id: { not: id } },
-      include: { controladoresCompatibles: { select: { controladorId: true } } },
-    });
-    const sortedNew = [...controladorIds].sort((a, b) => a - b);
-    const isDuplicate = existing.some((e) => {
-      const sortedExisting = e.controladoresCompatibles.map((c) => c.controladorId).sort((a, b) => a - b);
-      return JSON.stringify(sortedExisting) === JSON.stringify(sortedNew);
-    });
-    if (isDuplicate) {
-      res.status(409).json({ error: 'Ya existe otro modelo identico con las mismas controladoras.' });
-      return;
-    }
-
-    // Delete-and-recreate junction records
-    await prisma.$transaction([
-      prisma.compatibilidadControlador.deleteMany({ where: { componenteId: id } }),
-      ...(controladorIds.length > 0
-        ? [prisma.modeloComponente.update({
-            where: { id },
-            data: {
-              controladoresCompatibles: {
-                create: controladorIds.map((cId) => ({ controladorId: cId })),
-              },
-            },
-          })]
-        : []),
-    ]);
-
-    const updated = await prisma.modeloComponente.findUnique({
+    const updated = await prisma.modeloComponente.update({
       where: { id },
-      include: {
-        controladoresCompatibles: {
-          include: { controlador: { select: { id: true, nombre: true } } },
-        },
-      },
+      data: { controladoresCompatibles: controladorIds },
     });
-    res.json(updated);
+    const controladores = await resolveControladores(controladorIds);
+    res.json({ ...updated, controladoresCompatiblesInfo: controladores });
   } catch (err) { next(err); }
 });
 
@@ -715,137 +480,29 @@ router.delete('/:id', requireRole('admin'), async (req: Request, res: Response, 
 });
 
 // ===== MANTENIMIENTO (nested under modelo) =====
-// (lubricacion ahora esta unificado arriba en /:id/lubricacion)
 
 // GET /api/v1/modelos/:id/mantenimiento
-// Returns activities depending on the model type:
-//   controller       → actividad_cabinet
-//   drive_unit       → actividad_drive_module
-//   mechanical_unit  → actividad_preventiva
-//   external_axis    → actividad_preventiva
-// Mapeo tipo modelo → tipo_componente_aplicable de actividad_preventiva genérica.
-// Tras SQL 32 los puntos genéricos viven en actividad_preventiva; consultamos
-// los del tipo del modelo + los 'todos' (transversales: cabling, seguridad).
-const TIPO_TO_TIPO_APLICABLE: Record<string, ('mechanical_unit' | 'controller' | 'drive_unit' | 'external_axis' | 'todos')[]> = {
-  mechanical_unit: ['mechanical_unit', 'todos'],
-  controller:      ['controller', 'todos'],
-  drive_unit:      ['drive_unit', 'todos'],
-  external_axis:   ['external_axis', 'todos'],
-};
-const TIPO_APLICABLE_TO_CATEGORIA: Record<string, string> = {
-  mechanical_unit: 'manipulador',
-  controller: 'controladora',
-  drive_unit: 'drive_module',
-  external_axis: 'eje_externo',
-  todos: 'cabling',
-};
-
+// v2.9: todas las actividades viven en actividad_preventiva con
+// modelos_aplicables (tambien controladores y drive units).
 router.get('/:id/mantenimiento', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const modeloId = Number(req.params.id);
     const modelo = await prisma.modeloComponente.findUnique({
       where: { id: modeloId },
-      select: { tipo: true, familia: true, familiaId: true, fabricanteId: true },
+      select: { tipo: true },
     });
     if (!modelo) { res.status(404).json({ error: 'Modelo no encontrado' }); return; }
 
-    // Puntos genéricos del tipo (read-only, comunes a todos los modelos del tipo).
-    // Procedemos de actividad_preventiva con familia_id=NULL.
-    const tiposAplicables = TIPO_TO_TIPO_APLICABLE[modelo.tipo] ?? [];
-    const genericosRaw = tiposAplicables.length > 0
-      ? await prisma.actividadPreventiva.findMany({
-          where: { familiaId: null, tipoComponenteAplicable: { in: tiposAplicables } },
-          orderBy: [{ tipoComponenteAplicable: 'asc' }, { orden: 'asc' }, { componente: 'asc' }],
-          include: {
-            consumibles: {
-              include: {
-                consumible: { select: { id: true, nombre: true, tipo: true, codigoAbb: true } },
-              },
-              take: 1,
-            },
-          },
-        })
-      : [];
-    // Adaptamos al shape histórico (PuntoControlGenerico) que espera el frontend.
-    const genericos = genericosRaw.map((it) => {
-      const notas = it.notas ?? '';
-      const condIdx = notas.indexOf('Condición:');
-      const firstConsumible = it.consumibles[0]?.consumible ?? null;
-      return {
-        id: it.id,
-        categoria: TIPO_APLICABLE_TO_CATEGORIA[it.tipoComponenteAplicable ?? 'todos'] ?? 'cabling',
-        componente: it.componente,
-        descripcionAccion: condIdx >= 0 ? notas.slice(0, condIdx).trim() : notas,
-        intervaloTexto: it.intervaloTextoLegacy,
-        condicion: condIdx >= 0 ? notas.slice(condIdx + 'Condición:'.length).trim() : null,
-        generacionAplica: null,
-        notas: it.notas,
-        orden: it.orden,
-        consumibleId: firstConsumible?.id ?? null,
-        consumible: firstConsumible,
-      };
-    });
-    const categorias = tiposAplicables.map((t) => TIPO_APLICABLE_TO_CATEGORIA[t]).filter(Boolean);
-
-    // Especificas: depende del tipo
-    let specificSource: 'cabinet' | 'drive_module' | 'v2' | 'legacy' = 'v2';
-    let specificRecords: any[] = [];
-
-    if (modelo.tipo === 'controller') {
-      specificRecords = await prisma.actividadCabinet.findMany({
-        where: { cabinetModeloId: modeloId },
-        orderBy: [{ tipoActividadId: 'asc' }, { componente: 'asc' }],
-        include: {
-          tipoActividad: { select: { id: true, nombre: true, categoria: true } },
-        },
-      });
-      specificSource = 'cabinet';
-    } else if (modelo.tipo === 'drive_unit') {
-      specificRecords = await prisma.actividadDriveModule.findMany({
-        where: { driveModuleModeloId: modeloId },
-        orderBy: [{ tipoActividadId: 'asc' }, { componente: 'asc' }],
-        include: {
-          tipoActividad: { select: { id: true, nombre: true, categoria: true } },
-          controladorAsociado: { select: { id: true, nombre: true } },
-        },
-      });
-      specificSource = 'drive_module';
-    } else if (modelo.familiaId) {
-      // Mechanical unit / external axis → actividad_preventiva (por familia)
-      const normalized = await prisma.actividadPreventiva.findMany({
-        where: { familiaId: modelo.familiaId },
-        orderBy: [{ tipoActividadId: 'asc' }, { componente: 'asc' }],
-        include: {
-          tipoActividad: { select: { id: true, nombre: true, categoria: true } },
-          familia: { select: { id: true, codigo: true } },
-        },
-      });
-      if (normalized.length > 0) {
-        specificRecords = normalized;
-        specificSource = 'v2';
-      }
-    }
-
-    // Fallback legacy si no hay especificas v2
-    if (specificRecords.length === 0 && (modelo.tipo === 'mechanical_unit' || modelo.tipo === 'external_axis')) {
-      specificRecords = await prisma.actividadMantenimiento.findMany({
-        where: {
-          fabricanteId: modelo.fabricanteId,
-          familiaRobot: modelo.familia ?? '',
-        },
-        orderBy: [{ tipoActividad: 'asc' }, { componente: 'asc' }],
-      });
-      specificSource = 'legacy';
-    }
+    const cohorte = cohorteFromQuery(req);
+    const actividades = await getActividadesPlan(modeloId, null, cohorte);
 
     res.json({
-      source: specificSource,        // compat con frontend antiguo
-      records: specificRecords,      // compat con frontend antiguo
-      // Nuevo shape unificado:
-      especificas: specificRecords,
-      especificasSource: specificSource,
-      genericos,
-      genericosCategorias: categorias,
+      source: 'v2',                 // compat con frontend antiguo
+      records: actividades,         // compat con frontend antiguo
+      especificas: actividades,
+      especificasSource: 'v2',
+      genericos: [],                // las genericas se fusionaron en actividad_preventiva
+      genericosCategorias: [],
     });
   } catch (err) { next(err); }
 });

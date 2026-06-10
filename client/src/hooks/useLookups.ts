@@ -94,44 +94,54 @@ export function useDeleteConsumibleCatalogo() {
   });
 }
 
-export function useEquivalencias(filters?: { familiaId?: number; tipo?: string }) {
+// v2.9: catalogo unificado de actividades preventivas (sustituye a
+// equivalencias + puntos de control genericos, eliminados de la BD).
+export function useActividadesPreventivas(filters?: { tipoComponente?: string; nivel?: string }) {
   return useQuery({
-    queryKey: ['lookups', 'equivalencias', filters],
+    queryKey: ['lookups', 'actividades-preventivas', filters],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (filters?.familiaId) params.set('familiaId', String(filters.familiaId));
-      if (filters?.tipo) params.set('tipo', filters.tipo);
-      const { data } = await api.get(`/v1/lookups/equivalencias?${params}`);
+      if (filters?.tipoComponente) params.set('tipoComponente', filters.tipoComponente);
+      if (filters?.nivel) params.set('nivel', filters.nivel);
+      const { data } = await api.get(`/v1/lookups/actividades-preventivas?${params}`);
       return data as {
         id: number;
-        familiaId: number;
-        tipoEquivalencia: string;
-        descripcion: string;
-        fuenteDoc: string | null;
+        tipoComponenteAplicable: string;
+        componente: string;
+        ejes: string[] | null;
+        intervaloHoras: number | null;
+        intervaloMeses: number | null;
+        intervaloCondicion: string;
+        obligatoria: boolean;
+        observaciones: string | null;
         notas: string | null;
-        familia: { id: number; codigo: string; tipo: string };
+        orden: number;
+        tipoActividad: { id: number; codigo: string; nombre: string; categoria: string };
+        nivel: { id: number; codigo: string; nombre: string } | null;
+        consumibles: { id: number; cantidad: number | null; unidad: string | null; consumible: { id: number; codigoInterno: string | null; nombre: string; tipo: string } }[];
+        modelosAplicablesInfo: { id: number; nombre: string }[];
       }[];
     },
   });
 }
 
-export function usePuntosControl(categoria?: string) {
+// Montajes y protecciones (cohortes v2.9)
+export function useMontajes() {
   return useQuery({
-    queryKey: ['lookups', 'puntos-control', categoria],
+    queryKey: ['lookups', 'montajes'],
     queryFn: async () => {
-      const params = categoria ? `?categoria=${categoria}` : '';
-      const { data } = await api.get(`/v1/lookups/puntos-control${params}`);
-      return data as {
-        id: number;
-        categoria: string;
-        componente: string;
-        descripcionAccion: string;
-        intervaloTexto: string | null;
-        condicion: string | null;
-        generacionAplica: string | null;
-        notas: string | null;
-        orden: number;
-      }[];
+      const { data } = await api.get('/v1/lookups/montajes');
+      return data as { id: number; codigo: string; descripcion: string | null }[];
+    },
+  });
+}
+
+export function useProtecciones() {
+  return useQuery({
+    queryKey: ['lookups', 'protecciones'],
+    queryFn: async () => {
+      const { data } = await api.get('/v1/lookups/protecciones');
+      return data as { id: number; codigo: string; nombre: string; afectaLubricacion: boolean | null }[];
     },
   });
 }

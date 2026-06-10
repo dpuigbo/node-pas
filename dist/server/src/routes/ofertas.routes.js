@@ -8,6 +8,7 @@ const ofertaMantenimiento_1 = require("../lib/ofertaMantenimiento");
 const ofertaPlanificacion_1 = require("../lib/ofertaPlanificacion");
 const bloquesCandidatos_1 = require("../lib/bloquesCandidatos");
 const niveles_1 = require("../lib/niveles");
+const planMantenimiento_1 = require("../lib/planMantenimiento");
 /** Resolver codigos canonicos a IDs en batch. Lanza si algun codigo no existe.
  * Acepta null/undefined entries y los ignora. */
 async function resolveNivelCodigos(codigos) {
@@ -244,138 +245,67 @@ async function calculateRecargos(params) {
     };
 }
 /**
- * Calculate totals for an oferta's sistemas based on ConsumibleNivel data.
- * Returns per-system costs and overall totals.
+ * Calculate totals for an oferta's sistemas (BD v2.9).
+ *
+ * Por cada sistema con nivel global asignado, se itera por sus componentes y
+ * se calcula el nivel efectivo de cada uno (D-073): el nivel seleccionado
+ * aplica al manipulador, N_CTRL al controlador, N_DU al drive. Las horas y
+ * consumibles salen de mantenimiento_horas_modelo + lubricacion + actividades.
  */
 async function calculateOfertaTotals(sistemas) {
     const sistemaTotals = new Map();
     let totalHoras = 0;
     let totalCoste = 0;
     let totalPrecio = 0;
-    // Batch load all systems with their components and consumibles-nivel
     const sistemaIds = sistemas.map((s) => s.sistemaId);
     const sistemasDb = await database_1.prisma.sistema.findMany({
         where: { id: { in: sistemaIds } },
         include: {
             componentes: {
-                include: {
-                    modeloComponente: {
-                        include: {
-                            consumiblesNivel: {
-                                include: { nivel: { select: { codigo: true } } },
-                            },
-                        },
-                    },
-                },
+                select: { id: true, tipo: true, modeloComponenteId: true },
             },
         },
     });
     const sistemaMap = new Map(sistemasDb.map((s) => [s.id, s]));
-    // Collect all consumible IDs needed for price lookup (mix de v2 + legacy)
-    const aceiteIds = new Set();
-    const consumibleIds = new Set();
-    const catalogoIds = new Set();
     for (const { sistemaId, nivel } of sistemas) {
         if (!nivel)
             continue; // sin nivel global, no contribuye al total
         const sistema = sistemaMap.get(sistemaId);
         if (!sistema)
             continue;
-        for (const comp of sistema.componentes) {
-            const cn = comp.modeloComponente.consumiblesNivel.find((c) => c.nivel.codigo === nivel);
-            if (!cn?.consumibles)
-                continue;
-            const items = cn.consumibles;
-            for (const item of items) {
-                if (item.consumibleId && item.consumibleId > 0) {
-                    catalogoIds.add(item.consumibleId);
-                }
-                else if (item.id && item.id > 0) {
-                    if (item.tipo === 'aceite')
-                        aceiteIds.add(item.id);
-                    else
-                        consumibleIds.add(item.id);
-                }
-            }
-        }
-    }
-    // Load prices: catalogo unificado (v2) + legacy (con fallback al catalogo via FK)
-    const catalogoMap = new Map();
-    const aceiteMap = new Map();
-    const consumibleMap = new Map();
-    if (catalogoIds.size > 0) {
-        const items = await database_1.prisma.consumibleCatalogo.findMany({
-            where: { id: { in: Array.from(catalogoIds) } },
-        });
-        for (const it of items)
-            catalogoMap.set(it.id, { coste: dec(it.coste), precio: dec(it.precio) });
-    }
-    if (aceiteIds.size > 0) {
-        const aceites = await database_1.prisma.aceite.findMany({
-            where: { id: { in: Array.from(aceiteIds) } },
-            include: { consumible: true },
-        });
-        for (const a of aceites)
-            aceiteMap.set(a.id, {
-                coste: dec(a.consumible?.coste ?? a.coste),
-                precio: dec(a.consumible?.precio ?? a.precio),
-            });
-    }
-    if (consumibleIds.size > 0) {
-        // Legacy 'consumible' items: best-effort lookup contra consumible_catalogo
-        // (tabla legacy droppeada 2026-04, ver journal P-005).
-        const consumibles = await database_1.prisma.consumibleCatalogo.findMany({
-            where: { id: { in: Array.from(consumibleIds) } },
-        });
-        for (const c of consumibles)
-            consumibleMap.set(c.id, {
-                coste: dec(c.coste),
-                precio: dec(c.precio),
-            });
-    }
-    // Calculate per system
-    for (const { sistemaId, nivel } of sistemas) {
-        if (!nivel)
-            continue;
-        const sistema = sistemaMap.get(sistemaId);
-        if (!sistema)
-            continue;
+        // Controlador del sistema (cohorte para filtrar lubricacion/actividades)
+        const ctrl = sistema.componentes.find((c) => c.tipo === 'controller');
         let sysHoras = 0;
         let sysCoste = 0;
         let sysPrecio = 0;
         for (const comp of sistema.componentes) {
-            const cn = comp.modeloComponente.consumiblesNivel.find((c) => c.nivel.codigo === nivel);
-            if (!cn)
+            const nivelEfectivo = (0, planMantenimiento_1.nivelEfectivoParaTipo)(comp.tipo, nivel);
+            if (!nivelEfectivo)
                 continue;
-            // Add hours
-            sysHoras += dec(cn.horas) ?? 0;
-            // Add precioOtros
-            sysCoste += dec(cn.precioOtros) ?? 0;
-            sysPrecio += dec(cn.precioOtros) ?? 0;
-            // Add consumibles costs (soporta v2 + legacy)
-            if (cn.consumibles) {
-                const items = cn.consumibles;
-                for (const item of items) {
-                    let priceInfo;
-                    if (item.consumibleId && item.consumibleId > 0) {
-                        priceInfo = catalogoMap.get(item.consumibleId);
-                    }
-                    else if (item.id && item.id > 0) {
-                        priceInfo = item.tipo === 'aceite' ? aceiteMap.get(item.id) : consumibleMap.get(item.id);
-                    }
-                    if (priceInfo) {
-                        sysCoste += (priceInfo.coste ?? 0) * item.cantidad;
-                        sysPrecio += (priceInfo.precio ?? 0) * item.cantidad;
-                    }
-                }
-            }
+            const calc = await (0, ofertaMantenimiento_1.calcularComponenteOferta)(comp.modeloComponenteId, nivelEfectivo, {
+                tipoOferta: 'mantenimiento',
+                conBaterias: true,
+                conAceite: true,
+            }, ctrl?.modeloComponenteId ?? null);
+            sysHoras += calc.horas;
+            sysCoste += calc.costeConsumibles + calc.costeLimpieza;
+            sysPrecio += calc.precioConsumibles + calc.costeLimpieza;
         }
-        sistemaTotals.set(sistemaId, { horas: sysHoras, coste: sysCoste, precio: sysPrecio });
+        sistemaTotals.set(sistemaId, {
+            horas: +sysHoras.toFixed(2),
+            coste: +sysCoste.toFixed(2),
+            precio: +sysPrecio.toFixed(2),
+        });
         totalHoras += sysHoras;
         totalCoste += sysCoste;
         totalPrecio += sysPrecio;
     }
-    return { sistemaTotals, totalHoras, totalCoste, totalPrecio };
+    return {
+        sistemaTotals,
+        totalHoras: +totalHoras.toFixed(2),
+        totalCoste: +totalCoste.toFixed(2),
+        totalPrecio: +totalPrecio.toFixed(2),
+    };
 }
 // GET /api/v1/ofertas
 router.get('/', async (req, res, next) => {

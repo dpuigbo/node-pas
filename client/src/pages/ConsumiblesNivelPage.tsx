@@ -4,10 +4,14 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { useFabricantes } from '@/hooks/useFabricantes';
 import { useConsumiblesNivelByFabricante, useBatchUpsertConsumibleNivel } from '@/hooks/useConsumiblesNivel';
-import { useConsumiblesCatalogo } from '@/hooks/useLookups';
-import { getNivelesValidos, NIVEL_SHORT, NIVELES_ALL } from '@/lib/niveles';
+import { getNivelesModelo, NIVEL_SHORT, NIVELES_ALL } from '@/lib/niveles';
+
+// v2.9: esta pantalla edita las HORAS de trabajo por (modelo, nivel) en
+// mantenimiento_horas_modelo (D-073). Los consumibles ya no se configuran a
+// mano: salen de lubricacion + actividad_preventiva.
 
 const TIPO_COMP_LABELS: Record<string, string> = {
   controller: 'Controladora',
@@ -18,153 +22,50 @@ const TIPO_COMP_LABELS: Record<string, string> = {
 
 const SELECT_CLASS = 'flex h-8 w-full rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring';
 
-// Nuevo formato: usa consumibleId del catalogo unificado
-interface ConsumibleItem {
-  consumibleId: number;
-  cantidad: number;
-}
-
-interface NivelData {
-  horas: string;
-  precioOtros: string;
-  consumibles: ConsumibleItem[];
-}
-
-type ModeloNiveles = Record<string, NivelData>;
-type FormData = Record<number, ModeloNiveles>;
-
-const emptyNivel = (): NivelData => ({ horas: '', precioOtros: '', consumibles: [] });
-
-// Mapping para deserializar legacy items
-function deserializeItem(item: any, aceiteToCons: Map<number, number>, consToCons: Map<number, number>): ConsumibleItem | null {
-  // Nuevo formato
-  if (item.consumibleId) {
-    return { consumibleId: Number(item.consumibleId), cantidad: Number(item.cantidad) || 1 };
-  }
-  // Legacy: tipo+id → buscar consumibleId
-  if (item.tipo === 'aceite') {
-    const cId = aceiteToCons.get(Number(item.id));
-    return cId ? { consumibleId: cId, cantidad: Number(item.cantidad) || 1 } : null;
-  }
-  if (item.tipo === 'bateria' || item.tipo === 'consumible') {
-    const cId = consToCons.get(Number(item.id));
-    return cId ? { consumibleId: cId, cantidad: Number(item.cantidad) || 1 } : null;
-  }
-  return null;
-}
+type FormData = Record<number, Record<string, string>>; // modeloId → nivel → horas (string)
 
 export default function ConsumiblesNivelPage() {
   const { data: fabricantes } = useFabricantes();
   const [fabId, setFabId] = useState<number | null>(null);
+  const [tipoFiltro, setTipoFiltro] = useState<string>('');
   const { data: modelos, isLoading } = useConsumiblesNivelByFabricante(fabId);
-  const { data: consumiblesCatalogo } = useConsumiblesCatalogo();
   const batchUpsert = useBatchUpsertConsumibleNivel();
 
   const [form, setForm] = useState<FormData>({});
   const [dirty, setDirty] = useState(false);
-
-  // Indice de consumibles por id para mostrar nombre
-  const consumiblesById = useMemo(() => {
-    const m = new Map<number, any>();
-    for (const c of consumiblesCatalogo || []) m.set(c.id, c);
-    return m;
-  }, [consumiblesCatalogo]);
-
-  // Mappings legacy → catalogo (vacios; el backend ya guarda nuevos en formato v2)
-  const legacyMaps = useMemo(() => ({
-    aceiteToCons: new Map<number, number>(),
-    consToCons: new Map<number, number>(),
-  }), []);
 
   // Build form data from fetched modelos
   useEffect(() => {
     if (!Array.isArray(modelos)) return;
     const fd: FormData = {};
     for (const m of modelos) {
-      const modeloNiveles: ModeloNiveles = {};
-      const validos = getNivelesValidos(m.tipo, m.niveles);
-      for (const nv of validos) {
-        const existing = (m.consumiblesNivel || []).find((cn: any) => cn.nivel === nv);
-        if (existing) {
-          const rawItems = (existing.consumibles as any[]) || [];
-          const items = rawItems
-            .map((r) => deserializeItem(r, legacyMaps.aceiteToCons, legacyMaps.consToCons))
-            .filter((i): i is ConsumibleItem => i !== null);
-          modeloNiveles[nv] = {
-            horas: existing.horas != null ? String(existing.horas) : '',
-            precioOtros: existing.precioOtros != null ? String(existing.precioOtros) : '',
-            consumibles: items,
-          };
-        } else {
-          modeloNiveles[nv] = emptyNivel();
-        }
+      const niveles: Record<string, string> = {};
+      for (const nv of getNivelesModelo(m)) {
+        const existing = (m.horasNivel || []).find((h: any) => h.nivel === nv);
+        niveles[nv] = existing?.horas != null ? String(existing.horas) : '';
       }
-      fd[m.id] = modeloNiveles;
+      fd[m.id] = niveles;
     }
     setForm(fd);
     setDirty(false);
-  }, [modelos, legacyMaps]);
+  }, [modelos]);
 
-  const getNd = (prev: FormData, modeloId: number, nivel: string): NivelData => {
-    return prev[modeloId]?.[nivel] ?? emptyNivel();
-  };
-
-  const updateField = useCallback((modeloId: number, nivel: string, field: 'horas' | 'precioOtros', val: string) => {
-    setForm((prev) => {
-      const nd: NivelData = { ...getNd(prev, modeloId, nivel), [field]: val };
-      const modeloNiveles: ModeloNiveles = { ...(prev[modeloId] ?? {}), [nivel]: nd };
-      return { ...prev, [modeloId]: modeloNiveles };
-    });
-    setDirty(true);
-  }, []);
-
-  const addConsumible = useCallback((modeloId: number, nivel: string) => {
-    setForm((prev) => {
-      const nd = getNd(prev, modeloId, nivel);
-      const updated: NivelData = { ...nd, consumibles: [...nd.consumibles, { consumibleId: 0, cantidad: 1 }] };
-      const modeloNiveles: ModeloNiveles = { ...(prev[modeloId] ?? {}), [nivel]: updated };
-      return { ...prev, [modeloId]: modeloNiveles };
-    });
-    setDirty(true);
-  }, []);
-
-  const updateConsumible = useCallback((modeloId: number, nivel: string, idx: number, patch: Partial<ConsumibleItem>) => {
-    setForm((prev) => {
-      const nd = getNd(prev, modeloId, nivel);
-      const items = [...nd.consumibles];
-      const current = items[idx];
-      if (!current) return prev;
-      items[idx] = {
-        consumibleId: patch.consumibleId ?? current.consumibleId,
-        cantidad: patch.cantidad ?? current.cantidad,
-      };
-      const updated: NivelData = { ...nd, consumibles: items };
-      const modeloNiveles: ModeloNiveles = { ...(prev[modeloId] ?? {}), [nivel]: updated };
-      return { ...prev, [modeloId]: modeloNiveles };
-    });
-    setDirty(true);
-  }, []);
-
-  const removeConsumible = useCallback((modeloId: number, nivel: string, idx: number) => {
-    setForm((prev) => {
-      const nd = getNd(prev, modeloId, nivel);
-      const updated: NivelData = { ...nd, consumibles: nd.consumibles.filter((_, i) => i !== idx) };
-      const modeloNiveles: ModeloNiveles = { ...(prev[modeloId] ?? {}), [nivel]: updated };
-      return { ...prev, [modeloId]: modeloNiveles };
-    });
+  const updateHoras = useCallback((modeloId: number, nivel: string, val: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [modeloId]: { ...(prev[modeloId] ?? {}), [nivel]: val },
+    }));
     setDirty(true);
   }, []);
 
   const handleSave = async () => {
     const items: any[] = [];
     for (const [modeloId, niveles] of Object.entries(form)) {
-      for (const [nivel, data] of Object.entries(niveles)) {
+      for (const [nivel, horas] of Object.entries(niveles)) {
         items.push({
           modeloId: Number(modeloId),
           nivel,
-          horas: data.horas ? Number(data.horas) : null,
-          precioOtros: data.precioOtros ? Number(data.precioOtros) : null,
-          consumibles: data.consumibles.filter((c) => c.consumibleId > 0),
+          horas: horas !== '' ? Number(horas) : null,
         });
       }
     }
@@ -179,9 +80,17 @@ export default function ConsumiblesNivelPage() {
 
   const activos = (Array.isArray(fabricantes) ? fabricantes : []).filter((f: any) => f.activo);
 
+  const modelosFiltrados = useMemo(() => {
+    if (!Array.isArray(modelos)) return [];
+    return tipoFiltro ? modelos.filter((m: any) => m.tipo === tipoFiltro) : modelos;
+  }, [modelos, tipoFiltro]);
+
   return (
     <div className="space-y-6">
-      <PageHeader title="Consumibles por nivel" description="Define consumibles, horas y costes por modelo y nivel de mantenimiento" />
+      <PageHeader
+        title="Horas por nivel"
+        description="Horas de trabajo del técnico por modelo y nivel de mantenimiento (el total del sistema suma manipulador + controlador)"
+      />
 
       <div className="flex items-end gap-4">
         <div className="w-64">
@@ -197,6 +106,19 @@ export default function ConsumiblesNivelPage() {
             ))}
           </select>
         </div>
+        <div className="w-52">
+          <Label>Tipo</Label>
+          <select
+            value={tipoFiltro}
+            onChange={(e) => setTipoFiltro(e.target.value)}
+            className={SELECT_CLASS + ' !h-9 !text-sm'}
+          >
+            <option value="">Todos</option>
+            {Object.entries(TIPO_COMP_LABELS).map(([k, v]) => (
+              <option key={k} value={k}>{v}</option>
+            ))}
+          </select>
+        </div>
         {dirty && (
           <Button onClick={handleSave} disabled={batchUpsert.isPending}>
             <Save className="h-4 w-4 mr-1" />
@@ -205,104 +127,52 @@ export default function ConsumiblesNivelPage() {
         )}
       </div>
 
+      <p className="text-xs text-muted-foreground">
+        Las horas se redondean al alza en incrementos de 0,5 h (D-074).
+        Deja una casilla vacía para eliminar las horas de ese nivel.
+      </p>
+
       {isLoading && <p className="text-sm text-muted-foreground">Cargando modelos...</p>}
 
       {!fabId && <p className="text-sm text-muted-foreground">Selecciona un fabricante para ver sus modelos.</p>}
 
-      {fabId && Array.isArray(modelos) && modelos.length === 0 && (
-        <p className="text-sm text-muted-foreground">Este fabricante no tiene modelos registrados.</p>
+      {fabId && modelosFiltrados.length === 0 && !isLoading && (
+        <p className="text-sm text-muted-foreground">No hay modelos para este filtro.</p>
       )}
 
-      {fabId && Array.isArray(modelos) && modelos.map((modelo: any) => (
-        <div key={modelo.id} className="rounded-lg border bg-card p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium uppercase text-muted-foreground bg-muted px-2 py-0.5 rounded">
-              {TIPO_COMP_LABELS[modelo.tipo] || modelo.tipo}
-            </span>
-            <h3 className="font-semibold">{modelo.nombre}</h3>
-          </div>
+      {fabId && modelosFiltrados.map((modelo: any) => {
+        const niveles = getNivelesModelo(modelo);
+        if (niveles.length === 0) return null;
+        return (
+          <div key={modelo.id} className="rounded-lg border bg-card p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium uppercase text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                {TIPO_COMP_LABELS[modelo.tipo] || modelo.tipo}
+              </span>
+              <h3 className="font-semibold">{modelo.nombre}</h3>
+              {modelo.familia && <Badge variant="outline" className="text-[10px]">{modelo.familia}</Badge>}
+            </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="px-2 py-1.5 text-left w-28">Nivel</th>
-                  <th className="px-2 py-1.5 text-left w-20">Horas</th>
-                  <th className="px-2 py-1.5 text-left w-24">€ Otros</th>
-                  <th className="px-2 py-1.5 text-left">Consumibles</th>
-                </tr>
-              </thead>
-              <tbody>
-                {getNivelesValidos(modelo.tipo, modelo.niveles).map((nv) => {
-                  const nd = form[modelo.id]?.[nv] || emptyNivel();
-                  const nivelLabel = NIVELES_ALL.find((n) => n.value === nv)?.label ?? NIVEL_SHORT[nv] ?? nv;
-                  return (
-                    <tr key={nv} className="border-b last:border-0">
-                      <td className="px-2 py-2 font-medium">{nivelLabel}</td>
-                      <td className="px-2 py-2">
-                        <Input
-                          type="number" step="0.5" min="0"
-                          className="h-7 text-xs w-16"
-                          value={nd.horas}
-                          onChange={(e) => updateField(modelo.id, nv, 'horas', e.target.value)}
-                        />
-                      </td>
-                      <td className="px-2 py-2">
-                        <Input
-                          type="number" step="0.01" min="0"
-                          className="h-7 text-xs w-20"
-                          value={nd.precioOtros}
-                          onChange={(e) => updateField(modelo.id, nv, 'precioOtros', e.target.value)}
-                        />
-                      </td>
-                      <td className="px-2 py-2">
-                        <div className="space-y-1">
-                          {(nd.consumibles || []).map((c, idx) => {
-                            const item = consumiblesById.get(c.consumibleId);
-                            return (
-                              <div key={idx} className="flex items-center gap-1">
-                                <select
-                                  value={c.consumibleId}
-                                  onChange={(e) => updateConsumible(modelo.id, nv, idx, { consumibleId: Number(e.target.value) })}
-                                  className="h-7 rounded border border-input bg-transparent px-1 text-xs flex-1 min-w-0"
-                                >
-                                  <option value={0}>Seleccionar consumible...</option>
-                                  {(consumiblesCatalogo || []).map((it: any) => (
-                                    <option key={it.id} value={it.id}>
-                                      [{it.tipo}] {it.nombre}
-                                    </option>
-                                  ))}
-                                </select>
-                                <Input
-                                  type="number" min="0.001" step="0.001"
-                                  className="h-7 text-xs w-20"
-                                  value={c.cantidad}
-                                  onChange={(e) => updateConsumible(modelo.id, nv, idx, { cantidad: Number(e.target.value) || 1 })}
-                                />
-                                <span className="text-[10px] text-muted-foreground w-10">{item?.unidad ?? ''}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => removeConsumible(modelo.id, nv, idx)}
-                                  className="text-destructive hover:text-destructive/80 text-xs px-1"
-                                >✕</button>
-                              </div>
-                            );
-                          })}
-                          <button
-                            type="button"
-                            onClick={() => addConsumible(modelo.id, nv)}
-                            className="text-xs text-primary hover:underline"
-                          >+ Añadir consumible</button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div className="flex flex-wrap gap-6">
+              {niveles.map((nv) => {
+                const nivelLabel = NIVELES_ALL.find((n) => n.value === nv)?.label ?? NIVEL_SHORT[nv] ?? nv;
+                return (
+                  <div key={nv} className="flex items-center gap-2">
+                    <span className="text-xs font-medium w-28">{nivelLabel}</span>
+                    <Input
+                      type="number" step="0.5" min="0"
+                      className="h-7 text-xs w-20"
+                      value={form[modelo.id]?.[nv] ?? ''}
+                      onChange={(e) => updateHoras(modelo.id, nv, e.target.value)}
+                    />
+                    <span className="text-[10px] text-muted-foreground">h</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

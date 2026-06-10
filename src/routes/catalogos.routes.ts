@@ -2,19 +2,24 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { requireRole } from '../middleware/role.middleware';
 import { prisma } from '../config/database';
 import {
-  createAceiteSchema, updateAceiteSchema,
   createConsumibleSchema, updateConsumibleSchema,
-  updateConfigSchema, batchConfigSchema,
+  batchConfigSchema,
 } from '../validation/catalogos.validation';
 
 const router = Router();
 
-// ===== ACEITES =====
+// ===== ACEITES (compat) =====
+// v2.9: la tabla `aceites` fue eliminada. Aceites y grasas viven en
+// consumible_catalogo (tipo='aceite'|'grasa'). Estas rutas son shims de
+// compatibilidad sobre el catalogo unificado.
 
 // GET /api/v1/catalogos/aceites
 router.get('/aceites', async (_req: Request, res: Response, next: NextFunction) => {
   try {
-    const aceites = await prisma.aceite.findMany({ orderBy: { nombre: 'asc' } });
+    const aceites = await prisma.consumibleCatalogo.findMany({
+      where: { tipo: { in: ['aceite', 'grasa'] } },
+      orderBy: { nombre: 'asc' },
+    });
     res.json(aceites);
   } catch (err) { next(err); }
 });
@@ -22,8 +27,8 @@ router.get('/aceites', async (_req: Request, res: Response, next: NextFunction) 
 // POST /api/v1/catalogos/aceites (admin)
 router.post('/aceites', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = createAceiteSchema.parse(req.body);
-    const aceite = await prisma.aceite.create({ data });
+    const data = createConsumibleSchema.parse({ tipo: 'aceite', ...req.body });
+    const aceite = await prisma.consumibleCatalogo.create({ data });
     res.status(201).json(aceite);
   } catch (err) { next(err); }
 });
@@ -31,8 +36,8 @@ router.post('/aceites', requireRole('admin'), async (req: Request, res: Response
 // PUT /api/v1/catalogos/aceites/:id (admin)
 router.put('/aceites/:id', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = updateAceiteSchema.parse(req.body);
-    const aceite = await prisma.aceite.update({ where: { id: Number(req.params.id) }, data });
+    const data = updateConsumibleSchema.parse(req.body);
+    const aceite = await prisma.consumibleCatalogo.update({ where: { id: Number(req.params.id) }, data });
     res.json(aceite);
   } catch (err) { next(err); }
 });
@@ -40,7 +45,7 @@ router.put('/aceites/:id', requireRole('admin'), async (req: Request, res: Respo
 // DELETE /api/v1/catalogos/aceites/:id (admin) - soft delete
 router.delete('/aceites/:id', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const aceite = await prisma.aceite.update({
+    const aceite = await prisma.consumibleCatalogo.update({
       where: { id: Number(req.params.id) },
       data: { activo: false },
     });
@@ -48,13 +53,9 @@ router.delete('/aceites/:id', requireRole('admin'), async (req: Request, res: Re
   } catch (err) { next(err); }
 });
 
-// ===== CONSUMIBLES (v2: ConsumibleCatalogo) =====
+// ===== CONSUMIBLES (catalogo unificado v2.9) =====
 
 // GET /api/v1/catalogos/consumibles?tipo=bateria&compatibleCon=mechanical_unit|controller
-// `compatibleCon` se traduce a filtro por `subtipo` (campo nuevo en
-// consumible_catalogo v2). Mapeo:
-//   - mechanical_unit → subtipos `smb_*`
-//   - controller      → subtipos `cmos_rtc` / `memory_backup`
 router.get('/consumibles', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const where: Record<string, unknown> = {};
