@@ -1,5 +1,20 @@
 const router = require('express').Router();
 
+const CAMPOS = [
+  'nombre', 'sede', 'direccion', 'ciudad', 'codigo_postal', 'provincia',
+  'telefono', 'email', 'persona_contacto', 'activo',
+  'tarifa_hora_trabajo', 'tarifa_hora_viaje', 'dietas', 'peajes', 'km',
+  'gestion_accesos', 'horas_trayecto', 'dias_viaje', 'precio_hotel', 'precio_km',
+];
+
+function pick(body) {
+  const out = {};
+  for (const campo of CAMPOS) {
+    if (body[campo] !== undefined) out[campo] = body[campo];
+  }
+  return out;
+}
+
 // Listar clientes
 router.get('/', async (req, res, next) => {
   try {
@@ -8,6 +23,7 @@ router.get('/', async (req, res, next) => {
       .select('clientes.*')
       .select(db.raw('(SELECT COUNT(*) FROM plantas WHERE plantas.cliente_id = clientes.id) as total_plantas'))
       .select(db.raw('(SELECT COUNT(*) FROM sistemas WHERE sistemas.cliente_id = clientes.id) as total_sistemas'))
+      .select(db.raw('(SELECT COUNT(*) FROM intervenciones WHERE intervenciones.cliente_id = clientes.id) as total_intervenciones'))
       .orderBy('nombre');
     res.json(clientes);
   } catch (err) {
@@ -38,12 +54,10 @@ router.get('/:id', async (req, res, next) => {
 router.post('/', async (req, res, next) => {
   try {
     const db = req.app.locals.db;
-    const { nombre, sede, tarifa_hora_trabajo, tarifa_hora_viaje, dietas, peajes, km } = req.body;
-    if (!nombre) return res.status(400).json({ error: 'El nombre es obligatorio' });
+    const datos = pick(req.body);
+    if (!datos.nombre) return res.status(400).json({ error: 'El nombre es obligatorio' });
 
-    const [id] = await db('clientes').insert({
-      nombre, sede, tarifa_hora_trabajo, tarifa_hora_viaje, dietas, peajes, km,
-    });
+    const [id] = await db('clientes').insert({ ...datos, updated_at: db.fn.now() });
     const cliente = await db('clientes').where('id', id).first();
     res.status(201).json(cliente);
   } catch (err) {
@@ -55,9 +69,9 @@ router.post('/', async (req, res, next) => {
 router.put('/:id', async (req, res, next) => {
   try {
     const db = req.app.locals.db;
-    const { nombre, sede, tarifa_hora_trabajo, tarifa_hora_viaje, dietas, peajes, km } = req.body;
+    const datos = pick(req.body);
     await db('clientes').where('id', req.params.id).update({
-      nombre, sede, tarifa_hora_trabajo, tarifa_hora_viaje, dietas, peajes, km,
+      ...datos,
       updated_at: db.fn.now(),
     });
     const cliente = await db('clientes').where('id', req.params.id).first();

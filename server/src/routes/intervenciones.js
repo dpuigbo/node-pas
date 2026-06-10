@@ -6,7 +6,12 @@ router.get('/', async (req, res, next) => {
     const { estado, tipo, cliente_id } = req.query;
     let query = db('intervenciones')
       .join('clientes', 'intervenciones.cliente_id', 'clientes.id')
-      .select('intervenciones.*', 'clientes.nombre as cliente_nombre');
+      .leftJoin('ofertas', 'intervenciones.oferta_id', 'ofertas.id')
+      .select(
+        'intervenciones.*',
+        'clientes.nombre as cliente_nombre',
+        'ofertas.referencia as oferta_referencia',
+      );
 
     if (estado) query = query.where('intervenciones.estado', estado);
     if (tipo) query = query.where('intervenciones.tipo', tipo);
@@ -29,10 +34,11 @@ router.get('/:id', async (req, res, next) => {
       .first();
     if (!intervencion) return res.status(404).json({ error: 'Intervención no encontrada' });
 
-    const sistemas = await db('intervencion_sistemas')
-      .join('sistemas', 'intervencion_sistemas.sistema_id', 'sistemas.id')
-      .where('intervencion_sistemas.intervencion_id', intervencion.id)
-      .select('sistemas.*');
+    const sistemas = await db('intervencion_sistema')
+      .join('sistemas', 'intervencion_sistema.sistema_id', 'sistemas.id')
+      .leftJoin('lu_nivel_mantenimiento', 'intervencion_sistema.nivel_id', 'lu_nivel_mantenimiento.id')
+      .where('intervencion_sistema.intervencion_id', intervencion.id)
+      .select('sistemas.*', 'lu_nivel_mantenimiento.codigo as nivel_codigo');
 
     const informes = await db('informes')
       .where('intervencion_id', intervencion.id);
@@ -47,12 +53,14 @@ router.post('/', async (req, res, next) => {
   try {
     const db = req.app.locals.db;
     const { cliente_id, tipo, titulo, referencia, fecha_inicio, notas } = req.body;
-    if (!cliente_id || !tipo) {
-      return res.status(400).json({ error: 'cliente_id y tipo son obligatorios' });
+    if (!cliente_id || !tipo || !titulo) {
+      return res.status(400).json({ error: 'cliente_id, tipo y titulo son obligatorios' });
     }
 
     const [id] = await db('intervenciones').insert({
-      cliente_id, tipo, titulo, referencia, fecha_inicio, notas, estado: 'borrador',
+      cliente_id, tipo, titulo, referencia, fecha_inicio, notas,
+      estado: 'borrador',
+      updated_at: db.fn.now(),
     });
     const intervencion = await db('intervenciones').where('id', id).first();
     res.status(201).json(intervencion);
@@ -65,8 +73,12 @@ router.put('/:id', async (req, res, next) => {
   try {
     const db = req.app.locals.db;
     const { tipo, estado, titulo, referencia, fecha_inicio, fecha_fin, notas } = req.body;
+    const datos = {};
+    for (const [k, v] of Object.entries({ tipo, estado, titulo, referencia, fecha_inicio, fecha_fin, notas })) {
+      if (v !== undefined) datos[k] = v;
+    }
     await db('intervenciones').where('id', req.params.id).update({
-      tipo, estado, titulo, referencia, fecha_inicio, fecha_fin, notas,
+      ...datos,
       updated_at: db.fn.now(),
     });
     const intervencion = await db('intervenciones').where('id', req.params.id).first();

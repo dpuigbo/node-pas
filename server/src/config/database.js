@@ -1,26 +1,16 @@
-const path = require('path');
-const fs = require('fs');
-
-const projectRoot = path.resolve(__dirname, '../../..');
-const dbPath = process.env.DB_PATH || path.join(projectRoot, 'data', 'pas.db');
-
-// Ensure the data directory exists
-const dataDir = path.dirname(dbPath);
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
-
 module.exports = {
-  client: 'better-sqlite3',
+  client: 'mysql2',
   connection: {
-    filename: dbPath,
+    host: process.env.DB_HOST || '127.0.0.1',
+    port: parseInt(process.env.DB_PORT || '3306', 10),
+    user: process.env.DB_USER || 'pas_user',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'pas_robotics',
+    charset: 'utf8mb4',
+    timezone: '+00:00',
   },
-  useNullAsDefault: true,
   pool: {
-    afterCreate(conn, cb) {
-      conn.pragma('journal_mode = WAL');
-      conn.pragma('foreign_keys = ON');
-      cb();
-    },
+    min: 0,
+    max: 10,
   },
 };

@@ -71,13 +71,21 @@ cp .env.example .env
 nano .env
 ```
 
-Edita los valores:
+Edita los valores con los datos de tu base de datos MySQL de Hostinger
+(hPanel > **Bases de datos** > MySQL; si la app corre en el mismo hosting,
+`DB_HOST` es `127.0.0.1`; si conectas desde fuera, activa **MySQL remoto**
+en hPanel y usa el host que te indique):
 
 ```
 NODE_ENV=production
 PORT=3000
 SESSION_SECRET=genera-un-secreto-largo-y-aleatorio-aqui
-DB_PATH=/home/pasapp/node-pas/data/pas.db
+
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=u306143177_admin_db_user
+DB_PASSWORD=tu-password-mysql
+DB_NAME=u306143177_admin_db
 ```
 
 Para generar un secreto seguro:
@@ -86,10 +94,20 @@ Para generar un secreto seguro:
 node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 
-### 2.3 Crear carpeta de datos
+### 2.3 Preparar la base de datos
+
+La aplicación usa la base de datos MySQL existente. Si es la primera vez,
+ejecuta el script de saneamiento (una sola vez, con backup previo) —
+ver `DB.md` para los detalles:
 
 ```bash
-mkdir -p data
+mysql -h 127.0.0.1 -u USUARIO -p NOMBRE_BD < server/src/db/sql/limpieza_produccion.sql
+```
+
+Para crear una BD vacía desde cero (entorno nuevo):
+
+```bash
+mysql -h 127.0.0.1 -u USUARIO -p NOMBRE_BD < server/src/db/sql/schema_limpio.sql
 ```
 
 ### 2.4 Instalar dependencias y compilar
@@ -100,16 +118,7 @@ cd server && npm install && cd ..
 cd client && npm install && npx vite build && cd ..
 ```
 
-### 2.5 Ejecutar migraciones y seeds
-
-```bash
-cd server
-npx knex migrate:latest --knexfile src/db/knexfile.js
-npx knex seed:run --knexfile src/db/knexfile.js
-cd ..
-```
-
-### 2.6 Iniciar con PM2
+### 2.5 Iniciar con PM2
 
 ```bash
 pm2 start ecosystem.config.js
@@ -261,19 +270,19 @@ node-pas/
 │   └── deploy.yml
 ├── ecosystem.config.js     # Configuración PM2
 ├── package.json            # Scripts raíz
-├── server/                 # Backend Express + SQLite
+├── DB.md                   # Auditoría y guía de la base de datos
+├── server/                 # Backend Express + MySQL (knex)
 │   ├── src/
 │   │   ├── index.js        # Punto de entrada
 │   │   ├── config/         # Configuración BD
-│   │   ├── db/             # Migraciones y seeds
+│   │   ├── db/sql/         # schema_limpio.sql, limpieza_produccion.sql
 │   │   ├── routes/         # Endpoints API
 │   │   └── middleware/     # Error handler, etc.
 │   └── package.json
-├── client/                 # Frontend React + Vite + Tailwind
-│   ├── src/
-│   │   ├── pages/          # Páginas (Dashboard, Clientes, etc.)
-│   │   └── components/     # Componentes reutilizables
-│   ├── index.html
-│   └── package.json
-└── data/                   # Base de datos SQLite (creada automáticamente)
+└── client/                 # Frontend React + Vite + Tailwind
+    ├── src/
+    │   ├── pages/          # Páginas (Dashboard, Clientes, Modelos, etc.)
+    │   └── components/     # Componentes reutilizables
+    ├── index.html
+    └── package.json
 ```

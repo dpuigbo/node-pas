@@ -5,14 +5,20 @@ import {
   Wrench,
   Bot,
   Factory,
+  FileText,
+  Cog,
+  Droplets,
   Settings,
 } from 'lucide-react';
 
 const links = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/clientes', label: 'Clientes', icon: Users },
-  { to: '/intervenciones', label: 'Intervenciones', icon: Wrench },
   { to: '/sistemas', label: 'Sistemas', icon: Bot },
+  { to: '/ofertas', label: 'Ofertas', icon: FileText },
+  { to: '/intervenciones', label: 'Intervenciones', icon: Wrench },
+  { to: '/modelos', label: 'Catálogo de modelos', icon: Cog },
+  { to: '/consumibles', label: 'Consumibles', icon: Droplets },
   { to: '/fabricantes', label: 'Fabricantes', icon: Factory },
 ];
 

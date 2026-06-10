@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Users, Plus, MapPin, Bot } from 'lucide-react';
+import { Users, Plus, MapPin, Bot, Wrench, Mail, Phone } from 'lucide-react';
 
 export default function Clientes() {
   const [clientes, setClientes] = useState([]);
@@ -38,15 +38,29 @@ export default function Clientes() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {clientes.map((c) => (
             <div key={c.id} className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow cursor-pointer">
-              <h3 className="font-semibold text-gray-900">{c.nombre}</h3>
-              <p className="text-sm text-gray-500 mt-1">{c.sede || 'Sin sede'}</p>
-              <div className="flex items-center gap-4 mt-4 text-xs text-gray-500">
+              <div className="flex items-start justify-between">
+                <h3 className="font-semibold text-gray-900">{c.nombre}</h3>
+                {!c.activo && (
+                  <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-xs">Inactivo</span>
+                )}
+              </div>
+              <p className="text-sm text-gray-500 mt-1">
+                {[c.ciudad, c.provincia].filter(Boolean).join(', ') || c.sede || 'Sin ubicación'}
+              </p>
+              <div className="mt-3 space-y-1 text-xs text-gray-500">
+                {c.persona_contacto && <p className="text-gray-600">{c.persona_contacto}</p>}
+                {c.email && (
+                  <p className="flex items-center gap-1.5"><Mail size={11} /> {c.email}</p>
+                )}
+                {c.telefono && (
+                  <p className="flex items-center gap-1.5"><Phone size={11} /> {c.telefono}</p>
+                )}
+              </div>
+              <div className="flex items-center gap-4 mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
                 <span className="flex items-center gap-1"><MapPin size={12} /> {c.total_plantas} plantas</span>
                 <span className="flex items-center gap-1"><Bot size={12} /> {c.total_sistemas} sistemas</span>
+                <span className="flex items-center gap-1"><Wrench size={12} /> {c.total_intervenciones} interv.</span>
               </div>
-              {c.tarifa_hora_trabajo && (
-                <p className="text-xs text-gray-400 mt-2">{c.tarifa_hora_trabajo} €/h trabajo</p>
-              )}
             </div>
           ))}
         </div>

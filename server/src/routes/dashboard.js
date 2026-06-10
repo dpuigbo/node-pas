@@ -4,18 +4,27 @@ router.get('/', async (req, res, next) => {
   try {
     const db = req.app.locals.db;
 
-    const [clientes] = await db('clientes').count('* as total');
-    const [plantas] = await db('plantas').count('* as total');
+    const [clientes] = await db('clientes').where('activo', 1).count('* as total');
     const [sistemas] = await db('sistemas').count('* as total');
     const [intervenciones] = await db('intervenciones').count('* as total');
+    const [ofertas] = await db('ofertas').count('* as total');
+    const [modelos] = await db('modelos_componente').where('activa', 1).count('* as total');
+    const [consumibles] = await db('consumible_catalogo').where('activo', 1).count('* as total');
     const [informes] = await db('informes').count('* as total');
-    const [fabricantes] = await db('fabricantes').where('activo', true).count('* as total');
+    const [actividades] = await db('actividad_preventiva').count('* as total');
 
     // Intervenciones por estado
     const intPorEstado = await db('intervenciones')
       .select('estado')
       .count('* as total')
       .groupBy('estado');
+
+    // Modelos del catálogo por tipo
+    const modelosPorTipo = await db('modelos_componente')
+      .where('activa', 1)
+      .select('tipo')
+      .count('* as total')
+      .groupBy('tipo');
 
     // Intervenciones recientes
     const recientes = await db('intervenciones')
@@ -32,27 +41,37 @@ router.get('/', async (req, res, next) => {
       .orderBy('intervenciones.created_at', 'desc')
       .limit(10);
 
-    // Clientes con más sistemas
-    const topClientes = await db('sistemas')
-      .join('clientes', 'sistemas.cliente_id', 'clientes.id')
-      .select('clientes.nombre')
-      .count('sistemas.id as total_sistemas')
-      .groupBy('clientes.id')
-      .orderBy('total_sistemas', 'desc')
+    // Ofertas recientes
+    const ofertasRecientes = await db('ofertas')
+      .join('clientes', 'ofertas.cliente_id', 'clientes.id')
+      .select(
+        'ofertas.id',
+        'ofertas.referencia',
+        'ofertas.titulo',
+        'ofertas.tipo',
+        'ofertas.estado',
+        'ofertas.fecha_oferta',
+        'ofertas.total_precio',
+        'clientes.nombre as cliente_nombre',
+      )
+      .orderBy('ofertas.created_at', 'desc')
       .limit(5);
 
     res.json({
       stats: {
         clientes: clientes.total,
-        plantas: plantas.total,
         sistemas: sistemas.total,
         intervenciones: intervenciones.total,
+        ofertas: ofertas.total,
+        modelos: modelos.total,
+        consumibles: consumibles.total,
         informes: informes.total,
-        fabricantes: fabricantes.total,
+        actividades: actividades.total,
       },
       intervenciones_por_estado: intPorEstado,
+      modelos_por_tipo: modelosPorTipo,
       intervenciones_recientes: recientes,
-      top_clientes: topClientes,
+      ofertas_recientes: ofertasRecientes,
     });
   } catch (err) {
     next(err);

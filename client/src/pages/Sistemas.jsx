@@ -41,16 +41,19 @@ export default function Sistemas() {
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-semibold text-gray-900">{s.nombre}</h3>
-                  <p className="text-sm text-gray-500 mt-1">{s.fabricante_nombre}</p>
+                  {s.descripcion && <p className="text-sm text-gray-500 mt-1">{s.descripcion}</p>}
                 </div>
-                <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
+                <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium shrink-0">
                   {s.fabricante_nombre}
                 </span>
               </div>
               <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500 space-y-1">
-                <p>Cliente: {s.cliente_nombre}</p>
-                <p>Planta: {s.planta_nombre}</p>
-                <p>Máquina: {s.maquina_nombre}</p>
+                <p>Cliente: <span className="text-gray-700">{s.cliente_nombre}</span></p>
+                {s.planta_nombre && <p>Planta: <span className="text-gray-700">{s.planta_nombre}</span></p>}
+                {s.maquina_nombre && <p>Máquina: <span className="text-gray-700">{s.maquina_nombre}</span></p>}
+                <p>
+                  {s.total_componentes} componente{s.total_componentes !== 1 ? 's' : ''}
+                </p>
               </div>
             </div>
           ))}

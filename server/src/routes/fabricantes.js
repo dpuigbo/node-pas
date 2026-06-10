@@ -32,7 +32,7 @@ router.post('/', async (req, res, next) => {
     const { nombre, activo = true, orden = 0 } = req.body;
     if (!nombre) return res.status(400).json({ error: 'El nombre es obligatorio' });
 
-    const [id] = await db('fabricantes').insert({ nombre, activo, orden });
+    const [id] = await db('fabricantes').insert({ nombre, activo, orden, updated_at: db.fn.now() });
     const fabricante = await db('fabricantes').where('id', id).first();
     res.status(201).json(fabricante);
   } catch (err) {
