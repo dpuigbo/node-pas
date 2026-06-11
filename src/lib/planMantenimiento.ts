@@ -12,11 +12,89 @@
 
 import { prisma } from '../config/database';
 
-/** Cohorte seleccionada por el usuario al configurar el sistema/plan. */
+/**
+ * Contexto de evaluacion de criterios (v3): datos del componente/sistema
+ * contra los que se evaluan los criterios de aplicacion de cada fila.
+ * Extensible: anadir un atributo nuevo = anadir campo aqui + fila en
+ * lu_criterio_atributo + mapeo en ATRIBUTO_TO_CONTEXTO.
+ */
 export interface Cohorte {
   montajeId?: number | null;
   proteccionId?: number | null;
   controladorId?: number | null;
+  controladorGeneracionId?: number | null;
+  typeVariant?: string | null;
+  numeroSerie?: string | null;
+  anioFabricacion?: number | null;
+}
+
+/** Mapeo codigo de atributo (lu_criterio_atributo) → campo del contexto */
+const ATRIBUTO_TO_CONTEXTO: Record<string, keyof Cohorte> = {
+  montaje: 'montajeId',
+  proteccion: 'proteccionId',
+  controlador: 'controladorId',
+  controlador_generacion: 'controladorGeneracionId',
+  type_variant: 'typeVariant',
+  numero_serie: 'numeroSerie',
+  anio_fabricacion: 'anioFabricacion',
+};
+
+interface Criterio {
+  atributo: string;
+  op?: 'eq' | 'in' | 'between' | 'gte' | 'lte' | 'like';
+  valor: unknown;
+}
+
+/**
+ * Evalua los criterios de aplicacion v3 de una fila contra el contexto.
+ * Reglas (consistentes con el comportamiento de cohortes anterior):
+ *  - criterios NULL / vacios → aplica a todos.
+ *  - atributo desconocido → no restringe (forward-compatible).
+ *  - dato ausente en el contexto → no filtra (el usuario aun no lo eligio).
+ */
+export function evaluarCriterios(criterios: unknown, ctx: Cohorte | undefined): boolean {
+  if (criterios == null) return true;
+  let arr: unknown = criterios;
+  if (typeof arr === 'string') {
+    try { arr = JSON.parse(arr); } catch { return true; }
+  }
+  if (!Array.isArray(arr) || arr.length === 0) return true;
+  if (!ctx) return true;
+
+  for (const c of arr as Criterio[]) {
+    const key = c?.atributo ? ATRIBUTO_TO_CONTEXTO[c.atributo] : undefined;
+    if (!key) continue;
+    const v = ctx[key];
+    if (v == null) continue;
+    const val = c.valor;
+    const op = c.op ?? 'eq';
+    let pass: boolean;
+    switch (op) {
+      case 'eq':
+        pass = String(v) === String(val);
+        break;
+      case 'in':
+        pass = Array.isArray(val) && val.map(String).includes(String(v));
+        break;
+      case 'between':
+        pass = Array.isArray(val) && val.length === 2
+          && String(v) >= String(val[0]) && String(v) <= String(val[1]);
+        break;
+      case 'gte':
+        pass = Number(v) >= Number(val);
+        break;
+      case 'lte':
+        pass = Number(v) <= Number(val);
+        break;
+      case 'like':
+        pass = String(v).toLowerCase().includes(String(val).toLowerCase());
+        break;
+      default:
+        pass = true;
+    }
+    if (!pass) return false;
+  }
+  return true;
 }
 
 /**
@@ -63,10 +141,18 @@ export function cohorteMatch(aplicables: unknown, seleccionadoId: number | null 
 }
 
 export function matchCohorte(
-  row: { montajesAplicables?: unknown; proteccionesAplicables?: unknown; controladoresAplicables?: unknown },
+  row: {
+    criterios?: unknown;
+    montajesAplicables?: unknown;
+    proteccionesAplicables?: unknown;
+    controladoresAplicables?: unknown;
+  },
   cohorte: Cohorte | undefined,
 ): boolean {
   if (!cohorte) return true;
+  // v3: si la fila tiene criterios, mandan los criterios
+  if (row.criterios != null) return evaluarCriterios(row.criterios, cohorte);
+  // Fallback legacy: columnas de cohorte fijas
   return cohorteMatch(row.montajesAplicables, cohorte.montajeId)
     && cohorteMatch(row.proteccionesAplicables, cohorte.proteccionId)
     && cohorteMatch(row.controladoresAplicables, cohorte.controladorId);

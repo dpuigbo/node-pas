@@ -180,6 +180,33 @@ router.delete('/actividad/:tipo(preventiva)/:id/consumibles/:linkId',
     } catch (err) { next(err); }
   });
 
+// GET /api/v1/lookups/criterio-atributos
+// Catalogo de atributos de criterio de aplicacion (v3)
+router.get('/criterio-atributos', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const items = await prisma.luCriterioAtributo.findMany({
+      where: { activo: true },
+      orderBy: { id: 'asc' },
+    });
+    res.json(items);
+  } catch (err) { next(err); }
+});
+
+// GET /api/v1/lookups/manuales?fabricanteId=1
+// Registro de manuales (trazabilidad documento + revision)
+router.get('/manuales', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const where: any = {};
+    if (req.query.fabricanteId) where.fabricanteId = Number(req.query.fabricanteId);
+    const items = await prisma.manualDocumento.findMany({
+      where,
+      orderBy: [{ numeroDocumento: 'asc' }, { revision: 'desc' }],
+      include: { fabricante: { select: { id: true, nombre: true } } },
+    });
+    res.json(items);
+  } catch (err) { next(err); }
+});
+
 // GET /api/v1/lookups/actividades-preventivas?tipoComponente=mechanical_unit&nivel=N3
 // Catalogo completo de actividades preventivas (v2.9, unificadas).
 router.get('/actividades-preventivas', async (req: Request, res: Response, next: NextFunction) => {

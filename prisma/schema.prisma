@@ -189,6 +189,76 @@ model LuNivelMantenimiento {
   @@map("lu_nivel_mantenimiento")
 }
 
+// Atributos de criterio de aplicacion (v3): montaje, proteccion, controlador,
+// generacion, type_variant, numero_serie, anio_fabricacion... Anadir un
+// criterio nuevo = 1 fila aqui, sin cambios de schema.
+model LuCriterioAtributo {
+  id       Int     @id @default(autoincrement())
+  codigo   String  @unique @db.VarChar(40)
+  nombre   String  @db.VarChar(100)
+  tipoDato LuCriterioTipoDato @default(id) @map("tipo_dato")
+  origen   String? @db.VarChar(150)
+  notas    String? @db.Text
+  activo   Boolean @default(true)
+
+  @@map("lu_criterio_atributo")
+}
+
+enum LuCriterioTipoDato {
+  id
+  texto
+  numero
+  rango_serie
+  fecha
+}
+
+// Registro de manuales del fabricante (trazabilidad documento + revision)
+model ManualDocumento {
+  id              Int       @id @default(autoincrement())
+  fabricanteId    Int       @map("fabricante_id")
+  numeroDocumento String    @map("numero_documento") @db.VarChar(40)
+  revision        String?   @db.VarChar(10)
+  fechaRevision   DateTime? @map("fecha_revision") @db.Date
+  titulo          String?   @db.VarChar(255)
+  tipo            ManualTipo @default(product_manual)
+  generacion      String?   @db.VarChar(50)
+  rutaFichero     String?   @map("ruta_fichero") @db.VarChar(500)
+  notas           String?   @db.Text
+  createdAt       DateTime? @default(now()) @map("created_at")
+
+  fabricante  Fabricante            @relation(fields: [fabricanteId], references: [id])
+  lubricaciones Lubricacion[]
+  actividades ActividadPreventiva[]
+
+  @@unique([numeroDocumento, revision], map: "uq_manual_doc_rev")
+  @@map("manual_documento")
+}
+
+enum ManualTipo {
+  product_manual
+  trm
+  spare_parts
+  circuit_diagram
+  operating_manual
+  otro
+}
+
+// Consumibles auxiliares del cambio de lubricante (O-rings, juntas...)
+model LubricacionConsumible {
+  id            Int      @id @default(autoincrement())
+  lubricacionId Int      @map("lubricacion_id")
+  consumibleId  Int      @map("consumible_id")
+  cantidad      Decimal? @db.Decimal(10, 3)
+  unidad        String?  @db.VarChar(20)
+  notas         String?  @db.VarChar(255)
+
+  lubricacion Lubricacion        @relation(fields: [lubricacionId], references: [id], onDelete: Cascade)
+  consumible  ConsumibleCatalogo @relation(fields: [consumibleId], references: [id])
+
+  @@unique([lubricacionId, consumibleId], map: "uq_lubcons")
+  @@map("lubricacion_consumible")
+}
+
 // Montajes posibles del manipulador (floor, suspended, wall, tilted, shelf...)
 model LuMontaje {
   id          Int       @id @default(autoincrement())
@@ -224,6 +294,7 @@ model Fabricante {
   modelos  ModeloComponente[]
   sistemas Sistema[]
   familias LuFamilia[]
+  manuales ManualDocumento[]
 
   @@map("fabricantes")
 }
@@ -502,6 +573,7 @@ model ConsumibleCatalogo {
   precioHistorico ConsumiblePrecioHistorico[]
   actividadesPrev ActividadConsumible[]
   lubricaciones   Lubricacion[]
+  lubricacionesAuxiliares LubricacionConsumible[]
 
   @@map("consumible_catalogo")
 }
@@ -565,10 +637,14 @@ model Lubricacion {
   fechaRevisado           DateTime? @map("fecha_revisado") @db.Date
   // 1 = lubricated for life (no cambio preventivo); 0 = cambio aplicable
   lifetime                Boolean  @default(false)
-  // Cohortes: arrays JSON de IDs (NULL = aplica a todos)
+  // Cohortes legacy: arrays JSON de IDs (NULL = aplica a todos).
+  // v3: sustituidas por `criterios`; se mantienen durante la transicion.
   montajesAplicables      Json?    @map("montajes_aplicables")
   proteccionesAplicables  Json?    @map("protecciones_aplicables")
   controladoresAplicables Json?    @map("controladores_aplicables")
+  // v3: criterios de aplicacion [{atributo, op, valor}] (NULL = todos)
+  criterios               Json?
+  manualId                Int?     @map("manual_id")
   intervaloHoras          Int?     @map("intervalo_horas")
   nivelId                 Int?     @map("nivel_id")
   // oil_change, grease_refill, lifetime_lubricated, ...
@@ -577,6 +653,8 @@ model Lubricacion {
   modelo     ModeloComponente      @relation(fields: [modeloComponenteId], references: [id], onDelete: Cascade)
   consumible ConsumibleCatalogo?   @relation(fields: [consumibleId], references: [id])
   nivel      LuNivelMantenimiento? @relation(fields: [nivelId], references: [id])
+  manual     ManualDocumento?      @relation(fields: [manualId], references: [id])
+  consumiblesAuxiliares LubricacionConsumible[]
 
   @@index([modeloComponenteId])
   @@index([consumibleId])
@@ -637,9 +715,12 @@ model ActividadPreventiva {
   // Legacy: usar modelos_aplicables como filtro principal
   familiaId               Int?                     @map("familia_id")
   modelosAplicables       Json?                    @map("modelos_aplicables")
+  // Cohortes legacy (v3: sustituidas por `criterios`, se mantienen en transicion)
   montajesAplicables      Json?                    @map("montajes_aplicables")
   proteccionesAplicables  Json?                    @map("protecciones_aplicables")
   controladoresAplicables Json?                    @map("controladores_aplicables")
+  criterios               Json?
+  manualId                Int?                     @map("manual_id")
   documentoFuente         String?                  @map("documento_fuente") @db.VarChar(80)
   notas                   String?                  @db.Text
   observaciones           String?                  @db.VarChar(500)
@@ -651,6 +732,7 @@ model ActividadPreventiva {
   tipoActividad LuTipoActividad       @relation(fields: [tipoActividadId], references: [id])
   nivel         LuNivelMantenimiento? @relation(fields: [nivelId], references: [id])
   familia       LuFamilia?            @relation(fields: [familiaId], references: [id])
+  manual        ManualDocumento?      @relation(fields: [manualId], references: [id])
   consumibles   ActividadConsumible[]
 
   @@index([tipoActividadId])

@@ -1,0 +1,92 @@
+/**
+ * Tests del evaluador de criterios de aplicacion v3.
+ * Los criterios sustituyen a las cohortes fijas: cada fila de lubricacion o
+ * actividad puede llevar [{atributo, op, valor}] y se evalua contra el
+ * contexto del componente (montaje, proteccion, controlador, nº serie...).
+ */
+
+import { describe, it, expect } from 'vitest';
+import { evaluarCriterios, matchCohorte } from './planMantenimiento';
+
+describe('evaluarCriterios — semantica base', () => {
+  it('criterios NULL → aplica a todos', () => {
+    expect(evaluarCriterios(null, { montajeId: 2 })).toBe(true);
+  });
+
+  it('array vacio → aplica a todos', () => {
+    expect(evaluarCriterios([], { montajeId: 2 })).toBe(true);
+  });
+
+  it('contexto sin definir → aplica (el usuario aun no eligio)', () => {
+    const criterios = [{ atributo: 'montaje', op: 'in', valor: [2, 3] }];
+    expect(evaluarCriterios(criterios, undefined)).toBe(true);
+    expect(evaluarCriterios(criterios, {})).toBe(true);
+    expect(evaluarCriterios(criterios, { montajeId: null })).toBe(true);
+  });
+
+  it('atributo desconocido → no restringe (forward-compatible)', () => {
+    const criterios = [{ atributo: 'criterio_futuro', op: 'eq', valor: 'x' }];
+    expect(evaluarCriterios(criterios, { montajeId: 2 })).toBe(true);
+  });
+
+  it('acepta criterios como string JSON (longtext de MariaDB)', () => {
+    const criterios = JSON.stringify([{ atributo: 'montaje', op: 'in', valor: [2] }]);
+    expect(evaluarCriterios(criterios, { montajeId: 2 })).toBe(true);
+    expect(evaluarCriterios(criterios, { montajeId: 5 })).toBe(false);
+  });
+});
+
+describe('evaluarCriterios — operadores', () => {
+  it('in: incluido / excluido', () => {
+    const c = [{ atributo: 'controlador', op: 'in', valor: [28, 29, 30] }];
+    expect(evaluarCriterios(c, { controladorId: 29 })).toBe(true);
+    expect(evaluarCriterios(c, { controladorId: 34 })).toBe(false);
+  });
+
+  it('eq con type_variant', () => {
+    const c = [{ atributo: 'type_variant', op: 'eq', valor: 'Type C' }];
+    expect(evaluarCriterios(c, { typeVariant: 'Type C' })).toBe(true);
+    expect(evaluarCriterios(c, { typeVariant: 'Type A' })).toBe(false);
+  });
+
+  it('between con rango de numeros de serie', () => {
+    const c = [{ atributo: 'numero_serie', op: 'between', valor: ['6700-105000', '6700-108999'] }];
+    expect(evaluarCriterios(c, { numeroSerie: '6700-106500' })).toBe(true);
+    expect(evaluarCriterios(c, { numeroSerie: '6700-200000' })).toBe(false);
+  });
+
+  it('gte/lte con anio de fabricacion', () => {
+    expect(evaluarCriterios([{ atributo: 'anio_fabricacion', op: 'gte', valor: 2018 }], { anioFabricacion: 2020 })).toBe(true);
+    expect(evaluarCriterios([{ atributo: 'anio_fabricacion', op: 'gte', valor: 2018 }], { anioFabricacion: 2015 })).toBe(false);
+    expect(evaluarCriterios([{ atributo: 'anio_fabricacion', op: 'lte', valor: 2010 }], { anioFabricacion: 2008 })).toBe(true);
+  });
+
+  it('varios criterios = AND', () => {
+    const c = [
+      { atributo: 'montaje', op: 'in', valor: [2] },
+      { atributo: 'proteccion', op: 'in', valor: [6] },
+    ];
+    expect(evaluarCriterios(c, { montajeId: 2, proteccionId: 6 })).toBe(true);
+    expect(evaluarCriterios(c, { montajeId: 2, proteccionId: 1 })).toBe(false);
+    // proteccion sin elegir → solo filtra el montaje
+    expect(evaluarCriterios(c, { montajeId: 2 })).toBe(true);
+  });
+});
+
+describe('matchCohorte — integracion v3 + fallback legacy', () => {
+  it('fila con criterios v3: mandan los criterios', () => {
+    const row = {
+      criterios: [{ atributo: 'montaje', op: 'in', valor: [3] }],
+      // legacy contradictorio: debe ignorarse
+      montajesAplicables: [2],
+    };
+    expect(matchCohorte(row, { montajeId: 3 })).toBe(true);
+    expect(matchCohorte(row, { montajeId: 2 })).toBe(false);
+  });
+
+  it('fila sin criterios: fallback a columnas legacy', () => {
+    const row = { criterios: null, montajesAplicables: [2, 3], proteccionesAplicables: null, controladoresAplicables: null };
+    expect(matchCohorte(row, { montajeId: 2 })).toBe(true);
+    expect(matchCohorte(row, { montajeId: 5 })).toBe(false);
+  });
+});
