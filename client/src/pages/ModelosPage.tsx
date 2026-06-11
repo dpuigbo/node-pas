@@ -348,10 +348,10 @@ export default function ModelosPage() {
                                       {useGeneracionLevel && (
                                         <td className="px-4 py-2">
                                           <div className="flex flex-wrap gap-1">
-                                            {(m.controladoresCompatibles ?? []).map((cc: any) => (
-                                              <Badge key={cc.controlador.id} variant="secondary" className="text-[10px] py-0 gap-0.5">
+                                            {(m.controladoresCompatiblesInfo ?? []).map((cc: any) => (
+                                              <Badge key={cc.id} variant="secondary" className="text-[10px] py-0 gap-0.5">
                                                 <Link2 className="h-2.5 w-2.5" />
-                                                {cc.controlador.nombre}
+                                                {cc.nombre}
                                               </Badge>
                                             ))}
                                           </div>
