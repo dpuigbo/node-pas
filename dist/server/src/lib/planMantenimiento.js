@@ -11,6 +11,7 @@
 //     tiene sus propias filas (nivel N_CTRL); el total del sistema se obtiene
 //     SUMANDO manipulador + controlador (D-073).
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.evaluarCriterios = evaluarCriterios;
 exports.nivelesCubiertos = nivelesCubiertos;
 exports.parseIdArray = parseIdArray;
 exports.cohorteMatch = cohorteMatch;
@@ -25,6 +26,77 @@ exports.nivelEfectivoParaTipo = nivelEfectivoParaTipo;
 exports.convertirCantidadAUnidadConsumible = convertirCantidadAUnidadConsumible;
 exports.getConsumiblesPlan = getConsumiblesPlan;
 const database_1 = require("../config/database");
+/** Mapeo codigo de atributo (lu_criterio_atributo) → campo del contexto */
+const ATRIBUTO_TO_CONTEXTO = {
+    montaje: 'montajeId',
+    proteccion: 'proteccionId',
+    controlador: 'controladorId',
+    controlador_generacion: 'controladorGeneracionId',
+    type_variant: 'typeVariant',
+    numero_serie: 'numeroSerie',
+    anio_fabricacion: 'anioFabricacion',
+};
+/**
+ * Evalua los criterios de aplicacion v3 de una fila contra el contexto.
+ * Reglas (consistentes con el comportamiento de cohortes anterior):
+ *  - criterios NULL / vacios → aplica a todos.
+ *  - atributo desconocido → no restringe (forward-compatible).
+ *  - dato ausente en el contexto → no filtra (el usuario aun no lo eligio).
+ */
+function evaluarCriterios(criterios, ctx) {
+    if (criterios == null)
+        return true;
+    let arr = criterios;
+    if (typeof arr === 'string') {
+        try {
+            arr = JSON.parse(arr);
+        }
+        catch {
+            return true;
+        }
+    }
+    if (!Array.isArray(arr) || arr.length === 0)
+        return true;
+    if (!ctx)
+        return true;
+    for (const c of arr) {
+        const key = c?.atributo ? ATRIBUTO_TO_CONTEXTO[c.atributo] : undefined;
+        if (!key)
+            continue;
+        const v = ctx[key];
+        if (v == null)
+            continue;
+        const val = c.valor;
+        const op = c.op ?? 'eq';
+        let pass;
+        switch (op) {
+            case 'eq':
+                pass = String(v) === String(val);
+                break;
+            case 'in':
+                pass = Array.isArray(val) && val.map(String).includes(String(v));
+                break;
+            case 'between':
+                pass = Array.isArray(val) && val.length === 2
+                    && String(v) >= String(val[0]) && String(v) <= String(val[1]);
+                break;
+            case 'gte':
+                pass = Number(v) >= Number(val);
+                break;
+            case 'lte':
+                pass = Number(v) <= Number(val);
+                break;
+            case 'like':
+                pass = String(v).toLowerCase().includes(String(val).toLowerCase());
+                break;
+            default:
+                pass = true;
+        }
+        if (!pass)
+            return false;
+    }
+    return true;
+}
 /**
  * Niveles cuyo contenido queda cubierto al ejecutar el nivel pedido.
  * N2_INF/N2_SUP incluyen N1; N3 = N1 + N2_INF + N2_SUP (servicio completo).
@@ -76,6 +148,10 @@ function cohorteMatch(aplicables, seleccionadoId) {
 function matchCohorte(row, cohorte) {
     if (!cohorte)
         return true;
+    // v3: si la fila tiene criterios, mandan los criterios
+    if (row.criterios != null)
+        return evaluarCriterios(row.criterios, cohorte);
+    // Fallback legacy: columnas de cohorte fijas
     return cohorteMatch(row.montajesAplicables, cohorte.montajeId)
         && cohorteMatch(row.proteccionesAplicables, cohorte.proteccionId)
         && cohorteMatch(row.controladoresAplicables, cohorte.controladorId);
