@@ -76,10 +76,16 @@ function evaluarCriterios(criterios, ctx) {
             case 'in':
                 pass = Array.isArray(val) && val.map(String).includes(String(v));
                 break;
-            case 'between':
-                pass = Array.isArray(val) && val.length === 2
-                    && String(v) >= String(val[0]) && String(v) <= String(val[1]);
+            case 'between': {
+                // Valor: rango simple [min, max] o lista de rangos [[min, max], ...]
+                // (OR entre rangos; usado en numero_serie para generaciones, p.ej. IRB 7600 gen 1)
+                const enRango = (r) => Array.isArray(r) && r.length === 2
+                    && String(v) >= String(r[0]) && String(v) <= String(r[1]);
+                pass = Array.isArray(val) && (val.length > 0 && val.every((r) => Array.isArray(r))
+                    ? val.some(enRango)
+                    : enRango(val));
                 break;
+            }
             case 'gte':
                 pass = Number(v) >= Number(val);
                 break;
