@@ -76,10 +76,18 @@ export function evaluarCriterios(criterios: unknown, ctx: Cohorte | undefined): 
       case 'in':
         pass = Array.isArray(val) && val.map(String).includes(String(v));
         break;
-      case 'between':
-        pass = Array.isArray(val) && val.length === 2
-          && String(v) >= String(val[0]) && String(v) <= String(val[1]);
+      case 'between': {
+        // Valor: rango simple [min, max] o lista de rangos [[min, max], ...]
+        // (OR entre rangos; usado en numero_serie para generaciones, p.ej. IRB 7600 gen 1)
+        const enRango = (r: unknown): boolean => Array.isArray(r) && r.length === 2
+          && String(v) >= String((r as unknown[])[0]) && String(v) <= String((r as unknown[])[1]);
+        pass = Array.isArray(val) && (
+          val.length > 0 && val.every((r) => Array.isArray(r))
+            ? (val as unknown[]).some(enRango)
+            : enRango(val)
+        );
         break;
+      }
       case 'gte':
         pass = Number(v) >= Number(val);
         break;

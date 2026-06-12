@@ -55,6 +55,20 @@ describe('evaluarCriterios — operadores', () => {
     expect(evaluarCriterios(c, { numeroSerie: '6700-200000' })).toBe(false);
   });
 
+  it('between con LISTA de rangos de serie (OR entre rangos; IRB 7600 gen 1)', () => {
+    const c = [{
+      atributo: 'numero_serie', op: 'between',
+      valor: [['76-20000', '76-26999'], ['76-30000', '76-33999'], ['76-50000', '76-50999']],
+    }];
+    expect(evaluarCriterios(c, { numeroSerie: '76-21500' })).toBe(true);  // 1er rango
+    expect(evaluarCriterios(c, { numeroSerie: '76-33999' })).toBe(true);  // borde 2o rango
+    expect(evaluarCriterios(c, { numeroSerie: '76-50500' })).toBe(true);  // 3er rango
+    expect(evaluarCriterios(c, { numeroSerie: '76-27000' })).toBe(false); // hueco gen 2
+    expect(evaluarCriterios(c, { numeroSerie: '76-51000' })).toBe(false); // gen 2/3 M2004
+    // sin numero de serie en contexto → no filtra
+    expect(evaluarCriterios(c, { montajeId: 2 })).toBe(true);
+  });
+
   it('gte/lte con anio de fabricacion', () => {
     expect(evaluarCriterios([{ atributo: 'anio_fabricacion', op: 'gte', valor: 2018 }], { anioFabricacion: 2020 })).toBe(true);
     expect(evaluarCriterios([{ atributo: 'anio_fabricacion', op: 'gte', valor: 2018 }], { anioFabricacion: 2015 })).toBe(false);
