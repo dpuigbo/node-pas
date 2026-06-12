@@ -646,6 +646,9 @@ model Lubricacion {
   criterios               Json?
   manualId                Int?     @map("manual_id")
   intervaloHoras          Int?     @map("intervalo_horas")
+  // v3.2: pauta de calendario del PM ("X h o Y meses, lo que ocurra primero");
+  // las horas siguen siendo el criterio de planificacion
+  intervaloMeses          Int?     @map("intervalo_meses")
   // v3.1: primer cambio (rodaje) si difiere del recurrente (6.000 h tipico)
   intervaloPrimerCambioHoras Int?  @map("intervalo_primer_cambio_horas")
   nivelId                 Int?     @map("nivel_id")
