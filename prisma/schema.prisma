@@ -646,6 +646,8 @@ model Lubricacion {
   criterios               Json?
   manualId                Int?     @map("manual_id")
   intervaloHoras          Int?     @map("intervalo_horas")
+  // v3.1: primer cambio (rodaje) si difiere del recurrente (6.000 h tipico)
+  intervaloPrimerCambioHoras Int?  @map("intervalo_primer_cambio_horas")
   nivelId                 Int?     @map("nivel_id")
   // oil_change, grease_refill, lifetime_lubricated, ...
   actividadDocumentada    String?  @map("actividad_documentada") @db.VarChar(50)
@@ -710,6 +712,10 @@ model ActividadPreventiva {
   intervaloHoras          Int?                     @map("intervalo_horas")
   intervaloMeses          Int?                     @map("intervalo_meses") @db.SmallInt
   intervaloCondicion      IntervaloCondicion       @default(periodico) @map("intervalo_condicion")
+  // v3.1: 1 = actividad de una sola vez al alcanzar intervalo_horas (rodaje)
+  intervaloUnico          Boolean                  @default(false) @map("intervalo_unico")
+  // v3.1: intervalo por distancia recorrida (ball screw SCARA)
+  intervaloKm             Int?                     @map("intervalo_km")
   nivelId                 Int?                     @map("nivel_id")
   obligatoria             Boolean                  @default(true)
   // Legacy: usar modelos_aplicables como filtro principal
