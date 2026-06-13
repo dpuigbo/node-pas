@@ -35,6 +35,7 @@ const ATRIBUTO_TO_CONTEXTO = {
     type_variant: 'typeVariant',
     numero_serie: 'numeroSerie',
     anio_fabricacion: 'anioFabricacion',
+    opcion: 'opciones',
 };
 /**
  * Evalua los criterios de aplicacion v3 de una fila contra el contexto.
@@ -69,6 +70,16 @@ function evaluarCriterios(criterios, ctx) {
         const val = c.valor;
         const op = c.op ?? 'eq';
         let pass;
+        // Contexto que es un CONJUNTO (p.ej. opciones de armario): el criterio pasa
+        // si interseca con valor ("tiene al menos una de las opciones pedidas").
+        // Conjunto vacio = sin opciones = no aplica (las opcionales se excluyen).
+        if (Array.isArray(v)) {
+            const needed = (Array.isArray(val) ? val : [val]).map(String);
+            const present = v.map(String);
+            if (!needed.some((n) => present.includes(n)))
+                return false;
+            continue;
+        }
         switch (op) {
             case 'eq':
                 pass = String(v) === String(val);
