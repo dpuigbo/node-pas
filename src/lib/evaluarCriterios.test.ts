@@ -75,6 +75,32 @@ describe('evaluarCriterios — operadores', () => {
     expect(evaluarCriterios([{ atributo: 'anio_fabricacion', op: 'lte', valor: 2010 }], { anioFabricacion: 2008 })).toBe(true);
   });
 
+  it('opcion: el armario "tiene" la opcion (interseccion del conjunto)', () => {
+    const c = [{ atributo: 'opcion', op: 'in', valor: ['3005-2'] }];
+    // armario con la opcion 3005-2 (y otras) → aplica
+    expect(evaluarCriterios(c, { opciones: ['3004-2', '3005-2'] })).toBe(true);
+    // armario sin esa opcion → no aplica
+    expect(evaluarCriterios(c, { opciones: ['3005-1'] })).toBe(false);
+    // armario sin opciones declaradas → no aplica (opcional excluida)
+    expect(evaluarCriterios(c, { opciones: [] })).toBe(false);
+    // opciones aun sin elegir → no filtra
+    expect(evaluarCriterios(c, { opciones: null })).toBe(true);
+    expect(evaluarCriterios(c, {})).toBe(true);
+  });
+
+  it('opcion compuesta: dos criterios = AND (filtro heat exchanger 3004-2 + 3005-x)', () => {
+    const c = [
+      { atributo: 'opcion', op: 'in', valor: ['3004-2'] },
+      { atributo: 'opcion', op: 'in', valor: ['3005-1', '3005-2'] },
+    ];
+    expect(evaluarCriterios(c, { opciones: ['3004-2', '3005-2'] })).toBe(true);
+    expect(evaluarCriterios(c, { opciones: ['3004-2', '3005-1'] })).toBe(true);
+    // tiene 3004-2 pero ninguna 3005-x → no aplica
+    expect(evaluarCriterios(c, { opciones: ['3004-2'] })).toBe(false);
+    // tiene 3005-2 pero no 3004-2 → no aplica
+    expect(evaluarCriterios(c, { opciones: ['3005-2'] })).toBe(false);
+  });
+
   it('varios criterios = AND', () => {
     const c = [
       { atributo: 'montaje', op: 'in', valor: [2] },

@@ -26,6 +26,9 @@ export interface Cohorte {
   typeVariant?: string | null;
   numeroSerie?: string | null;
   anioFabricacion?: number | null;
+  // v3 (controladoras): conjunto de opciones de armario presentes (p.ej.
+  // ["3005-2", "3004-2"]); el criterio 'opcion' pasa si interseca con valor.
+  opciones?: string[] | null;
 }
 
 /** Mapeo codigo de atributo (lu_criterio_atributo) → campo del contexto */
@@ -37,6 +40,7 @@ const ATRIBUTO_TO_CONTEXTO: Record<string, keyof Cohorte> = {
   type_variant: 'typeVariant',
   numero_serie: 'numeroSerie',
   anio_fabricacion: 'anioFabricacion',
+  opcion: 'opciones',
 };
 
 interface Criterio {
@@ -69,6 +73,15 @@ export function evaluarCriterios(criterios: unknown, ctx: Cohorte | undefined): 
     const val = c.valor;
     const op = c.op ?? 'eq';
     let pass: boolean;
+    // Contexto que es un CONJUNTO (p.ej. opciones de armario): el criterio pasa
+    // si interseca con valor ("tiene al menos una de las opciones pedidas").
+    // Conjunto vacio = sin opciones = no aplica (las opcionales se excluyen).
+    if (Array.isArray(v)) {
+      const needed = (Array.isArray(val) ? val : [val]).map(String);
+      const present = v.map(String);
+      if (!needed.some((n) => present.includes(n))) return false;
+      continue;
+    }
     switch (op) {
       case 'eq':
         pass = String(v) === String(val);
