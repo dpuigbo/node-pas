@@ -91,8 +91,33 @@ if (!isDev) {
   });
 }
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`[PAS] Servidor corriendo en puerto ${PORT} (${isDev ? 'desarrollo' : 'produccion'})`);
 });
+
+// Cierre graceful: imprescindible para que Passenger reinicie LIMPIO en cada deploy.
+// El deploy hace touch tmp/restart.txt -> Passenger manda SIGTERM al proceso viejo.
+// Sin este handler, el proceso viejo no libera el pool de conexiones de BD ni el
+// socket, y el proceso nuevo se queda bloqueado (hay que matarlo a mano desde
+// Hostinger). Aqui cerramos el server HTTP, desconectamos Prisma y salimos; con un
+// timeout de seguridad por si quedan conexiones keep-alive abiertas.
+let cerrando = false;
+async function gracefulShutdown(signal: string): Promise<void> {
+  if (cerrando) return;
+  cerrando = true;
+  console.log(`[PAS] ${signal} recibido — cerrando limpio...`);
+  const forzar = setTimeout(() => { console.error('[PAS] cierre forzado (timeout 8s)'); process.exit(0); }, 8000);
+  forzar.unref();
+  try {
+    // Node 18.2+: cierra ya las conexiones keep-alive para no esperar a que drenen.
+    (server as unknown as { closeAllConnections?: () => void }).closeAllConnections?.();
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+    try { const { prisma } = await import('./config/database'); await prisma.$disconnect(); } catch (_) { /* noop */ }
+  } catch (_) { /* noop */ }
+  clearTimeout(forzar);
+  process.exit(0);
+}
+process.on('SIGTERM', () => { void gracefulShutdown('SIGTERM'); });
+process.on('SIGINT', () => { void gracefulShutdown('SIGINT'); });
 
 export default app;
