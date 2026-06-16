@@ -119,5 +119,6 @@ async function gracefulShutdown(signal: string): Promise<void> {
 }
 process.on('SIGTERM', () => { void gracefulShutdown('SIGTERM'); });
 process.on('SIGINT', () => { void gracefulShutdown('SIGINT'); });
+// v3.4: con el cierre graceful, cada deploy reinicia Passenger limpio (sin matar el proceso a mano).
 
 export default app;
