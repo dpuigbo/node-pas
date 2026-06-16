@@ -719,6 +719,9 @@ model ActividadPreventiva {
   intervaloUnico          Boolean                  @default(false) @map("intervalo_unico")
   // v3.1: intervalo por distancia recorrida (ball screw SCARA)
   intervaloKm             Int?                     @map("intervalo_km")
+  // v3.4: intervalo unificado JSON ({cantidad,unidad} | array para dobles horas+meses | {tipo}).
+  // Solo display; las columnas typed (horas/meses/km/condicion) siguen siendo la fuente del motor de ofertas.
+  intervalo               Json?                    @map("intervalo")
   nivelId                 Int?                     @map("nivel_id")
   obligatoria             Boolean                  @default(true)
   // Legacy: usar modelos_aplicables como filtro principal

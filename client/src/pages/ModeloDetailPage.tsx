@@ -47,17 +47,52 @@ const ESTADO_LABELS: Record<string, string> = {
 
 type TabKey = 'info' | 'lubricacion' | 'mantenimiento' | 'compatibilidad' | 'templates';
 
+const INTERVALO_TIPO_LABEL: Record<string, string> = {
+  condicion: 'Según condición',
+  alerta_baja: 'Alerta baja',
+  periodico: 'Periódico',
+  n_a: '—',
+};
+const INTERVALO_UNIDAD_LABEL: Record<string, string> = {
+  horas: 'h', meses: 'meses', km: 'km', dias: 'días', anios: 'años', ciclos: 'ciclos',
+};
+
+function formatIntervaloEntry(e: any): string | null {
+  if (e == null) return null;
+  if (typeof e.tipo === 'string') return INTERVALO_TIPO_LABEL[e.tipo] ?? null;
+  if (e.cantidad != null && e.unidad) {
+    const u = INTERVALO_UNIDAD_LABEL[e.unidad] ?? e.unidad;
+    return `${Number(e.cantidad).toLocaleString('es-ES')} ${u}${e.unico ? ' (única vez)' : ''}`;
+  }
+  return null;
+}
+
+// v3.4: lee el intervalo unificado JSON ({cantidad,unidad} | array para dobles | {tipo}).
+// Fallback a las columnas typed (incl. km) si aún no hay JSON.
 function formatIntervalo(item: any): string {
+  let iv = item.intervalo;
+  if (typeof iv === 'string') { try { iv = JSON.parse(iv); } catch { iv = null; } }
+  if (iv != null) {
+    if (Array.isArray(iv)) {
+      const ss = iv.map(formatIntervaloEntry).filter(Boolean) as string[];
+      if (ss.length) return ss.join(' o ');
+    } else if (typeof iv === 'object') {
+      const s = formatIntervaloEntry(iv);
+      if (s) return s;
+    }
+  }
+  // Fallback legacy: columnas typed.
   const parts: string[] = [];
   if (item.intervaloHoras) parts.push(`${item.intervaloHoras} h`);
   if (item.intervaloMeses) parts.push(`${item.intervaloMeses} meses`);
+  if (item.intervaloKm) parts.push(`${item.intervaloKm} km`);
   if (parts.length === 0) {
     if (item.intervaloCondicion === 'condicion') return 'Según condición';
     if (item.intervaloCondicion === 'alerta_baja') return 'Alerta baja';
     if (item.intervaloTextoLegacy) return item.intervaloTextoLegacy;
     return '—';
   }
-  return parts.join(' / ');
+  return parts.join(' o ');
 }
 
 function formatFoundry(item: any): string | null {
