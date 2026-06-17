@@ -6,6 +6,20 @@ const database_1 = require("../config/database");
 const sistemas_validation_1 = require("../validation/sistemas.validation");
 const validarCompatibilidadEje_1 = require("../lib/validarCompatibilidadEje");
 const router = (0, express_1.Router)();
+// Construye el JSON `metadata` de cohorte del componente instalado (montaje/proteccion/
+// type_variant/anio). El motor de ofertas lo lee para aplicar los cohortes FP/Type A/serie.
+function buildCohorteMeta(c) {
+    const m = {};
+    if (c.montajeId != null)
+        m.montajeId = c.montajeId;
+    if (c.proteccionId != null)
+        m.proteccionId = c.proteccionId;
+    if (c.typeVariant != null && c.typeVariant !== '')
+        m.typeVariant = c.typeVariant;
+    if (c.anioFabricacion != null)
+        m.anioFabricacion = c.anioFabricacion;
+    return Object.keys(m).length ? m : undefined;
+}
 // ===== SISTEMAS =====
 // GET /api/v1/sistemas
 router.get('/', async (req, res, next) => {
@@ -160,6 +174,7 @@ router.post('/completo', (0, role_middleware_1.requireRole)('admin'), async (req
                             etiqueta: comp.etiqueta,
                             numeroSerie: comp.numeroSerie ?? null,
                             numEjes: comp.numEjes ?? null,
+                            metadata: buildCohorteMeta(comp),
                             orden: comp.orden,
                             componentePadreId: padreId,
                         },
@@ -219,6 +234,7 @@ router.put('/:id/completo', (0, role_middleware_1.requireRole)('admin'), async (
                             etiqueta: comp.etiqueta,
                             numeroSerie: comp.numeroSerie ?? null,
                             numEjes: comp.numEjes ?? null,
+                            metadata: buildCohorteMeta(comp),
                             orden: comp.orden,
                             componentePadreId: padreId,
                         },

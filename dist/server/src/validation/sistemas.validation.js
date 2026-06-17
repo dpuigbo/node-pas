@@ -17,6 +17,11 @@ exports.createComponenteSchema = zod_1.z.object({
     etiqueta: zod_1.z.string().min(1, 'La etiqueta es obligatoria').max(100),
     numeroSerie: zod_1.z.string().max(100).optional().nullable(),
     numEjes: zod_1.z.number().int().positive().optional().nullable(),
+    // Cohorte del componente instalado (filtran lubricacion/actividades en la oferta)
+    montajeId: zod_1.z.number().int().positive().optional().nullable(),
+    proteccionId: zod_1.z.number().int().positive().optional().nullable(),
+    typeVariant: zod_1.z.string().max(50).optional().nullable(),
+    anioFabricacion: zod_1.z.number().int().min(1980).max(2100).optional().nullable(),
     metadata: zod_1.z.any().optional().nullable(),
     orden: zod_1.z.number().int().optional().default(0),
     componentePadreId: zod_1.z.number().int().positive().optional().nullable(),
@@ -32,6 +37,10 @@ const componenteWizardSchema = zod_1.z.object({
     etiqueta: zod_1.z.string().min(1).max(100),
     numeroSerie: zod_1.z.string().max(100).optional().nullable(),
     numEjes: zod_1.z.number().int().positive().optional().nullable(),
+    montajeId: zod_1.z.number().int().positive().optional().nullable(),
+    proteccionId: zod_1.z.number().int().positive().optional().nullable(),
+    typeVariant: zod_1.z.string().max(50).optional().nullable(),
+    anioFabricacion: zod_1.z.number().int().min(1980).max(2100).optional().nullable(),
     orden: zod_1.z.number().int().optional().default(0),
 });
 exports.createSistemaCompletoSchema = zod_1.z.object({
