@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useModelos, useModelosCompatiblesCon, useEjeCompatibilidad, useEjesCompatibles } from '@/hooks/useModelos';
 import { useFabricantes } from '@/hooks/useFabricantes';
 import { useCreateSistemaCompleto, useSistema, useUpdateSistemaCompleto } from '@/hooks/useSistemas';
+import { useMontajes, useProtecciones } from '@/hooks/useLookups';
 import { getControllerCapabilities } from '@/lib/controller-capabilities';
 
 // ===== Types =====
@@ -33,6 +34,10 @@ type RobotDraft = {
   etiqueta: string;
   numeroSerie: string;
   numEjes: number | null;
+  montajeId: number | null;
+  proteccionId: number | null;
+  typeVariant: string;
+  anioFabricacion: number | null;
   duEtiqueta: string;
   duSerie: string;
 };
@@ -44,6 +49,10 @@ const emptyRobot = (): RobotDraft => ({
   etiqueta: '',
   numeroSerie: '',
   numEjes: 6,
+  montajeId: null,
+  proteccionId: null,
+  typeVariant: '',
+  anioFabricacion: null,
   duEtiqueta: '',
   duSerie: '',
 });
@@ -89,6 +98,8 @@ export default function NuevoSistemaPage() {
 
   // Data fetching
   const { data: fabricantes } = useFabricantes();
+  const { data: montajes } = useMontajes();
+  const { data: protecciones } = useProtecciones();
   const { data: controllers } = useModelos(
     fabricanteId ? { fabricanteId, tipo: 'controller' } : undefined,
   );
@@ -178,6 +189,10 @@ export default function NuevoSistemaPage() {
           etiqueta: m.etiqueta,
           numeroSerie: m.numeroSerie || '',
           numEjes: m.numEjes,
+          montajeId: m.metadata?.montajeId ?? null,
+          proteccionId: m.metadata?.proteccionId ?? null,
+          typeVariant: m.metadata?.typeVariant ?? '',
+          anioFabricacion: m.metadata?.anioFabricacion ?? null,
           duEtiqueta: du?.etiqueta || '',
           duSerie: du?.numeroSerie || '',
         };
@@ -393,6 +408,10 @@ export default function NuevoSistemaPage() {
         etiqueta: robot.etiqueta,
         numeroSerie: robot.numeroSerie || null,
         numEjes: robot.numEjes,
+        montajeId: robot.montajeId,
+        proteccionId: robot.proteccionId,
+        typeVariant: robot.typeVariant || null,
+        anioFabricacion: robot.anioFabricacion,
         orden: orden++,
       });
     });
@@ -748,6 +767,64 @@ export default function NuevoSistemaPage() {
                               min={1}
                               max={10}
                             />
+                          </div>
+                        </div>
+
+                        {/* Cohorte: atributos del robot que afinan la oferta (FP, Type A, serie, anio) */}
+                        <div className="border-t pt-3 mt-1">
+                          <p className="text-xs font-medium text-muted-foreground mb-2">
+                            Atributos para la oferta <span className="font-normal">(opcional — afinan lubricacion/actividades)</span>
+                          </p>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label>Montaje</Label>
+                              <Select
+                                value={robot.montajeId ? String(robot.montajeId) : 'none'}
+                                onValueChange={(v) => updateRobot(index, { montajeId: v === 'none' ? null : Number(v) })}
+                              >
+                                <SelectTrigger><SelectValue placeholder="Sin especificar" /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="none">Sin especificar</SelectItem>
+                                  {montajes?.map((m) => (
+                                    <SelectItem key={m.id} value={String(m.id)}>{m.descripcion || m.codigo}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <Label>Proteccion</Label>
+                              <Select
+                                value={robot.proteccionId ? String(robot.proteccionId) : 'none'}
+                                onValueChange={(v) => updateRobot(index, { proteccionId: v === 'none' ? null : Number(v) })}
+                              >
+                                <SelectTrigger><SelectValue placeholder="Sin especificar" /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="none">Sin especificar</SelectItem>
+                                  {protecciones?.map((p) => (
+                                    <SelectItem key={p.id} value={String(p.id)}>{p.nombre}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <Label>Variante (Type) <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+                              <Input
+                                value={robot.typeVariant}
+                                onChange={(e) => updateRobot(index, { typeVariant: e.target.value })}
+                                placeholder="Ej: Type A"
+                              />
+                            </div>
+                            <div>
+                              <Label>Anio fabricacion <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+                              <Input
+                                type="number"
+                                value={robot.anioFabricacion ?? ''}
+                                onChange={(e) => updateRobot(index, { anioFabricacion: e.target.value ? Number(e.target.value) : null })}
+                                min={1980}
+                                max={2100}
+                                placeholder="Ej: 2018"
+                              />
+                            </div>
                           </div>
                         </div>
 
