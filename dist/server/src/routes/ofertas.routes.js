@@ -262,7 +262,7 @@ async function calculateOfertaTotals(sistemas) {
         where: { id: { in: sistemaIds } },
         include: {
             componentes: {
-                select: { id: true, tipo: true, modeloComponenteId: true },
+                select: { id: true, tipo: true, modeloComponenteId: true, numeroSerie: true, metadata: true },
             },
         },
     });
@@ -282,10 +282,21 @@ async function calculateOfertaTotals(sistemas) {
             const nivelEfectivo = (0, planMantenimiento_1.nivelEfectivoParaTipo)(comp.tipo, nivel);
             if (!nivelEfectivo)
                 continue;
+            const meta = (comp.metadata ?? {});
             const calc = await (0, ofertaMantenimiento_1.calcularComponenteOferta)(comp.modeloComponenteId, nivelEfectivo, {
                 tipoOferta: 'mantenimiento',
                 conBaterias: true,
                 conAceite: true,
+                // Cohorte del componente instalado: numeroSerie es columna real;
+                // montaje/proteccion/typeVariant/anioFabricacion se leen de metadata
+                // (se aplican en cuanto el alta de sistema los capture ahi).
+                cohorte: {
+                    numeroSerie: comp.numeroSerie ?? null,
+                    montajeId: typeof meta.montajeId === 'number' ? meta.montajeId : null,
+                    proteccionId: typeof meta.proteccionId === 'number' ? meta.proteccionId : null,
+                    typeVariant: typeof meta.typeVariant === 'string' ? meta.typeVariant : null,
+                    anioFabricacion: typeof meta.anioFabricacion === 'number' ? meta.anioFabricacion : null,
+                },
             }, ctrl?.modeloComponenteId ?? null);
             sysHoras += calc.horas;
             sysCoste += calc.costeConsumibles + calc.costeLimpieza;
@@ -856,7 +867,7 @@ router.put('/:id/componente/:cmpId', (0, role_middleware_1.requireRole)('admin')
         }
         const comp = await database_1.prisma.componenteSistema.findUnique({
             where: { id: componenteSistemaId },
-            select: { modeloComponenteId: true },
+            select: { modeloComponenteId: true, numeroSerie: true, metadata: true, sistemaId: true },
         });
         if (!comp) {
             res.status(404).json({ error: 'Componente no encontrado' });
@@ -870,11 +881,24 @@ router.put('/:id/componente/:cmpId', (0, role_middleware_1.requireRole)('admin')
         // Calcular horas + costes solo si hay nivel definido
         let calc = { horas: 0, costeConsumibles: 0, precioConsumibles: 0, costeLimpieza: 0 };
         if (nivelCodigo) {
+            // Controlador del sistema (cohorte por controlador) + cohorte del componente instalado.
+            const ctrlComp = await database_1.prisma.componenteSistema.findFirst({
+                where: { sistemaId: comp.sistemaId, tipo: 'controller' },
+                select: { modeloComponenteId: true },
+            });
+            const meta = (comp.metadata ?? {});
             calc = await (0, ofertaMantenimiento_1.calcularComponenteOferta)(comp.modeloComponenteId, nivelCodigo, {
                 tipoOferta: oferta.tipoOferta,
                 conBaterias,
                 conAceite,
-            });
+                cohorte: {
+                    numeroSerie: comp.numeroSerie ?? null,
+                    montajeId: typeof meta.montajeId === 'number' ? meta.montajeId : null,
+                    proteccionId: typeof meta.proteccionId === 'number' ? meta.proteccionId : null,
+                    typeVariant: typeof meta.typeVariant === 'string' ? meta.typeVariant : null,
+                    anioFabricacion: typeof meta.anioFabricacion === 'number' ? meta.anioFabricacion : null,
+                },
+            }, ctrlComp?.modeloComponenteId ?? null);
         }
         const upserted = await database_1.prisma.ofertaComponente.upsert({
             where: { ofertaId_componenteSistemaId: { ofertaId, componenteSistemaId } },
