@@ -1,4 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import { Prisma } from '@prisma/client';
 import { requireRole } from '../middleware/role.middleware';
 import { prisma } from '../config/database';
 import {
@@ -9,6 +10,20 @@ import {
 import { validarCompatibilidadEje, filtrarEjesCompatibles } from '../lib/validarCompatibilidadEje';
 
 const router = Router();
+
+// Construye el JSON `metadata` de cohorte del componente instalado (montaje/proteccion/
+// type_variant/anio). El motor de ofertas lo lee para aplicar los cohortes FP/Type A/serie.
+function buildCohorteMeta(c: {
+  montajeId?: number | null; proteccionId?: number | null;
+  typeVariant?: string | null; anioFabricacion?: number | null;
+}): Prisma.InputJsonValue | undefined {
+  const m: Record<string, string | number> = {};
+  if (c.montajeId != null) m.montajeId = c.montajeId;
+  if (c.proteccionId != null) m.proteccionId = c.proteccionId;
+  if (c.typeVariant != null && c.typeVariant !== '') m.typeVariant = c.typeVariant;
+  if (c.anioFabricacion != null) m.anioFabricacion = c.anioFabricacion;
+  return Object.keys(m).length ? m : undefined;
+}
 
 // ===== SISTEMAS =====
 
@@ -160,6 +175,7 @@ router.post('/completo', requireRole('admin'), async (req: Request, res: Respons
               etiqueta: comp.etiqueta,
               numeroSerie: comp.numeroSerie ?? null,
               numEjes: comp.numEjes ?? null,
+              metadata: buildCohorteMeta(comp),
               orden: comp.orden,
               componentePadreId: padreId,
             },
@@ -221,6 +237,7 @@ router.put('/:id/completo', requireRole('admin'), async (req: Request, res: Resp
               etiqueta: comp.etiqueta,
               numeroSerie: comp.numeroSerie ?? null,
               numEjes: comp.numEjes ?? null,
+              metadata: buildCohorteMeta(comp),
               orden: comp.orden,
               componentePadreId: padreId,
             },

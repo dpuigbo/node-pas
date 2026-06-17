@@ -18,6 +18,11 @@ export const createComponenteSchema = z.object({
   etiqueta: z.string().min(1, 'La etiqueta es obligatoria').max(100),
   numeroSerie: z.string().max(100).optional().nullable(),
   numEjes: z.number().int().positive().optional().nullable(),
+  // Cohorte del componente instalado (filtran lubricacion/actividades en la oferta)
+  montajeId: z.number().int().positive().optional().nullable(),
+  proteccionId: z.number().int().positive().optional().nullable(),
+  typeVariant: z.string().max(50).optional().nullable(),
+  anioFabricacion: z.number().int().min(1980).max(2100).optional().nullable(),
   metadata: z.any().optional().nullable(),
   orden: z.number().int().optional().default(0),
   componentePadreId: z.number().int().positive().optional().nullable(),
@@ -35,6 +40,10 @@ const componenteWizardSchema = z.object({
   etiqueta: z.string().min(1).max(100),
   numeroSerie: z.string().max(100).optional().nullable(),
   numEjes: z.number().int().positive().optional().nullable(),
+  montajeId: z.number().int().positive().optional().nullable(),
+  proteccionId: z.number().int().positive().optional().nullable(),
+  typeVariant: z.string().max(50).optional().nullable(),
+  anioFabricacion: z.number().int().min(1980).max(2100).optional().nullable(),
   orden: z.number().int().optional().default(0),
 });
 
