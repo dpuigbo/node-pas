@@ -39,6 +39,7 @@ export function AssembledTableOfContents({
     const result: TocEntry[] = [];
     let pageNumber = 1;
     let c1 = 0, c2 = 0, c3 = 0;
+    let lastH1Title = '';
 
     for (const b of allBlocks) {
       // section_separator and page_break advance the page count
@@ -50,7 +51,7 @@ export function AssembledTableOfContents({
       if (b.type === 'section_title') {
         const level = (b.config.level as number) || 1;
         let label: string;
-        if (level <= 1) { c1++; c2 = 0; c3 = 0; label = `${c1}`; }
+        if (level <= 1) { c1++; c2 = 0; c3 = 0; label = `${c1}`; lastH1Title = (b.config.title as string) || ''; }
         else if (level === 2) { c2++; c3 = 0; label = `${c1}.${c2}`; }
         else { c3++; label = `${c1}.${c2}.${c3}`; }
         result.push({
@@ -59,6 +60,14 @@ export function AssembledTableOfContents({
           level,
           pageNumber,
         });
+      } else if ((b.type === 'table' || b.type === 'reducer_oils') && b.config.title) {
+        // El titulo de la tabla actua como subseccion (X.1, X.2...), salvo que
+        // coincida con el H1 inmediatamente anterior (evita el duplicado).
+        const tTitle = (b.config.title as string) || '';
+        if (tTitle && tTitle !== lastH1Title) {
+          c2++; c3 = 0;
+          result.push({ label: `${c1}.${c2}`, title: tTitle, level: 2, pageNumber });
+        }
       }
     }
 
