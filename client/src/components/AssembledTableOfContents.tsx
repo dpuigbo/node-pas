@@ -23,7 +23,7 @@ interface AssembledTableOfContentsProps {
 }
 
 interface TocEntry {
-  number: number;
+  label: string;
   title: string;
   level: number;
   pageNumber: number;
@@ -38,7 +38,7 @@ export function AssembledTableOfContents({
   const entries = useMemo(() => {
     const result: TocEntry[] = [];
     let pageNumber = 1;
-    let idx = 0;
+    let c1 = 0, c2 = 0, c3 = 0;
 
     for (const b of allBlocks) {
       // section_separator and page_break advance the page count
@@ -48,11 +48,15 @@ export function AssembledTableOfContents({
       }
 
       if (b.type === 'section_title') {
-        idx++;
+        const level = (b.config.level as number) || 1;
+        let label: string;
+        if (level <= 1) { c1++; c2 = 0; c3 = 0; label = `${c1}`; }
+        else if (level === 2) { c2++; c3 = 0; label = `${c1}.${c2}`; }
+        else { c3++; label = `${c1}.${c2}.${c3}`; }
         result.push({
-          number: idx,
+          label,
           title: (b.config.title as string) || '',
-          level: (b.config.level as number) || 1,
+          level,
           pageNumber,
         });
       }
@@ -76,16 +80,16 @@ export function AssembledTableOfContents({
         </div>
       ) : (
         <div className="space-y-2 pl-4 pr-2">
-          {entries.map((entry) => (
+          {entries.map((entry, i) => (
             <div
-              key={entry.number}
+              key={i}
               className="flex items-baseline gap-2"
               style={{
                 paddingLeft: entry.level > 1 ? `${(entry.level - 1) * 16}px` : 0,
               }}
             >
-              <span className="font-semibold text-sm shrink-0 w-5 text-right">
-                {entry.number}
+              <span className="font-semibold text-sm shrink-0 w-8 text-right">
+                {entry.label}
               </span>
               <span className="font-medium text-sm truncate">
                 {entry.title}
