@@ -615,19 +615,25 @@ router.post('/:modeloId/versiones/generar', (0, role_middleware_1.requireRole)('
     }
 });
 // POST /api/v1/modelos/generar-plantillas-masivo (admin)
-// Genera plantillas (borrador) para todos los modelos activos del tipo indicado.
+// Genera plantillas para todos los modelos activos del tipo indicado.
 // Body: { tipo?: 'mechanical_unit'|'controller'|'drive_unit'|'external_axis',
-//         soloSinVersion?: boolean (default true) }
+//         soloSinVersion?: boolean (default true),
+//         regenerar?: boolean (default false) }
+// regenerar=true: sobreescribe EN SITIO la version que usan los informes (la activa,
+// o la mas reciente) en vez de apilar una nueva. Util para aplicar mejoras del generador
+// a las plantillas ya existentes sin tener que activarlas a mano.
 router.post('/generar-plantillas-masivo', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
     try {
         const tipo = req.body?.tipo;
-        const soloSinVersion = req.body?.soloSinVersion !== false;
+        const regenerar = req.body?.regenerar === true;
+        const soloSinVersion = !regenerar && req.body?.soloSinVersion !== false;
         const modelos = await database_1.prisma.modeloComponente.findMany({
             where: { activa: true, ...(tipo ? { tipo: tipo } : {}) },
             select: { id: true, nombre: true, _count: { select: { versiones: true } } },
             orderBy: { id: 'asc' },
         });
         let generadas = 0;
+        let regeneradas = 0;
         let saltadas = 0;
         const errores = [];
         for (const m of modelos) {
@@ -637,26 +643,44 @@ router.post('/generar-plantillas-masivo', (0, role_middleware_1.requireRole)('ad
             }
             try {
                 const schema = await (0, generateTemplate_1.generateTemplateForModel)(database_1.prisma, m.id);
-                const last = await database_1.prisma.versionTemplate.findFirst({
-                    where: { modeloComponenteId: m.id },
-                    orderBy: { version: 'desc' },
-                });
-                await database_1.prisma.versionTemplate.create({
-                    data: {
-                        modeloComponenteId: m.id,
-                        version: (last?.version ?? 0) + 1,
-                        schema: schema,
-                        estado: 'borrador',
-                        notas: 'Generada automaticamente (masivo) desde el plan',
-                    },
-                });
-                generadas++;
+                if (regenerar && m._count.versiones > 0) {
+                    // Sobreescribe en sitio la version activa (o la mas reciente si no hay activa).
+                    const activa = await database_1.prisma.versionTemplate.findFirst({
+                        where: { modeloComponenteId: m.id, estado: 'activo' },
+                        orderBy: { version: 'desc' },
+                    });
+                    const target = activa ?? await database_1.prisma.versionTemplate.findFirst({
+                        where: { modeloComponenteId: m.id },
+                        orderBy: { version: 'desc' },
+                    });
+                    await database_1.prisma.versionTemplate.update({
+                        where: { id: target.id },
+                        data: { schema: schema, notas: 'Regenerada en sitio desde el plan' },
+                    });
+                    regeneradas++;
+                }
+                else {
+                    const last = await database_1.prisma.versionTemplate.findFirst({
+                        where: { modeloComponenteId: m.id },
+                        orderBy: { version: 'desc' },
+                    });
+                    await database_1.prisma.versionTemplate.create({
+                        data: {
+                            modeloComponenteId: m.id,
+                            version: (last?.version ?? 0) + 1,
+                            schema: schema,
+                            estado: 'borrador',
+                            notas: 'Generada automaticamente (masivo) desde el plan',
+                        },
+                    });
+                    generadas++;
+                }
             }
             catch (e) {
                 errores.push({ modeloId: m.id, nombre: m.nombre, error: e.message });
             }
         }
-        res.json({ total: modelos.length, generadas, saltadas, errores });
+        res.json({ total: modelos.length, generadas, regeneradas, saltadas, errores });
     }
     catch (err) {
         next(err);
