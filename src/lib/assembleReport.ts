@@ -303,28 +303,12 @@ export function assembleReport(input: AssemblyInput): AssemblyResult {
       // === Replace content_placeholder with component blocks ===
       const contentType = (docBlock.config.contentType as string) || 'all';
 
-      let contributing = 0;
       for (const comp of sortedComponents) {
         const schema = comp.schemaCongelado;
         if (!schema?.blocks) continue;
 
         const sectionBlocks = extractSection(schema.blocks, contentType);
         if (sectionBlocks.length === 0) continue;
-
-        // Separador visual entre componentes dentro de la misma seccion
-        // (no antes del primero). Entre secciones, el separador lo da la
-        // plantilla general.
-        if (contributing > 0) {
-          result.push({
-            id: `${docBlock.id}_compsep_${comp.id}`,
-            type: 'divider',
-            config: { style: 'solid', spacing: 'medium', color: '#cbd5e1' },
-            _source: 'component',
-            _componenteInformeId: comp.id,
-            _componenteEtiqueta: comp.etiqueta,
-          });
-        }
-        contributing++;
 
         const compContext = buildComponentContext(baseContext, comp);
 
