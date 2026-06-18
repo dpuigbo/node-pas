@@ -202,15 +202,24 @@ export function buildMechanicalSchema(input: MechanicalInput): TemplateSchema {
     b.push(sectionH2('Inspecciones generales del manipulador'));
     for (const it of profile.generalChecks) b.push(tri(slug(it), it));
   }
+  if (overhaulHoras) b.push(tri('overhaul', `Overhaul completo (cada ${overhaulHoras} h)`, 'level3'));
   b.push(sectionH2('Funcionamiento de ejes y frenos'));
   b.push(ejesFrenosTable(nEjes));
+
+  // === manipulator_battery (SMB) ===
   if (profile.bateriaMedida === 'smb' && bateriasSMB.length > 0) {
-    b.push(sectionH2('Baterías de medida (SMB)'));
+    b.push(componentSection('manipulator_battery'));
+    b.push(sectionH1('Baterías de medida (SMB)'));
     b.push(bateriasTable('baterias_smb', 'Control de baterías SMB', bateriasSMB));
   }
+
+  // === calibration ===
   const cal = calibracionBlock(profile.calibracion, nEjes);
-  if (cal) { b.push(sectionH2('Valores de conmutación y calibración')); b.push(cal); }
-  if (overhaulHoras) b.push(tri('overhaul', `Overhaul completo (cada ${overhaulHoras} h)`, 'level3'));
+  if (cal) {
+    b.push(componentSection('calibration'));
+    b.push(sectionH1('Valores de conmutación y calibración'));
+    b.push(cal);
+  }
 
   return { blocks: b, pageConfig: PAGE };
 }
@@ -306,12 +315,21 @@ export function buildExternalAxisSchema(input: ExternalAxisInput): TemplateSchem
     for (const chk of profile.ejeChecks) b.push(tri(`ejeext${e}_${slug(chk)}`, chk));
   }
   for (const it of profile.generalChecks) b.push(tri(slug(it), it));
+
+  // === manipulator_battery (SMB del eje externo) ===
   if (profile.bateriaMedida === 'smb' && bateriasSMB.length > 0) {
-    b.push(sectionH2('Batería de medida (SMB) del eje externo'));
+    b.push(componentSection('manipulator_battery'));
+    b.push(sectionH1('Batería de medida (SMB) del eje externo'));
     b.push(bateriasTable('baterias_smb_eje', 'Control de baterías SMB del eje', bateriasSMB));
   }
+
+  // === calibration ===
   const cal = calibracionBlock(profile.calibracion, nEjes);
-  if (cal) { b.push(sectionH2('Calibración del eje externo')); b.push(cal); }
+  if (cal) {
+    b.push(componentSection('calibration'));
+    b.push(sectionH1('Calibración del eje externo'));
+    b.push(cal);
+  }
 
   return { blocks: b, pageConfig: PAGE };
 }

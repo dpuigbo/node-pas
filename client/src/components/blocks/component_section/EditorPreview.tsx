@@ -32,6 +32,8 @@ const SECTION_COLORS: Record<string, { bg: string; border: string; text: string;
   manipulator_info:         { bg: '#f0fdf4', border: '#22c55e', text: '#166534', icon: '#22c55e' },
   manipulator_installation: { bg: '#fefce8', border: '#eab308', text: '#854d0e', icon: '#eab308' },
   mechanical_unit_control:  { bg: '#fdf2f8', border: '#ec4899', text: '#9d174d', icon: '#ec4899' },
+  manipulator_battery:      { bg: '#f0f9ff', border: '#0ea5e9', text: '#075985', icon: '#0ea5e9' },
+  calibration:              { bg: '#fef2f2', border: '#ef4444', text: '#991b1b', icon: '#ef4444' },
   cabinet_control:          { bg: '#f5f3ff', border: '#8b5cf6', text: '#5b21b6', icon: '#8b5cf6' },
   programming_unit_control: { bg: '#ecfeff', border: '#06b6d4', text: '#155e75', icon: '#06b6d4' },
   system_control:           { bg: '#fff7ed', border: '#f97316', text: '#9a3412', icon: '#f97316' },

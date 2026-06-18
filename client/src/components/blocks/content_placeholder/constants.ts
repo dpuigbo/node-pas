@@ -4,6 +4,8 @@ export type SystemContentType =
   | 'manipulator_info'
   | 'manipulator_installation'
   | 'mechanical_unit_control'
+  | 'manipulator_battery'
+  | 'calibration'
   | 'cabinet_control'
   | 'programming_unit_control'
   | 'system_control';
@@ -45,6 +47,18 @@ export const SYSTEM_CONTENT_TYPES: SystemContentOption[] = [
     label: 'Control de la unidad mecanica',
     description: 'Revision y estado de la unidad mecanica',
     icon: 'Cog',
+  },
+  {
+    value: 'manipulator_battery',
+    label: 'Baterias del manipulador (SMB)',
+    description: 'Baterias de medida SMB del manipulador o eje externo',
+    icon: 'Battery',
+  },
+  {
+    value: 'calibration',
+    label: 'Calibracion',
+    description: 'Valores de conmutacion y calibracion',
+    icon: 'Crosshair',
   },
   {
     value: 'cabinet_control',
