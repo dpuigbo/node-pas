@@ -247,8 +247,12 @@ router.get('/informes/:id/assembled', async (req, res, next) => {
             return;
         }
         const documentSchema = documentTemplate.schema;
-        // Build placeholder context
-        const baseContext = (0, assembleReport_1.buildPlaceholderContext)(informe);
+        // Build placeholder context (el usuario logueado se usa como técnico de PAS)
+        const authUser = (0, auth_middleware_1.getAuthUser)(req);
+        const usuario = authUser
+            ? await database_1.prisma.user.findUnique({ where: { id: authUser.id }, select: { nombre: true, email: true } })
+            : null;
+        const baseContext = (0, assembleReport_1.buildPlaceholderContext)(informe, usuario ?? undefined);
         // Map component data for assembly
         const componentes = informe.componentes.map((c) => ({
             id: c.id,

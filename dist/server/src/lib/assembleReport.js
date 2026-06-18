@@ -81,9 +81,11 @@ function extractSection(blocks, contentType) {
  * Build the base placeholder context from informe-level data.
  * This covers sistema, cliente, and intervencion placeholders.
  */
-function buildPlaceholderContext(informe) {
+function buildPlaceholderContext(informe, usuario) {
     const cli = informe.intervencion.cliente;
     return {
+        'usuario.nombre': usuario?.nombre ?? undefined,
+        'usuario.email': usuario?.email ?? undefined,
         'sistema.nombre': informe.sistema.nombre,
         'sistema.descripcion': informe.sistema.descripcion ?? undefined,
         'sistema.fabricante': informe.sistema.fabricante.nombre,
@@ -270,12 +272,14 @@ function assembleReport(input) {
                     horas: '',
                     horaInicio: '',
                     horaFin: '',
-                    tecnicoPas: '',
-                    tecnicoCliente: '',
+                    // Técnico = usuario logueado que realiza el informe.
+                    tecnicoPas: String(baseContext['usuario.nombre'] ?? ''),
                     telTecnico: '',
-                    telContacto: '',
-                    emailTecnico: '',
-                    emailContacto: '',
+                    emailTecnico: String(baseContext['usuario.email'] ?? ''),
+                    // Contacto = persona de contacto del cliente.
+                    tecnicoCliente: String(baseContext['cliente.personaContacto'] ?? ''),
+                    telContacto: String(baseContext['cliente.telefono'] ?? ''),
+                    emailContacto: String(baseContext['cliente.email'] ?? ''),
                 };
                 const userEdits = datosDocumento[key] || {};
                 assembled._dataValue = { ...seeded, ...userEdits };
