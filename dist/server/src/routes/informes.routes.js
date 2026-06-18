@@ -369,5 +369,121 @@ router.patch('/informes/:id/estado', (0, role_middleware_1.requireRole)('admin')
         next(err);
     }
 });
+/** Re-inicializa datos para el nuevo schema, preservando valores cuyas keys siguen existiendo. */
+function regenDatos(schema, old) {
+    const fresh = (0, initDatos_1.initDatos)(schema);
+    const merged = { ...fresh };
+    for (const k of Object.keys(fresh)) {
+        if (k in old)
+            merged[k] = old[k];
+    }
+    return merged;
+}
+async function pickVersion(modeloComponenteId, versionTemplateId) {
+    if (versionTemplateId) {
+        return database_1.prisma.versionTemplate.findUnique({ where: { id: Number(versionTemplateId) } });
+    }
+    return ((await database_1.prisma.versionTemplate.findFirst({
+        where: { modeloComponenteId, estado: 'activo' },
+        orderBy: { version: 'desc' },
+    })) ??
+        (await database_1.prisma.versionTemplate.findFirst({
+            where: { modeloComponenteId },
+            orderBy: { version: 'desc' },
+        })));
+}
+// GET /componentes-informe/:id/versiones — plantillas disponibles para el modelo del componente
+router.get('/componentes-informe/:id/versiones', async (req, res, next) => {
+    try {
+        const ci = await database_1.prisma.componenteInforme.findUnique({
+            where: { id: Number(req.params.id) },
+            include: { componenteSistema: { select: { modeloComponenteId: true } } },
+        });
+        if (!ci) {
+            res.status(404).json({ error: 'Componente de informe no encontrado' });
+            return;
+        }
+        const versiones = await database_1.prisma.versionTemplate.findMany({
+            where: { modeloComponenteId: ci.componenteSistema.modeloComponenteId },
+            orderBy: { version: 'desc' },
+            select: { id: true, version: true, estado: true, notas: true, createdAt: true },
+        });
+        res.json({ actual: ci.versionTemplateId, versiones });
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// POST /componentes-informe/:id/regenerar — regenera schema/datos desde una version (o la activa/ultima)
+router.post('/componentes-informe/:id/regenerar', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
+    try {
+        const id = Number(req.params.id);
+        const ci = await database_1.prisma.componenteInforme.findUnique({
+            where: { id },
+            include: {
+                informe: { select: { estado: true } },
+                componenteSistema: { select: { modeloComponenteId: true } },
+            },
+        });
+        if (!ci) {
+            res.status(404).json({ error: 'Componente de informe no encontrado' });
+            return;
+        }
+        if (ci.informe.estado === 'finalizado') {
+            res.status(409).json({ error: 'No se puede regenerar un informe finalizado' });
+            return;
+        }
+        const version = await pickVersion(ci.componenteSistema.modeloComponenteId, req.body?.versionTemplateId);
+        if (!version) {
+            res.status(404).json({ error: 'No hay version de plantilla para este modelo' });
+            return;
+        }
+        const schema = version.schema;
+        const datos = regenDatos(schema, ci.datos || {});
+        const updated = await database_1.prisma.componenteInforme.update({
+            where: { id },
+            data: { versionTemplateId: version.id, schemaCongelado: schema, datos: datos },
+        });
+        res.json({ id: updated.id, versionTemplateId: version.id, version: version.version });
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// POST /informes/:id/regenerar — regenera TODOS los componentes a su version activa/ultima
+router.post('/informes/:id/regenerar', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
+    try {
+        const informeId = Number(req.params.id);
+        const informe = await database_1.prisma.informe.findUnique({
+            where: { id: informeId },
+            include: { componentes: { include: { componenteSistema: { select: { modeloComponenteId: true } } } } },
+        });
+        if (!informe) {
+            res.status(404).json({ error: 'Informe no encontrado' });
+            return;
+        }
+        if (informe.estado === 'finalizado') {
+            res.status(409).json({ error: 'No se puede regenerar un informe finalizado' });
+            return;
+        }
+        let regenerados = 0;
+        for (const ci of informe.componentes) {
+            const version = await pickVersion(ci.componenteSistema.modeloComponenteId);
+            if (!version)
+                continue;
+            const schema = version.schema;
+            const datos = regenDatos(schema, ci.datos || {});
+            await database_1.prisma.componenteInforme.update({
+                where: { id: ci.id },
+                data: { versionTemplateId: version.id, schemaCongelado: schema, datos: datos },
+            });
+            regenerados++;
+        }
+        res.json({ regenerados, total: informe.componentes.length });
+    }
+    catch (err) {
+        next(err);
+    }
+});
 exports.default = router;
 //# sourceMappingURL=informes.routes.js.map

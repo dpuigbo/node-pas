@@ -45,8 +45,8 @@ exports.updateEstadoOfertaSchema = zod_1.z.object({
     estado: zod_1.z.enum(['borrador', 'enviada', 'aprobada', 'rechazada']),
 });
 exports.generarIntervencionSchema = zod_1.z.object({
-    fechaInicio: zod_1.z.string().datetime(),
-    fechaFin: zod_1.z.string().datetime(),
+    fechaInicio: zod_1.z.string().datetime().optional(),
+    fechaFin: zod_1.z.string().datetime().optional(),
 });
 // Upsert oferta-componente (configuracion de mantenimiento por componente)
 exports.upsertOfertaComponenteSchema = zod_1.z.object({
