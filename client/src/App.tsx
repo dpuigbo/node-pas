@@ -94,9 +94,9 @@ export default function App() {
           }
         />
 
-        {/* Modo técnico (wizard de campo) — pantalla completa, fuera de AppShell */}
+        {/* Modo técnico (wizard) — pantalla principal del informe, fuera de AppShell */}
         <Route
-          path="/informes/:id/campo"
+          path="/informes/:id"
           element={
             <Suspense fallback={<EditorLoader />}>
               <InformeWizardPage />
@@ -153,7 +153,7 @@ export default function App() {
             }
           />
           <Route
-            path="/informes/:id"
+            path="/informes/:id/documento"
             element={
               <Suspense fallback={<EditorLoader />}>
                 <InformeFormPage />

@@ -84,7 +84,8 @@ export default function InformeFormPage() {
   const [localDocDatos, setLocalDocDatos] = useState<Record<string, unknown>>({});
   const [isSaving, setIsSaving] = useState(false);
 
-  const readOnly = data?.informe?.estado === 'finalizado' || data?.informe?.estado === 'inactivo';
+  // Solo FINALIZADO bloquea la edición; inactivo (borrador) y activo se editan.
+  const readOnly = data?.informe?.estado === 'finalizado';
 
   // Check if any component has unsaved changes
   const hasCompDirty = useMemo(
@@ -255,7 +256,7 @@ export default function InformeFormPage() {
           <Button
             variant="default"
             size="sm"
-            onClick={() => navigate(`/informes/${informeId}/campo`)}
+            onClick={() => navigate(`/informes/${informeId}`)}
             className="gap-1"
             title="Rellenar en campo (móvil/tablet), no lineal"
           >

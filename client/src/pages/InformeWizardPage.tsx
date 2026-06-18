@@ -2,36 +2,22 @@ import { useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
-  ArrowLeft,
-  Save,
-  FileText,
-  Loader2,
-  Check,
-  ChevronRight,
-  ChevronLeft,
-  CircleCheck,
-  CircleDashed,
-  ClipboardList,
+  ArrowLeft, Save, FileText, Loader2, Check, ChevronRight, ChevronLeft,
+  CircleCheck, CircleDashed, ClipboardList, CheckCircle2,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import api from '@/lib/api';
-import { useAssembledReport } from '@/hooks/useInformes';
+import { useAssembledReport, useUpdateEstadoInforme } from '@/hooks/useInformes';
+import { useAuth } from '@/hooks/useAuth';
 import { getBlockEntry } from '@/components/blocks/registry';
 import type { BlockType } from '@/types/editor';
 import type { AssembledBlock } from '@/types/informe';
 
 import '@/components/blocks/register-all';
 
+// ======================== Estilo (dark + acento lima) ========================
+const LIME = '#c5f82a';
+
 // ======================== Constantes ========================
-
-const ESTADO_BADGE: Record<string, string> = {
-  inactivo: 'bg-gray-100 text-gray-700', activo: 'bg-blue-100 text-blue-700', finalizado: 'bg-green-100 text-green-700',
-};
-const ESTADO_LABEL: Record<string, string> = { inactivo: 'Inactivo', activo: 'Activo', finalizado: 'Finalizado' };
-
-/** Bloques editables (puntos de control) que el técnico rellena. */
 const EDITABLE_TYPES = new Set<string>([
   'table', 'tristate', 'checklist', 'reducer_oils',
   'battery_manipulator', 'battery_controller', 'equipment_exchange',
@@ -39,33 +25,20 @@ const EDITABLE_TYPES = new Set<string>([
 ]);
 
 // ======================== Tipos / helpers ========================
-
 type Row = Record<string, unknown>;
+interface WizardSection { key: string; label: string; componenteInformeId?: number; blocks: AssembledBlock[]; }
 
-interface WizardSection {
-  key: string;
-  label: string;
-  componenteInformeId?: number;
-  blocks: AssembledBlock[];
-}
-
-/** Tabla de inspección = tiene columnas N/A, Bien, Mal y una columna etiqueta. */
 function isInspectionTable(b: AssembledBlock): boolean {
   if (b.type !== 'table') return false;
   const cols = (b.config.columns as { key: string; type: string }[]) || [];
   const keys = new Set(cols.map((c) => c.key));
   return keys.has('na') && keys.has('bien') && keys.has('mal') && cols.some((c) => c.type === 'label');
 }
-
 function labelKey(b: AssembledBlock): string {
   const cols = (b.config.columns as { key: string; type: string }[]) || [];
   return cols.find((c) => c.type === 'label')?.key ?? 'operacion';
 }
-
-function rowDone(row: Row): boolean {
-  return row?.na === true || row?.bien === true || row?.mal === true;
-}
-
+function rowDone(row: Row): boolean { return row?.na === true || row?.bien === true || row?.mal === true; }
 function isFilled(value: unknown): boolean {
   if (value == null) return false;
   if (typeof value === 'string') return value.trim() !== '';
@@ -84,47 +57,43 @@ function isFilled(value: unknown): boolean {
   if (typeof value === 'object') return Object.values(value as Row).some((v) => isFilled(v));
   return Boolean(value);
 }
-
-/** Cuenta "puntos de control": cada fila de inspección es 1 punto; los demás bloques, 1. */
 function countPoints(s: WizardSection, getValue: (b: AssembledBlock) => unknown): { done: number; total: number } {
   let done = 0, total = 0;
   for (const b of s.blocks) {
     if (isInspectionTable(b)) {
       const rows = (getValue(b) as Row[]) || [];
       for (const r of rows) { total++; if (rowDone(r)) done++; }
-    } else {
-      total++; if (isFilled(getValue(b))) done++;
-    }
+    } else { total++; if (isFilled(getValue(b))) done++; }
   }
   return { done, total };
 }
 
 // ======================== Página ========================
-
 export default function InformeWizardPage() {
   const { id } = useParams<{ id: string }>();
   const informeId = Number(id);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { isAdmin } = useAuth();
 
   const { data, isLoading } = useAssembledReport(informeId || undefined);
+  const intervencionId = (data?.informe as { intervencion?: { id?: number } } | undefined)?.intervencion?.id;
+  const updateEstado = useUpdateEstadoInforme(informeId, intervencionId ?? 0);
 
   const [localCompDatos, setLocalCompDatos] = useState<Record<number, Record<string, unknown>>>({});
   const [localDocDatos, setLocalDocDatos] = useState<Record<string, unknown>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [view, setView] = useState<'overview' | string>('overview');
 
-  const readOnly = data?.informe?.estado === 'finalizado' || data?.informe?.estado === 'inactivo';
+  // Solo FINALIZADO bloquea la edición; inactivo (borrador) y activo se editan.
+  const readOnly = data?.informe?.estado === 'finalizado';
 
-  // Secciones: una por componente. La Intervención (datos de documento) se
-  // rellena automáticamente, así que NO es una sección a rellenar por el técnico.
   const sections = useMemo<WizardSection[]>(() => {
     const blocks = data?.assembled?.blocks ?? [];
     const order: number[] = [];
     const map = new Map<number, WizardSection>();
     for (const b of blocks) {
-      if (!b._dataKey || !EDITABLE_TYPES.has(b.type)) continue;
-      if (!b._componenteInformeId) continue;
+      if (!b._dataKey || !EDITABLE_TYPES.has(b.type) || !b._componenteInformeId) continue;
       let g = map.get(b._componenteInformeId);
       if (!g) {
         g = { key: `c${b._componenteInformeId}`, label: b._componenteEtiqueta || `Componente ${b._componenteInformeId}`, componenteInformeId: b._componenteInformeId, blocks: [] };
@@ -136,30 +105,24 @@ export default function InformeWizardPage() {
     return order.map((cid) => map.get(cid)!);
   }, [data]);
 
-  const blockValue = useCallback(
-    (b: AssembledBlock): unknown => {
-      if (!b._dataKey) return null;
-      if (b._componenteInformeId) {
-        const local = localCompDatos[b._componenteInformeId];
-        return local && b._dataKey in local ? local[b._dataKey] : (b._dataValue ?? null);
-      }
-      return b._dataKey in localDocDatos ? localDocDatos[b._dataKey] : (b._dataValue ?? null);
-    },
-    [localCompDatos, localDocDatos],
-  );
+  const blockValue = useCallback((b: AssembledBlock): unknown => {
+    if (!b._dataKey) return null;
+    if (b._componenteInformeId) {
+      const local = localCompDatos[b._componenteInformeId];
+      return local && b._dataKey in local ? local[b._dataKey] : (b._dataValue ?? null);
+    }
+    return b._dataKey in localDocDatos ? localDocDatos[b._dataKey] : (b._dataValue ?? null);
+  }, [localCompDatos, localDocDatos]);
 
-  const onBlockChange = useCallback(
-    (b: AssembledBlock, v: unknown) => {
-      if (readOnly || !b._dataKey) return;
-      if (b._componenteInformeId) {
-        const cid = b._componenteInformeId;
-        setLocalCompDatos((prev) => ({ ...prev, [cid]: { ...(prev[cid] ?? {}), [b._dataKey!]: v } }));
-      } else {
-        setLocalDocDatos((prev) => ({ ...prev, [b._dataKey!]: v }));
-      }
-    },
-    [readOnly],
-  );
+  const onBlockChange = useCallback((b: AssembledBlock, v: unknown) => {
+    if (readOnly || !b._dataKey) return;
+    if (b._componenteInformeId) {
+      const cid = b._componenteInformeId;
+      setLocalCompDatos((prev) => ({ ...prev, [cid]: { ...(prev[cid] ?? {}), [b._dataKey!]: v } }));
+    } else {
+      setLocalDocDatos((prev) => ({ ...prev, [b._dataKey!]: v }));
+    }
+  }, [readOnly]);
 
   const totals = useMemo(() => {
     let done = 0, total = 0;
@@ -181,79 +144,83 @@ export default function InformeWizardPage() {
       }
       if (Object.keys(localDocDatos).length > 0) promises.push(api.patch(`/v1/informes/${informeId}/datos-documento`, { datos: localDocDatos }));
       await Promise.all(promises);
-      setLocalCompDatos({});
-      setLocalDocDatos({});
+      setLocalCompDatos({}); setLocalDocDatos({});
       queryClient.invalidateQueries({ queryKey: ['informes', informeId, 'assembled'] });
     } catch (err) {
       const e = err as { response?: { data?: { error?: string } } };
       alert(e?.response?.data?.error ?? 'Error al guardar');
-    } finally {
-      setIsSaving(false);
-    }
+    } finally { setIsSaving(false); }
   }, [hasDirty, isSaving, localCompDatos, localDocDatos, informeId, queryClient]);
 
+  const handleFinalizar = useCallback(async () => {
+    if (hasDirty) { alert('Guarda los cambios antes de finalizar.'); return; }
+    if (!window.confirm('¿Finalizar el informe? Quedará cerrado y no se podrá editar.')) return;
+    try {
+      await updateEstado.mutateAsync('finalizado');
+      queryClient.invalidateQueries({ queryKey: ['informes', informeId, 'assembled'] });
+    } catch (err) {
+      const e = err as { response?: { data?: { error?: string } } };
+      alert(e?.response?.data?.error ?? 'Error al finalizar');
+    }
+  }, [hasDirty, updateEstado, queryClient, informeId]);
+
   if (isLoading) {
-    return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
+    return <div className="flex h-screen items-center justify-center bg-neutral-950"><Loader2 className="h-8 w-8 animate-spin" style={{ color: LIME }} /></div>;
   }
   if (!data) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-4 p-4 text-center">
-        <p className="text-muted-foreground">No se pudo cargar el informe.</p>
-        <Button variant="outline" onClick={() => navigate(-1)}>Volver</Button>
+      <div className="flex h-screen flex-col items-center justify-center gap-4 bg-neutral-950 p-4 text-center text-neutral-300">
+        <p>No se pudo cargar el informe.</p>
+        <button onClick={() => navigate(-1)} className="rounded-lg border border-neutral-700 px-4 py-2 text-sm hover:bg-neutral-800">Volver</button>
       </div>
     );
   }
 
   const { informe } = data;
+  const finalizado = informe.estado === 'finalizado';
+  const estadoLabel = informe.estado === 'finalizado' ? 'Finalizado' : informe.estado === 'activo' ? 'En curso' : 'Borrador';
   const activeIdx = sections.findIndex((s) => s.key === view);
   const activeSection = activeIdx >= 0 ? sections[activeIdx] : null;
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-gray-50">
+    <div className="flex h-screen flex-col overflow-hidden bg-neutral-950 text-neutral-100">
       {/* ===== Barra superior ===== */}
-      <header className="flex items-center justify-between gap-2 border-b bg-background px-3 py-2 shrink-0">
+      <header className="flex items-center justify-between gap-2 border-b border-neutral-800 bg-neutral-900 px-3 py-2 shrink-0">
         <div className="flex items-center gap-2 min-w-0">
-          <Button variant="ghost" size="icon" onClick={() => (activeSection ? setView('overview') : navigate(`/informes/${informeId}`))} title="Volver">
+          <button onClick={() => (activeSection ? setView('overview') : navigate(-1))} className="rounded-lg p-2 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100" title="Volver">
             <ArrowLeft className="h-4 w-4" />
-          </Button>
+          </button>
           <div className="min-w-0">
             <div className="font-semibold truncate text-sm">{informe.sistema?.nombre ?? 'Informe'}</div>
-            <Badge className={`${ESTADO_BADGE[informe.estado] ?? ''} text-[10px]`}>{ESTADO_LABEL[informe.estado] ?? informe.estado}</Badge>
+            <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
+              finalizado ? 'bg-emerald-500/15 text-emerald-400' : 'bg-neutral-800 text-neutral-300'
+            }`}>{estadoLabel}</span>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <Button variant="outline" size="sm" onClick={() => navigate(`/informes/${informeId}/preview`)}>
-            <FileText className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Documento</span>
-          </Button>
-          {!readOnly && (
-            <Button size="sm" onClick={handleSave} disabled={!hasDirty || isSaving}>
-              {isSaving ? <Loader2 className="h-4 w-4 animate-spin sm:mr-1" /> : <Save className="h-4 w-4 sm:mr-1" />}
+          <button onClick={() => navigate(`/informes/${informeId}/preview`)} className="flex items-center gap-1 rounded-lg border border-neutral-700 px-3 py-1.5 text-sm text-neutral-300 hover:bg-neutral-800">
+            <FileText className="h-4 w-4" /> <span className="hidden sm:inline">Vista previa</span>
+          </button>
+          {!finalizado && (
+            <button onClick={handleSave} disabled={!hasDirty || isSaving}
+              className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-semibold text-neutral-900 disabled:opacity-40"
+              style={{ backgroundColor: LIME }}>
+              {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               <span className="hidden sm:inline">Guardar</span>
-            </Button>
+            </button>
           )}
         </div>
       </header>
 
-      {/* ===== Cuerpo ===== */}
       <main className="flex-1 min-h-0 overflow-y-auto">
         {activeSection ? (
-          <SectionView
-            section={activeSection}
-            sections={sections}
-            activeIdx={activeIdx}
-            readOnly={readOnly}
-            blockValue={blockValue}
-            onBlockChange={onBlockChange}
-            onNavigate={(key) => setView(key)}
-            countPoints={(s) => countPoints(s, blockValue)}
-          />
+          <SectionView section={activeSection} sections={sections} activeIdx={activeIdx} readOnly={readOnly}
+            blockValue={blockValue} onBlockChange={onBlockChange} onNavigate={setView}
+            countPoints={(s) => countPoints(s, blockValue)} />
         ) : (
-          <OverviewView
-            totals={totals}
-            sections={sections}
-            countPoints={(s) => countPoints(s, blockValue)}
-            onOpen={(key) => setView(key)}
-          />
+          <OverviewView totals={totals} sections={sections} finalizado={finalizado} isAdmin={isAdmin}
+            countPoints={(s) => countPoints(s, blockValue)} onOpen={setView} onFinalizar={handleFinalizar}
+            onAdvanced={() => navigate(`/informes/${informeId}/documento`)} />
         )}
       </main>
     </div>
@@ -261,29 +228,35 @@ export default function InformeWizardPage() {
 }
 
 // ======================== Visión general ========================
-
 function OverviewView({
-  totals, sections, countPoints, onOpen,
+  totals, sections, finalizado, isAdmin, countPoints, onOpen, onFinalizar, onAdvanced,
 }: {
   totals: { done: number; total: number; pct: number };
   sections: WizardSection[];
+  finalizado: boolean;
+  isAdmin: boolean;
   countPoints: (s: WizardSection) => { done: number; total: number };
   onOpen: (key: string) => void;
+  onFinalizar: () => void;
+  onAdvanced: () => void;
 }) {
   return (
     <div className="mx-auto max-w-4xl p-4 sm:p-6 space-y-5">
       {/* Progreso global */}
-      <div className="rounded-2xl border bg-background p-5 shadow-sm">
+      <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-5">
         <div className="flex items-center gap-4">
           <ProgressRing pct={totals.pct} />
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h1 className="text-lg font-bold">Mantenimiento</h1>
-            <p className="text-sm text-muted-foreground">
-              {totals.done} de {totals.total} puntos de control completados
-            </p>
+            <p className="text-sm text-neutral-400">{totals.done} de {totals.total} puntos de control completados</p>
           </div>
+          {!finalizado && totals.total > 0 && totals.done === totals.total && (
+            <button onClick={onFinalizar} className="flex items-center gap-1 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600">
+              <CheckCircle2 className="h-4 w-4" /> Finalizar
+            </button>
+          )}
         </div>
-        <div className="mt-3 rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-700">
+        <div className="mt-3 rounded-lg border px-3 py-2 text-xs" style={{ borderColor: `${LIME}30`, backgroundColor: `${LIME}10`, color: LIME }}>
           La sección de <strong>Intervención</strong> (cliente, técnico, fechas y horas) se rellena automáticamente.
         </div>
       </div>
@@ -294,33 +267,36 @@ function OverviewView({
           const { done, total } = countPoints(s);
           const complete = total > 0 && done === total;
           return (
-            <button
-              key={s.key}
-              type="button"
-              onClick={() => onOpen(s.key)}
-              className="flex items-center gap-3 rounded-xl border bg-background p-4 text-left shadow-sm transition-colors hover:bg-muted/40 active:bg-muted"
-            >
+            <button key={s.key} onClick={() => onOpen(s.key)}
+              className="flex items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-left transition-colors hover:border-neutral-700 hover:bg-neutral-800/60">
               {complete
-                ? <CircleCheck className="h-7 w-7 text-green-500 shrink-0" />
-                : <CircleDashed className="h-7 w-7 text-muted-foreground shrink-0" />}
+                ? <CircleCheck className="h-7 w-7 shrink-0" style={{ color: LIME }} />
+                : <CircleDashed className="h-7 w-7 shrink-0 text-neutral-600" />}
               <div className="min-w-0 flex-1">
                 <div className="font-semibold truncate">{s.label}</div>
-                <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                  <div className={`h-full ${complete ? 'bg-green-500' : 'bg-primary'}`} style={{ width: `${total ? (done / total) * 100 : 0}%` }} />
+                <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-neutral-800">
+                  <div className="h-full rounded-full" style={{ width: `${total ? (done / total) * 100 : 0}%`, backgroundColor: complete ? LIME : '#60a5fa' }} />
                 </div>
-                <div className="mt-1 text-xs text-muted-foreground">{done}/{total} puntos</div>
+                <div className="mt-1 text-xs text-neutral-400">{done}/{total} puntos</div>
               </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+              <ChevronRight className="h-5 w-5 text-neutral-600 shrink-0" />
             </button>
           );
         })}
         {sections.length === 0 && (
-          <div className="col-span-full rounded-xl border bg-background p-8 text-center text-muted-foreground">
+          <div className="col-span-full rounded-xl border border-neutral-800 bg-neutral-900 p-8 text-center text-neutral-500">
             <ClipboardList className="mx-auto mb-2 h-8 w-8 opacity-40" />
             No hay puntos de control para rellenar en este informe.
           </div>
         )}
       </div>
+
+      {isAdmin && (
+        <p className="text-center text-[11px] text-neutral-600">
+          ¿Faltan secciones o el formato no cuadra?{' '}
+          <button className="underline hover:text-neutral-400" onClick={onAdvanced}>Abrir el documento (avanzado)</button> para regenerar las plantillas.
+        </p>
+      )}
     </div>
   );
 }
@@ -330,9 +306,8 @@ function ProgressRing({ pct }: { pct: number }) {
   return (
     <div className="relative h-16 w-16 shrink-0">
       <svg viewBox="0 0 64 64" className="h-16 w-16 -rotate-90">
-        <circle cx="32" cy="32" r={r} fill="none" stroke="currentColor" strokeWidth="6" className="text-muted" />
-        <circle cx="32" cy="32" r={r} fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"
-          className={pct === 100 ? 'text-green-500' : 'text-primary'}
+        <circle cx="32" cy="32" r={r} fill="none" stroke="#262626" strokeWidth="6" />
+        <circle cx="32" cy="32" r={r} fill="none" stroke={LIME} strokeWidth="6" strokeLinecap="round"
           strokeDasharray={c} strokeDashoffset={c - (c * pct) / 100} />
       </svg>
       <span className="absolute inset-0 flex items-center justify-center text-sm font-bold">{pct}%</span>
@@ -341,18 +316,12 @@ function ProgressRing({ pct }: { pct: number }) {
 }
 
 // ======================== Vista de sección ========================
-
 function SectionView({
   section, sections, activeIdx, readOnly, blockValue, onBlockChange, onNavigate, countPoints,
 }: {
-  section: WizardSection;
-  sections: WizardSection[];
-  activeIdx: number;
-  readOnly: boolean;
-  blockValue: (b: AssembledBlock) => unknown;
-  onBlockChange: (b: AssembledBlock, v: unknown) => void;
-  onNavigate: (key: string) => void;
-  countPoints: (s: WizardSection) => { done: number; total: number };
+  section: WizardSection; sections: WizardSection[]; activeIdx: number; readOnly: boolean;
+  blockValue: (b: AssembledBlock) => unknown; onBlockChange: (b: AssembledBlock, v: unknown) => void;
+  onNavigate: (key: string) => void; countPoints: (s: WizardSection) => { done: number; total: number };
 }) {
   const { done, total } = countPoints(section);
   const prev = activeIdx > 0 ? sections[activeIdx - 1] : null;
@@ -360,16 +329,15 @@ function SectionView({
 
   return (
     <div className="mx-auto max-w-3xl p-3 sm:p-5">
-      {/* Cabecera de sección con progreso */}
-      <div className="sticky top-0 z-10 -mx-3 sm:-mx-5 mb-3 border-b bg-gray-50/95 px-3 sm:px-5 py-2 backdrop-blur">
-        <button type="button" onClick={() => onNavigate('overview')} className="mb-1 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+      <div className="sticky top-0 z-10 -mx-3 sm:-mx-5 mb-3 border-b border-neutral-800 bg-neutral-950/95 px-3 sm:px-5 py-2 backdrop-blur">
+        <button onClick={() => onNavigate('overview')} className="mb-1 flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-200">
           <ChevronLeft className="h-3.5 w-3.5" /> Visión general
         </button>
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-base font-bold truncate">{section.label}</h2>
-          <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${done === total && total > 0 ? 'bg-green-100 text-green-700' : 'bg-muted text-muted-foreground'}`}>
-            {done}/{total}
-          </span>
+          <span className="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium" style={
+            done === total && total > 0 ? { backgroundColor: `${LIME}20`, color: LIME } : { backgroundColor: '#262626', color: '#a3a3a3' }
+          }>{done}/{total}</span>
         </div>
       </div>
 
@@ -379,98 +347,76 @@ function SectionView({
         ))}
       </div>
 
-      {/* Navegación entre secciones */}
       <div className="mt-6 flex items-center justify-between gap-2">
-        <Button variant="outline" size="sm" disabled={!prev} onClick={() => prev && onNavigate(prev.key)}>
-          <ChevronLeft className="h-4 w-4 mr-1" /> Anterior
-        </Button>
+        <button disabled={!prev} onClick={() => prev && onNavigate(prev.key)}
+          className="flex items-center gap-1 rounded-lg border border-neutral-700 px-3 py-2 text-sm text-neutral-300 disabled:opacity-30 hover:bg-neutral-800">
+          <ChevronLeft className="h-4 w-4" /> Anterior
+        </button>
         {next
-          ? <Button size="sm" onClick={() => onNavigate(next.key)}>Siguiente <ChevronRight className="h-4 w-4 ml-1" /></Button>
-          : <Button size="sm" variant="outline" onClick={() => onNavigate('overview')}>Terminar <Check className="h-4 w-4 ml-1" /></Button>}
+          ? <button onClick={() => onNavigate(next.key)} className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold text-neutral-900" style={{ backgroundColor: LIME }}>Siguiente <ChevronRight className="h-4 w-4" /></button>
+          : <button onClick={() => onNavigate('overview')} className="flex items-center gap-1 rounded-lg border border-neutral-700 px-3 py-2 text-sm text-neutral-300 hover:bg-neutral-800">Terminar <Check className="h-4 w-4" /></button>}
       </div>
     </div>
   );
 }
 
 // ======================== Un bloque de control ========================
-
 function ControlBlock({
   block, value, readOnly, onChange,
-}: {
-  block: AssembledBlock;
-  value: unknown;
-  readOnly: boolean;
-  onChange: (v: unknown) => void;
-}) {
-  // Tablas de inspección → tarjetas táctiles (una por punto de control).
+}: { block: AssembledBlock; value: unknown; readOnly: boolean; onChange: (v: unknown) => void; }) {
   if (isInspectionTable(block)) {
     const rows = (value as Row[]) || [];
     const opKey = labelKey(block);
     const title = (block.config.title as string) || '';
-    const setRow = (i: number, next: Row) => {
-      onChange(rows.map((r, idx) => (idx === i ? next : r)));
-    };
+    const setRow = (i: number, next: Row) => onChange(rows.map((r, idx) => (idx === i ? next : r)));
     return (
       <section className="space-y-2">
-        {title && <h3 className="px-1 text-sm font-semibold text-gray-700">{title}</h3>}
+        {title && <h3 className="px-1 text-sm font-semibold text-neutral-300">{title}</h3>}
         {rows.map((row, i) => (
           <InspectionPointCard key={i} label={String(row[opKey] ?? '')} row={row} readOnly={readOnly} onChange={(n) => setRow(i, n)} />
         ))}
       </section>
     );
   }
-
-  // Otros bloques (reductoras, baterías, calibración, campos...) → reutilizar el FormField.
   const entry = getBlockEntry(block.type as BlockType);
   const FormFieldComp = entry?.FormField;
   if (!FormFieldComp) return null;
+  // Los FormField clásicos son claros: los envolvemos en una tarjeta clara para que se lean bien.
   return (
-    <div className="rounded-xl border bg-background p-3 shadow-sm overflow-x-auto">
+    <div className="rounded-xl border border-neutral-800 bg-neutral-100 p-3 text-neutral-900 overflow-x-auto">
       <FormFieldComp block={block as never} value={value} onChange={onChange} readOnly={readOnly} />
     </div>
   );
 }
 
-// ======================== Tarjeta táctil de un punto de control ========================
-
+// ======================== Tarjeta táctil ========================
 function InspectionPointCard({
   label, row, readOnly, onChange,
-}: {
-  label: string;
-  row: Row;
-  readOnly: boolean;
-  onChange: (next: Row) => void;
-}) {
+}: { label: string; row: Row; readOnly: boolean; onChange: (next: Row) => void; }) {
   const state: 'bien' | 'mal' | 'na' | null =
     row.bien === true ? 'bien' : row.mal === true ? 'mal' : row.na === true ? 'na' : null;
-
   const pick = (val: 'bien' | 'mal' | 'na') => {
     if (readOnly) return;
     const same = state === val;
     onChange({ ...row, bien: !same && val === 'bien', mal: !same && val === 'mal', na: !same && val === 'na' });
   };
-
   const btn = (val: 'bien' | 'mal' | 'na', active: string) =>
     `flex-1 rounded-lg border py-2.5 text-sm font-semibold transition-colors ${
-      state === val ? active : 'border-gray-200 bg-white text-gray-500'
+      state === val ? active : 'border-neutral-700 bg-neutral-800 text-neutral-400'
     } ${readOnly ? 'cursor-default' : 'active:scale-[0.98]'}`;
-
   return (
-    <div className={`rounded-xl border p-3 shadow-sm ${state ? 'bg-white' : 'bg-amber-50/40 border-amber-200'}`}>
-      <div className="mb-2 font-medium leading-snug">{label}</div>
+    <div className={`rounded-xl border p-3 ${state ? 'border-neutral-800 bg-neutral-900' : 'border-amber-500/40 bg-amber-500/5'}`}>
+      <div className="mb-2 font-medium leading-snug text-neutral-100">{label}</div>
       <div className="flex gap-2">
-        <button type="button" disabled={readOnly} onClick={() => pick('bien')} className={btn('bien', 'border-green-500 bg-green-500 text-white')}>Bien</button>
+        <button type="button" disabled={readOnly} onClick={() => pick('bien')} className={btn('bien', 'border-emerald-500 bg-emerald-500 text-white')}>Bien</button>
         <button type="button" disabled={readOnly} onClick={() => pick('mal')} className={btn('mal', 'border-red-500 bg-red-500 text-white')}>Mal</button>
-        <button type="button" disabled={readOnly} onClick={() => pick('na')} className={btn('na', 'border-gray-500 bg-gray-500 text-white')}>N/A</button>
+        <button type="button" disabled={readOnly} onClick={() => pick('na')} className={btn('na', 'border-neutral-500 bg-neutral-600 text-white')}>N/A</button>
       </div>
       {(state === 'mal' || (typeof row.observaciones === 'string' && row.observaciones)) && (
-        <Input
-          value={typeof row.observaciones === 'string' ? row.observaciones : ''}
+        <input value={typeof row.observaciones === 'string' ? row.observaciones : ''}
           onChange={(e) => onChange({ ...row, observaciones: e.target.value })}
-          placeholder="Observaciones"
-          readOnly={readOnly}
-          className="mt-2 text-sm"
-        />
+          placeholder="Observaciones" readOnly={readOnly}
+          className="mt-2 w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none" />
       )}
     </div>
   );
