@@ -100,6 +100,14 @@ function CellInput({
         />
       );
 
+    case 'label':
+      // Texto fijo de solo lectura (p.ej. la columna "Operacion"): envuelve, no se desborda.
+      return (
+        <div className="px-1 py-1 text-sm leading-snug text-gray-700 whitespace-normal break-words">
+          {String(value ?? '')}
+        </div>
+      );
+
     default:
       return (
         <Input
