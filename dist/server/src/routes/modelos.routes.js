@@ -6,6 +6,7 @@ const role_middleware_1 = require("../middleware/role.middleware");
 const database_1 = require("../config/database");
 const modelos_validation_1 = require("../validation/modelos.validation");
 const templateSeeds_1 = require("../lib/templateSeeds");
+const generateTemplate_1 = require("../lib/generateTemplate");
 const ofertaMantenimiento_1 = require("../lib/ofertaMantenimiento");
 const planMantenimiento_1 = require("../lib/planMantenimiento");
 const router = (0, express_1.Router)();
@@ -581,6 +582,81 @@ router.post('/:modeloId/versiones', (0, role_middleware_1.requireRole)('admin'),
             },
         });
         res.status(201).json(version);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// POST /api/v1/modelos/:modeloId/versiones/generar (admin)
+// Genera una nueva version (borrador) a partir del plan de mantenimiento
+// (lubricacion + catalogo) y el perfil de informe de la marca/generacion.
+router.post('/:modeloId/versiones/generar', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
+    try {
+        const modeloId = Number(req.params.modeloId);
+        const schema = await (0, generateTemplate_1.generateTemplateForModel)(database_1.prisma, modeloId);
+        const lastVersion = await database_1.prisma.versionTemplate.findFirst({
+            where: { modeloComponenteId: modeloId },
+            orderBy: { version: 'desc' },
+        });
+        const nextVersion = (lastVersion?.version ?? 0) + 1;
+        const version = await database_1.prisma.versionTemplate.create({
+            data: {
+                modeloComponenteId: modeloId,
+                version: nextVersion,
+                schema: schema,
+                estado: 'borrador',
+                notas: 'Generada automaticamente desde el plan de mantenimiento',
+            },
+        });
+        res.status(201).json(version);
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// POST /api/v1/modelos/generar-plantillas-masivo (admin)
+// Genera plantillas (borrador) para todos los modelos activos del tipo indicado.
+// Body: { tipo?: 'mechanical_unit'|'controller'|'drive_unit'|'external_axis',
+//         soloSinVersion?: boolean (default true) }
+router.post('/generar-plantillas-masivo', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
+    try {
+        const tipo = req.body?.tipo;
+        const soloSinVersion = req.body?.soloSinVersion !== false;
+        const modelos = await database_1.prisma.modeloComponente.findMany({
+            where: { activa: true, ...(tipo ? { tipo: tipo } : {}) },
+            select: { id: true, nombre: true, _count: { select: { versiones: true } } },
+            orderBy: { id: 'asc' },
+        });
+        let generadas = 0;
+        let saltadas = 0;
+        const errores = [];
+        for (const m of modelos) {
+            if (soloSinVersion && m._count.versiones > 0) {
+                saltadas++;
+                continue;
+            }
+            try {
+                const schema = await (0, generateTemplate_1.generateTemplateForModel)(database_1.prisma, m.id);
+                const last = await database_1.prisma.versionTemplate.findFirst({
+                    where: { modeloComponenteId: m.id },
+                    orderBy: { version: 'desc' },
+                });
+                await database_1.prisma.versionTemplate.create({
+                    data: {
+                        modeloComponenteId: m.id,
+                        version: (last?.version ?? 0) + 1,
+                        schema: schema,
+                        estado: 'borrador',
+                        notas: 'Generada automaticamente (masivo) desde el plan',
+                    },
+                });
+                generadas++;
+            }
+            catch (e) {
+                errores.push({ modeloId: m.id, nombre: m.nombre, error: e.message });
+            }
+        }
+        res.json({ total: modelos.length, generadas, saltadas, errores });
     }
     catch (err) {
         next(err);
