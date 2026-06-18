@@ -80,6 +80,15 @@ export function useCreateVersion(modeloId: number) {
   });
 }
 
+// Genera una version (borrador) automaticamente desde el plan de mantenimiento.
+export function useGenerarVersion(modeloId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.post(`/v1/modelos/${modeloId}/versiones/generar`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['modelos', modeloId] }),
+  });
+}
+
 export function useUpdateVersion(modeloId: number) {
   const qc = useQueryClient();
   return useMutation({

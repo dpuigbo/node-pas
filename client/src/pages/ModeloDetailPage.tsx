@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Plus, FileText, Play, Pause,
   AlertCircle, Loader2, Pencil, Save, X,
-  Droplets, Wrench, Link2, Cpu, Bot, Cog,
+  Droplets, Wrench, Link2, Cpu, Bot, Cog, Sparkles,
 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, Column } from '@/components/shared/DataTable';
@@ -17,7 +17,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  useModelo, useUpdateModelo, useVersiones, useCreateVersion, useActivateVersion,
+  useModelo, useUpdateModelo, useVersiones, useCreateVersion, useGenerarVersion, useActivateVersion,
   useModelos, useUpdateCompatibilidad, useLubricacion, useMantenimiento,
   useModeloCompatibilidad, useUpdateLubricacionFila,
 } from '@/hooks/useModelos';
@@ -111,6 +111,7 @@ export default function ModeloDetailPage() {
   const { data: modelo, isLoading: loadingModelo } = useModelo(modeloId || undefined);
   const { data: versiones, isLoading: loadingVersiones } = useVersiones(modeloId || undefined);
   const createVersion = useCreateVersion(modeloId);
+  const generarVersion = useGenerarVersion(modeloId);
   const activateVersion = useActivateVersion(modeloId);
   const updateModelo = useUpdateModelo();
 
@@ -308,6 +309,18 @@ export default function ModeloDetailPage() {
       }
     } catch (err: any) {
       alert(err?.response?.data?.error ?? 'Error al crear version');
+    }
+  };
+
+  const handleGenerarVersion = async () => {
+    try {
+      const res = await generarVersion.mutateAsync();
+      const newVersion = (res as any)?.data ?? res;
+      if (newVersion?.id) {
+        navigate(`/modelos/${modeloId}/versiones/${newVersion.id}/editor`);
+      }
+    } catch (err: any) {
+      alert(err?.response?.data?.error ?? 'Error al generar la plantilla desde el plan');
     }
   };
 
@@ -1026,9 +1039,14 @@ export default function ModeloDetailPage() {
               <FileText className="h-5 w-5" /> Versiones de Template ({versionList.length})
             </h2>
             {isAdmin && (
-              <Button size="sm" onClick={() => setCreateOpen(true)}>
-                <Plus className="h-4 w-4" /> Nueva version
-              </Button>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={handleGenerarVersion} disabled={generarVersion.isPending}>
+                  <Sparkles className="h-4 w-4" /> {generarVersion.isPending ? 'Generando...' : 'Generar desde plan'}
+                </Button>
+                <Button size="sm" onClick={() => setCreateOpen(true)}>
+                  <Plus className="h-4 w-4" /> Nueva version
+                </Button>
+              </div>
             )}
           </div>
 
