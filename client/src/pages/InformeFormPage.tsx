@@ -10,6 +10,7 @@ import {
   Circle,
   Eye,
   RefreshCw,
+  ClipboardCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -251,6 +252,16 @@ export default function InformeFormPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => navigate(`/informes/${informeId}/campo`)}
+            className="gap-1"
+            title="Rellenar en campo (móvil/tablet), no lineal"
+          >
+            <ClipboardCheck className="h-4 w-4" />
+            Modo técnico
+          </Button>
           <Button
             variant="outline"
             size="sm"

@@ -46,6 +46,7 @@ const SistemaDetailPage = lazyRetry(() => import('./pages/SistemaDetailPage'));
 const NuevoSistemaPage = lazyRetry(() => import('./pages/NuevoSistemaPage'));
 const DocumentTemplateEditorPage = lazyRetry(() => import('./pages/DocumentTemplateEditorPage'));
 const InformePreviewPage = lazyRetry(() => import('./pages/InformePreviewPage'));
+const InformeWizardPage = lazyRetry(() => import('./pages/InformeWizardPage'));
 
 function EditorLoader() {
   return (
@@ -89,6 +90,16 @@ export default function App() {
           element={
             <Suspense fallback={<EditorLoader />}>
               <InformePreviewPage />
+            </Suspense>
+          }
+        />
+
+        {/* Modo técnico (wizard de campo) — pantalla completa, fuera de AppShell */}
+        <Route
+          path="/informes/:id/campo"
+          element={
+            <Suspense fallback={<EditorLoader />}>
+              <InformeWizardPage />
             </Suspense>
           }
         />
