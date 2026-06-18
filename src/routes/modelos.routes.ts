@@ -601,44 +601,67 @@ router.post('/:modeloId/versiones/generar', requireRole('admin'), async (req: Re
 });
 
 // POST /api/v1/modelos/generar-plantillas-masivo (admin)
-// Genera plantillas (borrador) para todos los modelos activos del tipo indicado.
+// Genera plantillas para todos los modelos activos del tipo indicado.
 // Body: { tipo?: 'mechanical_unit'|'controller'|'drive_unit'|'external_axis',
-//         soloSinVersion?: boolean (default true) }
+//         soloSinVersion?: boolean (default true),
+//         regenerar?: boolean (default false) }
+// regenerar=true: sobreescribe EN SITIO la version que usan los informes (la activa,
+// o la mas reciente) en vez de apilar una nueva. Util para aplicar mejoras del generador
+// a las plantillas ya existentes sin tener que activarlas a mano.
 router.post('/generar-plantillas-masivo', requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const tipo = req.body?.tipo as string | undefined;
-    const soloSinVersion = req.body?.soloSinVersion !== false;
+    const regenerar = req.body?.regenerar === true;
+    const soloSinVersion = !regenerar && req.body?.soloSinVersion !== false;
     const modelos = await prisma.modeloComponente.findMany({
       where: { activa: true, ...(tipo ? { tipo: tipo as any } : {}) },
       select: { id: true, nombre: true, _count: { select: { versiones: true } } },
       orderBy: { id: 'asc' },
     });
     let generadas = 0;
+    let regeneradas = 0;
     let saltadas = 0;
     const errores: { modeloId: number; nombre: string; error: string }[] = [];
     for (const m of modelos) {
       if (soloSinVersion && m._count.versiones > 0) { saltadas++; continue; }
       try {
         const schema = await generateTemplateForModel(prisma, m.id);
-        const last = await prisma.versionTemplate.findFirst({
-          where: { modeloComponenteId: m.id },
-          orderBy: { version: 'desc' },
-        });
-        await prisma.versionTemplate.create({
-          data: {
-            modeloComponenteId: m.id,
-            version: (last?.version ?? 0) + 1,
-            schema: schema as any,
-            estado: 'borrador',
-            notas: 'Generada automaticamente (masivo) desde el plan',
-          },
-        });
-        generadas++;
+        if (regenerar && m._count.versiones > 0) {
+          // Sobreescribe en sitio la version activa (o la mas reciente si no hay activa).
+          const activa = await prisma.versionTemplate.findFirst({
+            where: { modeloComponenteId: m.id, estado: 'activo' },
+            orderBy: { version: 'desc' },
+          });
+          const target = activa ?? await prisma.versionTemplate.findFirst({
+            where: { modeloComponenteId: m.id },
+            orderBy: { version: 'desc' },
+          });
+          await prisma.versionTemplate.update({
+            where: { id: target!.id },
+            data: { schema: schema as any, notas: 'Regenerada en sitio desde el plan' },
+          });
+          regeneradas++;
+        } else {
+          const last = await prisma.versionTemplate.findFirst({
+            where: { modeloComponenteId: m.id },
+            orderBy: { version: 'desc' },
+          });
+          await prisma.versionTemplate.create({
+            data: {
+              modeloComponenteId: m.id,
+              version: (last?.version ?? 0) + 1,
+              schema: schema as any,
+              estado: 'borrador',
+              notas: 'Generada automaticamente (masivo) desde el plan',
+            },
+          });
+          generadas++;
+        }
       } catch (e) {
         errores.push({ modeloId: m.id, nombre: m.nombre, error: (e as Error).message });
       }
     }
-    res.json({ total: modelos.length, generadas, saltadas, errores });
+    res.json({ total: modelos.length, generadas, regeneradas, saltadas, errores });
   } catch (err) { next(err); }
 });
 

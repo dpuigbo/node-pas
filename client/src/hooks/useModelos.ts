@@ -89,6 +89,17 @@ export function useGenerarVersion(modeloId: number) {
   });
 }
 
+// Genera/regenera plantillas en masa desde el plan. regenerar=true sobreescribe en sitio
+// la version activa de cada modelo (aplica mejoras del generador sin apilar versiones).
+export function useRegenerarPlantillasMasivo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body?: { tipo?: string; regenerar?: boolean; soloSinVersion?: boolean }) =>
+      api.post('/v1/modelos/generar-plantillas-masivo', body ?? {}),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['modelos'] }),
+  });
+}
+
 export function useUpdateVersion(modeloId: number) {
   const qc = useQueryClient();
   return useMutation({

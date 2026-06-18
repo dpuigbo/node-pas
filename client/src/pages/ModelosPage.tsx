@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Trash2, Link2, ChevronRight, ChevronDown, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Link2, ChevronRight, ChevronDown, Loader2, RefreshCw } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, Column } from '@/components/shared/DataTable';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useModelos, useCreateModelo, useDeleteModelo } from '@/hooks/useModelos';
+import { useModelos, useCreateModelo, useDeleteModelo, useRegenerarPlantillasMasivo } from '@/hooks/useModelos';
 import { useFabricantes } from '@/hooks/useFabricantes';
 import { useAuth } from '@/hooks/useAuth';
 import { useFamilias, useGeneracionesControlador } from '@/hooks/useLookups';
@@ -62,6 +62,8 @@ export default function ModelosPage() {
   const { data: fabricantes } = useFabricantes();
   const createMutation = useCreateModelo();
   const deleteMutation = useDeleteModelo();
+  const regenMutation = useRegenerarPlantillasMasivo();
+  const [regenOpen, setRegenOpen] = useState(false);
 
   // Grouped view state (for mechanical_unit / external_axis / controller)
   const useGroupedView = tipoFilter === 'mechanical_unit' || tipoFilter === 'external_axis' || tipoFilter === 'controller';
@@ -261,10 +263,18 @@ export default function ModelosPage() {
         title={config?.title ?? 'Modelos de Componente'}
         description={config?.description ?? 'Todos los modelos del catalogo'}
         actions={
-          isAdmin && tipoFilter && (
-            <Button onClick={openCreateDialog}>
-              <Plus className="h-4 w-4" /> Nuevo modelo
-            </Button>
+          isAdmin && (
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => setRegenOpen(true)} disabled={regenMutation.isPending}>
+                <RefreshCw className={`h-4 w-4 ${regenMutation.isPending ? 'animate-spin' : ''}`} />
+                Regenerar plantillas
+              </Button>
+              {tipoFilter && (
+                <Button onClick={openCreateDialog}>
+                  <Plus className="h-4 w-4" /> Nuevo modelo
+                </Button>
+              )}
+            </div>
           )
         }
       />
@@ -570,6 +580,21 @@ export default function ModelosPage() {
         variant="destructive"
         onConfirm={async () => { await deleteMutation.mutateAsync(deleting.id); setDeleteOpen(false); }}
         isLoading={deleteMutation.isPending}
+      />
+
+      <ConfirmDialog
+        open={regenOpen}
+        onOpenChange={setRegenOpen}
+        title="Regenerar plantillas desde el plan"
+        description={`Se regenerara EN SITIO la plantilla activa de ${tipoFilter ? `cada modelo de "${TIPO_LABELS[tipoFilter] ?? tipoFilter}"` : 'TODOS los modelos'} con el ultimo formato del generador (colores, tablas, fix del NaN). Las plantillas editadas a mano se sobreescriben. Los informes ya creados no cambian hasta que pulses "Actualizar plantillas" en cada uno.`}
+        confirmLabel="Regenerar"
+        onConfirm={async () => {
+          const res: any = await regenMutation.mutateAsync({ regenerar: true, ...(tipoFilter ? { tipo: tipoFilter } : {}) });
+          const d = res?.data ?? {};
+          setRegenOpen(false);
+          alert(`Regeneradas en sitio: ${d.regeneradas ?? 0}. Nuevas: ${d.generadas ?? 0}. Saltadas: ${d.saltadas ?? 0}. Errores: ${d.errores?.length ?? 0}.`);
+        }}
+        isLoading={regenMutation.isPending}
       />
     </div>
   );
