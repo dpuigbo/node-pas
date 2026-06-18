@@ -50,8 +50,9 @@ const uuid = () => randomUUID();
 const block = (type: string, config: Record<string, unknown>): Block => ({ id: uuid(), type, config });
 const PAGE: PageConfig = { orientation: 'portrait', margins: { top: 20, right: 15, bottom: 20, left: 15 }, fontSize: 10 };
 
-// Estilo de tabla (como "Informacion general"): barra de titulo gris + cabecera gris clara.
-const TBL = { titleBg: '#9ca3af', titleColor: '#111827', headerBg: '#d1d5db', headerColor: '#1f2937', headerPosition: 'top' };
+// Estilo de tabla EXACTO de "Informacion general" (personalizado por el cliente en el
+// template global): barra de titulo gris #878787, cabecera gris clara #c9c9c9, texto negro.
+const TBL = { titleBg: '#878787', titleColor: '#000000', headerBg: '#c9c9c9', headerColor: '#000000', headerPosition: 'top' };
 
 function slug(s: string): string {
   return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
@@ -82,6 +83,24 @@ function infoTable(key: string, title: string, cols: { key: string; label: strin
     key, label: '', title, ...TBL,
     columns: cols.map((c) => ({ key: c.key, label: c.label, type: 'text', width: 'auto' })),
     fixedRows: [Object.fromEntries(cols.map((c) => [c.key, c.value]))],
+    allowAddRows: false, minRows: 1, maxRows: 1,
+  });
+}
+
+/** Tabla de una sola fila con celdas editables (select/number/text), titulo en barra.
+ *  Para datos de instalacion/sistema, al estilo de la tabla "Informacion general". */
+function fieldsTable(
+  key: string,
+  title: string,
+  fields: { key: string; label: string; type: string; options?: string[]; width?: string }[],
+): Block {
+  return block('table', {
+    key, label: '', title, ...TBL,
+    columns: fields.map((f) => ({
+      key: f.key, label: f.label, type: f.type, width: f.width || 'auto',
+      ...(f.options ? { options: f.options } : {}),
+    })),
+    fixedRows: [Object.fromEntries(fields.map((f) => [f.key, f.type === 'checkbox' ? false : '']))],
     allowAddRows: false, minRows: 1, maxRows: 1,
   });
 }
@@ -194,15 +213,11 @@ export function buildMechanicalSchema(input: MechanicalInput): TemplateSchema {
     { key: 'fecha_fabricacion', label: 'Fecha de fabricación', value: '' },
   ]));
   b.push(spaceSeparator());
-  b.push(block('select_field', {
-    key: 'presencia_cubierta', label: 'Presencia de cubierta y estado', required: false, width: 'third', helpText: '',
-    options: [{ value: 'si_bien', label: 'Sí - Bien' }, { value: 'si_mal', label: 'Sí - Mal' }, { value: 'no', label: 'No' }, { value: 'na', label: 'N/A' }],
-  }));
-  b.push(block('select_field', {
-    key: 'tipo_montaje', label: 'Tipo de montaje', required: false, width: 'third', helpText: '',
-    options: [{ value: 'normal', label: 'Normal' }, { value: 'pared', label: 'Pared' }, { value: 'invertido', label: 'Invertido' }],
-  }));
-  b.push(block('number_field', { key: 'altura_base', label: 'Altura de la base', required: false, width: 'third', helpText: '', unit: 'mm', min: 0, max: null }));
+  b.push(fieldsTable('manipulador_instalacion', 'Instalación del manipulador', [
+    { key: 'presencia_cubierta', label: 'Presencia de cubierta y estado', type: 'select', options: ['Sí - Bien', 'Sí - Mal', 'No', 'N/A'] },
+    { key: 'tipo_montaje', label: 'Tipo de montaje', type: 'select', options: ['Normal', 'Pared', 'Invertido'] },
+    { key: 'altura_base', label: 'Altura de la base (mm)', type: 'number' },
+  ]));
 
   // === mechanical_unit_control ===
   b.push(componentSection('mechanical_unit_control'));
@@ -281,11 +296,15 @@ export function buildControllerSchema(input: ControllerInput): TemplateSchema {
   // === system_control ===
   b.push(componentSection('system_control'));
   pushH1(b, 'Control del sistema', 'Versión, copia de seguridad y supervisión');
-  b.push(block('text_field', { key: 'sistema_version', label: 'Versión del sistema', required: false, width: 'half', helpText: '', placeholder: '' }));
+  const sistemaCols: { key: string; label: string; type: string }[] = [
+    { key: 'sistema_version', label: 'Versión del sistema', type: 'text' },
+  ];
   if (profile.sistemaConRam) {
-    b.push(block('text_field', { key: 'sistema_ram_disponible', label: 'Disponibilidad de la RAM', required: false, width: 'half', helpText: '', placeholder: '' }));
-    b.push(block('text_field', { key: 'sistema_ram_ocupacion', label: 'Ocupación de la RAM', required: false, width: 'half', helpText: '', placeholder: '' }));
+    sistemaCols.push({ key: 'ram_disponible', label: 'Disponibilidad de la RAM', type: 'text' });
+    sistemaCols.push({ key: 'ram_ocupacion', label: 'Ocupación de la RAM', type: 'text' });
   }
+  b.push(fieldsTable('sistema_info', 'Información del sistema', sistemaCols));
+  b.push(spaceSeparator());
   const sistemaChecks = profile.sistemaCampos.filter((c) => !/versi/i.test(c));
   if (profile.sistemaConRam) sistemaChecks.push('Clonado de disco duro');
   b.push(inspectionTable('sistema_checks', 'Control general del sistema', sistemaChecks));

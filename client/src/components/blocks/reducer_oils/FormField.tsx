@@ -55,10 +55,10 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
         <table className="w-full text-xs">
           <thead>
             <tr style={{ backgroundColor: headerBg }}>
-              <th className={`font-medium text-xs ${cellPad} text-left`} style={{ color: headerColor, width: '6%' }}>Eje</th>
-              <th className={`font-medium text-xs ${cellPad} text-left`} style={{ color: headerColor, width: '24%' }}>Tipo suministro</th>
-              <th className={`font-medium text-xs ${cellPad} text-left`} style={{ color: headerColor, width: '8%' }}>Unidad</th>
-              <th className={`font-medium text-xs ${cellPad} text-left`} style={{ color: headerColor, width: '10%' }}>Volumen</th>
+              <th className={`font-medium text-xs ${cellPad} text-left`} style={{ color: headerColor, width: '12%' }}>Eje</th>
+              <th className={`font-medium text-xs ${cellPad} text-left`} style={{ color: headerColor, width: '21%' }}>Tipo suministro</th>
+              <th className={`font-medium text-xs ${cellPad} text-left`} style={{ color: headerColor, width: '7%' }}>Unidad</th>
+              <th className={`font-medium text-xs ${cellPad} text-left`} style={{ color: headerColor, width: '8%' }}>Volumen</th>
               <th className={`font-medium text-xs ${cellPad} text-center`} style={{ color: headerColor, width: '10%' }}>Control</th>
               <th className={`font-medium text-xs ${cellPad} text-center`} style={{ color: headerColor, width: '10%' }}>Cambio</th>
               <th className={`font-medium text-xs ${cellPad} text-left`} style={{ color: headerColor, width: '32%' }}>Observaciones</th>
@@ -75,8 +75,8 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
               rows.map((row, ri) => (
                 <tr key={ri} className={ri % 2 === 1 ? 'bg-gray-50' : 'bg-white'}>
                   {/* Template data — read-only always */}
-                  <td className={`${cellPad} text-gray-600 border-t border-gray-100 text-center`}>{row.eje}</td>
-                  <td className={`${cellPad} text-gray-600 border-t border-gray-100`}>{row.tipoSuministro}</td>
+                  <td className={`${cellPad} text-gray-600 border-t border-gray-100 text-center whitespace-normal break-words leading-tight`}>{row.eje}</td>
+                  <td className={`${cellPad} text-gray-600 border-t border-gray-100 whitespace-normal break-words leading-tight`}>{row.tipoSuministro}</td>
                   <td className={`${cellPad} text-gray-600 border-t border-gray-100`}>{row.unidad || '-'}</td>
                   <td className={`${cellPad} text-gray-600 border-t border-gray-100`}>{row.volumen || '-'}</td>
                   {/* User-editable columns */}

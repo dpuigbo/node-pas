@@ -27,6 +27,16 @@ function CellInput({
   onChange: (v: unknown) => void;
   readOnly: boolean;
 }) {
+  // En solo-lectura (preview / informe), los campos de texto se muestran como texto que
+  // envuelve y no como input de una sola linea que desborda la celda.
+  if (readOnly && col.type !== 'checkbox' && col.type !== 'tristate' && col.type !== 'label') {
+    return (
+      <div className="px-1 py-1 text-sm leading-snug text-gray-700 whitespace-normal break-words">
+        {String(value ?? '') || '—'}
+      </div>
+    );
+  }
+
   switch (col.type) {
     case 'checkbox':
       return (
