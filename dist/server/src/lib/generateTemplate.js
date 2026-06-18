@@ -2,14 +2,11 @@
 /**
  * Motor auto-generador de plantillas de informe.
  *
- * Dado un modelo de componente, genera su VersionTemplate.schema combinando el
- * PERFIL de informe (reportProfiles) con los DATOS del plan (lubricacion + catálogo).
- *
- * Cada plantilla de componente se divide en secciones marcadas con bloques
- * `component_section` (contentType); la plantilla general (DocumentTemplate) coloca
- * cada sección en su `content_placeholder`. Las secciones de ámbito DOCUMENTO
- * (datos de intervención, línea/denominación de cliente, intercambio de equipos,
- * observaciones, estado/aceptación) NO se generan aquí: viven en la plantilla general.
+ * Combina el PERFIL (reportProfiles) con los DATOS del plan (lubricacion + catalogo).
+ * Cada seccion de inspeccion se genera como una TABLA (Operacion | N/A | Bien | Mal |
+ * Observaciones), al estilo de los informes Word. Entre cada elemento se inserta un
+ * separador de espacio grande y centrado. Las secciones se marcan con `component_section`
+ * (contentType) para que la plantilla general las coloque en su `content_placeholder`.
  *
  * Bloques compatibles con initDatos.ts / assembleReport.ts.
  */
@@ -33,7 +30,8 @@ function slug(s) {
 const componentSection = (contentType) => block('component_section', { contentType });
 const sectionH1 = (title) => block('section_title', { title, description: '', level: 1, color: '#1e293b' });
 const sectionH2 = (title) => block('section_title', { title, description: '', level: 2, color: '#475569' });
-const tri = (key, label, nivel = 'level1') => block('tristate', { key, label, withObservation: true, required: false, maintenanceLevel: nivel });
+/** Separador de espacio grande y centrado entre elementos del informe. */
+const spaceSeparator = () => block('divider', { style: 'space', spacing: 'large', align: 'center' });
 function ejesDeCinematica(cinematica) {
     if (!cinematica)
         return 6;
@@ -43,11 +41,25 @@ function ejesDeCinematica(cinematica) {
         return 4;
     return 6;
 }
+/** Tabla de inspeccion (Operacion | N/A | Bien | Mal | Observaciones), estilo Word. */
+function inspectionTable(key, checks) {
+    return block('table', {
+        key, label: '', title: '', ...TBL,
+        columns: [
+            { key: 'operacion', label: 'Operación', type: 'text', width: 'auto' },
+            { key: 'na', label: 'N/A', type: 'checkbox', width: '55px' },
+            { key: 'bien', label: 'Bien', type: 'checkbox', width: '55px' },
+            { key: 'mal', label: 'Mal', type: 'checkbox', width: '55px' },
+            { key: 'observaciones', label: 'Observaciones', type: 'text', width: 'auto' },
+        ],
+        fixedRows: checks.map((chk) => ({ operacion: chk, na: false, bien: false, mal: false, observaciones: '' })),
+        allowAddRows: true, minRows: checks.length, maxRows: checks.length + 10,
+    });
+}
 function calibracionBlock(tipo, nEjes) {
     if (tipo === 'abb_conmutacion') {
         return block('table', {
-            key: 'conmutacion_calibracion', label: 'Valores de conmutación y calibración',
-            title: 'Valores de conmutación y calibración', ...TBL,
+            key: 'conmutacion_calibracion', label: '', title: 'Valores de conmutación y calibración', ...TBL,
             columns: [
                 { key: 'eje', label: 'Eje', type: 'text', width: '50px' },
                 { key: 'conm_orig', label: 'Conmutación original', type: 'text', width: 'auto' },
@@ -61,8 +73,7 @@ function calibracionBlock(tipo, nEjes) {
     }
     if (tipo === 'kuka_angulo') {
         return block('table', {
-            key: 'calibracion_angulo', label: 'Verificación de posición de calibración',
-            title: 'Verificación de posición de calibración', ...TBL,
+            key: 'calibracion_angulo', label: '', title: 'Verificación de posición de calibración', ...TBL,
             columns: [
                 { key: 'eje', label: 'Eje', type: 'text', width: '50px' },
                 { key: 'dif_angulo_motor', label: 'Diferencia ángulo motor', type: 'text', width: 'auto' },
@@ -76,14 +87,14 @@ function calibracionBlock(tipo, nEjes) {
 }
 function bateriasTable(key, label, rows) {
     return block('table', {
-        key, label, title: label, ...TBL,
+        key, label: '', title: label, ...TBL,
         columns: [
             { key: 'bateria', label: 'Pila/Batería', type: 'text', width: 'auto' },
             { key: 'referencia', label: 'Referencia', type: 'text', width: 'auto' },
             { key: 'reemplazado', label: 'Reemplazado', type: 'checkbox', width: '100px' },
             { key: 'fecha', label: 'Fecha de reemplazo', type: 'text', width: '130px' },
         ],
-        fixedRows: rows.map(b => ({ bateria: b.nombre, referencia: b.referencia || '-', reemplazado: false, fecha: '' })),
+        fixedRows: rows.map((b) => ({ bateria: b.nombre, referencia: b.referencia || '-', reemplazado: false, fecha: '' })),
         allowAddRows: true, minRows: rows.length, maxRows: rows.length + 5,
     });
 }
@@ -91,7 +102,7 @@ function reducerOilsBlock(key, label, reductoras) {
     return block('reducer_oils', {
         key, label, title: label,
         titleBg: '#1f2937', titleColor: '#ffffff', headerBg: '#f3f4f6', headerColor: '#1f2937', required: false,
-        fixedRows: reductoras.map(r => ({
+        fixedRows: reductoras.map((r) => ({
             eje: r.eje, tipoSuministro: r.tipoSuministro, aceiteId: r.aceiteId,
             unidad: r.unidad, volumen: r.volumen, niveles: r.niveles, lifetime: r.lifetime,
         })),
@@ -99,8 +110,7 @@ function reducerOilsBlock(key, label, reductoras) {
 }
 function ejesFrenosTable(nEjes) {
     return block('table', {
-        key: 'ejes_frenos', label: 'Funcionamiento de ejes y frenos',
-        title: 'Funcionamiento de ejes y frenos', ...TBL,
+        key: 'ejes_frenos', label: '', title: 'Funcionamiento de ejes y frenos', ...TBL,
         columns: [
             { key: 'eje', label: 'Eje', type: 'text', width: '60px' },
             { key: 'func_eje', label: 'Funcionamiento eje', type: 'checkbox', width: '120px' },
@@ -114,9 +124,7 @@ function ejesFrenosTable(nEjes) {
 function buildMechanicalSchema(input) {
     const { nEjes, reductoras, bateriasSMB, overhaulHoras, profile } = input;
     const b = [];
-    // === manipulator_info (identidad + instalación del manipulador) ===
-    // NOTA: línea/denominación de cliente y "Información general" del sistema van
-    // en la plantilla general, no aquí.
+    // === manipulator_info (identidad + instalacion) ===
     b.push(componentSection('manipulator_info'));
     b.push(sectionH1('Información del manipulador'));
     b.push(block('text_field', { key: 'manipulador_numero_serie', label: 'Número de serie', required: true, width: 'third', helpText: 'Del sistema: {{componente.numero_serie}}', placeholder: '' }));
@@ -126,16 +134,11 @@ function buildMechanicalSchema(input) {
     b.push(block('divider', { style: 'solid', spacing: 'small', color: '#e5e7eb' }));
     b.push(block('select_field', {
         key: 'presencia_cubierta', label: 'Presencia de cubierta y estado', required: false, width: 'third', helpText: '',
-        options: [
-            { value: 'si_bien', label: 'Sí - Bien' }, { value: 'si_mal', label: 'Sí - Mal' },
-            { value: 'no', label: 'No' }, { value: 'na', label: 'N/A' },
-        ],
+        options: [{ value: 'si_bien', label: 'Sí - Bien' }, { value: 'si_mal', label: 'Sí - Mal' }, { value: 'no', label: 'No' }, { value: 'na', label: 'N/A' }],
     }));
     b.push(block('select_field', {
         key: 'tipo_montaje', label: 'Tipo de montaje', required: false, width: 'third', helpText: '',
-        options: [
-            { value: 'normal', label: 'Normal' }, { value: 'pared', label: 'Pared' }, { value: 'invertido', label: 'Invertido' },
-        ],
+        options: [{ value: 'normal', label: 'Normal' }, { value: 'pared', label: 'Pared' }, { value: 'invertido', label: 'Invertido' }],
     }));
     b.push(block('number_field', { key: 'altura_base', label: 'Altura de la base', required: false, width: 'third', helpText: '', unit: 'mm', min: 0, max: null }));
     // === mechanical_unit_control ===
@@ -143,19 +146,24 @@ function buildMechanicalSchema(input) {
     b.push(sectionH1('Control de la unidad mecánica'));
     if (reductoras.length > 0)
         b.push(reducerOilsBlock('reductoras', 'Reductoras del manipulador', reductoras));
+    // Control por eje individual (una TABLA por eje, separadas por espacio)
     for (let e = 1; e <= nEjes; e++) {
+        b.push(spaceSeparator());
         b.push(sectionH2(`Eje ${e}`));
         const checks = [...(profile.ejeExtras[e] || []), ...profile.ejeBase];
-        for (const chk of checks)
-            b.push(tri(`eje${e}_${slug(chk)}`, chk));
+        b.push(inspectionTable(`eje${e}_control`, checks));
     }
-    if (profile.generalChecks.length > 0) {
-        b.push(sectionH2('Inspecciones generales del manipulador'));
-        for (const it of profile.generalChecks)
-            b.push(tri(slug(it), it));
-    }
+    // Inspecciones generales (+ overhaul como fila)
+    const generales = [...profile.generalChecks];
     if (overhaulHoras)
-        b.push(tri('overhaul', `Overhaul completo (cada ${overhaulHoras} h)`, 'level3'));
+        generales.push(`Overhaul completo (cada ${overhaulHoras} h)`);
+    if (generales.length > 0) {
+        b.push(spaceSeparator());
+        b.push(sectionH2('Inspecciones generales del manipulador'));
+        b.push(inspectionTable('inspecciones_generales', generales));
+    }
+    // Funcionamiento de ejes y frenos
+    b.push(spaceSeparator());
     b.push(sectionH2('Funcionamiento de ejes y frenos'));
     b.push(ejesFrenosTable(nEjes));
     // === manipulator_battery (SMB) ===
@@ -186,35 +194,38 @@ function buildControllerSchema(input) {
     b.push(componentSection('cabinet_control'));
     b.push(sectionH1('Control del armario'));
     if (profile.armarioExterior.length > 0) {
+        b.push(spaceSeparator());
         b.push(sectionH2('Control general exterior'));
-        for (const c of profile.armarioExterior)
-            b.push(tri(`armario_ext_${slug(c)}`, c));
+        b.push(inspectionTable('armario_exterior', profile.armarioExterior));
     }
+    b.push(spaceSeparator());
     b.push(sectionH2('Control general interior'));
-    for (const c of profile.armarioInterior)
-        b.push(tri(`armario_int_${slug(c)}`, c));
+    b.push(inspectionTable('armario_interior', profile.armarioInterior));
+    b.push(spaceSeparator());
     b.push(sectionH2('Control cableado a robot'));
-    for (const c of profile.cableado)
-        b.push(tri(`cableado_${slug(c)}`, c));
+    b.push(inspectionTable('cableado_robot', profile.cableado));
     if (bateriasControlador.length > 0) {
+        b.push(spaceSeparator());
         b.push(sectionH2('Control de pilas y baterías'));
         b.push(bateriasTable('baterias_controlador', 'Control de pilas y baterías', bateriasControlador));
     }
     // === programming_unit_control ===
     b.push(componentSection('programming_unit_control'));
     b.push(sectionH1('Control de la unidad de programación'));
-    for (const c of profile.teachPendant)
-        b.push(tri(`tp_${slug(c)}`, c));
-    // === system_control (sin intercambio/observaciones/estado: van en la plantilla general) ===
+    b.push(inspectionTable('teach_pendant', profile.teachPendant));
+    // === system_control ===
     b.push(componentSection('system_control'));
     b.push(sectionH1('Control del sistema'));
-    for (const c of profile.sistemaCampos)
-        b.push(tri(`sistema_${slug(c)}`, c, 'general'));
+    b.push(block('text_field', { key: 'sistema_version', label: 'Versión del sistema', required: false, width: 'half', helpText: '', placeholder: '' }));
     if (profile.sistemaConRam) {
         b.push(block('text_field', { key: 'sistema_ram_disponible', label: 'Disponibilidad de la RAM', required: false, width: 'half', helpText: '', placeholder: '' }));
         b.push(block('text_field', { key: 'sistema_ram_ocupacion', label: 'Ocupación de la RAM', required: false, width: 'half', helpText: '', placeholder: '' }));
-        b.push(tri('sistema_clonado_disco', 'Clonado de disco duro', 'general'));
     }
+    // Checks del sistema (sin la version, que va arriba)
+    const sistemaChecks = profile.sistemaCampos.filter((c) => !/versi/i.test(c));
+    if (profile.sistemaConRam)
+        sistemaChecks.push('Clonado de disco duro');
+    b.push(inspectionTable('sistema_checks', sistemaChecks));
     return { blocks: b, pageConfig: PAGE };
 }
 function buildExternalAxisSchema(input) {
@@ -232,12 +243,15 @@ function buildExternalAxisSchema(input) {
     if (reductoras.length > 0)
         b.push(reducerOilsBlock('reductoras_eje', 'Lubricación del eje externo', reductoras));
     for (let e = 1; e <= nEjes; e++) {
+        b.push(spaceSeparator());
         b.push(sectionH2(`Eje externo ${e}`));
-        for (const chk of profile.ejeChecks)
-            b.push(tri(`ejeext${e}_${slug(chk)}`, chk));
+        b.push(inspectionTable(`ejeext${e}_control`, profile.ejeChecks));
     }
-    for (const it of profile.generalChecks)
-        b.push(tri(slug(it), it));
+    if (profile.generalChecks.length > 0) {
+        b.push(spaceSeparator());
+        b.push(sectionH2('Inspecciones generales del eje externo'));
+        b.push(inspectionTable('eje_inspecciones_generales', profile.generalChecks));
+    }
     // === manipulator_battery (SMB del eje externo) ===
     if (profile.bateriaMedida === 'smb' && bateriasSMB.length > 0) {
         b.push(componentSection('manipulator_battery'));
@@ -266,15 +280,15 @@ async function batteriesBySubtipo(prisma, subtipos) {
     return rows.map((r) => ({ nombre: r.nombre, referencia: r.codigoFabricante ?? '', consumibleId: r.id }));
 }
 async function batteriesByCodigo(prisma, refs) {
-    const codigos = refs.map(r => r.codigoInterno).filter(Boolean);
+    const codigos = refs.map((r) => r.codigoInterno).filter(Boolean);
     if (codigos.length === 0)
-        return refs.map(r => ({ nombre: r.nombre, referencia: '', consumibleId: null }));
+        return refs.map((r) => ({ nombre: r.nombre, referencia: '', consumibleId: null }));
     const rows = await prisma.consumibleCatalogo.findMany({
         where: { codigoInterno: { in: codigos } },
         select: { id: true, nombre: true, codigoFabricante: true, codigoInterno: true },
     });
     const byCod = new Map(rows.map((r) => [r.codigoInterno, r]));
-    return refs.map(r => {
+    return refs.map((r) => {
         const hit = r.codigoInterno ? byCod.get(r.codigoInterno) : null;
         return { nombre: r.nombre, referencia: hit?.codigoFabricante ?? '', consumibleId: hit?.id ?? null };
     });
@@ -313,9 +327,7 @@ async function generateTemplateForModel(prisma, modeloId) {
         const reductoras = await loadReductoras(prisma, modeloId);
         const nEjes = ejesDeCinematica(cinematica);
         const profile = (0, reportProfiles_1.getMechanicalProfile)(marca, generacion, cinematica);
-        const bateriasSMB = profile.bateriaMedida === 'smb'
-            ? await batteriesBySubtipo(prisma, ['smb_2pole', 'smb_3pole'])
-            : [];
+        const bateriasSMB = profile.bateriaMedida === 'smb' ? await batteriesBySubtipo(prisma, ['smb_2pole', 'smb_3pole']) : [];
         return buildMechanicalSchema({ nEjes, reductoras, bateriasSMB, overhaulHoras: 40000, profile });
     }
     if (model.tipo === 'controller') {
@@ -327,9 +339,7 @@ async function generateTemplateForModel(prisma, modeloId) {
         const reductoras = await loadReductoras(prisma, modeloId);
         const nEjes = reductoras.length || 1;
         const profile = (0, reportProfiles_1.getExternalAxisProfile)(marca);
-        const bateriasSMB = profile.bateriaMedida === 'smb'
-            ? await batteriesBySubtipo(prisma, ['smb_2pole', 'smb_3pole'])
-            : [];
+        const bateriasSMB = profile.bateriaMedida === 'smb' ? await batteriesBySubtipo(prisma, ['smb_2pole', 'smb_3pole']) : [];
         return buildExternalAxisSchema({ nEjes, reductoras, bateriasSMB, profile });
     }
     return {
