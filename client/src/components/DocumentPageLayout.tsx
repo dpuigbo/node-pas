@@ -566,7 +566,9 @@ function PaginatedDocument({
   useLayoutEffect(() => {
     const root = measureRef.current;
     if (!root) return;
+    let cancelled = false;
 
+    const measure = () => {
     const phys: PhysicalPage[] = [];
 
     logicalPages.forEach((lp, i) => {
@@ -633,7 +635,17 @@ function PaginatedDocument({
       });
     });
 
-    setState({ sig, pages: phys });
+      if (!cancelled) setState({ sig, pages: phys });
+    };
+
+    measure();
+    // Re-medir tras cargar las webfonts y en el siguiente frame: las alturas
+    // reales pueden crecer al entrar las fuentes -> evita empaquetar de mas y
+    // que la pagina acabe creciendo por encima del A4.
+    const raf = requestAnimationFrame(measure);
+    const fonts = (document as { fonts?: { ready?: Promise<unknown> } }).fonts;
+    if (fonts && fonts.ready) void fonts.ready.then(() => measure());
+    return () => { cancelled = true; cancelAnimationFrame(raf); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sig]);
 

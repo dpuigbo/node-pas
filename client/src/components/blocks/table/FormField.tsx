@@ -155,8 +155,13 @@ function TopHeaderTable({
   updateCell: (ri: number, colKey: string, value: unknown) => void;
   removeRow: (ri: number) => void;
 }) {
+  // table-fixed solo si TODAS las columnas tienen ancho explícito: fuerza que el
+  // texto largo (p.ej. "Operación") envuelva dentro de su columna en vez de
+  // ensanchar la columna y comerse el espacio de las demás. Las tablas de ancho
+  // 'auto' (identidad, Información general...) mantienen el layout automático.
+  const fixed = columns.length > 0 && columns.every((c) => c.width && c.width !== 'auto');
   return (
-    <table className="w-full text-sm">
+    <table className={`w-full text-sm ${fixed ? 'table-fixed' : ''}`}>
       <thead>
         <tr style={{ backgroundColor: headerBg }}>
           {columns.map((col) => (

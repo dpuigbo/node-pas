@@ -61,12 +61,13 @@ export function AssembledTableOfContents({
           pageNumber,
         });
       } else if ((b.type === 'table' || b.type === 'reducer_oils') && b.config.title) {
-        // El titulo de la tabla actua como subseccion (X.1, X.2...), salvo que
-        // coincida con el H1 inmediatamente anterior (evita el duplicado).
+        // El titulo de cada tabla es una entrada de nivel 1 del indice: los titulos
+        // de seccion ya no son bloques aparte, viven en la barra de cada tabla.
+        // (Se omite si coincide con un section_title inmediatamente anterior.)
         const tTitle = (b.config.title as string) || '';
         if (tTitle && tTitle !== lastH1Title) {
-          c2++; c3 = 0;
-          result.push({ label: `${c1}.${c2}`, title: tTitle, level: 2, pageNumber });
+          c1++; c2 = 0; c3 = 0;
+          result.push({ label: `${c1}`, title: tTitle, level: 1, pageNumber });
         }
       }
     }

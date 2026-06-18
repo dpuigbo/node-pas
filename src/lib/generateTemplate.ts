@@ -60,13 +60,14 @@ function slug(s: string): string {
 }
 
 const componentSection = (contentType: string) => block('component_section', { contentType });
-const sectionH1 = (title: string, description = '') => block('section_title', { title, description, level: 1, color: '#1e293b' });
 /** Separador de espacio grande y centrado entre elementos. */
 const spaceSeparator = () => block('divider', { style: 'space', spacing: 'large', align: 'center' });
 
-/** Cabecera de seccion principal: titulo + subtitulo + separador grande debajo. */
-function pushH1(b: Block[], title: string, description: string): void {
-  b.push(sectionH1(title, description));
+/** Separación entre secciones. El TÍTULO de cada sección va DENTRO de la tabla
+ *  (barra de título), NO en un bloque section_title aparte (el cliente lo pidió así
+ *  para no duplicar el título que ya muestra la tabla). */
+function pushH1(b: Block[], _title?: string, _description?: string): void {
+  void _title; void _description;
   b.push(spaceSeparator());
 }
 
@@ -110,11 +111,11 @@ function inspectionTable(key: string, title: string, checks: string[]): Block {
   return block('table', {
     key, label: '', title, ...TBL,
     columns: [
-      { key: 'operacion', label: 'Operación', type: 'label', width: 'auto' },
-      { key: 'na', label: 'N/A', type: 'checkbox', width: '55px' },
-      { key: 'bien', label: 'Bien', type: 'checkbox', width: '55px' },
-      { key: 'mal', label: 'Mal', type: 'checkbox', width: '55px' },
-      { key: 'observaciones', label: 'Observaciones', type: 'text', width: 'auto' },
+      { key: 'operacion', label: 'Operación', type: 'label', width: '38%' },
+      { key: 'na', label: 'N/A', type: 'checkbox', width: '8%' },
+      { key: 'bien', label: 'Bien', type: 'checkbox', width: '8%' },
+      { key: 'mal', label: 'Mal', type: 'checkbox', width: '8%' },
+      { key: 'observaciones', label: 'Observaciones', type: 'text', width: '38%' },
     ],
     fixedRows: checks.map((chk) => ({ operacion: chk, na: false, bien: false, mal: false, observaciones: '' })),
     allowAddRows: true, minRows: checks.length, maxRows: checks.length + 10,
@@ -295,18 +296,14 @@ export function buildControllerSchema(input: ControllerInput): TemplateSchema {
 
   // === system_control ===
   b.push(componentSection('system_control'));
-  pushH1(b, 'Control del sistema', 'Versión, copia de seguridad y supervisión');
-  const sistemaCols: { key: string; label: string; type: string }[] = [
-    { key: 'sistema_version', label: 'Versión del sistema', type: 'text' },
-  ];
+  pushH1(b);
+  // La versión del sistema (y la RAM en KUKA) van COMO FILAS dentro de la tabla de
+  // control general del sistema; el técnico anota el valor en Observaciones.
+  const sistemaChecks: string[] = ['Versión del sistema'];
   if (profile.sistemaConRam) {
-    sistemaCols.push({ key: 'ram_disponible', label: 'Disponibilidad de la RAM', type: 'text' });
-    sistemaCols.push({ key: 'ram_ocupacion', label: 'Ocupación de la RAM', type: 'text' });
+    sistemaChecks.push('Disponibilidad de la RAM', 'Ocupación de la RAM', 'Clonado de disco duro');
   }
-  b.push(fieldsTable('sistema_info', 'Información del sistema', sistemaCols));
-  b.push(spaceSeparator());
-  const sistemaChecks = profile.sistemaCampos.filter((c) => !/versi/i.test(c));
-  if (profile.sistemaConRam) sistemaChecks.push('Clonado de disco duro');
+  for (const c of profile.sistemaCampos.filter((c) => !/versi/i.test(c))) sistemaChecks.push(c);
   b.push(inspectionTable('sistema_checks', 'Control general del sistema', sistemaChecks));
 
   return { blocks: b, pageConfig: PAGE };
@@ -449,7 +446,6 @@ export async function generateTemplateForModel(prisma: any, modeloId: number): P
   return {
     blocks: [
       componentSection('controller_info'),
-      sectionH1('Información del componente'),
       spaceSeparator(),
       infoTable('componente_identidad', 'Información del componente', [
         { key: 'numero_serie', label: 'Número de serie', value: '{{componente.numero_serie}}' },
