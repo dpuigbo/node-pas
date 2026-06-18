@@ -12,9 +12,19 @@
  *   flex-col children for independent vertical positioning
  * - back_cover fills entire page (fixed height, not minHeight)
  * - Page numbering: injects _pageNumber/_totalPages into chrome blocks
+ *
+ * Optional `paginate` (read-only views only): measures rendered block heights
+ * and splits overflowing content into real A4 pages. Pages whose content holds
+ * a vertically alignable block (portada) or a back_cover are NOT split (they
+ * keep their single-page layout). The form/editor never passes paginate.
  */
 
-import React, { useMemo } from 'react';
+import React, {
+  useMemo,
+  useRef,
+  useState,
+  useLayoutEffect,
+} from 'react';
 import { DOCUMENT_CHROME_TYPES, DOCUMENT_CHROME_POSITION } from '@/types/editor';
 import type { BlockType } from '@/types/editor';
 import type { AssembledBlock } from '@/types/informe';
@@ -67,6 +77,12 @@ export interface DocumentPageLayoutProps {
   pageConfig: PageConfig;
   /** Render callback for each block. The layout decides WHERE, you decide HOW. */
   renderBlock: (block: AssembledBlock) => React.ReactNode;
+  /**
+   * When true, content that overflows an A4 page is measured and split into
+   * real pages. Only safe for read-only views (it renders each block twice:
+   * once hidden to measure, once visible). Defaults to false.
+   */
+  paginate?: boolean;
 }
 
 // ======================== Helpers ========================
@@ -199,6 +215,30 @@ function withPageNumbers(
       _totalPages: totalPages,
     },
   };
+}
+
+// ======================== Section separator label ========================
+
+function SeparatorLabel({
+  separator,
+  canvasWidth,
+}: {
+  separator: AssembledBlock;
+  canvasWidth: number;
+}) {
+  const key = separator.config.section as string;
+  return (
+    <div
+      className="w-full flex items-center gap-2 py-1"
+      style={{ maxWidth: canvasWidth }}
+    >
+      <div className="flex-1 border-t-2 border-dashed border-gray-300" />
+      <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+        {SECTION_LABELS[key] ?? key}
+      </span>
+      <div className="flex-1 border-t-2 border-dashed border-gray-300" />
+    </div>
+  );
 }
 
 // ======================== Page Container ========================
@@ -346,25 +386,45 @@ function PageContainer({
   );
 }
 
-// ======================== Main Component ========================
+// ======================== Shared canvas geometry ========================
 
-export function DocumentPageLayout({
-  blocks,
+interface Geometry {
+  canvasWidth: number;
+  canvasHeight: number;
+  mTop: number;
+  mRight: number;
+  mBottom: number;
+  mLeft: number;
+}
+
+function useGeometry(pageConfig: PageConfig): Geometry {
+  const isPortrait = pageConfig.orientation === 'portrait';
+  return {
+    canvasWidth: isPortrait ? A4_WIDTH : A4_HEIGHT,
+    canvasHeight: isPortrait ? A4_HEIGHT : A4_WIDTH,
+    mTop: pageConfig.margins.top * MM_TO_PX,
+    mRight: pageConfig.margins.right * MM_TO_PX,
+    mBottom: pageConfig.margins.bottom * MM_TO_PX,
+    mLeft: pageConfig.margins.left * MM_TO_PX,
+  };
+}
+
+// ======================== Unpaginated (default) document ========================
+
+function UnpaginatedDocument({
+  sections,
   pageConfig,
   renderBlock,
-}: DocumentPageLayoutProps) {
-  const sections = useMemo(() => splitIntoSections(blocks), [blocks]);
+  geo,
+}: {
+  sections: Section[];
+  pageConfig: PageConfig;
+  renderBlock: (block: AssembledBlock) => React.ReactNode;
+  geo: Geometry;
+}) {
   const totalPages = useMemo(() => countTotalPages(sections), [sections]);
+  const { canvasWidth, canvasHeight, mTop, mRight, mBottom, mLeft } = geo;
 
-  const isPortrait = pageConfig.orientation === 'portrait';
-  const canvasWidth = isPortrait ? A4_WIDTH : A4_HEIGHT;
-  const canvasHeight = isPortrait ? A4_HEIGHT : A4_WIDTH;
-  const mTop = pageConfig.margins.top * MM_TO_PX;
-  const mRight = pageConfig.margins.right * MM_TO_PX;
-  const mBottom = pageConfig.margins.bottom * MM_TO_PX;
-  const mLeft = pageConfig.margins.left * MM_TO_PX;
-
-  // Track page number across all sections
   let currentPage = 0;
 
   return (
@@ -377,23 +437,10 @@ export function DocumentPageLayout({
 
         return (
           <div key={si} className="flex flex-col items-center w-full gap-2">
-            {/* Section separator label (outside pages) */}
             {section.separator && (
-              <div
-                className="w-full flex items-center gap-2 py-1"
-                style={{ maxWidth: canvasWidth }}
-              >
-                <div className="flex-1 border-t-2 border-dashed border-gray-300" />
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                  {SECTION_LABELS[
-                    section.separator.config.section as string
-                  ] ?? (section.separator.config.section as string)}
-                </span>
-                <div className="flex-1 border-t-2 border-dashed border-gray-300" />
-              </div>
+              <SeparatorLabel separator={section.separator} canvasWidth={canvasWidth} />
             )}
 
-            {/* Render a PageContainer for each sub-page */}
             {contentPages.map((pageContent, pi) => {
               currentPage++;
               return (
@@ -421,5 +468,299 @@ export function DocumentPageLayout({
         );
       })}
     </div>
+  );
+}
+
+// ======================== Paginated document ========================
+
+/** One page_break-delimited unit before height pagination */
+interface LogicalPage {
+  topChrome: AssembledBlock[];
+  bottomChrome: AssembledBlock[];
+  blocks: AssembledBlock[];
+  hasBackCover: boolean;
+  separator?: AssembledBlock;
+  /** Content pages get measured + split; alignable/back_cover pages do not. */
+  measurable: boolean;
+}
+
+/** One physical A4 page after height pagination */
+interface PhysicalPage {
+  topChrome: AssembledBlock[];
+  bottomChrome: AssembledBlock[];
+  blocks: AssembledBlock[];
+  hasBackCover: boolean;
+  separator?: AssembledBlock;
+}
+
+function buildLogicalPages(sections: Section[]): LogicalPage[] {
+  const out: LogicalPage[] = [];
+  for (const section of sections) {
+    const { topChrome, content, bottomChrome, hasBackCover } =
+      splitChromeAndContent(section.blocks);
+
+    if (hasBackCover) {
+      out.push({
+        topChrome,
+        bottomChrome,
+        blocks: [],
+        hasBackCover: true,
+        separator: section.separator,
+        measurable: false,
+      });
+      continue;
+    }
+
+    const pbPages = splitByPageBreak(content);
+    pbPages.forEach((blocks, pi) => {
+      const hasAlignable = blocks.some((b) => VERTICALLY_ALIGNABLE.has(b.type));
+      out.push({
+        topChrome,
+        bottomChrome,
+        blocks,
+        hasBackCover: false,
+        separator: pi === 0 ? section.separator : undefined,
+        // Pages with vertically-aligned blocks (portada) keep their single-page
+        // layout; only plain content pages get height-split.
+        measurable: !hasAlignable,
+      });
+    });
+  }
+  return out;
+}
+
+function PaginatedDocument({
+  sections,
+  pageConfig,
+  renderBlock,
+  geo,
+}: {
+  sections: Section[];
+  pageConfig: PageConfig;
+  renderBlock: (block: AssembledBlock) => React.ReactNode;
+  geo: Geometry;
+}) {
+  const { canvasWidth, canvasHeight, mTop, mRight, mBottom, mLeft } = geo;
+  const innerW = Math.max(canvasWidth - mLeft - mRight, 50);
+
+  const logicalPages = useMemo(() => buildLogicalPages(sections), [sections]);
+
+  // Signature retriggers measurement when content or geometry changes.
+  const sig = useMemo(() => {
+    const body = logicalPages
+      .map(
+        (lp, i) =>
+          `${i}:${lp.blocks.map((b) => b.id).join(',')}` +
+          `|tc${lp.topChrome.length}|bc${lp.bottomChrome.length}`,
+      )
+      .join('||');
+    return `${body}@@${canvasWidth}x${canvasHeight}:${mTop},${mRight},${mBottom},${mLeft}`;
+  }, [logicalPages, canvasWidth, canvasHeight, mTop, mRight, mBottom, mLeft]);
+
+  const measureRef = useRef<HTMLDivElement | null>(null);
+  const [state, setState] = useState<{ sig: string; pages: PhysicalPage[] } | null>(
+    null,
+  );
+
+  useLayoutEffect(() => {
+    const root = measureRef.current;
+    if (!root) return;
+
+    const phys: PhysicalPage[] = [];
+
+    logicalPages.forEach((lp, i) => {
+      if (!lp.measurable) {
+        phys.push({
+          topChrome: lp.topChrome,
+          bottomChrome: lp.bottomChrome,
+          blocks: lp.blocks,
+          hasBackCover: lp.hasBackCover,
+          separator: lp.separator,
+        });
+        return;
+      }
+
+      const wrap = root.querySelector<HTMLElement>(`[data-lp="${i}"]`);
+      const cont = wrap?.querySelector<HTMLElement>('[data-cont]') ?? null;
+      const ctEl = wrap?.querySelector<HTMLElement>('[data-ct]') ?? null;
+      const cbEl = wrap?.querySelector<HTMLElement>('[data-cb]') ?? null;
+
+      const topH = ctEl ? ctEl.getBoundingClientRect().height : 0;
+      const botH = cbEl ? cbEl.getBoundingClientRect().height : 0;
+      const padTop = lp.topChrome.length > 0 ? 8 : mTop;
+      const padBottom = lp.bottomChrome.length > 0 ? 8 : mBottom;
+      const avail = Math.max(canvasHeight - topH - botH - padTop - padBottom, 120);
+
+      const kids = cont ? Array.from(cont.children) : [];
+
+      let subsets: AssembledBlock[][];
+      if (kids.length !== lp.blocks.length || kids.length === 0) {
+        // Couldn't line up DOM with blocks — fall back to a single page.
+        subsets = [lp.blocks];
+      } else {
+        const contTop = cont!.getBoundingClientRect().top;
+        subsets = [];
+        let cur: AssembledBlock[] = [];
+        let startY: number | null = null;
+        for (let j = 0; j < lp.blocks.length; j++) {
+          const blk = lp.blocks[j];
+          const kid = kids[j] as HTMLElement | undefined;
+          if (!blk || !kid) continue;
+          const rect = kid.getBoundingClientRect();
+          const top = rect.top - contTop;
+          const bottom = top + rect.height;
+          if (startY === null) startY = top;
+          if (cur.length > 0 && bottom - startY > avail) {
+            subsets.push(cur);
+            cur = [];
+            startY = top;
+          }
+          cur.push(blk);
+        }
+        if (cur.length > 0) subsets.push(cur);
+        if (subsets.length === 0) subsets = [[]];
+      }
+
+      subsets.forEach((bl, k) => {
+        phys.push({
+          topChrome: lp.topChrome,
+          bottomChrome: lp.bottomChrome,
+          blocks: bl,
+          hasBackCover: false,
+          separator: k === 0 ? lp.separator : undefined,
+        });
+      });
+    });
+
+    setState({ sig, pages: phys });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sig]);
+
+  const ready = state && state.sig === sig;
+
+  return (
+    <>
+      {/* Hidden measurement layer — lays out every content page at real width */}
+      <div
+        ref={measureRef}
+        aria-hidden
+        key={sig}
+        style={{
+          position: 'absolute',
+          left: -99999,
+          top: 0,
+          visibility: 'hidden',
+          pointerEvents: 'none',
+          zIndex: -1,
+        }}
+      >
+        {logicalPages.map((lp, i) =>
+          lp.measurable ? (
+            <div key={i} data-lp={i}>
+              {lp.topChrome.length > 0 && (
+                <div data-ct style={{ width: canvasWidth }}>
+                  {lp.topChrome.map((b) => (
+                    <div key={b.id} className="w-full">
+                      {renderBlock(b)}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div
+                data-cont
+                style={{
+                  width: innerW,
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'flex-start',
+                }}
+              >
+                {lp.blocks.map((b) => (
+                  <React.Fragment key={b.id}>{renderBlock(b)}</React.Fragment>
+                ))}
+              </div>
+              {lp.bottomChrome.length > 0 && (
+                <div data-cb style={{ width: canvasWidth }}>
+                  {lp.bottomChrome.map((b) => (
+                    <div key={b.id} className="w-full">
+                      {renderBlock(b)}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : null,
+        )}
+      </div>
+
+      {/* Visible layer — paginated once measured, plain fallback meanwhile */}
+      {ready ? (
+        <div className="flex flex-col items-center gap-2">
+          {state!.pages.map((pp, idx) => (
+            <div key={idx} className="flex flex-col items-center w-full gap-2">
+              {pp.separator && (
+                <SeparatorLabel separator={pp.separator} canvasWidth={canvasWidth} />
+              )}
+              <PageContainer
+                canvasWidth={canvasWidth}
+                canvasHeight={canvasHeight}
+                pageConfig={pageConfig}
+                topChrome={pp.topChrome}
+                bottomChrome={pp.bottomChrome}
+                contentBlocks={pp.blocks}
+                hasBackCover={pp.hasBackCover}
+                marginTop={mTop}
+                marginRight={mRight}
+                marginBottom={mBottom}
+                marginLeft={mLeft}
+                renderBlock={renderBlock}
+                keyPrefix={`pg${idx}`}
+                pageNumber={idx + 1}
+                totalPages={state!.pages.length}
+              />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <UnpaginatedDocument
+          sections={sections}
+          pageConfig={pageConfig}
+          renderBlock={renderBlock}
+          geo={geo}
+        />
+      )}
+    </>
+  );
+}
+
+// ======================== Main Component ========================
+
+export function DocumentPageLayout({
+  blocks,
+  pageConfig,
+  renderBlock,
+  paginate = false,
+}: DocumentPageLayoutProps) {
+  const sections = useMemo(() => splitIntoSections(blocks), [blocks]);
+  const geo = useGeometry(pageConfig);
+
+  if (paginate) {
+    return (
+      <PaginatedDocument
+        sections={sections}
+        pageConfig={pageConfig}
+        renderBlock={renderBlock}
+        geo={geo}
+      />
+    );
+  }
+
+  return (
+    <UnpaginatedDocument
+      sections={sections}
+      pageConfig={pageConfig}
+      renderBlock={renderBlock}
+      geo={geo}
+    />
   );
 }

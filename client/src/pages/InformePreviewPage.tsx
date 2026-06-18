@@ -144,6 +144,7 @@ export default function InformePreviewPage() {
             blocks={assembled.blocks}
             pageConfig={assembled.pageConfig}
             renderBlock={renderBlock}
+            paginate
           />
         </div>
       </div>
