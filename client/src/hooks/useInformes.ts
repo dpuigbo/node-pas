@@ -50,11 +50,13 @@ export function useAssembledReport(id: number | undefined) {
   });
 }
 
-/** Regenerate ALL components of an informe to the latest active template (admin only) */
+/** Regenerate ALL components of an informe (admin only).
+ *  desdePlan=true regenera la plantilla desde el plan antes de bajarla (un clic = todo). */
 export function useRegenerarInforme(informeId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => api.post(`/v1/informes/${informeId}/regenerar`).then(r => r.data),
+    mutationFn: (opts?: { desdePlan?: boolean }) =>
+      api.post(`/v1/informes/${informeId}/regenerar`, opts ?? {}).then(r => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['informes', informeId] });
       qc.invalidateQueries({ queryKey: ['informes', informeId, 'assembled'] });

@@ -9,6 +9,7 @@ import {
 import { initDatos } from '../lib/initDatos';
 import { assembleReport, buildPlaceholderContext } from '../lib/assembleReport';
 import type { AssemblyComponente } from '../lib/assembleReport';
+import { generateTemplateForModel } from '../lib/generateTemplate';
 
 const router = Router();
 
@@ -547,9 +548,34 @@ router.post(
         res.status(409).json({ error: 'No se puede regenerar un informe finalizado' });
         return;
       }
+      // desdePlan=true: regenera la plantilla desde el plan de mantenimiento y la
+      // sobreescribe EN SITIO (version activa o mas reciente) antes de bajarla al
+      // informe. Asi un solo clic en "Actualizar plantillas" aplica las mejoras del
+      // generador (colores, tablas, fix del NaN) sin pasar antes por Modelos.
+      const desdePlan = req.body?.desdePlan === true;
       let regenerados = 0;
       for (const ci of informe.componentes) {
-        const version = await pickVersion(ci.componenteSistema.modeloComponenteId);
+        const modeloId = ci.componenteSistema.modeloComponenteId;
+        let version: { id: number; schema: unknown } | null = null;
+        if (desdePlan) {
+          try {
+            const fresh = await generateTemplateForModel(prisma, modeloId);
+            const activa = await prisma.versionTemplate.findFirst({
+              where: { modeloComponenteId: modeloId, estado: 'activo' },
+              orderBy: { version: 'desc' },
+            });
+            const target = activa ?? await prisma.versionTemplate.findFirst({
+              where: { modeloComponenteId: modeloId },
+              orderBy: { version: 'desc' },
+            });
+            version = target
+              ? await prisma.versionTemplate.update({ where: { id: target.id }, data: { schema: fresh as object } })
+              : await prisma.versionTemplate.create({
+                  data: { modeloComponenteId: modeloId, version: 1, schema: fresh as object, estado: 'activo', notas: 'Regenerada desde el plan' },
+                });
+          } catch { version = null; }
+        }
+        if (!version) version = await pickVersion(modeloId);
         if (!version) continue;
         const schema = version.schema as FrozenSchema;
         const datos = regenDatos(schema, (ci.datos as Record<string, unknown>) || {});

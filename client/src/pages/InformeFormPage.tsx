@@ -266,9 +266,9 @@ export default function InformeFormPage() {
               variant="outline"
               size="sm"
               onClick={async () => {
-                if (!window.confirm('¿Actualizar todas las plantillas a la última versión activa? Se conservan los datos introducidos cuyos campos sigan existiendo.')) return;
+                if (!window.confirm('¿Regenerar las plantillas desde el plan (último formato: colores, tablas, correcciones) y aplicarlas a este informe? Se conservan los datos introducidos cuyos campos sigan existiendo.')) return;
                 try {
-                  const r = await regenerar.mutateAsync();
+                  const r = await regenerar.mutateAsync({ desdePlan: true });
                   alert(`Plantillas actualizadas: ${(r as any)?.regenerados ?? 0} de ${(r as any)?.total ?? 0} componentes.`);
                 } catch (e: any) {
                   alert(e?.response?.data?.error ?? 'Error al actualizar plantillas');
