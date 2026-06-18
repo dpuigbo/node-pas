@@ -218,31 +218,54 @@ router.put('/:id/completo', requireRole('admin'), async (req: Request, res: Resp
         },
       });
 
-      // 2. Delete all existing components
-      await tx.componenteSistema.deleteMany({ where: { sistemaId } });
-
-      // 3. Recreate all components (2 pases para resolver padreTempId)
+      // 2. Upsert por posicion: actualiza los componentes existentes EN SITIO
+      //    (preserva los IDs y por tanto las FK de informes que los referencian),
+      //    crea los nuevos y borra los sobrantes que NO tengan informes asociados.
+      //    Evita el error de BD del deleteMany cuando el sistema ya tiene informes.
+      const existing = await tx.componenteSistema.findMany({
+        where: { sistemaId },
+        orderBy: { orden: 'asc' },
+      });
       const tempIdToReal = new Map<string, number>();
-      for (const pass of [1, 2]) {
-        for (const comp of componentes) {
-          const isHijo = !!comp.padreTempId;
-          if ((pass === 1 && isHijo) || (pass === 2 && !isHijo)) continue;
-
-          const padreId = comp.padreTempId ? tempIdToReal.get(comp.padreTempId) ?? null : null;
-          const created = await tx.componenteSistema.create({
-            data: {
-              sistemaId,
-              modeloComponenteId: comp.modeloComponenteId,
-              tipo: comp.tipo,
-              etiqueta: comp.etiqueta,
-              numeroSerie: comp.numeroSerie ?? null,
-              numEjes: comp.numEjes ?? null,
-              metadata: buildCohorteMeta(comp),
-              orden: comp.orden,
-              componentePadreId: padreId,
-            },
+      const realIds: number[] = [];
+      for (let i = 0; i < componentes.length; i++) {
+        const comp = componentes[i]!;
+        const baseData = {
+          modeloComponenteId: comp.modeloComponenteId,
+          tipo: comp.tipo,
+          etiqueta: comp.etiqueta,
+          numeroSerie: comp.numeroSerie ?? null,
+          numEjes: comp.numEjes ?? null,
+          metadata: buildCohorteMeta(comp),
+          orden: comp.orden,
+          componentePadreId: null as number | null,
+        };
+        let realId: number;
+        if (i < existing.length) {
+          const upd = await tx.componenteSistema.update({ where: { id: existing[i]!.id }, data: baseData });
+          realId = upd.id;
+        } else {
+          const cre = await tx.componenteSistema.create({ data: { sistemaId, ...baseData } });
+          realId = cre.id;
+        }
+        realIds.push(realId);
+        if (comp.tempId) tempIdToReal.set(comp.tempId, realId);
+      }
+      // Resolver padres (padreTempId -> id real)
+      for (let i = 0; i < componentes.length; i++) {
+        const comp = componentes[i]!;
+        if (comp.padreTempId) {
+          await tx.componenteSistema.update({
+            where: { id: realIds[i]! },
+            data: { componentePadreId: tempIdToReal.get(comp.padreTempId) ?? null },
           });
-          if (comp.tempId) tempIdToReal.set(comp.tempId, created.id);
+        }
+      }
+      // Borrar sobrantes (los que el usuario quito) solo si no tienen informes
+      for (let i = componentes.length; i < existing.length; i++) {
+        const dep = await tx.componenteInforme.count({ where: { componenteSistemaId: existing[i]!.id } });
+        if (dep === 0) {
+          await tx.componenteSistema.delete({ where: { id: existing[i]!.id } });
         }
       }
 

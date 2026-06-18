@@ -446,4 +446,122 @@ router.patch(
   },
 );
 
+// ================================================================
+// Regeneracion de plantillas en informes en borrador (no finalizados).
+// ================================================================
+
+type FrozenSchema = { blocks: { id: string; type: string; config: Record<string, unknown> }[]; pageConfig?: unknown };
+
+/** Re-inicializa datos para el nuevo schema, preservando valores cuyas keys siguen existiendo. */
+function regenDatos(schema: FrozenSchema, old: Record<string, unknown>): Record<string, unknown> {
+  const fresh = initDatos(schema as { blocks: { id: string; type: string; config: Record<string, unknown> }[]; pageConfig?: unknown });
+  const merged: Record<string, unknown> = { ...fresh };
+  for (const k of Object.keys(fresh)) {
+    if (k in old) merged[k] = old[k];
+  }
+  return merged;
+}
+
+async function pickVersion(modeloComponenteId: number, versionTemplateId?: number) {
+  if (versionTemplateId) {
+    return prisma.versionTemplate.findUnique({ where: { id: Number(versionTemplateId) } });
+  }
+  return (
+    (await prisma.versionTemplate.findFirst({
+      where: { modeloComponenteId, estado: 'activo' },
+      orderBy: { version: 'desc' },
+    })) ??
+    (await prisma.versionTemplate.findFirst({
+      where: { modeloComponenteId },
+      orderBy: { version: 'desc' },
+    }))
+  );
+}
+
+// GET /componentes-informe/:id/versiones — plantillas disponibles para el modelo del componente
+router.get(
+  '/componentes-informe/:id/versiones',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const ci = await prisma.componenteInforme.findUnique({
+        where: { id: Number(req.params.id) },
+        include: { componenteSistema: { select: { modeloComponenteId: true } } },
+      });
+      if (!ci) { res.status(404).json({ error: 'Componente de informe no encontrado' }); return; }
+      const versiones = await prisma.versionTemplate.findMany({
+        where: { modeloComponenteId: ci.componenteSistema.modeloComponenteId },
+        orderBy: { version: 'desc' },
+        select: { id: true, version: true, estado: true, notas: true, createdAt: true },
+      });
+      res.json({ actual: ci.versionTemplateId, versiones });
+    } catch (err) { next(err); }
+  },
+);
+
+// POST /componentes-informe/:id/regenerar — regenera schema/datos desde una version (o la activa/ultima)
+router.post(
+  '/componentes-informe/:id/regenerar',
+  requireRole('admin'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const id = Number(req.params.id);
+      const ci = await prisma.componenteInforme.findUnique({
+        where: { id },
+        include: {
+          informe: { select: { estado: true } },
+          componenteSistema: { select: { modeloComponenteId: true } },
+        },
+      });
+      if (!ci) { res.status(404).json({ error: 'Componente de informe no encontrado' }); return; }
+      if (ci.informe.estado === 'finalizado') {
+        res.status(409).json({ error: 'No se puede regenerar un informe finalizado' });
+        return;
+      }
+      const version = await pickVersion(ci.componenteSistema.modeloComponenteId, req.body?.versionTemplateId);
+      if (!version) { res.status(404).json({ error: 'No hay version de plantilla para este modelo' }); return; }
+
+      const schema = version.schema as FrozenSchema;
+      const datos = regenDatos(schema, (ci.datos as Record<string, unknown>) || {});
+      const updated = await prisma.componenteInforme.update({
+        where: { id },
+        data: { versionTemplateId: version.id, schemaCongelado: schema as object, datos: datos as object },
+      });
+      res.json({ id: updated.id, versionTemplateId: version.id, version: version.version });
+    } catch (err) { next(err); }
+  },
+);
+
+// POST /informes/:id/regenerar — regenera TODOS los componentes a su version activa/ultima
+router.post(
+  '/informes/:id/regenerar',
+  requireRole('admin'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const informeId = Number(req.params.id);
+      const informe = await prisma.informe.findUnique({
+        where: { id: informeId },
+        include: { componentes: { include: { componenteSistema: { select: { modeloComponenteId: true } } } } },
+      });
+      if (!informe) { res.status(404).json({ error: 'Informe no encontrado' }); return; }
+      if (informe.estado === 'finalizado') {
+        res.status(409).json({ error: 'No se puede regenerar un informe finalizado' });
+        return;
+      }
+      let regenerados = 0;
+      for (const ci of informe.componentes) {
+        const version = await pickVersion(ci.componenteSistema.modeloComponenteId);
+        if (!version) continue;
+        const schema = version.schema as FrozenSchema;
+        const datos = regenDatos(schema, (ci.datos as Record<string, unknown>) || {});
+        await prisma.componenteInforme.update({
+          where: { id: ci.id },
+          data: { versionTemplateId: version.id, schemaCongelado: schema as object, datos: datos as object },
+        });
+        regenerados++;
+      }
+      res.json({ regenerados, total: informe.componentes.length });
+    } catch (err) { next(err); }
+  },
+);
+
 export default router;

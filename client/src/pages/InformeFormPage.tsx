@@ -9,6 +9,7 @@ import {
   Loader2,
   Circle,
   Eye,
+  RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,7 @@ import api from '@/lib/api';
 import {
   useAssembledReport,
   useUpdateEstadoInforme,
+  useRegenerarInforme,
 } from '@/hooks/useInformes';
 import { useAuth } from '@/hooks/useAuth';
 import { getBlockEntry } from '@/components/blocks/registry';
@@ -73,6 +75,7 @@ export default function InformeFormPage() {
   const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useAssembledReport(informeId || undefined);
+  const regenerar = useRegenerarInforme(informeId);
 
   // Local dirty datos per componenteInforme id
   const [localCompDatos, setLocalCompDatos] = useState<Record<number, Record<string, unknown>>>({});
@@ -257,6 +260,27 @@ export default function InformeFormPage() {
             <Eye className="h-4 w-4" />
             Vista previa
           </Button>
+
+          {isAdmin && informe.estado !== 'finalizado' && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                if (!window.confirm('¿Actualizar todas las plantillas a la última versión activa? Se conservan los datos introducidos cuyos campos sigan existiendo.')) return;
+                try {
+                  const r = await regenerar.mutateAsync();
+                  alert(`Plantillas actualizadas: ${(r as any)?.regenerados ?? 0} de ${(r as any)?.total ?? 0} componentes.`);
+                } catch (e: any) {
+                  alert(e?.response?.data?.error ?? 'Error al actualizar plantillas');
+                }
+              }}
+              disabled={regenerar.isPending}
+              className="gap-1"
+            >
+              {regenerar.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              Actualizar plantillas
+            </Button>
+          )}
 
           {!readOnly && (
             <Button

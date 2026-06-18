@@ -47,8 +47,8 @@ export const updateEstadoOfertaSchema = z.object({
 });
 
 export const generarIntervencionSchema = z.object({
-  fechaInicio: z.string().datetime(),
-  fechaFin: z.string().datetime(),
+  fechaInicio: z.string().datetime().optional(),
+  fechaFin: z.string().datetime().optional(),
 });
 
 // Upsert oferta-componente (configuracion de mantenimiento por componente)

@@ -50,6 +50,18 @@ export function useAssembledReport(id: number | undefined) {
   });
 }
 
+/** Regenerate ALL components of an informe to the latest active template (admin only) */
+export function useRegenerarInforme(informeId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.post(`/v1/informes/${informeId}/regenerar`).then(r => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['informes', informeId] });
+      qc.invalidateQueries({ queryKey: ['informes', informeId, 'assembled'] });
+    },
+  });
+}
+
 /** Change informe estado (admin only) */
 export function useUpdateEstadoInforme(informeId: number, intervencionId: number) {
   const qc = useQueryClient();

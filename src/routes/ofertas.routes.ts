@@ -732,8 +732,8 @@ router.post('/:id/generar-intervencion', requireRole('admin'), async (req: Reque
         tipo: oferta.tipo,
         titulo: oferta.titulo,
         referencia: oferta.referencia,
-        fechaInicio: new Date(fechaInicio),
-        fechaFin: new Date(fechaFin),
+        fechaInicio: fechaInicio ? new Date(fechaInicio) : oferta.fechaInicio,
+        fechaFin: fechaFin ? new Date(fechaFin) : oferta.fechaFin,
         notas: oferta.notas,
         estado: 'borrador',
         sistemas: {

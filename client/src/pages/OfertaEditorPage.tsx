@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Send, CheckCircle, XCircle, Trash2, RefreshCw, Calendar,
@@ -55,6 +55,12 @@ export default function OfertaEditorPage() {
   const [fechaDialogOpen, setFechaDialogOpen] = useState(false);
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
+
+  // Pre-rellena las fechas de la intervencion con las de la oferta (que no aparezcan vacias)
+  useEffect(() => {
+    if (oferta?.fechaInicio) setFechaInicio(new Date(oferta.fechaInicio).toISOString().slice(0, 16));
+    if (oferta?.fechaFin) setFechaFin(new Date(oferta.fechaFin).toISOString().slice(0, 16));
+  }, [oferta?.fechaInicio, oferta?.fechaFin]);
   const [activeTab, setActiveTab] = useState<'datos' | 'componentes' | 'planificacion' | 'resumen'>(
     isNew ? 'datos' : 'componentes'
   );
