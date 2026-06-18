@@ -5,6 +5,13 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Serializa los runs: solo uno a la vez, los demas esperan (no se cancelan).
+# Evita la carrera al commitear/pushear dist/ cuando hay varios pushes seguidos
+# (el paso "Commit dist/" hacia exit 1 tras 3 reintentos -> build "fallido").
+concurrency:
+  group: build-deploy-main
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
