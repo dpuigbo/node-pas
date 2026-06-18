@@ -156,19 +156,23 @@ function buildMechanicalSchema(input) {
         for (const it of profile.generalChecks)
             b.push(tri(slug(it), it));
     }
-    b.push(sectionH2('Funcionamiento de ejes y frenos'));
-    b.push(ejesFrenosTable(nEjes));
-    if (profile.bateriaMedida === 'smb' && bateriasSMB.length > 0) {
-        b.push(sectionH2('Baterías de medida (SMB)'));
-        b.push(bateriasTable('baterias_smb', 'Control de baterías SMB', bateriasSMB));
-    }
-    const cal = calibracionBlock(profile.calibracion, nEjes);
-    if (cal) {
-        b.push(sectionH2('Valores de conmutación y calibración'));
-        b.push(cal);
-    }
     if (overhaulHoras)
         b.push(tri('overhaul', `Overhaul completo (cada ${overhaulHoras} h)`, 'level3'));
+    b.push(sectionH2('Funcionamiento de ejes y frenos'));
+    b.push(ejesFrenosTable(nEjes));
+    // === manipulator_battery (SMB) ===
+    if (profile.bateriaMedida === 'smb' && bateriasSMB.length > 0) {
+        b.push(componentSection('manipulator_battery'));
+        b.push(sectionH1('Baterías de medida (SMB)'));
+        b.push(bateriasTable('baterias_smb', 'Control de baterías SMB', bateriasSMB));
+    }
+    // === calibration ===
+    const cal = calibracionBlock(profile.calibracion, nEjes);
+    if (cal) {
+        b.push(componentSection('calibration'));
+        b.push(sectionH1('Valores de conmutación y calibración'));
+        b.push(cal);
+    }
     return { blocks: b, pageConfig: PAGE };
 }
 function buildControllerSchema(input) {
@@ -250,13 +254,17 @@ function buildExternalAxisSchema(input) {
     }
     for (const it of profile.generalChecks)
         b.push(tri(slug(it), it));
+    // === manipulator_battery (SMB del eje externo) ===
     if (profile.bateriaMedida === 'smb' && bateriasSMB.length > 0) {
-        b.push(sectionH2('Batería de medida (SMB) del eje externo'));
+        b.push(componentSection('manipulator_battery'));
+        b.push(sectionH1('Batería de medida (SMB) del eje externo'));
         b.push(bateriasTable('baterias_smb_eje', 'Control de baterías SMB del eje', bateriasSMB));
     }
+    // === calibration ===
     const cal = calibracionBlock(profile.calibracion, nEjes);
     if (cal) {
-        b.push(sectionH2('Calibración del eje externo'));
+        b.push(componentSection('calibration'));
+        b.push(sectionH1('Calibración del eje externo'));
         b.push(cal);
     }
     return { blocks: b, pageConfig: PAGE };
