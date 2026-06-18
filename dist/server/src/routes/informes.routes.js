@@ -7,6 +7,7 @@ const database_1 = require("../config/database");
 const informes_validation_1 = require("../validation/informes.validation");
 const initDatos_1 = require("../lib/initDatos");
 const assembleReport_1 = require("../lib/assembleReport");
+const generateTemplate_1 = require("../lib/generateTemplate");
 const router = (0, express_1.Router)();
 // ================================================================
 // POST /intervenciones/:intervencionId/informes
@@ -466,9 +467,38 @@ router.post('/informes/:id/regenerar', (0, role_middleware_1.requireRole)('admin
             res.status(409).json({ error: 'No se puede regenerar un informe finalizado' });
             return;
         }
+        // desdePlan=true: regenera la plantilla desde el plan de mantenimiento y la
+        // sobreescribe EN SITIO (version activa o mas reciente) antes de bajarla al
+        // informe. Asi un solo clic en "Actualizar plantillas" aplica las mejoras del
+        // generador (colores, tablas, fix del NaN) sin pasar antes por Modelos.
+        const desdePlan = req.body?.desdePlan === true;
         let regenerados = 0;
         for (const ci of informe.componentes) {
-            const version = await pickVersion(ci.componenteSistema.modeloComponenteId);
+            const modeloId = ci.componenteSistema.modeloComponenteId;
+            let version = null;
+            if (desdePlan) {
+                try {
+                    const fresh = await (0, generateTemplate_1.generateTemplateForModel)(database_1.prisma, modeloId);
+                    const activa = await database_1.prisma.versionTemplate.findFirst({
+                        where: { modeloComponenteId: modeloId, estado: 'activo' },
+                        orderBy: { version: 'desc' },
+                    });
+                    const target = activa ?? await database_1.prisma.versionTemplate.findFirst({
+                        where: { modeloComponenteId: modeloId },
+                        orderBy: { version: 'desc' },
+                    });
+                    version = target
+                        ? await database_1.prisma.versionTemplate.update({ where: { id: target.id }, data: { schema: fresh } })
+                        : await database_1.prisma.versionTemplate.create({
+                            data: { modeloComponenteId: modeloId, version: 1, schema: fresh, estado: 'activo', notas: 'Regenerada desde el plan' },
+                        });
+                }
+                catch {
+                    version = null;
+                }
+            }
+            if (!version)
+                version = await pickVersion(modeloId);
             if (!version)
                 continue;
             const schema = version.schema;
