@@ -513,16 +513,17 @@ function buildLogicalPages(sections: Section[]): LogicalPage[] {
 
     const pbPages = splitByPageBreak(content);
     pbPages.forEach((blocks, pi) => {
-      const hasAlignable = blocks.some((b) => VERTICALLY_ALIGNABLE.has(b.type));
       out.push({
         topChrome,
         bottomChrome,
         blocks,
         hasBackCover: false,
         separator: pi === 0 ? section.separator : undefined,
-        // Pages with vertically-aligned blocks (portada) keep their single-page
-        // layout; only plain content pages get height-split.
-        measurable: !hasAlignable,
+        // TODA pagina de contenido se mide y se parte por altura. Si cabe en una
+        // sola pagina (p.ej. la portada con bloques centrados) sale como una unica
+        // pagina y conserva su maquetacion; si desborda, se reparte en varias A4.
+        // (Antes, una pagina con un bloque centrado NO se partia -> pagina larga.)
+        measurable: true,
       });
     });
   }
@@ -675,8 +676,13 @@ function PaginatedDocument({
                   alignItems: 'flex-start',
                 }}
               >
+                {/* Cada bloque en su marcador full-width: el conteo DOM coincide
+                    SIEMPRE con lp.blocks (aunque un bloque renderice null), y su
+                    offsetTop da la posicion acumulada para partir por altura. */}
                 {lp.blocks.map((b) => (
-                  <React.Fragment key={b.id}>{renderBlock(b)}</React.Fragment>
+                  <div key={b.id} data-mb style={{ width: '100%' }}>
+                    {renderBlock(b)}
+                  </div>
                 ))}
               </div>
               {lp.bottomChrome.length > 0 && (
