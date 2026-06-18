@@ -300,8 +300,12 @@ router.get(
         pageConfig?: any;
       };
 
-      // Build placeholder context
-      const baseContext = buildPlaceholderContext(informe);
+      // Build placeholder context (el usuario logueado se usa como técnico de PAS)
+      const authUser = getAuthUser(req);
+      const usuario = authUser
+        ? await prisma.user.findUnique({ where: { id: authUser.id }, select: { nombre: true, email: true } })
+        : null;
+      const baseContext = buildPlaceholderContext(informe, usuario ?? undefined);
 
       // Map component data for assembly
       const componentes: AssemblyComponente[] = informe.componentes.map((c) => ({

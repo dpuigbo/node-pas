@@ -184,9 +184,11 @@ export function buildPlaceholderContext(informe: {
     fabricante: { nombre: string };
     maquina?: { nombre: string } | null;
   };
-}): Record<string, string | undefined> {
+}, usuario?: { nombre?: string | null; email?: string | null }): Record<string, string | undefined> {
   const cli = informe.intervencion.cliente;
   return {
+    'usuario.nombre': usuario?.nombre ?? undefined,
+    'usuario.email': usuario?.email ?? undefined,
     'sistema.nombre': informe.sistema.nombre,
     'sistema.descripcion': informe.sistema.descripcion ?? undefined,
     'sistema.fabricante': informe.sistema.fabricante.nombre,
@@ -396,12 +398,14 @@ export function assembleReport(input: AssemblyInput): AssemblyResult {
           horas: '',
           horaInicio: '',
           horaFin: '',
-          tecnicoPas: '',
-          tecnicoCliente: '',
+          // Técnico = usuario logueado que realiza el informe.
+          tecnicoPas: String(baseContext['usuario.nombre'] ?? ''),
           telTecnico: '',
-          telContacto: '',
-          emailTecnico: '',
-          emailContacto: '',
+          emailTecnico: String(baseContext['usuario.email'] ?? ''),
+          // Contacto = persona de contacto del cliente.
+          tecnicoCliente: String(baseContext['cliente.personaContacto'] ?? ''),
+          telContacto: String(baseContext['cliente.telefono'] ?? ''),
+          emailContacto: String(baseContext['cliente.email'] ?? ''),
         };
         const userEdits =
           (datosDocumento[key] as Record<string, unknown>) || {};
