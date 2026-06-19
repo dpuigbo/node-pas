@@ -3,10 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft, Save, FileText, Loader2, Check, ChevronRight, ChevronLeft,
-  CheckCircle2, ClipboardCheck, Bot, Cpu, Move, BookOpen,
+  CheckCircle2, ClipboardCheck, Bot, Cpu, Move, BookOpen, RefreshCw,
 } from 'lucide-react';
 import api from '@/lib/api';
-import { useAssembledReport, useUpdateEstadoInforme } from '@/hooks/useInformes';
+import { useAssembledReport, useUpdateEstadoInforme, useRegenerarInforme } from '@/hooks/useInformes';
 import { useAuth } from '@/hooks/useAuth';
 import { getBlockEntry } from '@/components/blocks/registry';
 import type { BlockType } from '@/types/editor';
@@ -109,6 +109,7 @@ export default function InformeWizardPage() {
   const { data, isLoading } = useAssembledReport(informeId || undefined);
   const intervencionId = (data?.informe as { intervencion?: { id?: number } } | undefined)?.intervencion?.id;
   const updateEstado = useUpdateEstadoInforme(informeId, intervencionId ?? 0);
+  const regenerar = useRegenerarInforme(informeId);
 
   const [localCompDatos, setLocalCompDatos] = useState<Record<number, Record<string, unknown>>>({});
   const [localDocDatos, setLocalDocDatos] = useState<Record<string, unknown>>({});
@@ -193,6 +194,18 @@ export default function InformeWizardPage() {
     }
   }, [hasDirty, updateEstado, queryClient, informeId]);
 
+  const handleRegenerar = useCallback(async () => {
+    if (!window.confirm('¿Regenerar las plantillas desde el plan? Trae el último formato y corrige datos (NaN del eje, colores, tablas). Se conservan los valores ya introducidos cuyos campos sigan existiendo.')) return;
+    try {
+      await regenerar.mutateAsync({ desdePlan: true });
+      queryClient.invalidateQueries({ queryKey: ['informes', informeId, 'assembled'] });
+      alert('Plantillas actualizadas desde el plan.');
+    } catch (err) {
+      const e = err as { response?: { data?: { error?: string } } };
+      alert(e?.response?.data?.error ?? 'Error al actualizar plantillas');
+    }
+  }, [regenerar, queryClient, informeId]);
+
   if (isLoading) {
     return <div className="flex h-screen items-center justify-center bg-neutral-950"><Loader2 className="h-8 w-8 animate-spin" style={{ color: LIME }} /></div>;
   }
@@ -250,7 +263,8 @@ export default function InformeWizardPage() {
         ) : (
           <OverviewView totals={totals} sections={sections} finalizado={finalizado} isAdmin={isAdmin}
             countPoints={(s) => countPoints(s, blockValue)} onOpen={setView} onFinalizar={handleFinalizar}
-            onAdvanced={() => navigate(`/informes/${informeId}/documento`)} />
+            onAdvanced={() => navigate(`/informes/${informeId}/documento`)}
+            onRegenerar={handleRegenerar} regenerating={regenerar.isPending} />
         )}
       </main>
     </div>
@@ -259,12 +273,13 @@ export default function InformeWizardPage() {
 
 // ======================== Visión general ========================
 function OverviewView({
-  totals, sections, finalizado, isAdmin, countPoints, onOpen, onFinalizar, onAdvanced,
+  totals, sections, finalizado, isAdmin, countPoints, onOpen, onFinalizar, onAdvanced, onRegenerar, regenerating,
 }: {
   totals: { done: number; total: number; pct: number };
   sections: WizardSection[]; finalizado: boolean; isAdmin: boolean;
   countPoints: (s: WizardSection) => { done: number; total: number };
   onOpen: (key: string) => void; onFinalizar: () => void; onAdvanced: () => void;
+  onRegenerar: () => void; regenerating: boolean;
 }) {
   return (
     <div className="mx-auto max-w-4xl p-4 sm:p-6 space-y-4">
@@ -336,10 +351,14 @@ function OverviewView({
       </div>
 
       {isAdmin && (
-        <p className="text-center text-[11px] text-neutral-600">
-          ¿Faltan secciones o el formato no cuadra?{' '}
-          <button className="underline hover:text-neutral-400" onClick={onAdvanced}>Abrir el documento (avanzado)</button> para regenerar las plantillas.
-        </p>
+        <div className="flex flex-col items-center gap-2 pt-1">
+          <button onClick={onRegenerar} disabled={regenerating}
+            className="flex items-center gap-1.5 rounded-lg border border-neutral-700 px-3 py-1.5 text-xs text-neutral-300 hover:bg-neutral-800 disabled:opacity-50">
+            {regenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+            Actualizar plantillas desde el plan
+          </button>
+          <button className="text-[11px] text-neutral-600 underline hover:text-neutral-400" onClick={onAdvanced}>Abrir el documento (avanzado)</button>
+        </div>
       )}
     </div>
   );
