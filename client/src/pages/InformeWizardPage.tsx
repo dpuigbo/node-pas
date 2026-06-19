@@ -76,10 +76,10 @@ function compIcon(label: string) {
 
 interface ManualRef { nombre: string; ruta: string; general?: boolean }
 
-/** Abre un PDF de manual concreto (autenticado, como blob, en otra pestaña). */
-async function openManualBlob(componenteInformeId: number, ruta: string): Promise<void> {
-  const resp = await api.get(`/v1/componentes-informe/${componenteInformeId}/manual`, { params: { ruta }, responseType: 'blob' });
-  const url = URL.createObjectURL(resp.data as Blob);
+/** Abre un PDF de manual en otra pestaña. La cookie de sesión viaja sola (withCredentials),
+ *  así que el navegador lo sirve por streaming nativo (rápido) en vez de descargar el blob entero. */
+function openManualBlob(componenteInformeId: number, ruta: string): void {
+  const url = `/api/v1/componentes-informe/${componenteInformeId}/manual?ruta=${encodeURIComponent(ruta)}`;
   window.open(url, '_blank');
 }
 
@@ -221,9 +221,18 @@ export default function InformeWizardPage() {
   const handleRegenerar = useCallback(async () => {
     if (!window.confirm('¿Regenerar las plantillas desde el plan? Trae el último formato y corrige datos (NaN del eje, colores, tablas). Se conservan los valores ya introducidos cuyos campos sigan existiendo.')) return;
     try {
-      await regenerar.mutateAsync({ desdePlan: true });
+      const res = (await regenerar.mutateAsync({ desdePlan: true })) as { fallosPlan?: { modeloId: number; error: string }[] };
       queryClient.invalidateQueries({ queryKey: ['informes', informeId, 'assembled'] });
-      alert('Plantillas actualizadas desde el plan.');
+      const fallos = res?.fallosPlan ?? [];
+      if (fallos.length) {
+        alert(
+          `Atención: ${fallos.length} componente(s) NO se pudieron regenerar desde el plan ` +
+          `(se mantuvo la plantilla anterior, así que un NaN o un campo que falte seguirá ahí):\n\n` +
+          fallos.map((f) => `· modelo ${f.modeloId}: ${f.error}`).join('\n'),
+        );
+      } else {
+        alert('Plantillas actualizadas desde el plan.');
+      }
     } catch (err) {
       const e = err as { response?: { data?: { error?: string } } };
       alert(e?.response?.data?.error ?? 'Error al actualizar plantillas');
