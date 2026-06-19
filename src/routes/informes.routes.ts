@@ -10,6 +10,47 @@ import { initDatos } from '../lib/initDatos';
 import { assembleReport, buildPlaceholderContext } from '../lib/assembleReport';
 import type { AssemblyComponente } from '../lib/assembleReport';
 import { generateTemplateForModel } from '../lib/generateTemplate';
+import fs from 'node:fs';
+import path from 'node:path';
+
+// ===== Manuales (servidos CON LOGIN desde una carpeta privada del servidor) =====
+const MANUALES_DIR = (() => {
+  const root = [__dirname, path.join(__dirname, '..'), path.join(__dirname, '..', '..', '..')]
+    .find((d) => fs.existsSync(path.join(d, 'package.json'))) || path.join(__dirname, '..');
+  return path.join(root, '..', 'manuales');
+})();
+const BRANCH_BY_TIPO: Record<string, string> = {
+  mechanical_unit: 'Manipuladores', controller: 'Controladoras', drive_unit: 'Controladoras', external_axis: 'EjesExternos',
+};
+/** Raíz de las ramas: admite manuales/<rama> o manuales/ABB Manuals/<rama>. */
+function manualesBranchRoot(): string {
+  for (const c of [MANUALES_DIR, path.join(MANUALES_DIR, 'ABB Manuals')]) {
+    try { if (fs.existsSync(path.join(c, 'Manipuladores'))) return c; } catch { /* noop */ }
+  }
+  return MANUALES_DIR;
+}
+function normNombre(s: string): string { return s.toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+/** Carpeta del manual cuyo nombre normalizado es prefijo del modelo (la coincidencia más larga). */
+function findManualDir(modeloNombre: string, tipo: string): string | null {
+  const branchDir = path.join(manualesBranchRoot(), BRANCH_BY_TIPO[tipo] || 'Manipuladores');
+  if (!fs.existsSync(branchDir)) return null;
+  const nm = normNombre(modeloNombre);
+  let best: string | null = null, bestLen = 0;
+  for (const d of fs.readdirSync(branchDir, { withFileTypes: true })) {
+    if (!d.isDirectory()) continue;
+    const nf = normNombre(d.name);
+    if (nf && nm.startsWith(nf) && nf.length > bestLen) { best = path.join(branchDir, d.name); bestLen = nf.length; }
+  }
+  return best;
+}
+async function modeloDeComponenteInforme(ciId: number): Promise<{ nombre: string; tipo: string } | null> {
+  const ci = await prisma.componenteInforme.findUnique({
+    where: { id: ciId },
+    select: { componenteSistema: { select: { modeloComponente: { select: { nombre: true, tipo: true } } } } },
+  });
+  const m = ci?.componenteSistema?.modeloComponente;
+  return m ? { nombre: m.nombre, tipo: m.tipo as string } : null;
+}
 
 const router = Router();
 
@@ -395,6 +436,37 @@ router.patch(
     }
   },
 );
+
+// ================================================================
+// GET /componentes-informe/:id/manuales  — lista de PDFs del modelo (con login)
+// GET /componentes-informe/:id/manual?archivo=...  — sirve el PDF (con login)
+// ================================================================
+router.get('/componentes-informe/:id/manuales', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const modelo = await modeloDeComponenteInforme(Number(req.params.id));
+    if (!modelo) { res.status(404).json({ error: 'Componente no encontrado' }); return; }
+    const dir = findManualDir(modelo.nombre, modelo.tipo);
+    if (!dir) { res.json({ modelo: modelo.nombre, archivos: [] }); return; }
+    const archivos = fs.readdirSync(dir).filter((f) => f.toLowerCase().endsWith('.pdf'));
+    res.json({ modelo: modelo.nombre, archivos });
+  } catch (err) { next(err); }
+});
+
+router.get('/componentes-informe/:id/manual', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const archivo = String(req.query.archivo || '');
+    if (!archivo || /[\\/]|\.\./.test(archivo)) { res.status(400).json({ error: 'Archivo invalido' }); return; }
+    const modelo = await modeloDeComponenteInforme(Number(req.params.id));
+    if (!modelo) { res.status(404).json({ error: 'Componente no encontrado' }); return; }
+    const dir = findManualDir(modelo.nombre, modelo.tipo);
+    if (!dir) { res.status(404).json({ error: 'Sin manual' }); return; }
+    const filePath = path.join(dir, archivo);
+    if (!filePath.startsWith(dir) || !fs.existsSync(filePath)) { res.status(404).json({ error: 'Manual no encontrado' }); return; }
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(archivo)}"`);
+    fs.createReadStream(filePath).pipe(res);
+  } catch (err) { next(err); }
+});
 
 // ================================================================
 // PATCH /informes/:id/datos-documento

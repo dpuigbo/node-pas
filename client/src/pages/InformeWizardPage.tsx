@@ -1,9 +1,9 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, type ReactNode } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft, Save, FileText, Loader2, Check, ChevronRight, ChevronLeft,
-  CircleCheck, CircleDashed, ClipboardList, CheckCircle2,
+  CheckCircle2, ClipboardCheck, Bot, Cpu, Move, BookOpen,
 } from 'lucide-react';
 import api from '@/lib/api';
 import { useAssembledReport, useUpdateEstadoInforme } from '@/hooks/useInformes';
@@ -14,7 +14,7 @@ import type { AssembledBlock } from '@/types/informe';
 
 import '@/components/blocks/register-all';
 
-// ======================== Estilo (dark + acento lima) ========================
+// ======================== Estilo ========================
 const LIME = '#c5f82a';
 
 // ======================== Constantes ========================
@@ -67,6 +67,36 @@ function countPoints(s: WizardSection, getValue: (b: AssembledBlock) => unknown)
   }
   return { done, total };
 }
+function compIcon(label: string) {
+  const l = label.toLowerCase();
+  if (l.includes('controlad') || l.includes('irc') || l.includes('omnicore') || l.includes('s4') || l.includes('s3')) return Cpu;
+  if (l.includes('eje') || l.includes('irbt') || l.includes('irbp') || l.includes('posicion') || l.includes('track') || l.includes('irt')) return Move;
+  return Bot;
+}
+
+/** Abre el PDF del manual del componente (autenticado, como blob). */
+async function openManual(componenteInformeId: number) {
+  try {
+    const { data } = await api.get(`/v1/componentes-informe/${componenteInformeId}/manuales`);
+    const archivos: string[] = data?.archivos || [];
+    if (!archivos.length) { alert('No hay manual disponible para este componente todavía.'); return; }
+    const archivo = archivos[0];
+    const resp = await api.get(`/v1/componentes-informe/${componenteInformeId}/manual`, { params: { archivo }, responseType: 'blob' });
+    const url = URL.createObjectURL(resp.data as Blob);
+    window.open(url, '_blank');
+  } catch {
+    alert('No se pudo abrir el manual.');
+  }
+}
+
+// ======================== Chip ========================
+function Chip({ children, tone = 'neutral' }: { children: ReactNode; tone?: 'neutral' | 'lime' | 'green' }) {
+  const cls = tone === 'lime'
+    ? 'border-transparent' : tone === 'green'
+    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-neutral-700 bg-neutral-800/60 text-neutral-300';
+  const style = tone === 'lime' ? { backgroundColor: `${LIME}1a`, color: LIME } : undefined;
+  return <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium ${cls}`} style={style}>{children}</span>;
+}
 
 // ======================== Página ========================
 export default function InformeWizardPage() {
@@ -85,7 +115,6 @@ export default function InformeWizardPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [view, setView] = useState<'overview' | string>('overview');
 
-  // Solo FINALIZADO bloquea la edición; inactivo (borrador) y activo se editan.
   const readOnly = data?.informe?.estado === 'finalizado';
 
   const sections = useMemo<WizardSection[]>(() => {
@@ -178,7 +207,7 @@ export default function InformeWizardPage() {
 
   const { informe } = data;
   const finalizado = informe.estado === 'finalizado';
-  const estadoLabel = informe.estado === 'finalizado' ? 'Finalizado' : informe.estado === 'activo' ? 'En curso' : 'Borrador';
+  const estadoLabel = finalizado ? 'Finalizado' : informe.estado === 'activo' ? 'En curso' : 'Borrador';
   const activeIdx = sections.findIndex((s) => s.key === view);
   const activeSection = activeIdx >= 0 ? sections[activeIdx] : null;
 
@@ -190,20 +219,21 @@ export default function InformeWizardPage() {
           <button onClick={() => (activeSection ? setView('overview') : navigate(-1))} className="rounded-lg p-2 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100" title="Volver">
             <ArrowLeft className="h-4 w-4" />
           </button>
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: `${LIME}1a` }}>
+            <ClipboardCheck className="h-4 w-4" style={{ color: LIME }} />
+          </div>
           <div className="min-w-0">
-            <div className="font-semibold truncate text-sm">{informe.sistema?.nombre ?? 'Informe'}</div>
-            <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
-              finalizado ? 'bg-emerald-500/15 text-emerald-400' : 'bg-neutral-800 text-neutral-300'
-            }`}>{estadoLabel}</span>
+            <div className="font-semibold truncate text-sm leading-tight">{informe.sistema?.nombre ?? 'Informe'}</div>
+            <Chip tone={finalizado ? 'green' : 'neutral'}>{estadoLabel}</Chip>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <button onClick={() => navigate(`/informes/${informeId}/preview`)} className="flex items-center gap-1 rounded-lg border border-neutral-700 px-3 py-1.5 text-sm text-neutral-300 hover:bg-neutral-800">
+          <button onClick={() => navigate(`/informes/${informeId}/preview`)} className="flex items-center gap-1.5 rounded-lg border border-neutral-700 px-3 py-1.5 text-sm text-neutral-300 hover:bg-neutral-800">
             <FileText className="h-4 w-4" /> <span className="hidden sm:inline">Vista previa</span>
           </button>
           {!finalizado && (
             <button onClick={handleSave} disabled={!hasDirty || isSaving}
-              className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-semibold text-neutral-900 disabled:opacity-40"
+              className="flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-semibold text-neutral-900 transition-opacity disabled:opacity-40"
               style={{ backgroundColor: LIME }}>
               {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               <span className="hidden sm:inline">Guardar</span>
@@ -232,32 +262,33 @@ function OverviewView({
   totals, sections, finalizado, isAdmin, countPoints, onOpen, onFinalizar, onAdvanced,
 }: {
   totals: { done: number; total: number; pct: number };
-  sections: WizardSection[];
-  finalizado: boolean;
-  isAdmin: boolean;
+  sections: WizardSection[]; finalizado: boolean; isAdmin: boolean;
   countPoints: (s: WizardSection) => { done: number; total: number };
-  onOpen: (key: string) => void;
-  onFinalizar: () => void;
-  onAdvanced: () => void;
+  onOpen: (key: string) => void; onFinalizar: () => void; onAdvanced: () => void;
 }) {
   return (
-    <div className="mx-auto max-w-4xl p-4 sm:p-6 space-y-5">
-      {/* Progreso global */}
+    <div className="mx-auto max-w-4xl p-4 sm:p-6 space-y-4">
+      {/* Tarjeta de progreso global */}
       <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-5">
         <div className="flex items-center gap-4">
           <ProgressRing pct={totals.pct} />
           <div className="min-w-0 flex-1">
-            <h1 className="text-lg font-bold">Mantenimiento</h1>
+            <h1 className="text-lg font-bold leading-tight">Mantenimiento</h1>
             <p className="text-sm text-neutral-400">{totals.done} de {totals.total} puntos de control completados</p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <Chip tone="lime">{totals.pct}% completado</Chip>
+              <Chip>{sections.length} componentes</Chip>
+            </div>
           </div>
           {!finalizado && totals.total > 0 && totals.done === totals.total && (
-            <button onClick={onFinalizar} className="flex items-center gap-1 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600">
+            <button onClick={onFinalizar} className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600">
               <CheckCircle2 className="h-4 w-4" /> Finalizar
             </button>
           )}
         </div>
-        <div className="mt-3 rounded-lg border px-3 py-2 text-xs" style={{ borderColor: `${LIME}30`, backgroundColor: `${LIME}10`, color: LIME }}>
-          La sección de <strong>Intervención</strong> (cliente, técnico, fechas y horas) se rellena automáticamente.
+        <div className="mt-4 flex items-start gap-2 rounded-xl border px-3 py-2 text-xs" style={{ borderColor: `${LIME}30`, backgroundColor: `${LIME}0d`, color: LIME }}>
+          <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>La sección de <strong>Intervención</strong> (cliente, técnico, fechas y horas) se rellena automáticamente.</span>
         </div>
       </div>
 
@@ -266,26 +297,39 @@ function OverviewView({
         {sections.map((s) => {
           const { done, total } = countPoints(s);
           const complete = total > 0 && done === total;
+          const Icon = compIcon(s.label);
           return (
-            <button key={s.key} onClick={() => onOpen(s.key)}
-              className="flex items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-left transition-colors hover:border-neutral-700 hover:bg-neutral-800/60">
-              {complete
-                ? <CircleCheck className="h-7 w-7 shrink-0" style={{ color: LIME }} />
-                : <CircleDashed className="h-7 w-7 shrink-0 text-neutral-600" />}
-              <div className="min-w-0 flex-1">
-                <div className="font-semibold truncate">{s.label}</div>
-                <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-neutral-800">
-                  <div className="h-full rounded-full" style={{ width: `${total ? (done / total) * 100 : 0}%`, backgroundColor: complete ? LIME : '#60a5fa' }} />
+            <div key={s.key} className="flex flex-col gap-3 rounded-2xl border border-neutral-800 bg-neutral-900 p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl shrink-0" style={{ backgroundColor: complete ? `${LIME}1a` : '#1f1f1f' }}>
+                  <Icon className="h-5 w-5" style={{ color: complete ? LIME : '#a3a3a3' }} />
                 </div>
-                <div className="mt-1 text-xs text-neutral-400">{done}/{total} puntos</div>
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold truncate leading-tight">{s.label}</div>
+                </div>
+                <Chip tone={complete ? 'lime' : 'neutral'}>{complete ? 'Completo' : 'Pendiente'}</Chip>
               </div>
-              <ChevronRight className="h-5 w-5 text-neutral-600 shrink-0" />
-            </button>
+              <div>
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-800">
+                  <div className="h-full rounded-full transition-all" style={{ width: `${total ? (done / total) * 100 : 0}%`, backgroundColor: complete ? LIME : '#60a5fa' }} />
+                </div>
+                <div className="mt-1.5 text-xs text-neutral-500">{done}/{total} puntos</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => onOpen(s.key)} className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-neutral-700 py-2 text-sm font-medium text-neutral-200 hover:bg-neutral-800">
+                  Rellenar <ChevronRight className="h-4 w-4" />
+                </button>
+                {s.componenteInformeId && (
+                  <button onClick={() => openManual(s.componenteInformeId!)} title="Abrir manual" className="flex items-center justify-center gap-1 rounded-lg border border-neutral-700 px-3 py-2 text-sm text-neutral-300 hover:bg-neutral-800">
+                    <BookOpen className="h-4 w-4" /> <span className="hidden sm:inline">Manual</span>
+                  </button>
+                )}
+              </div>
+            </div>
           );
         })}
         {sections.length === 0 && (
-          <div className="col-span-full rounded-xl border border-neutral-800 bg-neutral-900 p-8 text-center text-neutral-500">
-            <ClipboardList className="mx-auto mb-2 h-8 w-8 opacity-40" />
+          <div className="col-span-full rounded-2xl border border-neutral-800 bg-neutral-900 p-8 text-center text-neutral-500">
             No hay puntos de control para rellenar en este informe.
           </div>
         )}
@@ -326,18 +370,25 @@ function SectionView({
   const { done, total } = countPoints(section);
   const prev = activeIdx > 0 ? sections[activeIdx - 1] : null;
   const next = activeIdx < sections.length - 1 ? sections[activeIdx + 1] : null;
+  const Icon = compIcon(section.label);
 
   return (
     <div className="mx-auto max-w-3xl p-3 sm:p-5">
-      <div className="sticky top-0 z-10 -mx-3 sm:-mx-5 mb-3 border-b border-neutral-800 bg-neutral-950/95 px-3 sm:px-5 py-2 backdrop-blur">
-        <button onClick={() => onNavigate('overview')} className="mb-1 flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-200">
+      {/* Cabecera de sección */}
+      <div className="sticky top-0 z-10 -mx-3 sm:-mx-5 mb-3 border-b border-neutral-800 bg-neutral-950/95 px-3 sm:px-5 py-2.5 backdrop-blur">
+        <button onClick={() => onNavigate('overview')} className="mb-1.5 flex items-center gap-1 text-xs text-neutral-500 hover:text-neutral-200">
           <ChevronLeft className="h-3.5 w-3.5" /> Visión general
         </button>
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="text-base font-bold truncate">{section.label}</h2>
-          <span className="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium" style={
-            done === total && total > 0 ? { backgroundColor: `${LIME}20`, color: LIME } : { backgroundColor: '#262626', color: '#a3a3a3' }
-          }>{done}/{total}</span>
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-800 shrink-0"><Icon className="h-4 w-4 text-neutral-300" /></div>
+          <h2 className="text-base font-bold truncate flex-1">{section.label}</h2>
+          <Chip tone={done === total && total > 0 ? 'lime' : 'neutral'}>{done}/{total}</Chip>
+          {section.componenteInformeId && (
+            <button onClick={() => openManual(section.componenteInformeId!)} title="Abrir manual"
+              className="flex items-center gap-1 rounded-lg border border-neutral-700 px-2.5 py-1 text-xs text-neutral-300 hover:bg-neutral-800">
+              <BookOpen className="h-3.5 w-3.5" /> Manual
+            </button>
+          )}
         </div>
       </div>
 
@@ -353,14 +404,14 @@ function SectionView({
           <ChevronLeft className="h-4 w-4" /> Anterior
         </button>
         {next
-          ? <button onClick={() => onNavigate(next.key)} className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold text-neutral-900" style={{ backgroundColor: LIME }}>Siguiente <ChevronRight className="h-4 w-4" /></button>
+          ? <button onClick={() => onNavigate(next.key)} className="flex items-center gap-1 rounded-lg px-3.5 py-2 text-sm font-semibold text-neutral-900" style={{ backgroundColor: LIME }}>Siguiente <ChevronRight className="h-4 w-4" /></button>
           : <button onClick={() => onNavigate('overview')} className="flex items-center gap-1 rounded-lg border border-neutral-700 px-3 py-2 text-sm text-neutral-300 hover:bg-neutral-800">Terminar <Check className="h-4 w-4" /></button>}
       </div>
     </div>
   );
 }
 
-// ======================== Un bloque de control ========================
+// ======================== Bloque de control ========================
 function ControlBlock({
   block, value, readOnly, onChange,
 }: { block: AssembledBlock; value: unknown; readOnly: boolean; onChange: (v: unknown) => void; }) {
@@ -368,49 +419,61 @@ function ControlBlock({
     const rows = (value as Row[]) || [];
     const opKey = labelKey(block);
     const title = (block.config.title as string) || '';
+    const doneN = rows.filter((r) => rowDone(r)).length;
     const setRow = (i: number, next: Row) => onChange(rows.map((r, idx) => (idx === i ? next : r)));
     return (
-      <section className="space-y-2">
-        {title && <h3 className="px-1 text-sm font-semibold text-neutral-300">{title}</h3>}
-        {rows.map((row, i) => (
-          <InspectionPointCard key={i} label={String(row[opKey] ?? '')} row={row} readOnly={readOnly} onChange={(n) => setRow(i, n)} />
-        ))}
+      <section className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900">
+        {title && (
+          <div className="flex items-center justify-between gap-2 border-b border-neutral-800 px-4 py-2.5">
+            <h3 className="text-sm font-semibold text-neutral-200">{title}</h3>
+            <Chip tone={doneN === rows.length && rows.length > 0 ? 'lime' : 'neutral'}>{doneN}/{rows.length}</Chip>
+          </div>
+        )}
+        <div className="divide-y divide-neutral-800">
+          {rows.map((row, i) => (
+            <InspectionPointRow key={i} label={String(row[opKey] ?? '')} row={row} readOnly={readOnly} onChange={(n) => setRow(i, n)} />
+          ))}
+        </div>
       </section>
     );
   }
+  // Otros bloques (reductoras, baterías…) → su FormField sobre tarjeta clara legible.
   const entry = getBlockEntry(block.type as BlockType);
   const FormFieldComp = entry?.FormField;
   if (!FormFieldComp) return null;
-  // Los FormField clásicos son claros: los envolvemos en una tarjeta clara para que se lean bien.
   return (
-    <div className="rounded-xl border border-neutral-800 bg-neutral-100 p-3 text-neutral-900 overflow-x-auto">
+    <div className="overflow-x-auto rounded-2xl border border-neutral-800 bg-neutral-100 p-3 text-neutral-900">
       <FormFieldComp block={block as never} value={value} onChange={onChange} readOnly={readOnly} />
     </div>
   );
 }
 
-// ======================== Tarjeta táctil ========================
-function InspectionPointCard({
+// ======================== Punto de control (fila con control segmentado) ========================
+function InspectionPointRow({
   label, row, readOnly, onChange,
 }: { label: string; row: Row; readOnly: boolean; onChange: (next: Row) => void; }) {
   const state: 'bien' | 'mal' | 'na' | null =
     row.bien === true ? 'bien' : row.mal === true ? 'mal' : row.na === true ? 'na' : null;
+  const dot = state === 'bien' ? '#10b981' : state === 'mal' ? '#ef4444' : state === 'na' ? '#737373' : '#f59e0b';
   const pick = (val: 'bien' | 'mal' | 'na') => {
     if (readOnly) return;
     const same = state === val;
     onChange({ ...row, bien: !same && val === 'bien', mal: !same && val === 'mal', na: !same && val === 'na' });
   };
-  const btn = (val: 'bien' | 'mal' | 'na', active: string) =>
-    `flex-1 rounded-lg border py-2.5 text-sm font-semibold transition-colors ${
-      state === val ? active : 'border-neutral-700 bg-neutral-800 text-neutral-400'
-    } ${readOnly ? 'cursor-default' : 'active:scale-[0.98]'}`;
+  const seg = (val: 'bien' | 'mal' | 'na', active: string, last = false) =>
+    `flex-1 py-2.5 text-sm font-semibold transition-colors ${last ? '' : 'border-r border-neutral-700'} ${
+      state === val ? active : 'bg-neutral-800/40 text-neutral-400 hover:bg-neutral-800'
+    } ${readOnly ? 'cursor-default' : ''}`;
   return (
-    <div className={`rounded-xl border p-3 ${state ? 'border-neutral-800 bg-neutral-900' : 'border-amber-500/40 bg-amber-500/5'}`}>
-      <div className="mb-2 font-medium leading-snug text-neutral-100">{label}</div>
-      <div className="flex gap-2">
-        <button type="button" disabled={readOnly} onClick={() => pick('bien')} className={btn('bien', 'border-emerald-500 bg-emerald-500 text-white')}>Bien</button>
-        <button type="button" disabled={readOnly} onClick={() => pick('mal')} className={btn('mal', 'border-red-500 bg-red-500 text-white')}>Mal</button>
-        <button type="button" disabled={readOnly} onClick={() => pick('na')} className={btn('na', 'border-neutral-500 bg-neutral-600 text-white')}>N/A</button>
+    <div className="p-3">
+      <div className="mb-2.5 flex items-center gap-2">
+        <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: dot }} />
+        <span className="text-sm font-medium leading-snug text-neutral-100">{label}</span>
+      </div>
+      <div className="flex overflow-hidden rounded-lg border border-neutral-700">
+        <button type="button" disabled={readOnly} onClick={() => pick('bien')} className={seg('bien', 'bg-emerald-500 text-white')}>Bien</button>
+        <button type="button" disabled={readOnly} onClick={() => pick('mal')} className={seg('mal', 'bg-red-500 text-white')}>Mal</button>
+        <button type="button" disabled={readOnly} onClick={() => pick('na')} className={seg('na', 'bg-neutral-600 text-white', true)}>N/A</button>
       </div>
       {(state === 'mal' || (typeof row.observaciones === 'string' && row.observaciones)) && (
         <input value={typeof row.observaciones === 'string' ? row.observaciones : ''}
