@@ -20,6 +20,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getMechanicalProfile = getMechanicalProfile;
+exports.getModelEjeExtras = getModelEjeExtras;
 exports.getControllerProfile = getControllerProfile;
 exports.getExternalAxisProfile = getExternalAxisProfile;
 // ============================================================
@@ -152,6 +153,32 @@ function getMechanicalProfile(marca, generacion, cinematica) {
     }
     // KUKA: pendiente de extracción. Estructura base provisional.
     return ABB_MECH_6AXIS;
+}
+// ============================================================
+// Checks de inspección ESPECÍFICOS POR MODELO (además de los del perfil), por nº de eje.
+// Para actividades que solo tienen ciertos modelos (p.ej. engrases de rodamientos del
+// IRB 8700, sección 3.5 del manual) y que NO aplican a todos los ABB.
+// ============================================================
+const MODEL_EJE_EXTRAS = [
+    {
+        // IRB 8700 (todas las variantes): engrases de rodamientos (manual 3.5 Lubrication activities).
+        match: /^IRB\s*8700/i,
+        ejes: {
+            1: ['Engrase del rodamiento cross roller (Mobillux EP2, 3 g/boquilla)'],
+            2: ['Engrase del rodamiento esférico del balancing device (Tribol GR 100-2 PD, 25 ml)'],
+            3: [
+                'Engrase del rodamiento esférico del balancing device (Tribol GR 100-2 PD, 25 ml)',
+                'Engrase del rodamiento esférico del brazo inferior (Mobillux EP2, 3-6 g)',
+            ],
+        },
+    },
+];
+/** Checks extra de inspección por eje, específicos del modelo (objeto vacío si no aplica). */
+function getModelEjeExtras(modeloNombre) {
+    for (const m of MODEL_EJE_EXTRAS)
+        if (m.match.test(modeloNombre))
+            return m.ejes;
+    return {};
 }
 function getControllerProfile(marca, generacion) {
     if (marca === 'ABB') {

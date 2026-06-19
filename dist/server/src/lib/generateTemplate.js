@@ -329,6 +329,15 @@ async function loadReductoras(prisma, modeloId) {
         };
     });
 }
+/** Fusiona los checks extra por eje del perfil con los específicos del modelo (se concatenan). */
+function mergeEjeExtras(base, extra) {
+    const out = { ...base };
+    for (const [k, checks] of Object.entries(extra)) {
+        const n = Number(k);
+        out[n] = [...(out[n] ?? []), ...checks];
+    }
+    return out;
+}
 async function generateTemplateForModel(prisma, modeloId) {
     const model = await prisma.modeloComponente.findUnique({
         where: { id: modeloId },
@@ -342,7 +351,11 @@ async function generateTemplateForModel(prisma, modeloId) {
     if (model.tipo === 'mechanical_unit') {
         const reductoras = await loadReductoras(prisma, modeloId);
         const nEjes = ejesDeCinematica(cinematica);
-        const profile = (0, reportProfiles_1.getMechanicalProfile)(marca, generacion, cinematica);
+        const baseProfile = (0, reportProfiles_1.getMechanicalProfile)(marca, generacion, cinematica);
+        const modelExtras = (0, reportProfiles_1.getModelEjeExtras)(model.nombre);
+        const profile = Object.keys(modelExtras).length
+            ? { ...baseProfile, ejeExtras: mergeEjeExtras(baseProfile.ejeExtras, modelExtras) }
+            : baseProfile;
         const bateriasSMB = profile.bateriaMedida === 'smb' ? await batteriesBySubtipo(prisma, ['smb_2pole', 'smb_3pole']) : [];
         return buildMechanicalSchema({ nEjes, reductoras, bateriasSMB, overhaulHoras: 40000, profile });
     }
