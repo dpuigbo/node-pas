@@ -437,13 +437,117 @@ function ControlBlock({
       </section>
     );
   }
-  // Otros bloques (reductoras, baterías…) → su FormField sobre tarjeta clara legible.
+  // Resto de bloques en OSCURO (reductoras, baterías, calibración, identidad, montaje…)
+  if (block.type === 'reducer_oils') return <DarkReducerOils value={value} readOnly={readOnly} onChange={onChange} title={(block.config.title as string) || 'Reductoras'} />;
+  if (block.type === 'table') return <DarkTable block={block} value={value} readOnly={readOnly} onChange={onChange} />;
+  if (['text_field', 'number_field', 'date_field', 'select_field'].includes(block.type)) return <DarkField block={block} value={value} readOnly={readOnly} onChange={onChange} />;
+  // Fallback (raro): FormField clásico en tarjeta clara legible.
   const entry = getBlockEntry(block.type as BlockType);
   const FormFieldComp = entry?.FormField;
   if (!FormFieldComp) return null;
   return (
     <div className="overflow-x-auto rounded-2xl border border-neutral-800 bg-neutral-100 p-3 text-neutral-900">
       <FormFieldComp block={block as never} value={value} onChange={onChange} readOnly={readOnly} />
+    </div>
+  );
+}
+
+// ===== Celda oscura =====
+type Col = { key: string; label: string; type: string; options?: string[] };
+function darkCell(col: Col, value: unknown, onChange: (v: unknown) => void, readOnly: boolean) {
+  if (col.type === 'label') return <span className="text-neutral-300">{String(value ?? '') || '—'}</span>;
+  if (col.type === 'checkbox') return (
+    <input type="checkbox" checked={value === true || value === 'true'} disabled={readOnly}
+      onChange={(e) => onChange(e.target.checked)} className="h-5 w-5 rounded border-neutral-600 bg-neutral-800" style={{ accentColor: LIME }} />
+  );
+  if (col.type === 'select') return (
+    <select value={String(value ?? '')} disabled={readOnly} onChange={(e) => onChange(e.target.value || null)}
+      className="w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-100 focus:border-neutral-500 focus:outline-none">
+      <option value="">—</option>
+      {(col.options || []).map((o) => <option key={o} value={o}>{o}</option>)}
+    </select>
+  );
+  return (
+    <input type={col.type === 'number' ? 'number' : col.type === 'date' ? 'date' : 'text'}
+      value={String(value ?? '')} disabled={readOnly} onChange={(e) => onChange(e.target.value || null)}
+      className="w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none" />
+  );
+}
+
+// ===== Tabla genérica en oscuro =====
+function DarkTable({ block, value, readOnly, onChange }: { block: AssembledBlock; value: unknown; readOnly: boolean; onChange: (v: unknown) => void }) {
+  const cols = (block.config.columns as Col[]) || [];
+  const rows = (value as Row[]) || [];
+  const title = (block.config.title as string) || (block.config.label as string) || '';
+  const update = (ri: number, key: string, v: unknown) => onChange(rows.map((r, i) => (i === ri ? { ...r, [key]: v } : r)));
+  return (
+    <section className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900">
+      {title && <div className="border-b border-neutral-800 px-4 py-2.5 text-sm font-semibold text-neutral-200">{title}</div>}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left">{cols.map((c) => <th key={c.key} className="px-3 py-2 text-xs font-medium text-neutral-500">{c.label}</th>)}</tr>
+          </thead>
+          <tbody className="divide-y divide-neutral-800">
+            {rows.length === 0
+              ? <tr><td colSpan={Math.max(cols.length, 1)} className="px-3 py-4 text-center text-xs text-neutral-600">Sin filas</td></tr>
+              : rows.map((row, ri) => (
+                <tr key={ri}>{cols.map((c) => <td key={c.key} className="px-3 py-2 align-middle">{darkCell(c, row[c.key], (v) => update(ri, c.key, v), readOnly)}</td>)}</tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+// ===== reducer_oils en oscuro =====
+function DarkReducerOils({ value, readOnly, onChange, title }: { value: unknown; readOnly: boolean; onChange: (v: unknown) => void; title: string }) {
+  const rows = (value as Row[]) || [];
+  const update = (ri: number, key: string, v: unknown) => onChange(rows.map((r, i) => (i === ri ? { ...r, [key]: v } : r)));
+  const chk = (ri: number, key: string, checked: boolean) => (
+    <input type="checkbox" checked={checked} disabled={readOnly} onChange={(e) => update(ri, key, e.target.checked)} className="h-5 w-5 rounded border-neutral-600 bg-neutral-800" style={{ accentColor: LIME }} />
+  );
+  return (
+    <section className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900">
+      <div className="border-b border-neutral-800 px-4 py-2.5 text-sm font-semibold text-neutral-200">{title}</div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs font-medium text-neutral-500">
+              <th className="px-3 py-2">Eje</th><th className="px-3 py-2">Lubricante</th><th className="px-3 py-2">Vol.</th>
+              <th className="px-3 py-2 text-center">Control</th><th className="px-3 py-2 text-center">Cambio</th><th className="px-3 py-2">Observaciones</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-neutral-800">
+            {rows.map((row, ri) => (
+              <tr key={ri}>
+                <td className="px-3 py-2 whitespace-nowrap text-neutral-300">{String(row.eje ?? '')}</td>
+                <td className="px-3 py-2 text-neutral-300">{String(row.tipoSuministro ?? '')}</td>
+                <td className="px-3 py-2 whitespace-nowrap text-neutral-400">{String(row.volumen ?? '')} {String(row.unidad ?? '')}</td>
+                <td className="px-3 py-2 text-center">{chk(ri, 'control', row.control === true)}</td>
+                <td className="px-3 py-2 text-center">{chk(ri, 'cambio', row.cambio === true)}</td>
+                <td className="px-3 py-2"><input value={typeof row.observaciones === 'string' ? row.observaciones : ''} disabled={readOnly} onChange={(e) => update(ri, 'observaciones', e.target.value)} placeholder="—" className="w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-100 placeholder:text-neutral-600 focus:border-neutral-500 focus:outline-none" /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+// ===== Campo simple en oscuro =====
+function DarkField({ block, value, readOnly, onChange }: { block: AssembledBlock; value: unknown; readOnly: boolean; onChange: (v: unknown) => void }) {
+  const c = block.config;
+  const label = (c.label as string) || '';
+  const opts = (c.options as { value: string; label: string }[] | undefined);
+  return (
+    <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-3">
+      {label && <div className="mb-1.5 text-sm font-medium text-neutral-200">{label}</div>}
+      {block.type === 'select_field' && opts
+        ? <select value={String(value ?? '')} disabled={readOnly} onChange={(e) => onChange(e.target.value || null)} className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 focus:border-neutral-500 focus:outline-none"><option value="">—</option>{opts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
+        : <input type={block.type === 'number_field' ? 'number' : block.type === 'date_field' ? 'date' : 'text'} value={String(value ?? '')} disabled={readOnly} onChange={(e) => onChange(e.target.value || null)} className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none" />}
     </div>
   );
 }
