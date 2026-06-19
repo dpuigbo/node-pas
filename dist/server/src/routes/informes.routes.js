@@ -484,9 +484,15 @@ router.get('/componentes-informe/:id/manual', async (req, res, next) => {
             res.status(404).json({ error: 'Manual no encontrado' });
             return;
         }
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(node_path_1.default.basename(filePath))}"`);
-        node_fs_1.default.createReadStream(filePath).pipe(res);
+        // sendFile soporta Range requests (Accept-Ranges) → el navegador renderiza por streaming/seek,
+        // mucho más rápido que descargar el PDF entero antes de abrirlo.
+        res.sendFile(filePath, {
+            headers: {
+                'Content-Type': 'application/pdf',
+                'Content-Disposition': `inline; filename="${encodeURIComponent(node_path_1.default.basename(filePath))}"`,
+            },
+        }, (err) => { if (err && !res.headersSent)
+            next(err); });
     }
     catch (err) {
         next(err);
@@ -536,13 +542,36 @@ router.patch('/informes/:id/estado', (0, role_middleware_1.requireRole)('admin')
         next(err);
     }
 });
-/** Re-inicializa datos para el nuevo schema, preservando valores cuyas keys siguen existiendo. */
+// Campos de fila que vienen de la plantilla (fijos/identidad), NO editables por el técnico.
+// Al regenerar se RE-SIEMBRAN desde el schema nuevo (así un `eje` que quedó "NaN" en datos
+// viejos se corrige). El resto (control, cambio, na/bien/mal, observaciones…) se preserva.
+const FIXED_ROW_KEYS = ['eje', 'operacion', 'bateria', 'referencia', 'tipoSuministro', 'aceiteId', 'unidad', 'volumen', 'niveles', 'lifetime'];
+/** Funde un array de filas: campos FIJOS desde la plantilla nueva (`fresh`), resto del dato viejo. */
+function mergeRowArray(fresh, old) {
+    if (!Array.isArray(old))
+        return fresh;
+    return fresh.map((fr, i) => {
+        const ol = old[i];
+        if (fr && typeof fr === 'object' && ol && typeof ol === 'object') {
+            const row = { ...ol };
+            const frObj = fr;
+            for (const key of FIXED_ROW_KEYS)
+                if (key in frObj)
+                    row[key] = frObj[key];
+            return row;
+        }
+        return ol ?? fr;
+    });
+}
+/** Re-inicializa datos para el nuevo schema, preservando lo EDITABLE del viejo; en arrays de filas
+ *  re-siembra los campos fijos desde el schema nuevo (corrige p.ej. ejes 'NaN' heredados en datos). */
 function regenDatos(schema, old) {
     const fresh = (0, initDatos_1.initDatos)(schema);
     const merged = { ...fresh };
     for (const k of Object.keys(fresh)) {
-        if (k in old)
-            merged[k] = old[k];
+        if (!(k in old))
+            continue;
+        merged[k] = Array.isArray(fresh[k]) ? mergeRowArray(fresh[k], old[k]) : old[k];
     }
     return merged;
 }
@@ -639,6 +668,7 @@ router.post('/informes/:id/regenerar', (0, role_middleware_1.requireRole)('admin
         // generador (colores, tablas, fix del NaN) sin pasar antes por Modelos.
         const desdePlan = req.body?.desdePlan === true;
         let regenerados = 0;
+        const fallosPlan = [];
         for (const ci of informe.componentes) {
             const modeloId = ci.componenteSistema.modeloComponenteId;
             let version = null;
@@ -659,7 +689,10 @@ router.post('/informes/:id/regenerar', (0, role_middleware_1.requireRole)('admin
                             data: { modeloComponenteId: modeloId, version: 1, schema: fresh, estado: 'activo', notas: 'Regenerada desde el plan' },
                         });
                 }
-                catch {
+                catch (e) {
+                    const msg = e?.message ?? String(e);
+                    console.error(`[regenerar desdePlan] generación falló para modelo ${modeloId}: ${msg}`);
+                    fallosPlan.push({ modeloId, error: msg });
                     version = null;
                 }
             }
@@ -675,7 +708,7 @@ router.post('/informes/:id/regenerar', (0, role_middleware_1.requireRole)('admin
             });
             regenerados++;
         }
-        res.json({ regenerados, total: informe.componentes.length });
+        res.json({ regenerados, total: informe.componentes.length, fallosPlan });
     }
     catch (err) {
         next(err);
