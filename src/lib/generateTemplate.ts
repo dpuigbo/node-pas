@@ -13,6 +13,7 @@
 import { randomUUID } from 'node:crypto';
 import {
   getMechanicalProfile,
+  getModelEjeExtras,
   getControllerProfile,
   getExternalAxisProfile,
   type Marca,
@@ -410,6 +411,16 @@ async function loadReductoras(prisma: any, modeloId: number): Promise<ReductoraR
   });
 }
 
+/** Fusiona los checks extra por eje del perfil con los específicos del modelo (se concatenan). */
+function mergeEjeExtras(base: Record<number, string[]>, extra: Record<number, string[]>): Record<number, string[]> {
+  const out: Record<number, string[]> = { ...base };
+  for (const [k, checks] of Object.entries(extra)) {
+    const n = Number(k);
+    out[n] = [...(out[n] ?? []), ...checks];
+  }
+  return out;
+}
+
 export async function generateTemplateForModel(prisma: any, modeloId: number): Promise<TemplateSchema> {
   const model = await prisma.modeloComponente.findUnique({
     where: { id: modeloId },
@@ -424,7 +435,11 @@ export async function generateTemplateForModel(prisma: any, modeloId: number): P
   if (model.tipo === 'mechanical_unit') {
     const reductoras = await loadReductoras(prisma, modeloId);
     const nEjes = ejesDeCinematica(cinematica);
-    const profile = getMechanicalProfile(marca, generacion, cinematica);
+    const baseProfile = getMechanicalProfile(marca, generacion, cinematica);
+    const modelExtras = getModelEjeExtras(model.nombre);
+    const profile = Object.keys(modelExtras).length
+      ? { ...baseProfile, ejeExtras: mergeEjeExtras(baseProfile.ejeExtras, modelExtras) }
+      : baseProfile;
     const bateriasSMB = profile.bateriaMedida === 'smb' ? await batteriesBySubtipo(prisma, ['smb_2pole', 'smb_3pole']) : [];
     return buildMechanicalSchema({ nEjes, reductoras, bateriasSMB, overhaulHoras: 40000, profile });
   }
