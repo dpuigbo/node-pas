@@ -574,12 +574,34 @@ router.patch(
 
 type FrozenSchema = { blocks: { id: string; type: string; config: Record<string, unknown> }[]; pageConfig?: unknown };
 
-/** Re-inicializa datos para el nuevo schema, preservando valores cuyas keys siguen existiendo. */
+// Campos de fila que vienen de la plantilla (fijos/identidad), NO editables por el técnico.
+// Al regenerar se RE-SIEMBRAN desde el schema nuevo (así un `eje` que quedó "NaN" en datos
+// viejos se corrige). El resto (control, cambio, na/bien/mal, observaciones…) se preserva.
+const FIXED_ROW_KEYS = ['eje', 'operacion', 'bateria', 'referencia', 'tipoSuministro', 'aceiteId', 'unidad', 'volumen', 'niveles', 'lifetime'];
+
+/** Funde un array de filas: campos FIJOS desde la plantilla nueva (`fresh`), resto del dato viejo. */
+function mergeRowArray(fresh: unknown[], old: unknown): unknown[] {
+  if (!Array.isArray(old)) return fresh;
+  return fresh.map((fr, i) => {
+    const ol = old[i];
+    if (fr && typeof fr === 'object' && ol && typeof ol === 'object') {
+      const row: Record<string, unknown> = { ...(ol as Record<string, unknown>) };
+      const frObj = fr as Record<string, unknown>;
+      for (const key of FIXED_ROW_KEYS) if (key in frObj) row[key] = frObj[key];
+      return row;
+    }
+    return ol ?? fr;
+  });
+}
+
+/** Re-inicializa datos para el nuevo schema, preservando lo EDITABLE del viejo; en arrays de filas
+ *  re-siembra los campos fijos desde el schema nuevo (corrige p.ej. ejes 'NaN' heredados en datos). */
 function regenDatos(schema: FrozenSchema, old: Record<string, unknown>): Record<string, unknown> {
   const fresh = initDatos(schema as { blocks: { id: string; type: string; config: Record<string, unknown> }[]; pageConfig?: unknown });
   const merged: Record<string, unknown> = { ...fresh };
   for (const k of Object.keys(fresh)) {
-    if (k in old) merged[k] = old[k];
+    if (!(k in old)) continue;
+    merged[k] = Array.isArray(fresh[k]) ? mergeRowArray(fresh[k] as unknown[], old[k]) : old[k];
   }
   return merged;
 }
