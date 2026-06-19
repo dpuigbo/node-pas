@@ -3,6 +3,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.findManuales = findManuales;
+exports.resolveManualPath = resolveManualPath;
 const express_1 = require("express");
 const role_middleware_1 = require("../middleware/role.middleware");
 const auth_middleware_1 = require("../middleware/auth.middleware");
@@ -34,23 +36,85 @@ function manualesBranchRoot() {
     return MANUALES_DIR;
 }
 function normNombre(s) { return s.toUpperCase().replace(/[^A-Z0-9]/g, ''); }
-/** Carpeta del manual cuyo nombre normalizado es prefijo del modelo (la coincidencia más larga). */
-function findManualDir(modeloNombre, tipo) {
-    const branchDir = node_path_1.default.join(manualesBranchRoot(), BRANCH_BY_TIPO[tipo] || 'Manipuladores');
+/** "Tipo/familia" del modelo para ejes externos: letras iniciales (IRBT, IRBP, IRP, IRT, MID, MTD, MU...). */
+function tipoToken(s) { const m = s.toUpperCase().match(/^[A-Z]+/); return m ? m[0] : ''; }
+/**
+ * Todos los manuales que ayudan a un modelo. La estructura NO es uniforme:
+ *  - Manipuladores/Controladoras: subcarpeta por modelo (nombre = prefijo del modelo) → todos sus PDFs.
+ *  - EjesExternos: PDFs sueltos en la raíz de la rama → se casan por familia (tipo: IRBT, IRBP, IRP...).
+ *  - Generales (lubricación/gearbox) en la raíz de Manipuladores → para toda unidad mecánica.
+ * Devuelve rutas relativas a la raíz de manuales (para servir luego por `ruta`, anti-traversal).
+ */
+function findManuales(modeloNombre, tipo) {
+    const root = manualesBranchRoot();
+    const branch = BRANCH_BY_TIPO[tipo] || 'Manipuladores';
+    const branchDir = node_path_1.default.join(root, branch);
     if (!node_fs_1.default.existsSync(branchDir))
-        return null;
+        return [];
     const nm = normNombre(modeloNombre);
-    let best = null, bestLen = 0;
-    for (const d of node_fs_1.default.readdirSync(branchDir, { withFileTypes: true })) {
-        if (!d.isDirectory())
+    const tok = normNombre(tipoToken(modeloNombre));
+    const out = [];
+    const add = (full, general = false) => out.push({ nombre: node_path_1.default.basename(full), ruta: node_path_1.default.relative(root, full), general });
+    let entries;
+    try {
+        entries = node_fs_1.default.readdirSync(branchDir, { withFileTypes: true });
+    }
+    catch {
+        return [];
+    }
+    const isPdf = (n) => n.toLowerCase().endsWith('.pdf');
+    // 1) Subcarpeta del modelo (coincidencia de prefijo más larga) → todos sus PDFs.
+    let bestDir = null, bestLen = 0;
+    for (const e of entries) {
+        if (!e.isDirectory())
             continue;
-        const nf = normNombre(d.name);
+        const nf = normNombre(e.name);
         if (nf && nm.startsWith(nf) && nf.length > bestLen) {
-            best = node_path_1.default.join(branchDir, d.name);
+            bestDir = node_path_1.default.join(branchDir, e.name);
             bestLen = nf.length;
         }
     }
-    return best;
+    if (bestDir) {
+        try {
+            for (const f of node_fs_1.default.readdirSync(bestDir))
+                if (isPdf(f))
+                    add(node_path_1.default.join(bestDir, f));
+        }
+        catch { /* noop */ }
+    }
+    // 2) PDFs sueltos en la raíz de la rama.
+    for (const e of entries) {
+        if (!e.isFile() || !isPdf(e.name))
+            continue;
+        const fn = normNombre(e.name);
+        const esGeneral = fn.includes('LUBRICATION') || fn.includes('GEARBOX');
+        if (branch === 'Manipuladores' && esGeneral) {
+            add(node_path_1.default.join(branchDir, e.name), true);
+            continue;
+        }
+        // Ejes externos (y similares): casar por familia/tipo presente en el nombre del fichero.
+        if (branch === 'EjesExternos' && tok.length >= 2 && fn.includes(tok)) {
+            add(node_path_1.default.join(branchDir, e.name));
+        }
+    }
+    // Dedup por ruta.
+    const seen = new Set();
+    return out.filter((m) => (seen.has(m.ruta) ? false : (seen.add(m.ruta), true)));
+}
+/** Resuelve y valida una ruta de manual (relativa a la raíz de manuales) para servirla. Anti-traversal. */
+function resolveManualPath(ruta) {
+    if (!ruta || ruta.includes('..') || ruta.includes('\0'))
+        return null;
+    const root = node_path_1.default.resolve(manualesBranchRoot());
+    const full = node_path_1.default.resolve(root, ruta);
+    if (!full.startsWith(root + node_path_1.default.sep) || !full.toLowerCase().endsWith('.pdf'))
+        return null;
+    try {
+        return node_fs_1.default.existsSync(full) ? full : null;
+    }
+    catch {
+        return null;
+    }
 }
 async function modeloDeComponenteInforme(ciId) {
     const ci = await database_1.prisma.componenteInforme.findUnique({
@@ -383,8 +447,8 @@ router.patch('/componentes-informe/:id/datos', async (req, res, next) => {
     }
 });
 // ================================================================
-// GET /componentes-informe/:id/manuales  — lista de PDFs del modelo (con login)
-// GET /componentes-informe/:id/manual?archivo=...  — sirve el PDF (con login)
+// GET /componentes-informe/:id/manuales         — TODOS los manuales que ayudan al modelo (con login)
+// GET /componentes-informe/:id/manual?ruta=...  — sirve un PDF por su ruta (con login, anti-traversal)
 // ================================================================
 router.get('/componentes-informe/:id/manuales', async (req, res, next) => {
     try {
@@ -393,13 +457,8 @@ router.get('/componentes-informe/:id/manuales', async (req, res, next) => {
             res.status(404).json({ error: 'Componente no encontrado' });
             return;
         }
-        const dir = findManualDir(modelo.nombre, modelo.tipo);
-        if (!dir) {
-            res.json({ modelo: modelo.nombre, archivos: [] });
-            return;
-        }
-        const archivos = node_fs_1.default.readdirSync(dir).filter((f) => f.toLowerCase().endsWith('.pdf'));
-        res.json({ modelo: modelo.nombre, archivos });
+        const manuales = findManuales(modelo.nombre, modelo.tipo);
+        res.json({ modelo: modelo.nombre, manuales });
     }
     catch (err) {
         next(err);
@@ -407,28 +466,14 @@ router.get('/componentes-informe/:id/manuales', async (req, res, next) => {
 });
 router.get('/componentes-informe/:id/manual', async (req, res, next) => {
     try {
-        const archivo = String(req.query.archivo || '');
-        if (!archivo || /[\\/]|\.\./.test(archivo)) {
-            res.status(400).json({ error: 'Archivo invalido' });
-            return;
-        }
-        const modelo = await modeloDeComponenteInforme(Number(req.params.id));
-        if (!modelo) {
-            res.status(404).json({ error: 'Componente no encontrado' });
-            return;
-        }
-        const dir = findManualDir(modelo.nombre, modelo.tipo);
-        if (!dir) {
-            res.status(404).json({ error: 'Sin manual' });
-            return;
-        }
-        const filePath = node_path_1.default.join(dir, archivo);
-        if (!filePath.startsWith(dir) || !node_fs_1.default.existsSync(filePath)) {
+        const ruta = String(req.query.ruta || req.query.archivo || '');
+        const filePath = resolveManualPath(ruta);
+        if (!filePath) {
             res.status(404).json({ error: 'Manual no encontrado' });
             return;
         }
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(archivo)}"`);
+        res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(node_path_1.default.basename(filePath))}"`);
         node_fs_1.default.createReadStream(filePath).pipe(res);
     }
     catch (err) {
