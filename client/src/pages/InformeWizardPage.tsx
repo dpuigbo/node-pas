@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft, Save, FileText, Loader2, Check, ChevronRight, ChevronLeft,
-  CheckCircle2, ClipboardCheck, Bot, Cpu, Move, BookOpen, RefreshCw,
+  CheckCircle2, ClipboardCheck, Bot, Cpu, Move, BookOpen, RefreshCw, X,
 } from 'lucide-react';
 import api from '@/lib/api';
 import { useAssembledReport, useUpdateEstadoInforme, useRegenerarInforme } from '@/hooks/useInformes';
@@ -74,19 +74,42 @@ function compIcon(label: string) {
   return Bot;
 }
 
-/** Abre el PDF del manual del componente (autenticado, como blob). */
-async function openManual(componenteInformeId: number) {
-  try {
-    const { data } = await api.get(`/v1/componentes-informe/${componenteInformeId}/manuales`);
-    const archivos: string[] = data?.archivos || [];
-    if (!archivos.length) { alert('No hay manual disponible para este componente todavía.'); return; }
-    const archivo = archivos[0];
-    const resp = await api.get(`/v1/componentes-informe/${componenteInformeId}/manual`, { params: { archivo }, responseType: 'blob' });
-    const url = URL.createObjectURL(resp.data as Blob);
-    window.open(url, '_blank');
-  } catch {
-    alert('No se pudo abrir el manual.');
-  }
+interface ManualRef { nombre: string; ruta: string; general?: boolean }
+
+/** Abre un PDF de manual concreto (autenticado, como blob, en otra pestaña). */
+async function openManualBlob(componenteInformeId: number, ruta: string): Promise<void> {
+  const resp = await api.get(`/v1/componentes-informe/${componenteInformeId}/manual`, { params: { ruta }, responseType: 'blob' });
+  const url = URL.createObjectURL(resp.data as Blob);
+  window.open(url, '_blank');
+}
+
+// ======================== Selector de manuales ========================
+function ManualPickerModal({ picker, onClose }: { picker: { componenteId: number; modelo: string; manuales: ManualRef[] }; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-4" onClick={onClose}>
+      <div className="max-h-[80vh] w-full overflow-auto rounded-t-2xl border border-neutral-800 bg-neutral-900 p-4 sm:max-w-lg sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <BookOpen className="h-4 w-4 shrink-0" style={{ color: LIME }} />
+            <span className="truncate text-sm font-semibold text-neutral-100">Manuales · {picker.modelo}</span>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-neutral-400 hover:bg-neutral-800" title="Cerrar"><X className="h-4 w-4" /></button>
+        </div>
+        <p className="mb-3 text-xs text-neutral-500">{picker.manuales.length} documentos. Toca uno para abrirlo en otra pestaña.</p>
+        <div className="space-y-1.5">
+          {picker.manuales.map((m) => (
+            <button key={m.ruta} onClick={() => openManualBlob(picker.componenteId, m.ruta)}
+              className="flex w-full items-center gap-2.5 rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2.5 text-left transition-colors hover:border-neutral-600">
+              <FileText className="h-4 w-4 shrink-0 text-neutral-400" />
+              <span className="flex-1 text-sm leading-snug text-neutral-200">{m.nombre.replace(/\.pdf$/i, '')}</span>
+              {m.general && <Chip>general</Chip>}
+              <ChevronRight className="h-4 w-4 shrink-0 text-neutral-600" />
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ======================== Chip ========================
@@ -115,6 +138,7 @@ export default function InformeWizardPage() {
   const [localDocDatos, setLocalDocDatos] = useState<Record<string, unknown>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [view, setView] = useState<'overview' | string>('overview');
+  const [manualPicker, setManualPicker] = useState<{ componenteId: number; modelo: string; manuales: ManualRef[] } | null>(null);
 
   const readOnly = data?.informe?.estado === 'finalizado';
 
@@ -206,6 +230,19 @@ export default function InformeWizardPage() {
     }
   }, [regenerar, queryClient, informeId]);
 
+  const handleManual = useCallback(async (componenteInformeId: number) => {
+    try {
+      const { data: m } = await api.get(`/v1/componentes-informe/${componenteInformeId}/manuales`);
+      const manuales: ManualRef[] = m?.manuales || [];
+      const first = manuales[0];
+      if (!first) { alert('No hay manual disponible para este componente todavía.'); return; }
+      if (manuales.length === 1) { await openManualBlob(componenteInformeId, first.ruta); return; }
+      setManualPicker({ componenteId: componenteInformeId, modelo: m?.modelo || '', manuales });
+    } catch {
+      alert('No se pudo abrir el manual.');
+    }
+  }, []);
+
   if (isLoading) {
     return <div className="flex h-screen items-center justify-center bg-neutral-950"><Loader2 className="h-8 w-8 animate-spin" style={{ color: LIME }} /></div>;
   }
@@ -259,27 +296,29 @@ export default function InformeWizardPage() {
         {activeSection ? (
           <SectionView section={activeSection} sections={sections} activeIdx={activeIdx} readOnly={readOnly}
             blockValue={blockValue} onBlockChange={onBlockChange} onNavigate={setView}
-            countPoints={(s) => countPoints(s, blockValue)} />
+            countPoints={(s) => countPoints(s, blockValue)} onManual={handleManual} />
         ) : (
           <OverviewView totals={totals} sections={sections} finalizado={finalizado} isAdmin={isAdmin}
             countPoints={(s) => countPoints(s, blockValue)} onOpen={setView} onFinalizar={handleFinalizar}
             onAdvanced={() => navigate(`/informes/${informeId}/documento`)}
-            onRegenerar={handleRegenerar} regenerating={regenerar.isPending} />
+            onRegenerar={handleRegenerar} regenerating={regenerar.isPending} onManual={handleManual} />
         )}
       </main>
+
+      {manualPicker && <ManualPickerModal picker={manualPicker} onClose={() => setManualPicker(null)} />}
     </div>
   );
 }
 
 // ======================== Visión general ========================
 function OverviewView({
-  totals, sections, finalizado, isAdmin, countPoints, onOpen, onFinalizar, onAdvanced, onRegenerar, regenerating,
+  totals, sections, finalizado, isAdmin, countPoints, onOpen, onFinalizar, onAdvanced, onRegenerar, regenerating, onManual,
 }: {
   totals: { done: number; total: number; pct: number };
   sections: WizardSection[]; finalizado: boolean; isAdmin: boolean;
   countPoints: (s: WizardSection) => { done: number; total: number };
   onOpen: (key: string) => void; onFinalizar: () => void; onAdvanced: () => void;
-  onRegenerar: () => void; regenerating: boolean;
+  onRegenerar: () => void; regenerating: boolean; onManual: (componenteInformeId: number) => void;
 }) {
   return (
     <div className="mx-auto max-w-4xl p-4 sm:p-6 space-y-4">
@@ -335,7 +374,7 @@ function OverviewView({
                   Rellenar <ChevronRight className="h-4 w-4" />
                 </button>
                 {s.componenteInformeId && (
-                  <button onClick={() => openManual(s.componenteInformeId!)} title="Abrir manual" className="flex items-center justify-center gap-1 rounded-lg border border-neutral-700 px-3 py-2 text-sm text-neutral-300 hover:bg-neutral-800">
+                  <button onClick={() => onManual(s.componenteInformeId!)} title="Ver manuales" className="flex items-center justify-center gap-1 rounded-lg border border-neutral-700 px-3 py-2 text-sm text-neutral-300 hover:bg-neutral-800">
                     <BookOpen className="h-4 w-4" /> <span className="hidden sm:inline">Manual</span>
                   </button>
                 )}
@@ -380,11 +419,12 @@ function ProgressRing({ pct }: { pct: number }) {
 
 // ======================== Vista de sección ========================
 function SectionView({
-  section, sections, activeIdx, readOnly, blockValue, onBlockChange, onNavigate, countPoints,
+  section, sections, activeIdx, readOnly, blockValue, onBlockChange, onNavigate, countPoints, onManual,
 }: {
   section: WizardSection; sections: WizardSection[]; activeIdx: number; readOnly: boolean;
   blockValue: (b: AssembledBlock) => unknown; onBlockChange: (b: AssembledBlock, v: unknown) => void;
   onNavigate: (key: string) => void; countPoints: (s: WizardSection) => { done: number; total: number };
+  onManual: (componenteInformeId: number) => void;
 }) {
   const { done, total } = countPoints(section);
   const prev = activeIdx > 0 ? sections[activeIdx - 1] : null;
@@ -403,7 +443,7 @@ function SectionView({
           <h2 className="text-base font-bold truncate flex-1">{section.label}</h2>
           <Chip tone={done === total && total > 0 ? 'lime' : 'neutral'}>{done}/{total}</Chip>
           {section.componenteInformeId && (
-            <button onClick={() => openManual(section.componenteInformeId!)} title="Abrir manual"
+            <button onClick={() => onManual(section.componenteInformeId!)} title="Ver manuales"
               className="flex items-center gap-1 rounded-lg border border-neutral-700 px-2.5 py-1 text-xs text-neutral-300 hover:bg-neutral-800">
               <BookOpen className="h-3.5 w-3.5" /> Manual
             </button>
