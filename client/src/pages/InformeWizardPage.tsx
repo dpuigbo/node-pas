@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, type ReactNode } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect, type ReactNode } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -511,8 +511,28 @@ function ControlBlock({
   );
 }
 
+// ===== Textarea que crece con el contenido (multilínea, envuelve, sin scroll) =====
+// Las observaciones deben envolver y crecer en alto (no scroll horizontal) para que el PDF salga bien.
+function AutoTextarea({ value, onChange, readOnly, placeholder, className }: {
+  value: string; onChange: (v: string) => void; readOnly?: boolean; placeholder?: string; className?: string;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const resize = useCallback(() => {
+    const el = ref.current; if (!el) return;
+    el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`;
+  }, []);
+  useEffect(() => { resize(); }, [value, resize]);
+  return (
+    <textarea
+      ref={ref} rows={1} value={value} disabled={readOnly} placeholder={placeholder}
+      onChange={(e) => { onChange(e.target.value); resize(); }}
+      className={`block w-full resize-none overflow-hidden whitespace-pre-wrap break-words ${className ?? ''}`}
+    />
+  );
+}
+
 // ===== Celda oscura =====
-type Col = { key: string; label: string; type: string; options?: string[] };
+type Col = { key: string; label: string; type: string; options?: string[]; width?: string };
 function darkCell(col: Col, value: unknown, onChange: (v: unknown) => void, readOnly: boolean) {
   if (col.type === 'label') return <span className="text-neutral-300">{String(value ?? '') || '—'}</span>;
   if (col.type === 'checkbox') return (
@@ -526,10 +546,15 @@ function darkCell(col: Col, value: unknown, onChange: (v: unknown) => void, read
       {(col.options || []).map((o) => <option key={o} value={o}>{o}</option>)}
     </select>
   );
-  return (
-    <input type={col.type === 'number' ? 'number' : col.type === 'date' ? 'date' : 'text'}
+  if (col.type === 'number' || col.type === 'date') return (
+    <input type={col.type === 'number' ? 'number' : 'date'}
       value={String(value ?? '')} disabled={readOnly} onChange={(e) => onChange(e.target.value || null)}
       className="w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none" />
+  );
+  // Texto → multilínea que envuelve y crece (no scroll horizontal).
+  return (
+    <AutoTextarea value={String(value ?? '')} readOnly={readOnly} onChange={(v) => onChange(v || null)}
+      className="rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none" />
   );
 }
 
@@ -543,7 +568,8 @@ function DarkTable({ block, value, readOnly, onChange }: { block: AssembledBlock
     <section className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900">
       {title && <div className="border-b border-neutral-800 px-4 py-2.5 text-sm font-semibold text-neutral-200">{title}</div>}
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full table-fixed text-sm">
+          <colgroup>{cols.map((c) => <col key={c.key} style={c.width ? { width: c.width } : undefined} />)}</colgroup>
           <thead>
             <tr className="text-left">{cols.map((c) => <th key={c.key} className="px-3 py-2 text-xs font-medium text-neutral-500">{c.label}</th>)}</tr>
           </thead>
@@ -551,7 +577,7 @@ function DarkTable({ block, value, readOnly, onChange }: { block: AssembledBlock
             {rows.length === 0
               ? <tr><td colSpan={Math.max(cols.length, 1)} className="px-3 py-4 text-center text-xs text-neutral-600">Sin filas</td></tr>
               : rows.map((row, ri) => (
-                <tr key={ri}>{cols.map((c) => <td key={c.key} className="px-3 py-2 align-middle">{darkCell(c, row[c.key], (v) => update(ri, c.key, v), readOnly)}</td>)}</tr>
+                <tr key={ri}>{cols.map((c) => <td key={c.key} className="px-3 py-2 align-top">{darkCell(c, row[c.key], (v) => update(ri, c.key, v), readOnly)}</td>)}</tr>
               ))}
           </tbody>
         </table>
@@ -571,7 +597,11 @@ function DarkReducerOils({ value, readOnly, onChange, title }: { value: unknown;
     <section className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900">
       <div className="border-b border-neutral-800 px-4 py-2.5 text-sm font-semibold text-neutral-200">{title}</div>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full table-fixed text-sm">
+          <colgroup>
+            <col style={{ width: '9%' }} /><col style={{ width: '22%' }} /><col style={{ width: '11%' }} />
+            <col style={{ width: '9%' }} /><col style={{ width: '9%' }} /><col style={{ width: '40%' }} />
+          </colgroup>
           <thead>
             <tr className="text-left text-xs font-medium text-neutral-500">
               <th className="px-3 py-2">Eje</th><th className="px-3 py-2">Lubricante</th><th className="px-3 py-2">Vol.</th>
@@ -586,7 +616,7 @@ function DarkReducerOils({ value, readOnly, onChange, title }: { value: unknown;
                 <td className="px-3 py-2 whitespace-nowrap text-neutral-400">{String(row.volumen ?? '')} {String(row.unidad ?? '')}</td>
                 <td className="px-3 py-2 text-center">{chk(ri, 'control', row.control === true)}</td>
                 <td className="px-3 py-2 text-center">{chk(ri, 'cambio', row.cambio === true)}</td>
-                <td className="px-3 py-2"><input value={typeof row.observaciones === 'string' ? row.observaciones : ''} disabled={readOnly} onChange={(e) => update(ri, 'observaciones', e.target.value)} placeholder="—" className="w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-100 placeholder:text-neutral-600 focus:border-neutral-500 focus:outline-none" /></td>
+                <td className="px-3 py-2 align-top"><AutoTextarea value={typeof row.observaciones === 'string' ? row.observaciones : ''} readOnly={readOnly} onChange={(v) => update(ri, 'observaciones', v)} placeholder="—" className="rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-100 placeholder:text-neutral-600 focus:border-neutral-500 focus:outline-none" /></td>
               </tr>
             ))}
           </tbody>
@@ -639,10 +669,10 @@ function InspectionPointRow({
         <button type="button" disabled={readOnly} onClick={() => pick('na')} className={seg('na', 'bg-neutral-600 text-white', true)}>N/A</button>
       </div>
       {(state === 'mal' || (typeof row.observaciones === 'string' && row.observaciones)) && (
-        <input value={typeof row.observaciones === 'string' ? row.observaciones : ''}
-          onChange={(e) => onChange({ ...row, observaciones: e.target.value })}
+        <AutoTextarea value={typeof row.observaciones === 'string' ? row.observaciones : ''}
+          onChange={(v) => onChange({ ...row, observaciones: v })}
           placeholder="Observaciones" readOnly={readOnly}
-          className="mt-2 w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none" />
+          className="mt-2 rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none" />
       )}
     </div>
   );
