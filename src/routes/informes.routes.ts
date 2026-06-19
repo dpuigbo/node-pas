@@ -15,9 +15,18 @@ import path from 'node:path';
 
 // ===== Manuales (servidos CON LOGIN desde una carpeta privada del servidor) =====
 const MANUALES_DIR = (() => {
-  const root = [__dirname, path.join(__dirname, '..'), path.join(__dirname, '..', '..', '..')]
-    .find((d) => fs.existsSync(path.join(d, 'package.json'))) || path.join(__dirname, '..');
-  return path.join(root, '..', 'manuales');
+  if (process.env.MANUALES_DIR) return process.env.MANUALES_DIR;
+  // Subir desde __dirname hasta el package.json del proyecto (app/ en local; nodejs/ en el server,
+  // que en el build está MUCHOS niveles por encima de dist/server/src/routes). El buscador anterior
+  // solo miraba 3 niveles fijos → en producción no llegaba a nodejs/ y MANUALES_DIR apuntaba mal.
+  let d = __dirname;
+  for (let i = 0; i < 10; i++) {
+    if (fs.existsSync(path.join(d, 'package.json'))) break;
+    const parent = path.dirname(d);
+    if (parent === d) break;
+    d = parent;
+  }
+  return path.join(d, '..', 'manuales');
 })();
 const BRANCH_BY_TIPO: Record<string, string> = {
   mechanical_unit: 'Manipuladores', controller: 'Controladoras', drive_unit: 'Controladoras', external_axis: 'EjesExternos',
