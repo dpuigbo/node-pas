@@ -502,9 +502,14 @@ router.get('/componentes-informe/:id/manual', async (req: Request, res: Response
     const ruta = String(req.query.ruta || req.query.archivo || '');
     const filePath = resolveManualPath(ruta);
     if (!filePath) { res.status(404).json({ error: 'Manual no encontrado' }); return; }
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(path.basename(filePath))}"`);
-    fs.createReadStream(filePath).pipe(res);
+    // sendFile soporta Range requests (Accept-Ranges) → el navegador renderiza por streaming/seek,
+    // mucho más rápido que descargar el PDF entero antes de abrirlo.
+    res.sendFile(filePath, {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `inline; filename="${encodeURIComponent(path.basename(filePath))}"`,
+      },
+    }, (err) => { if (err && !res.headersSent) next(err); });
   } catch (err) { next(err); }
 });
 
@@ -670,6 +675,7 @@ router.post(
       // generador (colores, tablas, fix del NaN) sin pasar antes por Modelos.
       const desdePlan = req.body?.desdePlan === true;
       let regenerados = 0;
+      const fallosPlan: { modeloId: number; error: string }[] = [];
       for (const ci of informe.componentes) {
         const modeloId = ci.componenteSistema.modeloComponenteId;
         let version: { id: number; schema: unknown } | null = null;
@@ -689,7 +695,12 @@ router.post(
               : await prisma.versionTemplate.create({
                   data: { modeloComponenteId: modeloId, version: 1, schema: fresh as object, estado: 'activo', notas: 'Regenerada desde el plan' },
                 });
-          } catch { version = null; }
+          } catch (e) {
+            const msg = (e as Error)?.message ?? String(e);
+            console.error(`[regenerar desdePlan] generación falló para modelo ${modeloId}: ${msg}`);
+            fallosPlan.push({ modeloId, error: msg });
+            version = null;
+          }
         }
         if (!version) version = await pickVersion(modeloId);
         if (!version) continue;
@@ -701,7 +712,7 @@ router.post(
         });
         regenerados++;
       }
-      res.json({ regenerados, total: informe.componentes.length });
+      res.json({ regenerados, total: informe.componentes.length, fallosPlan });
     } catch (err) { next(err); }
   },
 );
