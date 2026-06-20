@@ -22,7 +22,9 @@ const DEFAULT_PAGE_CONFIG = {
 const PLACEHOLDER_REGEX = /\{\{([a-z_]+\.[a-z_]+)\}\}/g;
 function resolvePlaceholders(text, context) {
     return text.replace(PLACEHOLDER_REGEX, (_match, key) => {
-        return context[key] ?? `[${key}]`;
+        // Si falta el dato, dejar en blanco en vez de mostrar el placeholder en crudo
+        // (p.ej. un numero de serie sin rellenar no debe salir como [componente.numero_serie] en el PDF del cliente).
+        return context[key] ?? '';
     });
 }
 /**
