@@ -52,7 +52,7 @@ export default function ClienteDetailPage() {
   // Logistics editing state
   const [editingLogistics, setEditingLogistics] = useState(false);
   const [logForm, setLogForm] = useState({
-    tarifaHoraTrabajo: '', tarifaHoraViaje: '', dietas: '', gestionAccesos: '',
+    tarifaHoraTrabajo: '', tarifaHoraViaje: '', dietas: '', dietaInternacional: '', gestionAccesos: '',
     horasTrayecto: '', diasViaje: '', km: '', peajes: '', precioHotel: '', precioKm: '',
   });
 
@@ -74,6 +74,7 @@ export default function ClienteDetailPage() {
         tarifaHoraTrabajo: cliente.tarifaHoraTrabajo != null ? String(cliente.tarifaHoraTrabajo) : '',
         tarifaHoraViaje: cliente.tarifaHoraViaje != null ? String(cliente.tarifaHoraViaje) : '',
         dietas: cliente.dietas != null ? String(cliente.dietas) : '',
+        dietaInternacional: cliente.dietaInternacional != null ? String(cliente.dietaInternacional) : '',
         gestionAccesos: cliente.gestionAccesos != null ? String(cliente.gestionAccesos) : '',
         horasTrayecto: cliente.horasTrayecto != null ? String(cliente.horasTrayecto) : '',
         diasViaje: cliente.diasViaje != null ? String(cliente.diasViaje) : '',
@@ -123,6 +124,7 @@ export default function ClienteDetailPage() {
       tarifaHoraTrabajo: toNum(logForm.tarifaHoraTrabajo),
       tarifaHoraViaje: toNum(logForm.tarifaHoraViaje),
       dietas: toNum(logForm.dietas),
+      dietaInternacional: toNum(logForm.dietaInternacional),
       gestionAccesos: toNum(logForm.gestionAccesos),
       horasTrayecto: toNum(logForm.horasTrayecto),
       diasViaje: toNum(logForm.diasViaje),
@@ -506,7 +508,8 @@ export default function ClienteDetailPage() {
               {[
                 { key: 'tarifaHoraTrabajo' as const, label: '€/hora trabajo' },
                 { key: 'tarifaHoraViaje' as const, label: '€/hora desplazamiento' },
-                { key: 'dietas' as const, label: '€ dieta' },
+                { key: 'dietas' as const, label: '€ dieta (nacional)' },
+                { key: 'dietaInternacional' as const, label: '€ dieta internacional' },
                 { key: 'gestionAccesos' as const, label: '€ gestion accesos' },
               ].map((field) => (
                 <div key={field.key} className="flex items-center justify-between gap-3">

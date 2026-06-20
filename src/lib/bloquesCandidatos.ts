@@ -15,7 +15,7 @@ import { actividadAplicaAModelo, nivelesCubiertos } from './planMantenimiento';
 export interface CandidatoBloque {
   id: string;                  // identificador logico (ej: "sis-12", "viaje-total")
   tipo: 'trabajo' | 'desplazamiento';
-  origenTipo: 'componente' | 'desplazamiento';
+  origenTipo: 'componente' | 'desplazamiento' | 'manual';
   ofertaComponenteId: number | null;     // primer componente del sistema (puntero)
   componenteIds: number[];               // todos los oferta_componente_id del sistema
   label: string;
@@ -55,6 +55,8 @@ export async function getBloquesCandidatos(ofertaId: number): Promise<CandidatoB
     where: { id: ofertaId },
     select: {
       clienteId: true,
+      tipo: true,
+      operacionesCorrectivas: { select: { horasEstimadas: true } },
       cliente: { select: { horasTrayecto: true } },
       componentes: {
         include: {
@@ -105,13 +107,17 @@ export async function getBloquesCandidatos(ofertaId: number): Promise<CandidatoB
   // Index horas colocadas por componente
   const horasPorComponente = new Map<number, number>();
   let horasDesplazamientoColocadas = 0;
+  let horasTrabajoColocadas = 0;
   for (const b of oferta.bloques) {
     const h = bloqueHoras(b);
-    if (b.tipo === 'trabajo' && b.ofertaComponenteId) {
-      horasPorComponente.set(
-        b.ofertaComponenteId,
-        (horasPorComponente.get(b.ofertaComponenteId) ?? 0) + h
-      );
+    if (b.tipo === 'trabajo') {
+      horasTrabajoColocadas += h;
+      if (b.ofertaComponenteId) {
+        horasPorComponente.set(
+          b.ofertaComponenteId,
+          (horasPorComponente.get(b.ofertaComponenteId) ?? 0) + h
+        );
+      }
     } else if (b.tipo === 'desplazamiento') {
       horasDesplazamientoColocadas += h;
     }
@@ -176,6 +182,29 @@ export async function getBloquesCandidatos(ofertaId: number): Promise<CandidatoB
         componenteTipo: 'sistema',
         nivel: Array.from(niveles).join('+'),
       },
+    });
+  }
+
+  // Operaciones correctivas: un unico candidato de trabajo con el total de horas
+  // estimadas. En ofertas correctivas todos los bloques de trabajo son la reparacion
+  // (no hay componentes vinculados), asi que colocadas = horas de todos los bloques
+  // de trabajo.
+  if (oferta.tipo === 'correctiva' && oferta.operacionesCorrectivas.length > 0) {
+    const horasTotalOps = oferta.operacionesCorrectivas.reduce((s, op) => s + dec(op.horasEstimadas), 0);
+    const pendientesOps = Math.max(0, horasTotalOps - horasTrabajoColocadas);
+    candidatos.push({
+      id: 'correctiva-total',
+      tipo: 'trabajo',
+      origenTipo: 'manual',
+      ofertaComponenteId: null,
+      componenteIds: [],
+      label: 'Operaciones de reparacion',
+      horasTotal: +horasTotalOps.toFixed(2),
+      horasColocadas: +horasTrabajoColocadas.toFixed(2),
+      horasPendientes: +pendientesOps.toFixed(2),
+      sinHoras: horasTotalOps <= 0,
+      actividades: [],
+      meta: {},
     });
   }
 

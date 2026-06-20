@@ -453,7 +453,7 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
                     : (candidato?.meta.componenteEtiqueta ?? null);
                   const actividades = candidato?.actividades ?? [];
                   const horasBloque = (endMin - startMin) / 60;
-                  const sinVincular = b.tipo === 'trabajo' && !sistemaNombre;
+                  const sinVincular = b.tipo === 'trabajo' && b.origenTipo === 'componente' && !sistemaNombre;
                   const tooltipText = [
                     sistemaNombre,
                     componenteLabel,

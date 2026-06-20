@@ -333,7 +333,7 @@ export interface BloqueCalendario {
 export interface CandidatoBloque {
   id: string;
   tipo: 'trabajo' | 'desplazamiento';
-  origenTipo: 'componente' | 'desplazamiento';
+  origenTipo: 'componente' | 'desplazamiento' | 'manual';
   ofertaComponenteId: number | null;
   componenteIds: number[];
   label: string;

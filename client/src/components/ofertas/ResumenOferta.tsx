@@ -66,7 +66,7 @@ export function ResumenOferta({ ofertaId, oferta }: Props) {
             <Row label="Recargos por horario" value="" importe={t.precioRecargos} />
             <Row label={`Dietas${t.esInternacional ? ' internacionales' : ''} (${t.diasOcupados} dias)`} value="" importe={t.precioDietas} />
             <Row label={`Hotel (${t.nochesFuera} noches)`} value="" importe={t.precioHotel} />
-            <Row label={`Kilometraje (${t.kmTotal ?? 0} km)`} value="" importe={t.precioKilometraje ?? 0} />
+            <Row label={`Kilometraje ida y vuelta (${t.kmTotal ?? 0} km x 2)`} value="" importe={t.precioKilometraje ?? 0} />
             <Row label="Peajes" value="" importe={t.precioPeajes ?? 0} />
             {(t.factorTraficoPct ?? 0) > 0 && (
               <Row label={`Recargo trafico (+${t.factorTraficoPct}%)`} value="" importe={t.precioTrafico ?? 0} />

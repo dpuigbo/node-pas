@@ -308,7 +308,7 @@ export async function calcularPlanificacion(ofertaId: number): Promise<Planifica
   const nochesFuera = Math.max(0, diasOcupados - 1);
   const precioDietas = +(diasOcupados * dietaUsada).toFixed(2);
   const precioHotel = +(nochesFuera * tarifas.precioHotel).toFixed(2);
-  const precioKilometraje = +(tarifas.km * tarifas.precioKm).toFixed(2);
+  const precioKilometraje = +(tarifas.km * 2 * tarifas.precioKm).toFixed(2); // ida + vuelta
   const precioPeajes = +tarifas.peajes.toFixed(2);
   const factorTraficoPct = Number(oferta?.factorTraficoPct ?? 0);
   const precioTrafico = +(precioDesplazamiento * factorTraficoPct / 100).toFixed(2);
