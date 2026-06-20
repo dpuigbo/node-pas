@@ -285,7 +285,7 @@ function PageContainer({
 
   return (
     <div
-      className="bg-white shadow-lg border overflow-hidden"
+      className="doc-page bg-white shadow-lg border overflow-hidden"
       style={{
         width: canvasWidth,
         // back_cover needs fixed height to fill page; content pages use minHeight

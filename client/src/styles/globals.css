@@ -34,3 +34,17 @@ body {
   background-color: var(--color-background);
   color: var(--color-foreground);
 }
+
+/* Impresion / exportar a PDF del informe: solo el documento, cada pagina en A4.
+   El boton "PDF" del preview hace window.print(); en movil/tablet sale el dialogo
+   nativo para guardar o compartir el PDF. */
+@media print {
+  @page { size: A4; margin: 0; }
+  html, body { background: #fff !important; height: auto !important; overflow: visible !important; }
+  .no-print { display: none !important; }
+  .print-root { display: block !important; height: auto !important; overflow: visible !important; }
+  .print-area { overflow: visible !important; background: #fff !important; height: auto !important; }
+  #informe-print { padding: 0 !important; }
+  .doc-page { box-shadow: none !important; border: none !important; margin: 0 auto !important; }
+  .doc-page:not(:last-child) { break-after: page; page-break-after: always; }
+}

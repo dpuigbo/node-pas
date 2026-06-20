@@ -6,6 +6,7 @@ import {
   Loader2,
   AlertCircle,
   Eye,
+  Printer,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -102,9 +103,9 @@ export default function InformePreviewPage() {
   const { informe, assembled, documentTemplate } = data;
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden">
+    <div className="flex h-screen flex-col overflow-hidden print-root">
       {/* Toolbar */}
-      <div className="flex h-14 items-center justify-between border-b bg-background px-4 shrink-0">
+      <div className="no-print flex h-14 items-center justify-between border-b bg-background px-4 shrink-0">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
@@ -129,6 +130,15 @@ export default function InformePreviewPage() {
           <Button
             variant="outline"
             size="sm"
+            onClick={() => window.print()}
+            title="Guardar o compartir como PDF"
+          >
+            <Printer className="h-4 w-4 mr-1" />
+            PDF
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => navigate(`/informes/${informeId}`)}
           >
             <FileText className="h-4 w-4 mr-1" />
@@ -138,8 +148,8 @@ export default function InformePreviewPage() {
       </div>
 
       {/* Document canvas — uses proper page layout */}
-      <div className="flex-1 overflow-auto bg-muted">
-        <div className="py-8 px-4">
+      <div className="flex-1 overflow-auto bg-muted print-area">
+        <div id="informe-print" className="py-8 px-4">
           <DocumentPageLayout
             blocks={assembled.blocks}
             pageConfig={assembled.pageConfig}
