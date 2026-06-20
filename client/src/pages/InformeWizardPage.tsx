@@ -677,7 +677,7 @@ function InspectionPointRow({
         <button type="button" disabled={readOnly} onClick={() => pick('mal')} className={seg('mal', 'bg-red-500 text-white')}>Mal</button>
         <button type="button" disabled={readOnly} onClick={() => pick('na')} className={seg('na', 'bg-neutral-600 text-white', true)}>N/A</button>
       </div>
-      {(state === 'mal' || (typeof row.observaciones === 'string' && row.observaciones)) && (
+      {(!readOnly || (typeof row.observaciones === 'string' && row.observaciones)) && (
         <AutoTextarea value={typeof row.observaciones === 'string' ? row.observaciones : ''}
           onChange={(v) => onChange({ ...row, observaciones: v })}
           placeholder="Observaciones" readOnly={readOnly}

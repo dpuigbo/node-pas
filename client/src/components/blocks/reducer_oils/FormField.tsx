@@ -1,5 +1,4 @@
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import type { FormFieldProps } from '@/types/formField';
 
 interface OilRow {
@@ -52,7 +51,7 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
             {title}
           </div>
         )}
-        <table className="w-full text-xs">
+        <table className="w-full table-fixed text-xs">
           <thead>
             <tr style={{ backgroundColor: headerBg }}>
               <th className={`font-medium text-xs ${cellPad} text-left`} style={{ color: headerColor, width: '12%' }}>Eje</th>
@@ -102,15 +101,20 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
                       />
                     </div>
                   </td>
-                  <td className="px-1 py-1 border-t border-gray-100">
-                    <Input
-                      value={row.observaciones || ''}
-                      onChange={(e) => updateCell(ri, 'observaciones', e.target.value)}
-                      placeholder="-"
-                      readOnly={readOnly}
-                      disabled={readOnly}
-                      className="h-7 text-xs border-0 bg-transparent px-1 focus-visible:ring-0"
-                    />
+                  <td className="px-1 py-1 border-t border-gray-100 align-top">
+                    {readOnly ? (
+                      <div className="px-1 py-0.5 text-xs text-gray-700 whitespace-normal break-words leading-tight">{row.observaciones || '-'}</div>
+                    ) : (
+                      <textarea
+                        ref={(el) => { if (el) { el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`; } }}
+                        value={row.observaciones || ''}
+                        onChange={(e) => updateCell(ri, 'observaciones', e.target.value)}
+                        onInput={(e) => { const t = e.currentTarget; t.style.height = 'auto'; t.style.height = `${t.scrollHeight}px`; }}
+                        placeholder="-"
+                        rows={1}
+                        className="w-full resize-none overflow-hidden whitespace-pre-wrap break-words text-xs border-0 bg-transparent px-1 focus:outline-none"
+                      />
+                    )}
                   </td>
                 </tr>
               ))

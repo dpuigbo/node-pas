@@ -298,14 +298,22 @@ export function buildControllerSchema(input: ControllerInput): TemplateSchema {
   // === system_control ===
   b.push(componentSection('system_control'));
   pushH1(b);
-  // La versión del sistema (y la RAM en KUKA) van COMO FILAS dentro de la tabla de
-  // control general del sistema; el técnico anota el valor en Observaciones.
-  const sistemaChecks: string[] = ['Versión del sistema'];
+  // "Versión del sistema" (y los valores de RAM en KUKA) son VALORES que anota el técnico →
+  // CAMPO DE TEXTO LIBRE (fieldsTable). El resto van como checks de inspección (Bien/Mal/N/A).
+  const sistemaValores: { key: string; label: string; type: string }[] = [
+    { key: 'version_sistema', label: 'Versión del sistema', type: 'text' },
+  ];
   if (profile.sistemaConRam) {
-    sistemaChecks.push('Disponibilidad de la RAM', 'Ocupación de la RAM', 'Clonado de disco duro');
+    sistemaValores.push(
+      { key: 'ram_disponible', label: 'Disponibilidad de la RAM', type: 'text' },
+      { key: 'ram_ocupada', label: 'Ocupación de la RAM', type: 'text' },
+    );
   }
+  b.push(fieldsTable('sistema_valores', 'Datos del sistema', sistemaValores));
+  const sistemaChecks: string[] = [];
+  if (profile.sistemaConRam) sistemaChecks.push('Clonado de disco duro');
   for (const c of profile.sistemaCampos.filter((c) => !/versi/i.test(c))) sistemaChecks.push(c);
-  b.push(inspectionTable('sistema_checks', 'Control general del sistema', sistemaChecks));
+  if (sistemaChecks.length) b.push(inspectionTable('sistema_checks', 'Control general del sistema', sistemaChecks));
 
   return { blocks: b, pageConfig: PAGE };
 }
