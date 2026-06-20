@@ -64,10 +64,13 @@ export function ResumenOferta({ ofertaId, oferta }: Props) {
             <Row label="Horas de trabajo" value={`${t.horasTrabajo.toFixed(1)} h`} importe={t.precioTrabajo} />
             <Row label="Horas de desplazamiento" value={`${t.horasDesplazamiento.toFixed(1)} h`} importe={t.precioDesplazamiento} />
             <Row label="Recargos por horario" value="" importe={t.precioRecargos} />
-            <Row label={`Dietas (${t.diasOcupados} dias)`} value="" importe={t.precioDietas} />
+            <Row label={`Dietas${t.esInternacional ? ' internacionales' : ''} (${t.diasOcupados} dias)`} value="" importe={t.precioDietas} />
             <Row label={`Hotel (${t.nochesFuera} noches)`} value="" importe={t.precioHotel} />
             <Row label={`Kilometraje (${t.kmTotal ?? 0} km)`} value="" importe={t.precioKilometraje ?? 0} />
             <Row label="Peajes" value="" importe={t.precioPeajes ?? 0} />
+            {(t.factorTraficoPct ?? 0) > 0 && (
+              <Row label={`Recargo trafico (+${t.factorTraficoPct}%)`} value="" importe={t.precioTrafico ?? 0} />
+            )}
             <tr className="border-t bg-muted/30 font-medium">
               <td className="px-3 py-2">Subtotal planificacion</td>
               <td className="px-3 py-2"></td>

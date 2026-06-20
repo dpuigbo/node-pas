@@ -31,6 +31,8 @@ export function DatosOfertaTab({ oferta, onCreated, readOnly }: Props) {
   const [tipo, setTipo] = useState<'preventiva' | 'correctiva'>(oferta?.tipo ?? 'preventiva');
   const [tipoOferta, setTipoOferta] = useState<'mantenimiento' | 'solo_limpieza'>(oferta?.tipoOferta ?? 'mantenimiento');
   const [validezDias, setValidezDias] = useState<number>(oferta?.validezDias ?? 30);
+  const [alcance, setAlcance] = useState<'nacional' | 'internacional'>(oferta?.alcance ?? 'nacional');
+  const [factorTraficoPct, setFactorTraficoPct] = useState<number>(Number(oferta?.factorTraficoPct ?? 0));
   const [notas, setNotas] = useState<string>(oferta?.notas ?? '');
   const [sistemas, setSistemas] = useState<SistemaItem[]>(
     (oferta?.sistemas ?? []).map((s: any) => ({ sistemaId: s.sistemaId, nivel: s.nivel }))
@@ -45,6 +47,8 @@ export function DatosOfertaTab({ oferta, onCreated, readOnly }: Props) {
       setTipo(oferta.tipo);
       setTipoOferta(oferta.tipoOferta ?? 'mantenimiento');
       setValidezDias(oferta.validezDias);
+      setAlcance(oferta.alcance ?? 'nacional');
+      setFactorTraficoPct(Number(oferta.factorTraficoPct ?? 0));
       setNotas(oferta.notas ?? '');
       setSistemas((oferta.sistemas ?? []).map((s: any) => ({ sistemaId: s.sistemaId, nivel: s.nivel })));
     }
@@ -85,6 +89,8 @@ export function DatosOfertaTab({ oferta, onCreated, readOnly }: Props) {
       referencia: referencia.trim() || null,
       tipo,
       tipoOferta,
+      alcance,
+      factorTraficoPct,
       validezDias,
       notas: notas.trim() || null,
       sistemas,
@@ -180,6 +186,37 @@ export function DatosOfertaTab({ oferta, onCreated, readOnly }: Props) {
             onChange={(e) => setValidezDias(Number(e.target.value) || 30)}
             disabled={readOnly}
           />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label>Alcance</Label>
+          <Select value={alcance} onValueChange={(v: any) => setAlcance(v)} disabled={readOnly}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="nacional">Nacional</SelectItem>
+              <SelectItem value="internacional">Internacional</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground mt-1">
+            Internacional aplica la dieta internacional del cliente.
+          </p>
+        </div>
+        <div>
+          <Label>Factor trafico (%)</Label>
+          <Input
+            type="number"
+            min={0}
+            step={5}
+            value={factorTraficoPct}
+            onChange={(e) => setFactorTraficoPct(Number(e.target.value) || 0)}
+            disabled={readOnly}
+            placeholder="0"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Recargo sobre el desplazamiento (p.ej. 50 = +50% hora punta).
+          </p>
         </div>
       </div>
 

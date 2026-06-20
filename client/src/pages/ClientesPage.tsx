@@ -19,8 +19,19 @@ import { useAuth } from '@/hooks/useAuth';
 const EMPTY_FORM = {
   nombre: '', sede: '', direccion: '', ciudad: '',
   codigoPostal: '', provincia: '', telefono: '', email: '', personaContacto: '',
-  tarifaHoraTrabajo: '', tarifaHoraViaje: '', dietas: '', gestionAccesos: '',
+  tarifaHoraTrabajo: '', tarifaHoraViaje: '', dietas: '', dietaInternacional: '', gestionAccesos: '',
   horasTrayecto: '', diasViaje: '', km: '', peajes: '', precioHotel: '', precioKm: '',
+};
+
+// Tarifas por defecto al crear un cliente nuevo (Tarifa de Servicios PAS 2026).
+// Editables por cliente; solo son un punto de partida.
+const DEFAULT_TARIFAS_NUEVO = {
+  tarifaHoraTrabajo: '60',     // PAS-NHOP hora en cliente
+  tarifaHoraViaje: '50',       // PAS-NHTP hora de viaje
+  dietas: '70',                // PAS-NDO dieta nacional
+  dietaInternacional: '90',    // PAS-IDO dieta internacional
+  precioKm: '0.54',            // PAS-KMP (incluye combustible y peajes en vehiculo PAS)
+  precioHotel: '150',          // PAS-HTL
 };
 
 export default function ClientesPage() {
@@ -39,7 +50,7 @@ export default function ClientesPage() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ ...EMPTY_FORM });
+    setForm({ ...EMPTY_FORM, ...DEFAULT_TARIFAS_NUEVO });
     setFormOpen(true);
   };
 
@@ -54,6 +65,7 @@ export default function ClientesPage() {
       tarifaHoraTrabajo: cli.tarifaHoraTrabajo != null ? String(cli.tarifaHoraTrabajo) : '',
       tarifaHoraViaje: cli.tarifaHoraViaje != null ? String(cli.tarifaHoraViaje) : '',
       dietas: cli.dietas != null ? String(cli.dietas) : '',
+      dietaInternacional: cli.dietaInternacional != null ? String(cli.dietaInternacional) : '',
       gestionAccesos: cli.gestionAccesos != null ? String(cli.gestionAccesos) : '',
       horasTrayecto: cli.horasTrayecto != null ? String(cli.horasTrayecto) : '',
       diasViaje: cli.diasViaje != null ? String(cli.diasViaje) : '',
@@ -81,6 +93,7 @@ export default function ClientesPage() {
       tarifaHoraTrabajo: toNum(form.tarifaHoraTrabajo),
       tarifaHoraViaje: toNum(form.tarifaHoraViaje),
       dietas: toNum(form.dietas),
+      dietaInternacional: toNum(form.dietaInternacional),
       gestionAccesos: toNum(form.gestionAccesos),
       horasTrayecto: toNum(form.horasTrayecto),
       diasViaje: toNum(form.diasViaje),
@@ -227,8 +240,12 @@ export default function ClientesPage() {
                   <Input type="number" step="0.01" value={form.tarifaHoraViaje} onChange={(e) => setForm({ ...form, tarifaHoraViaje: e.target.value })} placeholder="0.00" />
                 </div>
                 <div>
-                  <Label>€ dieta</Label>
+                  <Label>€ dieta (nacional)</Label>
                   <Input type="number" step="0.01" value={form.dietas} onChange={(e) => setForm({ ...form, dietas: e.target.value })} placeholder="0.00" />
+                </div>
+                <div>
+                  <Label>€ dieta internacional</Label>
+                  <Input type="number" step="0.01" value={form.dietaInternacional} onChange={(e) => setForm({ ...form, dietaInternacional: e.target.value })} placeholder="0.00" />
                 </div>
                 <div>
                   <Label>€ gestion accesos</Label>

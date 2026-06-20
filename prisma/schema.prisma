@@ -48,6 +48,7 @@ model Cliente {
   tarifaHoraTrabajo   Decimal?  @map("tarifa_hora_trabajo") @db.Decimal(10, 2)
   tarifaHoraViaje     Decimal?  @map("tarifa_hora_viaje") @db.Decimal(10, 2)
   dietas              Decimal?  @db.Decimal(10, 2)
+  dietaInternacional  Decimal?  @map("dieta_internacional") @db.Decimal(10, 2)
   gestionAccesos      Decimal?  @map("gestion_accesos") @db.Decimal(10, 2)
   // Logistica viaje
   horasTrayecto       Decimal?  @map("horas_trayecto") @db.Decimal(8, 2)
@@ -396,6 +397,7 @@ model Sistema {
   intervenciones IntervencionSistema[]
   informes       Informe[]
   ofertas        OfertaSistema[]
+  operacionesCorrectivas OfertaOperacionCorrectiva[]
 
   @@unique([clienteId, fabricanteId, nombre])
   @@map("sistemas")
@@ -804,6 +806,8 @@ model Oferta {
   referencia    String?
   tipo          TipoIntervencion
   tipoOferta    TipoOferta     @default(mantenimiento) @map("tipo_oferta")
+  alcance       String         @default("nacional")
+  factorTraficoPct Decimal?    @default(0) @map("factor_trafico_pct") @db.Decimal(5, 2)
   estado        String         @default("borrador")
   fechaOferta   DateTime       @default(now()) @map("fecha_oferta")
   validezDias   Int            @default(30) @map("validez_dias")
@@ -825,6 +829,7 @@ model Oferta {
   sistemas    OfertaSistema[]
   componentes OfertaComponente[]
   bloques     OfertaBloqueCalendario[]
+  operacionesCorrectivas OfertaOperacionCorrectiva[]
 
   @@map("ofertas")
 }
@@ -904,6 +909,24 @@ model OfertaSistema {
 
   @@id([ofertaId, sistemaId])
   @@map("oferta_sistema")
+}
+
+// Operaciones correctivas de una oferta (por sistema). El catalogo de operaciones
+// por modelo/manual se llenara despues; de momento el tecnico las introduce a mano.
+model OfertaOperacionCorrectiva {
+  id             Int      @id @default(autoincrement())
+  ofertaId       Int      @map("oferta_id")
+  sistemaId      Int      @map("sistema_id")
+  operacion      String   @db.VarChar(500)
+  horasEstimadas Decimal? @map("horas_estimadas") @db.Decimal(8, 2)
+  orden          Int      @default(0)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  oferta  Oferta  @relation(fields: [ofertaId], references: [id], onDelete: Cascade)
+  sistema Sistema @relation(fields: [sistemaId], references: [id], onDelete: Cascade)
+
+  @@index([ofertaId])
+  @@map("oferta_operacion_correctiva")
 }
 
 // ===== PEDIDOS DE COMPRA =====

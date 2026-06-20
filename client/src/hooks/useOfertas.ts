@@ -159,6 +159,61 @@ export function useDeleteOfertaComponente(ofertaId: number) {
   });
 }
 
+// ===== OPERACIONES CORRECTIVAS (ofertas tipo correctiva) =====
+
+export interface OperacionCorrectiva {
+  id: number;
+  operacion: string;
+  horasEstimadas: number | null;
+  orden: number;
+}
+
+export interface SistemaOperaciones {
+  sistemaId: number;
+  sistemaNombre: string;
+  operaciones: OperacionCorrectiva[];
+}
+
+export function useOperacionesCorrectivas(ofertaId: number | undefined) {
+  return useQuery({
+    queryKey: ['ofertas', ofertaId, 'operaciones-correctivas'],
+    queryFn: async () => {
+      const { data } = await api.get<{ ofertaId: number; sistemas: SistemaOperaciones[] }>(
+        `/v1/ofertas/${ofertaId}/operaciones-correctivas`
+      );
+      return data;
+    },
+    enabled: !!ofertaId,
+  });
+}
+
+export function useCreateOperacionCorrectiva(ofertaId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { sistemaId: number; operacion: string; horasEstimadas?: number | null; orden?: number }) =>
+      api.post(`/v1/ofertas/${ofertaId}/operaciones-correctivas`, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['ofertas', ofertaId, 'operaciones-correctivas'] }),
+  });
+}
+
+export function useUpdateOperacionCorrectiva(ofertaId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ opId, ...body }: { opId: number; operacion?: string; horasEstimadas?: number | null; orden?: number }) =>
+      api.put(`/v1/ofertas/${ofertaId}/operaciones-correctivas/${opId}`, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['ofertas', ofertaId, 'operaciones-correctivas'] }),
+  });
+}
+
+export function useDeleteOperacionCorrectiva(ofertaId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (opId: number) =>
+      api.delete(`/v1/ofertas/${ofertaId}/operaciones-correctivas/${opId}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['ofertas', ofertaId, 'operaciones-correctivas'] }),
+  });
+}
+
 export interface LubricacionFila {
   id: number;
   modeloComponenteId: number;
@@ -319,10 +374,13 @@ export interface PlanificacionTotales {
   diasEspeciales: number;
   nochesFuera: number;
   precioDietas: number;
+  esInternacional?: boolean;
   precioHotel: number;
   kmTotal?: number;
   precioKilometraje?: number;
   precioPeajes?: number;
+  factorTraficoPct?: number;
+  precioTrafico?: number;
   bloquesDesglose: BloqueRecargoDesglose[];
   totalPlanificacion: number;
 }

@@ -122,11 +122,14 @@ export interface PlanificacionResultado {
   diasDomFestivos: number;
   diasEspeciales: number;
   nochesFuera: number;        // max(0, diasOcupados - 1) salvo override
-  precioDietas: number;        // diasOcupados × cliente.dietas
+  precioDietas: number;        // diasOcupados × dieta (nacional o internacional)
+  esInternacional: boolean;    // si la oferta usa la dieta internacional
   precioHotel: number;         // nochesFuera × cliente.precioHotel
   kmTotal: number;             // km de la ruta del cliente
   precioKilometraje: number;   // km × precioKm (en vehiculo PAS incluye combustible+peajes)
   precioPeajes: number;        // peajes de la ruta (si se facturan aparte)
+  factorTraficoPct: number;    // % de recargo por trafico sobre el desplazamiento
+  precioTrafico: number;       // precioDesplazamiento × factorTraficoPct/100
 
   // Desglose detallado
   bloquesDesglose: BloqueRecargoDesglose[];
@@ -146,6 +149,7 @@ interface ClienteTarifas {
   tarifaHoraTrabajo: number;
   tarifaHoraViaje: number;
   dietas: number;
+  dietaInternacional: number;
   precioHotel: number;
   km: number;
   precioKm: number;
@@ -221,6 +225,8 @@ export async function calcularPlanificacion(ofertaId: number): Promise<Planifica
     where: { id: ofertaId },
     select: {
       clienteId: true,
+      alcance: true,
+      factorTraficoPct: true,
       bloques: {
         select: { id: true, fecha: true, horaInicio: true, horaFin: true, tipo: true },
         orderBy: [{ fecha: 'asc' }, { horaInicio: 'asc' }],
@@ -231,7 +237,7 @@ export async function calcularPlanificacion(ofertaId: number): Promise<Planifica
   const cliente = oferta
     ? await prisma.cliente.findUnique({
         where: { id: oferta.clienteId },
-        select: { tarifaHoraTrabajo: true, tarifaHoraViaje: true, dietas: true, precioHotel: true, km: true, precioKm: true, peajes: true },
+        select: { tarifaHoraTrabajo: true, tarifaHoraViaje: true, dietas: true, dietaInternacional: true, precioHotel: true, km: true, precioKm: true, peajes: true },
       })
     : null;
 
@@ -239,6 +245,7 @@ export async function calcularPlanificacion(ofertaId: number): Promise<Planifica
     tarifaHoraTrabajo: Number(cliente?.tarifaHoraTrabajo ?? 0),
     tarifaHoraViaje: Number(cliente?.tarifaHoraViaje ?? 0),
     dietas: Number(cliente?.dietas ?? 0),
+    dietaInternacional: Number(cliente?.dietaInternacional ?? 0),
     precioHotel: Number(cliente?.precioHotel ?? 0),
     km: Number(cliente?.km ?? 0),
     precioKm: Number(cliente?.precioKm ?? 0),
@@ -293,16 +300,22 @@ export async function calcularPlanificacion(ofertaId: number): Promise<Planifica
   const precioDesplazamiento = +(horasDesplazamiento * tarifas.tarifaHoraViaje).toFixed(2);
   precioRecargos = +precioRecargos.toFixed(2);
 
+  const esInternacional = oferta?.alcance === 'internacional';
+  const dietaUsada = esInternacional
+    ? (tarifas.dietaInternacional || tarifas.dietas)
+    : tarifas.dietas;
   const diasOcupados = diasSet.size;
   const nochesFuera = Math.max(0, diasOcupados - 1);
-  const precioDietas = +(diasOcupados * tarifas.dietas).toFixed(2);
+  const precioDietas = +(diasOcupados * dietaUsada).toFixed(2);
   const precioHotel = +(nochesFuera * tarifas.precioHotel).toFixed(2);
   const precioKilometraje = +(tarifas.km * tarifas.precioKm).toFixed(2);
   const precioPeajes = +tarifas.peajes.toFixed(2);
+  const factorTraficoPct = Number(oferta?.factorTraficoPct ?? 0);
+  const precioTrafico = +(precioDesplazamiento * factorTraficoPct / 100).toFixed(2);
 
   const totalPlanificacion = +(
     precioTrabajo + precioDesplazamiento + precioRecargos + precioDietas + precioHotel
-    + precioKilometraje + precioPeajes
+    + precioKilometraje + precioPeajes + precioTrafico
   ).toFixed(2);
 
   return {
@@ -318,10 +331,13 @@ export async function calcularPlanificacion(ofertaId: number): Promise<Planifica
     diasEspeciales: diasEspecialesSet.size,
     nochesFuera,
     precioDietas,
+    esInternacional,
     precioHotel,
     kmTotal: tarifas.km,
     precioKilometraje,
     precioPeajes,
+    factorTraficoPct,
+    precioTrafico,
     bloquesDesglose,
     totalPlanificacion,
   };

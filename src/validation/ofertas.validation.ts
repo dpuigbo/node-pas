@@ -15,6 +15,8 @@ export const createOfertaSchema = z.object({
   referencia: z.string().max(100).optional().nullable(),
   tipo: z.enum(['preventiva', 'correctiva']),
   tipoOferta: z.enum(['mantenimiento', 'solo_limpieza']).default('mantenimiento'),
+  alcance: z.enum(['nacional', 'internacional']).default('nacional'),
+  factorTraficoPct: z.number().min(0).max(500).optional().nullable(),
   validezDias: z.number().int().min(1).default(30),
   notas: z.string().optional().nullable(),
   sistemas: z.array(ofertaSistemaSchema).min(0),
@@ -31,6 +33,8 @@ export const updateOfertaSchema = z.object({
   referencia: z.string().max(100).optional().nullable(),
   tipo: z.enum(['preventiva', 'correctiva']).optional(),
   tipoOferta: z.enum(['mantenimiento', 'solo_limpieza']).optional(),
+  alcance: z.enum(['nacional', 'internacional']).optional(),
+  factorTraficoPct: z.number().min(0).max(500).optional().nullable(),
   validezDias: z.number().int().min(1).optional(),
   notas: z.string().optional().nullable(),
   sistemas: z.array(ofertaSistemaSchema).optional(),
@@ -57,6 +61,21 @@ export const upsertOfertaComponenteSchema = z.object({
   conBaterias: z.boolean().optional(),
   conAceite: z.boolean().optional(),
   notas: z.string().max(500).optional().nullable(),
+});
+
+// Operaciones correctivas (ofertas tipo correctiva): el tecnico anade
+// operaciones de reparacion por sistema con horas estimadas.
+export const createOperacionCorrectivaSchema = z.object({
+  sistemaId: z.number().int().positive(),
+  operacion: z.string().min(1, 'La operacion es obligatoria').max(500),
+  horasEstimadas: z.number().min(0).optional().nullable(),
+  orden: z.number().int().min(0).optional(),
+});
+
+export const updateOperacionCorrectivaSchema = z.object({
+  operacion: z.string().min(1).max(500).optional(),
+  horasEstimadas: z.number().min(0).optional().nullable(),
+  orden: z.number().int().min(0).optional(),
 });
 
 // Bloques de calendario para planificacion

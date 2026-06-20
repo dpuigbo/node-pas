@@ -17,6 +17,7 @@ import {
   useGenerarIntervencion, useDeleteOferta,
 } from '@/hooks/useOfertas';
 import { MantenimientoComponentes } from '@/components/ofertas/MantenimientoComponentes';
+import { OperacionesCorrectivas } from '@/components/ofertas/OperacionesCorrectivas';
 import { CalendarioPlanificacion } from '@/components/ofertas/CalendarioPlanificacion';
 import { ResumenOferta } from '@/components/ofertas/ResumenOferta';
 import { DatosOfertaTab } from '@/components/ofertas/DatosOfertaTab';
@@ -228,7 +229,10 @@ export default function OfertaEditorPage() {
       <div className="border-b flex gap-1 flex-wrap">
         {[
           { key: 'datos', label: '0. Datos' },
-          { key: 'componentes', label: '1. Componentes y niveles' },
+          {
+            key: 'componentes',
+            label: oferta.tipo === 'correctiva' ? '1. Operaciones de reparacion' : '1. Componentes y niveles',
+          },
           { key: 'planificacion', label: '2. Planificacion' },
           { key: 'resumen', label: '3. Resumen' },
         ].map((t) => (
@@ -252,7 +256,11 @@ export default function OfertaEditorPage() {
           <DatosOfertaTab oferta={oferta} readOnly={readOnly} />
         )}
         {activeTab === 'componentes' && (
-          <MantenimientoComponentes ofertaId={oferta.id} readOnly={readOnly} />
+          oferta.tipo === 'correctiva' ? (
+            <OperacionesCorrectivas ofertaId={oferta.id} readOnly={readOnly} />
+          ) : (
+            <MantenimientoComponentes ofertaId={oferta.id} readOnly={readOnly} />
+          )
         )}
         {activeTab === 'planificacion' && (
           <CalendarioPlanificacion

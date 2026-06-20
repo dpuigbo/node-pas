@@ -22,6 +22,7 @@ export const createClienteSchema = z.object({
   tarifaHoraTrabajo: z.number().min(0).optional().nullable(),
   tarifaHoraViaje: z.number().min(0).optional().nullable(),
   dietas: z.number().min(0).optional().nullable(),
+  dietaInternacional: z.number().min(0).optional().nullable(),
   gestionAccesos: z.number().min(0).optional().nullable(),
   horasTrayecto: horasTrayectoTransformer.optional().nullable(),
   diasViaje: z.number().min(0).optional().nullable(),
