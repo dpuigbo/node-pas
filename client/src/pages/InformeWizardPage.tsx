@@ -24,7 +24,7 @@ const LIME = '#c5f82a';
 const EDITABLE_TYPES = new Set<string>([
   'table', 'tristate', 'checklist', 'reducer_oils',
   'battery_manipulator', 'battery_controller', 'equipment_exchange',
-  'text_field', 'number_field', 'date_field', 'select_field', 'signature', 'image',
+  'text_field', 'number_field', 'date_field', 'select_field', 'signature', 'image', 'text_area',
 ]);
 
 // ======================== Tipos / helpers ========================
@@ -72,6 +72,7 @@ function countPoints(s: WizardSection, getValue: (b: AssembledBlock) => unknown)
 }
 function compIcon(label: string) {
   const l = label.toLowerCase();
+  if (l.includes('general')) return FileText;
   if (l.includes('controlad') || l.includes('irc') || l.includes('omnicore') || l.includes('s4') || l.includes('s3')) return Cpu;
   if (l.includes('eje') || l.includes('irbt') || l.includes('irbp') || l.includes('posicion') || l.includes('track') || l.includes('irt')) return Move;
   return Bot;
@@ -186,17 +187,27 @@ export default function InformeWizardPage() {
     const blocks = data?.assembled?.blocks ?? [];
     const order: number[] = [];
     const map = new Map<number, WizardSection>();
+    const generalBlocks: AssembledBlock[] = [];
     for (const b of blocks) {
-      if (!b._dataKey || !EDITABLE_TYPES.has(b.type) || !b._componenteInformeId) continue;
-      let g = map.get(b._componenteInformeId);
-      if (!g) {
-        g = { key: `c${b._componenteInformeId}`, label: b._componenteEtiqueta || `Componente ${b._componenteInformeId}`, componenteInformeId: b._componenteInformeId, blocks: [] };
-        map.set(b._componenteInformeId, g);
-        order.push(b._componenteInformeId);
+      if (!b._dataKey || !EDITABLE_TYPES.has(b.type)) continue;
+      if (b._componenteInformeId) {
+        let g = map.get(b._componenteInformeId);
+        if (!g) {
+          g = { key: `c${b._componenteInformeId}`, label: b._componenteEtiqueta || `Componente ${b._componenteInformeId}`, componenteInformeId: b._componenteInformeId, blocks: [] };
+          map.set(b._componenteInformeId, g);
+          order.push(b._componenteInformeId);
+        }
+        g.blocks.push(b);
+      } else {
+        // Bloques doc-level editables (observaciones generales, intercambio de equipos, pruebas/aceptación…) → sección General.
+        generalBlocks.push(b);
       }
-      g.blocks.push(b);
     }
-    return order.map((cid) => map.get(cid)!);
+    const result = order.map((cid) => map.get(cid)!);
+    if (generalBlocks.length > 0) {
+      result.push({ key: 'general', label: 'General del informe', blocks: generalBlocks });
+    }
+    return result;
   }, [data]);
 
   const blockValue = useCallback((b: AssembledBlock): unknown => {
@@ -571,7 +582,7 @@ function ControlBlock({
   // Resto de bloques en OSCURO (reductoras, baterías, calibración, identidad, montaje…)
   if (block.type === 'reducer_oils') return <DarkReducerOils value={value} readOnly={readOnly} onChange={onChange} title={(block.config.title as string) || 'Reductoras'} />;
   if (block.type === 'table') return <DarkTable block={block} value={value} readOnly={readOnly} onChange={onChange} />;
-  if (['text_field', 'number_field', 'date_field', 'select_field'].includes(block.type)) return <DarkField block={block} value={value} readOnly={readOnly} onChange={onChange} />;
+  if (['text_field', 'number_field', 'date_field', 'select_field', 'text_area'].includes(block.type)) return <DarkField block={block} value={value} readOnly={readOnly} onChange={onChange} />;
   if (block.type === 'image') return <DarkImage value={value} readOnly={readOnly} onChange={onChange} label={(block.config.label as string) || 'Fotos'} />;
   // Fallback (raro): FormField clásico en tarjeta clara legible.
   const entry = getBlockEntry(block.type as BlockType);
@@ -637,10 +648,14 @@ function DarkTable({ block, value, readOnly, onChange }: { block: AssembledBlock
   const rows = (value as Row[]) || [];
   const title = (block.config.title as string) || (block.config.label as string) || '';
   const update = (ri: number, key: string, v: unknown) => onChange(rows.map((r, i) => (i === ri ? { ...r, [key]: v } : r)));
+  const isText = (c: Col) => !['label', 'checkbox', 'select', 'number', 'date'].includes(c.type);
+  const compactCols = cols.filter((c) => !isText(c));
+  const textCols = cols.filter(isText);
   return (
     <section className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900">
       {title && <div className="border-b border-neutral-800 px-4 py-2.5 text-sm font-semibold text-neutral-200">{title}</div>}
-      <div className="overflow-x-auto">
+      {/* Escritorio/tablet: tabla */}
+      <div className="hidden overflow-x-auto sm:block">
         <table className="w-full table-fixed text-sm">
           <colgroup>{cols.map((c) => <col key={c.key} style={c.width ? { width: c.width } : undefined} />)}</colgroup>
           <thead>
@@ -655,6 +670,31 @@ function DarkTable({ block, value, readOnly, onChange }: { block: AssembledBlock
           </tbody>
         </table>
       </div>
+      {/* Móvil: tarjeta por fila — datos compactos arriba, columnas de texto (observaciones) a lo ancho debajo */}
+      <div className="divide-y divide-neutral-800 sm:hidden">
+        {rows.length === 0
+          ? <div className="px-4 py-4 text-center text-xs text-neutral-600">Sin filas</div>
+          : rows.map((row, ri) => (
+            <div key={ri} className="space-y-2 p-3">
+              {compactCols.length > 0 && (
+                <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
+                  {compactCols.map((c) => (
+                    <div key={c.key} className="min-w-0">
+                      <div className="mb-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-500">{c.label}</div>
+                      {darkCell(c, row[c.key], (v) => update(ri, c.key, v), readOnly)}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {textCols.map((c) => (
+                <div key={c.key}>
+                  <div className="mb-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-500">{c.label}</div>
+                  {darkCell(c, row[c.key], (v) => update(ri, c.key, v), readOnly)}
+                </div>
+              ))}
+            </div>
+          ))}
+      </div>
     </section>
   );
 }
@@ -666,10 +706,14 @@ function DarkReducerOils({ value, readOnly, onChange, title }: { value: unknown;
   const chk = (ri: number, key: string, checked: boolean) => (
     <input type="checkbox" checked={checked} disabled={readOnly} onChange={(e) => update(ri, key, e.target.checked)} className="h-5 w-5 rounded border-neutral-600 bg-neutral-800" style={{ accentColor: LIME }} />
   );
+  const obs = (ri: number, row: Row) => (
+    <AutoTextarea value={typeof row.observaciones === 'string' ? row.observaciones : ''} readOnly={readOnly} onChange={(v) => update(ri, 'observaciones', v)} placeholder="—" className="rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-100 placeholder:text-neutral-600 focus:border-neutral-500 focus:outline-none" />
+  );
   return (
     <section className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900">
       <div className="border-b border-neutral-800 px-4 py-2.5 text-sm font-semibold text-neutral-200">{title}</div>
-      <div className="overflow-x-auto">
+      {/* Escritorio/tablet: tabla */}
+      <div className="hidden overflow-x-auto sm:block">
         <table className="w-full table-fixed text-sm">
           <colgroup>
             <col style={{ width: '9%' }} /><col style={{ width: '22%' }} /><col style={{ width: '11%' }} />
@@ -689,11 +733,29 @@ function DarkReducerOils({ value, readOnly, onChange, title }: { value: unknown;
                 <td className="px-3 py-2 whitespace-nowrap text-neutral-400">{String(row.volumen ?? '')} {String(row.unidad ?? '')}</td>
                 <td className="px-3 py-2 text-center">{chk(ri, 'control', row.control === true)}</td>
                 <td className="px-3 py-2 text-center">{chk(ri, 'cambio', row.cambio === true)}</td>
-                <td className="px-3 py-2 align-top"><AutoTextarea value={typeof row.observaciones === 'string' ? row.observaciones : ''} readOnly={readOnly} onChange={(v) => update(ri, 'observaciones', v)} placeholder="—" className="rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-100 placeholder:text-neutral-600 focus:border-neutral-500 focus:outline-none" /></td>
+                <td className="px-3 py-2 align-top">{obs(ri, row)}</td>
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
+      {/* Móvil: tarjeta por eje — datos arriba, Observaciones a lo ancho debajo */}
+      <div className="divide-y divide-neutral-800 sm:hidden">
+        {rows.map((row, ri) => (
+          <div key={ri} className="space-y-2 p-3">
+            <div className="flex flex-wrap items-end gap-x-4 gap-y-2 text-sm">
+              <div><div className="text-[10px] uppercase text-neutral-500">Eje</div><div className="text-neutral-200">{String(row.eje ?? '')}</div></div>
+              <div className="min-w-0"><div className="text-[10px] uppercase text-neutral-500">Lubricante</div><div className="text-neutral-200">{String(row.tipoSuministro ?? '')}</div></div>
+              <div><div className="text-[10px] uppercase text-neutral-500">Vol.</div><div className="text-neutral-400">{String(row.volumen ?? '')} {String(row.unidad ?? '')}</div></div>
+              <div className="text-center"><div className="text-[10px] uppercase text-neutral-500">Control</div>{chk(ri, 'control', row.control === true)}</div>
+              <div className="text-center"><div className="text-[10px] uppercase text-neutral-500">Cambio</div>{chk(ri, 'cambio', row.cambio === true)}</div>
+            </div>
+            <div>
+              <div className="mb-0.5 text-[10px] uppercase text-neutral-500">Observaciones</div>
+              {obs(ri, row)}
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -707,7 +769,9 @@ function DarkField({ block, value, readOnly, onChange }: { block: AssembledBlock
   return (
     <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-3">
       {label && <div className="mb-1.5 text-sm font-medium text-neutral-200">{label}</div>}
-      {block.type === 'select_field' && opts
+      {block.type === 'text_area'
+        ? <AutoTextarea value={typeof value === 'string' ? value : ''} readOnly={readOnly} onChange={(v) => onChange(v)} placeholder="Escribe aquí…" className="min-h-[72px] rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none" />
+        : block.type === 'select_field' && opts
         ? <select value={String(value ?? '')} disabled={readOnly} onChange={(e) => onChange(e.target.value || null)} className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 focus:border-neutral-500 focus:outline-none"><option value="">—</option>{opts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
         : <input type={block.type === 'number_field' ? 'number' : block.type === 'date_field' ? 'date' : 'text'} value={String(value ?? '')} disabled={readOnly} onChange={(e) => onChange(e.target.value || null)} className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none" />}
     </div>
