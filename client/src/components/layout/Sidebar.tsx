@@ -96,7 +96,7 @@ function SidebarLink({ item }: { item: NavItem }) {
                 cn(
                   'flex items-center rounded-lg px-3 py-1.5 text-sm transition-colors',
                   isActive
-                    ? 'bg-sidebar-accent text-primary font-medium'
+                    ? 'bg-primary/10 text-primary font-medium'
                     : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground',
                 )
               }
@@ -121,7 +121,7 @@ function SidebarLink({ item }: { item: NavItem }) {
         className={cn(
           'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
           isActive
-            ? 'bg-sidebar-accent text-primary'
+            ? 'bg-primary/10 text-primary'
             : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground',
         )}
       >
@@ -140,7 +140,7 @@ function SidebarLink({ item }: { item: NavItem }) {
         cn(
           'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
           isActive
-            ? 'bg-sidebar-accent text-primary'
+            ? 'bg-primary/10 text-primary'
             : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground',
         )
       }

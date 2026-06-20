@@ -1,29 +1,31 @@
 @import "tailwindcss";
 
+/* Tema DARK + acento LIMA (estilo "Haulix"). Las variables shadcn propagan el oscuro a
+   toda la estructura (cards, sidebar, inputs, botones). El acento primario es lima #c5f82a. */
 @theme {
-  --color-background: #ffffff;
-  --color-foreground: #0a0a0a;
-  --color-muted: #f5f5f5;
-  --color-muted-foreground: #737373;
-  --color-border: #e5e5e5;
-  --color-input: #e5e5e5;
-  --color-ring: #1e40af;
-  --color-primary: #1e40af;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: #f5f5f5;
-  --color-secondary-foreground: #171717;
-  --color-accent: #f5f5f5;
-  --color-accent-foreground: #171717;
-  --color-destructive: #dc2626;
+  --color-background: #0a0a0a;          /* neutral-950 */
+  --color-foreground: #f5f5f5;          /* neutral-100 */
+  --color-muted: #262626;               /* neutral-800 */
+  --color-muted-foreground: #a3a3a3;    /* neutral-400 */
+  --color-border: #262626;              /* neutral-800 */
+  --color-input: #404040;               /* neutral-700 */
+  --color-ring: #c5f82a;                /* lima */
+  --color-primary: #c5f82a;             /* lima */
+  --color-primary-foreground: #0a0a0a;  /* texto oscuro sobre lima */
+  --color-secondary: #262626;
+  --color-secondary-foreground: #f5f5f5;
+  --color-accent: #1f1f1f;              /* hover/activo sutil */
+  --color-accent-foreground: #f5f5f5;
+  --color-destructive: #ef4444;
   --color-destructive-foreground: #ffffff;
-  --color-card: #ffffff;
-  --color-card-foreground: #0a0a0a;
-  --color-popover: #ffffff;
-  --color-popover-foreground: #0a0a0a;
-  --color-sidebar: #fafafa;
-  --color-sidebar-foreground: #0a0a0a;
-  --color-sidebar-border: #e5e5e5;
-  --color-sidebar-accent: #f0f0f0;
+  --color-card: #171717;                /* neutral-900 */
+  --color-card-foreground: #f5f5f5;
+  --color-popover: #171717;
+  --color-popover-foreground: #f5f5f5;
+  --color-sidebar: #141414;             /* algo más oscuro que las tarjetas */
+  --color-sidebar-foreground: #f5f5f5;
+  --color-sidebar-border: #262626;
+  --color-sidebar-accent: #262626;      /* fondo del item activo/hover */
   --radius: 0.5rem;
 }
 

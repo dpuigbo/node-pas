@@ -39,10 +39,10 @@ function StatCard({ title, value, description, icon: Icon, color }: StatCardProp
 }
 
 const ESTADO_COLORS: Record<string, string> = {
-  borrador: 'bg-gray-200 text-gray-700 border-gray-300',
-  en_curso: 'bg-blue-100 text-blue-700 border-blue-300',
-  completada: 'bg-green-100 text-green-700 border-green-300',
-  facturada: 'bg-purple-100 text-purple-700 border-purple-300',
+  borrador: 'bg-neutral-700/50 text-neutral-300 border-neutral-600',
+  en_curso: 'bg-blue-500/15 text-blue-300 border-blue-500/40',
+  completada: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40',
+  facturada: 'bg-purple-500/15 text-purple-300 border-purple-500/40',
 };
 
 const ESTADO_DOT: Record<string, string> = {
@@ -234,9 +234,9 @@ function CalendarioIntervenciones() {
               !day.isCurrentMonth
                 ? 'bg-muted/30'
                 : isEspecial
-                  ? 'bg-red-50'
+                  ? 'bg-red-500/15'
                   : isFestivo
-                    ? 'bg-orange-50'
+                    ? 'bg-amber-500/15'
                     : isSunday
                       ? 'bg-muted/20'
                       : ''
@@ -246,7 +246,7 @@ function CalendarioIntervenciones() {
           >
             <div className={`text-right text-xs px-1 py-0.5 ${
               day.isToday
-                ? 'font-bold text-white bg-primary rounded-full w-6 h-6 flex items-center justify-center ml-auto'
+                ? 'font-bold text-primary-foreground bg-primary rounded-full w-6 h-6 flex items-center justify-center ml-auto'
                 : day.isCurrentMonth
                   ? 'text-foreground'
                   : 'text-muted-foreground/50'
@@ -313,13 +313,13 @@ function CalendarioIntervenciones() {
             <span className="mx-2">|</span>
             {festivosSet.size > 0 && (
               <div className="flex items-center gap-1">
-                <span className="h-2 w-4 rounded-sm bg-orange-100 border border-orange-200" />
+                <span className="h-2 w-4 rounded-sm bg-amber-500/20 border border-amber-500/40" />
                 Festivo
               </div>
             )}
             {especialesSet.size > 0 && (
               <div className="flex items-center gap-1">
-                <span className="h-2 w-4 rounded-sm bg-red-100 border border-red-200" />
+                <span className="h-2 w-4 rounded-sm bg-red-500/20 border border-red-500/40" />
                 Especial
               </div>
             )}

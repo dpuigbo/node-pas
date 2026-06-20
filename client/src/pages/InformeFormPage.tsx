@@ -322,7 +322,7 @@ export default function InformeFormPage() {
       </div>
 
       {/* Assembled document form — uses proper page layout */}
-      <div className="flex-1 overflow-auto bg-gray-100">
+      <div className="flex-1 overflow-auto bg-muted">
         <div className="py-8 px-4">
           <DocumentPageLayout
             blocks={assembled.blocks}

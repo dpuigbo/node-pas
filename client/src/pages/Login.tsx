@@ -39,7 +39,7 @@ export default function Login() {
         <div className="space-y-4">
           <a
             href="/api/auth/microsoft"
-            className="flex w-full items-center justify-center gap-3 rounded-lg border border-border bg-white px-4 py-3 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted"
+            className="flex w-full items-center justify-center gap-3 rounded-lg border border-neutral-300 bg-white px-4 py-3 text-sm font-medium text-gray-800 shadow-sm transition-colors hover:bg-gray-100"
           >
             <svg className="h-5 w-5" viewBox="0 0 21 21">
               <rect x="1" y="1" width="9" height="9" fill="#f25022" />
