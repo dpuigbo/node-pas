@@ -124,7 +124,7 @@ export default function DocumentTemplateEditorPage() {
           </Button>
           <div className="flex items-center gap-2">
             <span className="font-semibold">{templateData.nombre}</span>
-            <Badge className="bg-blue-100 text-blue-800">
+            <Badge className="bg-blue-500/15 text-blue-300">
               {TIPO_LABELS[templateData.tipo] || templateData.tipo}
             </Badge>
             {isDirty && (

@@ -27,7 +27,7 @@ export function DataTable<T>({
 }: DataTableProps<T>) {
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex items-center justify-center rounded-2xl border border-border bg-card py-12">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -35,21 +35,21 @@ export function DataTable<T>({
 
   if (data.length === 0) {
     return (
-      <div className="flex items-center justify-center py-12 text-muted-foreground">
+      <div className="flex items-center justify-center rounded-2xl border border-border bg-card py-12 text-sm text-muted-foreground">
         {emptyMessage}
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border">
+    <div className="overflow-x-auto rounded-2xl border border-border bg-card">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b bg-muted/50">
+          <tr className="border-b border-border bg-muted/40">
             {columns.map((col) => (
               <th
                 key={col.key}
-                className={cn('px-4 py-3 text-left font-medium text-muted-foreground', col.className)}
+                className={cn('px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground', col.className)}
               >
                 {col.header}
               </th>
@@ -62,7 +62,7 @@ export function DataTable<T>({
               key={rowKey ? rowKey(item) : i}
               onClick={() => onRowClick?.(item)}
               className={cn(
-                'border-b transition-colors hover:bg-muted/50',
+                'border-b border-border/50 transition-colors last:border-0 hover:bg-accent',
                 onRowClick && 'cursor-pointer',
               )}
             >

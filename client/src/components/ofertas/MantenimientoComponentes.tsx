@@ -220,8 +220,8 @@ export function MantenimientoComponentes({ ofertaId, readOnly = false }: Props) 
                         onClick={() => handleToggle(c.componenteSistemaId, 'conBaterias', !(sel?.conBaterias ?? true), c)}
                         className={`inline-flex items-center justify-center h-7 w-7 rounded transition-colors ${
                           (sel?.conBaterias ?? true)
-                            ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                            : 'bg-gray-100 text-gray-400 line-through hover:bg-gray-200'
+                            ? 'bg-amber-500/15 text-amber-300 hover:bg-amber-500/25'
+                            : 'bg-muted text-muted-foreground line-through hover:bg-muted/70'
                         } disabled:opacity-50`}
                         title={(sel?.conBaterias ?? true) ? 'Cambiar baterias (click para excluir)' : 'Baterias excluidas (click para incluir)'}
                       >
@@ -236,8 +236,8 @@ export function MantenimientoComponentes({ ofertaId, readOnly = false }: Props) 
                           onClick={() => handleToggle(c.componenteSistemaId, 'conAceite', !(sel?.conAceite ?? true), c)}
                           className={`inline-flex items-center justify-center h-7 w-7 rounded transition-colors ${
                             (sel?.conAceite ?? true)
-                              ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                              : 'bg-gray-100 text-gray-400 line-through hover:bg-gray-200'
+                              ? 'bg-blue-500/15 text-blue-300 hover:bg-blue-500/25'
+                              : 'bg-muted text-muted-foreground line-through hover:bg-muted/70'
                           } disabled:opacity-50`}
                           title={
                             !sel?.nivel

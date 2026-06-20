@@ -34,9 +34,9 @@ import '@/components/blocks/register-all';
 // ======================== Constants ========================
 
 const ESTADO_BADGE: Record<string, string> = {
-  inactivo: 'bg-gray-100 text-gray-700',
-  activo: 'bg-blue-100 text-blue-700',
-  finalizado: 'bg-green-100 text-green-700',
+  inactivo: 'bg-muted text-muted-foreground',
+  activo: 'bg-blue-500/15 text-blue-300',
+  finalizado: 'bg-emerald-500/15 text-emerald-300',
 };
 
 const ESTADO_LABEL: Record<string, string> = {
@@ -238,10 +238,10 @@ export default function InformeFormPage() {
           </Button>
           <div className="flex items-center gap-2">
             <span className="font-semibold">{informe.sistema.nombre}</span>
-            <Badge className="bg-blue-100 text-blue-800">
+            <Badge className="bg-blue-500/15 text-blue-300">
               {documentTemplate.nombre}
             </Badge>
-            <Badge className={ESTADO_BADGE[informe.estado] ?? 'bg-gray-100 text-gray-700'}>
+            <Badge className={ESTADO_BADGE[informe.estado] ?? 'bg-muted text-muted-foreground'}>
               {ESTADO_LABEL[informe.estado] ?? informe.estado}
             </Badge>
             {hasDirtyChanges && (

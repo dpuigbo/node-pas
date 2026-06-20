@@ -20,9 +20,9 @@ const SLOTS_PER_HOUR = 60 / SLOT_MINUTES;
 const TOTAL_SLOTS = (HOUR_END - HOUR_START) * SLOTS_PER_HOUR;
 
 const TIPO_COLOR: Record<TipoBloque, { bg: string; border: string; text: string; icon: any }> = {
-  trabajo: { bg: 'bg-blue-100/80', border: 'border-blue-400', text: 'text-blue-900', icon: Briefcase },
-  desplazamiento: { bg: 'bg-amber-100/80', border: 'border-amber-400', text: 'text-amber-900', icon: Car },
-  comida: { bg: 'bg-green-100/80', border: 'border-green-400', text: 'text-green-900', icon: Coffee },
+  trabajo: { bg: 'bg-blue-500/20', border: 'border-blue-500/50', text: 'text-blue-100', icon: Briefcase },
+  desplazamiento: { bg: 'bg-amber-500/20', border: 'border-amber-500/50', text: 'text-amber-100', icon: Car },
+  comida: { bg: 'bg-emerald-500/20', border: 'border-emerald-500/50', text: 'text-emerald-100', icon: Coffee },
 };
 
 const DIAS_SEMANA = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
@@ -273,7 +273,7 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
 
       {/* Panel de candidatos */}
       {!readOnly && candidatos.length > 0 && (
-        <div className="rounded-lg border bg-muted/20 p-3 space-y-2">
+        <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-2">
           <div className="flex items-center justify-between">
             <div className="text-xs font-medium uppercase text-muted-foreground tracking-wide">
               Bloques pendientes de planificar
@@ -304,9 +304,9 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
                     flex-shrink-0 text-left rounded-md border px-3 py-2 text-xs min-w-[200px] max-w-[260px]
                     transition-colors
                     ${completo
-                      ? 'border-green-300 bg-green-50 text-green-800 cursor-default'
+                      ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300 cursor-default'
                       : c.sinHoras
-                        ? 'border-amber-300 bg-amber-50 text-amber-900 cursor-not-allowed opacity-80'
+                        ? 'border-amber-500/40 bg-amber-500/10 text-amber-300 cursor-not-allowed opacity-80'
                         : isActivo
                           ? 'border-primary bg-primary/10 text-primary ring-2 ring-primary/30'
                           : 'border-border bg-background hover:border-primary/50 cursor-pointer'}
@@ -315,7 +315,7 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
                   <div className="flex items-center gap-1.5 font-medium">
                     {c.tipo === 'trabajo' ? <Briefcase className="h-3 w-3" /> : <Car className="h-3 w-3" />}
                     <span className="truncate">{c.label}</span>
-                    {completo && <CheckCircle2 className="h-3 w-3 text-green-600 flex-shrink-0" />}
+                    {completo && <CheckCircle2 className="h-3 w-3 text-emerald-400 flex-shrink-0" />}
                   </div>
                   {c.meta.sistemaNombre && (
                     <div className="text-[10px] text-muted-foreground mt-0.5 truncate">
@@ -355,7 +355,7 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
 
       {/* Calendar grid */}
       <div
-        className="rounded-lg border overflow-hidden select-none relative"
+        className="rounded-xl border border-border overflow-hidden select-none relative"
         onMouseUp={handleMouseUp}
         onMouseMove={(e) => {
           if (drag) setMousePos({ x: e.clientX, y: e.clientY });
@@ -483,7 +483,7 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
                         <div className="leading-tight mt-0.5 opacity-95 font-semibold truncate flex items-center gap-1">
                           <span className="truncate">{sistemaNombre}</span>
                           {nivelLabel && (
-                            <span className="inline-block px-1 rounded bg-white/70 text-[10px] font-semibold flex-shrink-0">
+                            <span className="inline-block px-1 rounded bg-black/30 text-[10px] font-semibold flex-shrink-0">
                               {nivelLabel}
                             </span>
                           )}
@@ -497,7 +497,7 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
                       )}
                       {/* Aviso si bloque trabajo sin sistema */}
                       {sinVincular && (
-                        <div className="text-[10px] italic text-amber-700 mt-0.5">
+                        <div className="text-[10px] italic text-amber-300 mt-0.5">
                           ⚠ Sin sistema vinculado
                         </div>
                       )}
@@ -517,7 +517,7 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
                       {!readOnly && (
                         <div className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-100 flex gap-0.5">
                           <Select value={b.tipo} onValueChange={(v: any) => handleChangeTipoBloque(b, v)}>
-                            <SelectTrigger className="h-4 w-4 p-0 border-none bg-white/70" />
+                            <SelectTrigger className="h-4 w-4 p-0 border-none bg-black/30" />
                             <SelectContent>
                               <SelectItem value="trabajo">Trabajo</SelectItem>
                               <SelectItem value="desplazamiento">Desplazamiento</SelectItem>
@@ -527,7 +527,7 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
                           <button
                             type="button"
                             onClick={() => handleDeleteBloque(b.id)}
-                            className="h-4 w-4 rounded bg-white/70 hover:bg-red-200 text-red-700 flex items-center justify-center"
+                            className="h-4 w-4 rounded bg-black/30 hover:bg-red-500/30 text-red-300 flex items-center justify-center"
                             title="Eliminar bloque"
                           >
                             <Trash2 className="h-2.5 w-2.5" />
@@ -589,9 +589,9 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
 
       {/* Leyenda */}
       <div className="flex items-center gap-4 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-blue-300 border border-blue-500"></span>Trabajo</span>
-        <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-amber-300 border border-amber-500"></span>Desplazamiento</span>
-        <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-green-300 border border-green-500"></span>Comida</span>
+        <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded border border-blue-500/60 bg-blue-500/40"></span>Trabajo</span>
+        <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded border border-amber-500/60 bg-amber-500/40"></span>Desplazamiento</span>
+        <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded border border-emerald-500/60 bg-emerald-500/40"></span>Comida</span>
         {!readOnly && (
           <span className="ml-auto text-[11px] italic">Arrastra en celdas vacias para crear · hover sobre bloque para editar/borrar</span>
         )}
@@ -602,10 +602,10 @@ export function CalendarioPlanificacion({ ofertaId, fechaInicio, fechaFin, readO
 
 function Stat({ label, value, color }: { label: string; value: string; color: string }) {
   const colorMap: Record<string, string> = {
-    blue: 'border-blue-300 bg-blue-50',
-    amber: 'border-amber-300 bg-amber-50',
-    green: 'border-green-300 bg-green-50',
-    violet: 'border-violet-300 bg-violet-50',
+    blue: 'border-blue-500/30 bg-blue-500/10',
+    amber: 'border-amber-500/30 bg-amber-500/10',
+    green: 'border-emerald-500/30 bg-emerald-500/10',
+    violet: 'border-violet-500/30 bg-violet-500/10',
   };
   return (
     <div className={`rounded-lg border px-3 py-2 ${colorMap[color] ?? ''}`}>

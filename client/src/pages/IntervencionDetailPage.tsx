@@ -32,9 +32,9 @@ const DIAS_SEMANA = [
 ];
 
 const ESTADO_INFORME_BADGE: Record<string, string> = {
-  inactivo: 'bg-gray-100 text-gray-700',
-  activo: 'bg-blue-100 text-blue-700',
-  finalizado: 'bg-green-100 text-green-700',
+  inactivo: 'bg-muted text-muted-foreground',
+  activo: 'bg-blue-500/15 text-blue-300',
+  finalizado: 'bg-emerald-500/15 text-emerald-300',
 };
 
 const ESTADO_INFORME_LABEL: Record<string, string> = {
@@ -44,14 +44,14 @@ const ESTADO_INFORME_LABEL: Record<string, string> = {
 };
 
 const TIPO_BADGE: Record<string, string> = {
-  preventiva: 'bg-blue-100 text-blue-700',
-  correctiva: 'bg-orange-100 text-orange-700',
+  preventiva: 'bg-blue-500/15 text-blue-300',
+  correctiva: 'bg-orange-500/15 text-orange-300',
 };
 
 const ESTADO_PEDIDO_BADGE: Record<string, string> = {
-  pendiente: 'bg-yellow-100 text-yellow-700',
-  pedido: 'bg-blue-100 text-blue-700',
-  recibido: 'bg-green-100 text-green-700',
+  pendiente: 'bg-amber-500/15 text-amber-300',
+  pedido: 'bg-blue-500/15 text-blue-300',
+  recibido: 'bg-emerald-500/15 text-emerald-300',
 };
 
 const ESTADO_PEDIDO_LABEL: Record<string, string> = {
@@ -332,7 +332,7 @@ export default function IntervencionDetailPage() {
               <Badge
                 className={
                   TIPO_BADGE[intervencion.tipo as string] ??
-                  'bg-gray-100 text-gray-700'
+                  'bg-muted text-muted-foreground'
                 }
               >
                 {intervencion.tipo}
@@ -640,7 +640,7 @@ export default function IntervencionDetailPage() {
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" /> Pedido de compra
             {hasPedido && (
-              <Badge className={ESTADO_PEDIDO_BADGE[pedido.estado] ?? 'bg-gray-100 text-gray-700'}>
+              <Badge className={ESTADO_PEDIDO_BADGE[pedido.estado] ?? 'bg-muted text-muted-foreground'}>
                 {ESTADO_PEDIDO_LABEL[pedido.estado] ?? pedido.estado}
               </Badge>
             )}
@@ -731,10 +731,10 @@ export default function IntervencionDetailPage() {
         )}
 
         {hasPedido && aggregated.length > 0 && (
-          <div className="rounded-lg border bg-card overflow-hidden">
+          <div className="overflow-hidden rounded-2xl border border-border bg-card">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-muted/50">
+                <tr className="border-b border-border bg-muted/40">
                   <th className="px-3 py-2 text-left w-8"></th>
                   <th className="px-3 py-2 text-left">Tipo</th>
                   <th className="px-3 py-2 text-left">Nombre</th>
@@ -853,7 +853,7 @@ export default function IntervencionDetailPage() {
                     <Badge
                       className={
                         ESTADO_INFORME_BADGE[informe.estado as string] ??
-                        'bg-gray-100 text-gray-700'
+                        'bg-muted text-muted-foreground'
                       }
                     >
                       {ESTADO_INFORME_LABEL[informe.estado as string] ??
