@@ -34,6 +34,8 @@ async function getBloquesCandidatos(ofertaId) {
         where: { id: ofertaId },
         select: {
             clienteId: true,
+            tipo: true,
+            operacionesCorrectivas: { select: { horasEstimadas: true } },
             cliente: { select: { horasTrayecto: true } },
             componentes: {
                 include: {
@@ -82,10 +84,14 @@ async function getBloquesCandidatos(ofertaId) {
     // Index horas colocadas por componente
     const horasPorComponente = new Map();
     let horasDesplazamientoColocadas = 0;
+    let horasTrabajoColocadas = 0;
     for (const b of oferta.bloques) {
         const h = bloqueHoras(b);
-        if (b.tipo === 'trabajo' && b.ofertaComponenteId) {
-            horasPorComponente.set(b.ofertaComponenteId, (horasPorComponente.get(b.ofertaComponenteId) ?? 0) + h);
+        if (b.tipo === 'trabajo') {
+            horasTrabajoColocadas += h;
+            if (b.ofertaComponenteId) {
+                horasPorComponente.set(b.ofertaComponenteId, (horasPorComponente.get(b.ofertaComponenteId) ?? 0) + h);
+            }
         }
         else if (b.tipo === 'desplazamiento') {
             horasDesplazamientoColocadas += h;
@@ -147,6 +153,28 @@ async function getBloquesCandidatos(ofertaId) {
                 componenteTipo: 'sistema',
                 nivel: Array.from(niveles).join('+'),
             },
+        });
+    }
+    // Operaciones correctivas: un unico candidato de trabajo con el total de horas
+    // estimadas. En ofertas correctivas todos los bloques de trabajo son la reparacion
+    // (no hay componentes vinculados), asi que colocadas = horas de todos los bloques
+    // de trabajo.
+    if (oferta.tipo === 'correctiva' && oferta.operacionesCorrectivas.length > 0) {
+        const horasTotalOps = oferta.operacionesCorrectivas.reduce((s, op) => s + dec(op.horasEstimadas), 0);
+        const pendientesOps = Math.max(0, horasTotalOps - horasTrabajoColocadas);
+        candidatos.push({
+            id: 'correctiva-total',
+            tipo: 'trabajo',
+            origenTipo: 'manual',
+            ofertaComponenteId: null,
+            componenteIds: [],
+            label: 'Operaciones de reparacion',
+            horasTotal: +horasTotalOps.toFixed(2),
+            horasColocadas: +horasTrabajoColocadas.toFixed(2),
+            horasPendientes: +pendientesOps.toFixed(2),
+            sinHoras: horasTotalOps <= 0,
+            actividades: [],
+            meta: {},
         });
     }
     // Desplazamiento del cliente (ida + vuelta)
