@@ -108,7 +108,7 @@ export default function EditorPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden">
+    <div className="flex h-screen flex-col overflow-hidden" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
       <EditorToolbar
         modeloId={modeloId}
         modeloNombre={versionData.modeloComponente?.nombre || 'Template'}

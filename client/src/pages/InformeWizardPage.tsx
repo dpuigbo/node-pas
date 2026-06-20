@@ -338,7 +338,7 @@ export default function InformeWizardPage() {
   const activeSection = activeIdx >= 0 ? sections[activeIdx] : null;
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-neutral-950 text-neutral-100">
+    <div className="flex h-screen flex-col overflow-hidden bg-neutral-950 text-neutral-100" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
       {/* ===== Barra superior ===== */}
       <header className="flex items-center justify-between gap-2 border-b border-neutral-800 bg-neutral-900 px-3 py-2 shrink-0">
         <div className="flex items-center gap-2 min-w-0">

@@ -103,7 +103,7 @@ export default function InformePreviewPage() {
   const { informe, assembled, documentTemplate } = data;
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden print-root">
+    <div className="flex h-screen flex-col overflow-hidden print-root" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       {/* Toolbar */}
       <div className="no-print flex h-14 items-center justify-between border-b bg-background px-4 shrink-0">
         <div className="flex items-center gap-3">

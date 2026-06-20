@@ -110,7 +110,7 @@ export default function DocumentTemplateEditorPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden">
+    <div className="flex h-screen flex-col overflow-hidden" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
       {/* Toolbar */}
       <div className="flex h-14 items-center justify-between border-b bg-background px-4">
         <div className="flex items-center gap-3">
