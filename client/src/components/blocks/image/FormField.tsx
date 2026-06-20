@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Image as ImageIcon, X, Upload } from 'lucide-react';
+import { Image as ImageIcon, X, Upload, Camera } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import type { FormFieldProps } from '@/types/formField';
 
@@ -17,6 +17,7 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
 
   const images = (value as StoredImage[]) ?? [];
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
 
   const handleFiles = (files: FileList | null) => {
     if (!files || readOnly) return;
@@ -36,18 +37,14 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
 
       const reader = new FileReader();
       reader.onload = () => {
-        const newImg: StoredImage = {
-          name: file.name,
-          data: reader.result as string,
-        };
-        // Use functional update pattern via current value
-        onChange([...images, newImg]);
+        onChange([...images, { name: file.name, data: reader.result as string }]);
       };
       reader.readAsDataURL(file);
     }
 
-    // Reset input so same file can be selected again
+    // Reset inputs so the same file (o foto) se pueda volver a elegir.
     if (inputRef.current) inputRef.current.value = '';
+    if (cameraRef.current) cameraRef.current.value = '';
   };
 
   const removeImage = (idx: number) => {
@@ -71,11 +68,7 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
               className="relative group rounded border overflow-hidden"
               style={{ width: 120, height: 90 }}
             >
-              <img
-                src={img.data}
-                alt={img.name}
-                className="w-full h-full object-cover"
-              />
+              <img src={img.data} alt={img.name} className="w-full h-full object-cover" />
               {!readOnly && (
                 <button
                   type="button"
@@ -93,37 +86,47 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
         </div>
       )}
 
-      {/* Upload area */}
+      {/* Camara + archivo */}
       {!readOnly && images.length < maxFiles && (
-        <div
-          onClick={() => inputRef.current?.click()}
-          onDragOver={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-          onDrop={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            handleFiles(e.dataTransfer.files);
-          }}
-          className="flex flex-col items-center justify-center gap-2 rounded border-2 border-dashed border-gray-300 bg-gray-50 p-6 cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-colors"
-        >
-          <Upload className="h-6 w-6 text-gray-400" />
-          <span className="text-xs text-gray-500">
-            Arrastra imagenes o haz clic para seleccionar
-          </span>
-          <span className="text-[10px] text-gray-400">
-            Max {maxSizeMB} MB por archivo
-            {maxFiles > 1 && ` · ${images.length}/${maxFiles} archivos`}
+        <div className="space-y-1.5">
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => cameraRef.current?.click()}
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white p-3 text-sm font-medium text-gray-700 hover:border-blue-400 hover:bg-blue-50/30 transition-colors"
+            >
+              <Camera className="h-4 w-4" /> Hacer foto
+            </button>
+            <div
+              onClick={() => inputRef.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onDrop={(e) => { e.preventDefault(); e.stopPropagation(); handleFiles(e.dataTransfer.files); }}
+              className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-3 text-sm text-gray-500 hover:border-blue-400 hover:bg-blue-50/30 transition-colors"
+            >
+              <Upload className="h-4 w-4" /> Archivo
+            </div>
+          </div>
+          <span className="block text-[10px] text-gray-400">
+            Max {maxSizeMB} MB por archivo{maxFiles > 1 && ` · ${images.length}/${maxFiles}`}
           </span>
         </div>
       )}
 
+      {/* Galeria / archivo: permite varias si maxFiles > 1 */}
       <input
         ref={inputRef}
         type="file"
         accept="image/*"
         multiple={maxFiles > 1}
+        onChange={(e) => handleFiles(e.target.files)}
+        className="hidden"
+      />
+      {/* Camara: capture abre la camara trasera en movil/tablet */}
+      <input
+        ref={cameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
         onChange={(e) => handleFiles(e.target.files)}
         className="hidden"
       />

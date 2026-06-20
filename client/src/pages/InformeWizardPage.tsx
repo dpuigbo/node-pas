@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft, Save, FileText, Loader2, Check, ChevronRight, ChevronLeft,
-  CheckCircle2, ClipboardCheck, Bot, Cpu, Move, BookOpen, RefreshCw, X, WifiOff,
+  CheckCircle2, ClipboardCheck, Bot, Cpu, Move, BookOpen, RefreshCw, X, WifiOff, Camera, Image as ImageIcon,
 } from 'lucide-react';
 import api from '@/lib/api';
 import { useAssembledReport, useUpdateEstadoInforme, useRegenerarInforme } from '@/hooks/useInformes';
@@ -24,7 +24,7 @@ const LIME = '#c5f82a';
 const EDITABLE_TYPES = new Set<string>([
   'table', 'tristate', 'checklist', 'reducer_oils',
   'battery_manipulator', 'battery_controller', 'equipment_exchange',
-  'text_field', 'number_field', 'date_field', 'select_field', 'signature',
+  'text_field', 'number_field', 'date_field', 'select_field', 'signature', 'image',
 ]);
 
 // ======================== Tipos / helpers ========================
@@ -572,6 +572,7 @@ function ControlBlock({
   if (block.type === 'reducer_oils') return <DarkReducerOils value={value} readOnly={readOnly} onChange={onChange} title={(block.config.title as string) || 'Reductoras'} />;
   if (block.type === 'table') return <DarkTable block={block} value={value} readOnly={readOnly} onChange={onChange} />;
   if (['text_field', 'number_field', 'date_field', 'select_field'].includes(block.type)) return <DarkField block={block} value={value} readOnly={readOnly} onChange={onChange} />;
+  if (block.type === 'image') return <DarkImage value={value} readOnly={readOnly} onChange={onChange} label={(block.config.label as string) || 'Fotos'} />;
   // Fallback (raro): FormField clásico en tarjeta clara legible.
   const entry = getBlockEntry(block.type as BlockType);
   const FormFieldComp = entry?.FormField;
@@ -709,6 +710,55 @@ function DarkField({ block, value, readOnly, onChange }: { block: AssembledBlock
       {block.type === 'select_field' && opts
         ? <select value={String(value ?? '')} disabled={readOnly} onChange={(e) => onChange(e.target.value || null)} className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 focus:border-neutral-500 focus:outline-none"><option value="">—</option>{opts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
         : <input type={block.type === 'number_field' ? 'number' : block.type === 'date_field' ? 'date' : 'text'} value={String(value ?? '')} disabled={readOnly} onChange={(e) => onChange(e.target.value || null)} className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none" />}
+    </div>
+  );
+}
+
+// ===== Fotos (camara) en oscuro =====
+function DarkImage({ value, readOnly, onChange, label }: { value: unknown; readOnly: boolean; onChange: (v: unknown) => void; label: string }) {
+  const images = (value as { name: string; data: string }[]) ?? [];
+  const inputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const maxSizeMB = 8;
+  const add = (files: FileList | null) => {
+    if (!files || readOnly) return;
+    for (const file of Array.from(files)) {
+      if (file.size > maxSizeMB * 1024 * 1024) { alert(`"${file.name}" supera ${maxSizeMB} MB.`); continue; }
+      if (!file.type.startsWith('image/')) continue;
+      const reader = new FileReader();
+      reader.onload = () => onChange([...images, { name: file.name, data: reader.result as string }]);
+      reader.readAsDataURL(file);
+    }
+    if (inputRef.current) inputRef.current.value = '';
+    if (cameraRef.current) cameraRef.current.value = '';
+  };
+  const remove = (i: number) => { if (!readOnly) onChange(images.filter((_, idx) => idx !== i)); };
+  return (
+    <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-3">
+      {label && <div className="mb-2 text-sm font-medium text-neutral-200">{label}</div>}
+      {images.length > 0 && (
+        <div className="mb-2 flex flex-wrap gap-2">
+          {images.map((img, i) => (
+            <div key={i} className="relative overflow-hidden rounded-lg border border-neutral-700" style={{ width: 110, height: 84 }}>
+              <img src={img.data} alt={img.name} className="h-full w-full object-cover" />
+              {!readOnly && <button type="button" onClick={() => remove(i)} className="absolute right-1 top-1 rounded-full bg-black/70 p-0.5 text-white"><X className="h-3 w-3" /></button>}
+            </div>
+          ))}
+        </div>
+      )}
+      {!readOnly && (
+        <div className="flex gap-2">
+          <button type="button" onClick={() => cameraRef.current?.click()} className="flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold text-neutral-900" style={{ backgroundColor: LIME }}>
+            <Camera className="h-4 w-4" /> Hacer foto
+          </button>
+          <button type="button" onClick={() => inputRef.current?.click()} className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-neutral-700 py-2.5 text-sm text-neutral-200 hover:bg-neutral-800">
+            <ImageIcon className="h-4 w-4" /> Galería
+          </button>
+        </div>
+      )}
+      <input ref={inputRef} type="file" accept="image/*" multiple onChange={(e) => add(e.target.files)} className="hidden" />
+      <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={(e) => add(e.target.files)} className="hidden" />
+      {readOnly && images.length === 0 && <div className="text-xs text-neutral-500">Sin fotos</div>}
     </div>
   );
 }
