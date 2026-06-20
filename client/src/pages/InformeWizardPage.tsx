@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft, Save, FileText, Loader2, Check, ChevronRight, ChevronLeft,
-  CheckCircle2, ClipboardCheck, Bot, Cpu, Move, BookOpen, RefreshCw, X,
+  CheckCircle2, ClipboardCheck, Bot, Cpu, Move, BookOpen, RefreshCw, X, WifiOff,
 } from 'lucide-react';
 import api from '@/lib/api';
 import { useAssembledReport, useUpdateEstadoInforme, useRegenerarInforme } from '@/hooks/useInformes';
@@ -11,6 +11,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { getBlockEntry } from '@/components/blocks/registry';
 import type { BlockType } from '@/types/editor';
 import type { AssembledBlock } from '@/types/informe';
+import { db } from '@/lib/db';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 
 import '@/components/blocks/register-all';
 
@@ -139,6 +141,37 @@ export default function InformeWizardPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [view, setView] = useState<'overview' | string>('overview');
   const [manualPicker, setManualPicker] = useState<{ componenteId: number; modelo: string; manuales: ManualRef[] } | null>(null);
+  const online = useOnlineStatus();
+  const draftHydrated = useRef(false);
+
+  // Restaurar borrador local (cambios sin guardar) al abrir el informe.
+  useEffect(() => {
+    draftHydrated.current = false;
+    let active = true;
+    db.drafts.get(informeId).then((d) => {
+      if (!active) return;
+      if (d?.compDatos && Object.keys(d.compDatos).length) setLocalCompDatos(d.compDatos);
+      if (d?.docDatos && Object.keys(d.docDatos).length) setLocalDocDatos(d.docDatos);
+      draftHydrated.current = true;
+    }).catch(() => { draftHydrated.current = true; });
+    return () => { active = false; };
+  }, [informeId]);
+
+  // Persistir borrador local en el dispositivo (debounce). Sobrevive a cerrar la app o quedarse sin conexion.
+  useEffect(() => {
+    if (!draftHydrated.current) return;
+    const t = setTimeout(() => {
+      const dirty =
+        Object.values(localCompDatos).some((d) => d && Object.keys(d).length > 0) ||
+        Object.keys(localDocDatos).length > 0;
+      if (dirty) {
+        db.drafts.put({ informeId, compDatos: localCompDatos, docDatos: localDocDatos, updatedAt: Date.now() }).catch(() => {});
+      } else {
+        db.drafts.delete(informeId).catch(() => {});
+      }
+    }, 500);
+    return () => clearTimeout(t);
+  }, [localCompDatos, localDocDatos, informeId]);
 
   const readOnly = data?.informe?.estado === 'finalizado';
 
@@ -199,10 +232,15 @@ export default function InformeWizardPage() {
       if (Object.keys(localDocDatos).length > 0) promises.push(api.patch(`/v1/informes/${informeId}/datos-documento`, { datos: localDocDatos }));
       await Promise.all(promises);
       setLocalCompDatos({}); setLocalDocDatos({});
+      db.drafts.delete(informeId).catch(() => {});
       queryClient.invalidateQueries({ queryKey: ['informes', informeId, 'assembled'] });
     } catch (err) {
-      const e = err as { response?: { data?: { error?: string } } };
-      alert(e?.response?.data?.error ?? 'Error al guardar');
+      if (!navigator.onLine) {
+        alert('Sin conexión. Tus cambios siguen guardados en el dispositivo y no se perderán; vuelve a pulsar Guardar cuando recuperes señal.');
+      } else {
+        const e = err as { response?: { data?: { error?: string } } };
+        alert(e?.response?.data?.error ?? 'Error al guardar');
+      }
     } finally { setIsSaving(false); }
   }, [hasDirty, isSaving, localCompDatos, localDocDatos, informeId, queryClient]);
 
@@ -283,7 +321,14 @@ export default function InformeWizardPage() {
           </div>
           <div className="min-w-0">
             <div className="font-semibold truncate text-sm leading-tight">{informe.sistema?.nombre ?? 'Informe'}</div>
-            <Chip tone={finalizado ? 'green' : 'neutral'}>{estadoLabel}</Chip>
+            <div className="flex items-center gap-1.5">
+              <Chip tone={finalizado ? 'green' : 'neutral'}>{estadoLabel}</Chip>
+              {!online && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-300">
+                  <WifiOff className="h-3 w-3" /> Sin conexión
+                </span>
+              )}
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
