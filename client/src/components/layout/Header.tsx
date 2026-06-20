@@ -12,7 +12,10 @@ export function Header({ onOpenMobile }: { onOpenMobile: () => void }) {
     .toUpperCase();
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-4 sm:px-6">
+    <header
+      className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-4 sm:px-6"
+      style={{ height: 'calc(4rem + env(safe-area-inset-top))', paddingTop: 'env(safe-area-inset-top)' }}
+    >
       <div className="flex items-center gap-3">
         <button
           onClick={onOpenMobile}

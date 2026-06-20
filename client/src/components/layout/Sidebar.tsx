@@ -92,6 +92,7 @@ export function Sidebar({ collapsed, mobileOpen, onToggleCollapse, onCloseMobile
         collapsed ? 'lg:w-[68px] lg:items-center' : 'lg:w-64',
         mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0',
       )}
+      style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       {/* Logo + cerrar (móvil) */}
       <div className={cn('flex items-center gap-3 px-3 py-3', collapsed && 'lg:justify-center lg:px-0')}>
