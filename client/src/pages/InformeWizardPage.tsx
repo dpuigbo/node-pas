@@ -12,6 +12,7 @@ import { getBlockEntry } from '@/components/blocks/registry';
 import type { BlockType } from '@/types/editor';
 import type { AssembledBlock } from '@/types/informe';
 import { db } from '@/lib/db';
+import { setOpenInforme } from '@/lib/syncDrafts';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 
 import '@/components/blocks/register-all';
@@ -173,6 +174,12 @@ export default function InformeWizardPage() {
     return () => clearTimeout(t);
   }, [localCompDatos, localDocDatos, informeId]);
 
+  // Marcar este informe como "abierto" para que el sync global no lo pise (lo gestiona el wizard).
+  useEffect(() => {
+    setOpenInforme(informeId);
+    return () => setOpenInforme(null);
+  }, [informeId]);
+
   const readOnly = data?.informe?.estado === 'finalizado';
 
   const sections = useMemo<WizardSection[]>(() => {
@@ -236,13 +243,24 @@ export default function InformeWizardPage() {
       queryClient.invalidateQueries({ queryKey: ['informes', informeId, 'assembled'] });
     } catch (err) {
       if (!navigator.onLine) {
-        alert('Sin conexión. Tus cambios siguen guardados en el dispositivo y no se perderán; vuelve a pulsar Guardar cuando recuperes señal.');
+        alert('Sin conexión. Tus cambios quedan guardados en el dispositivo y se subirán automáticamente cuando recuperes la conexión.');
       } else {
         const e = err as { response?: { data?: { error?: string } } };
         alert(e?.response?.data?.error ?? 'Error al guardar');
       }
     } finally { setIsSaving(false); }
   }, [hasDirty, isSaving, localCompDatos, localDocDatos, informeId, queryClient]);
+
+  // Auto-sincronizar el borrador de ESTE informe al recuperar la conexion (offline -> online).
+  const wasOnline = useRef(online);
+  useEffect(() => {
+    const reconnected = online && !wasOnline.current;
+    wasOnline.current = online;
+    if (reconnected && hasDirty && !isSaving && !readOnly) {
+      const t = setTimeout(() => { void handleSave(); }, 1200);
+      return () => clearTimeout(t);
+    }
+  }, [online, hasDirty, isSaving, readOnly, handleSave]);
 
   const handleFinalizar = useCallback(async () => {
     if (hasDirty) { alert('Guarda los cambios antes de finalizar.'); return; }

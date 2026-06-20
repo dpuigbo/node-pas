@@ -16,6 +16,7 @@ import ConfiguracionPage from './pages/ConfiguracionPage';
 import OfertasPage from './pages/OfertasPage';
 import OfertaEditorPage from './pages/OfertaEditorPage';
 import PlantillasPage from './pages/PlantillasPage';
+import { useSyncDrafts } from './hooks/useSyncDrafts';
 
 /**
  * Lazy import with auto-reload on chunk load failure.
@@ -57,6 +58,7 @@ function EditorLoader() {
 }
 
 export default function App() {
+  useSyncDrafts();
   return (
     <Routes>
       {/* Ruta publica */}
