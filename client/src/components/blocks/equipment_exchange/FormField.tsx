@@ -75,7 +75,7 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
             {title}
           </div>
         )}
-        <table className="w-full text-sm">
+        <table className={`w-full text-sm ${readOnly ? 'table-fixed' : ''}`}>
           <thead>
             <tr style={{ backgroundColor: headerBg }}>
               <th className="font-medium text-xs px-2 py-1.5 text-center border-r border-white/20" style={{ color: headerColor, width: '7%' }}>
@@ -118,46 +118,54 @@ export function FormField({ block, value, onChange, readOnly }: FormFieldProps) 
                 <td className="border border-gray-200 p-0" colSpan={2}>
                   <div className="flex items-center border-b border-gray-100">
                     <span className="bg-gray-100 px-2 py-1 text-xs font-medium text-gray-500 border-r border-gray-200 shrink-0 w-[60px]">Entrada</span>
-                    <Input
-                      value={row.designacionEntrada}
-                      onChange={(e) => updateCell(ri, 'designacionEntrada', e.target.value)}
-                      readOnly={readOnly}
-                      disabled={readOnly}
-                      className="h-auto text-sm border-0 bg-transparent rounded-none focus-visible:ring-0 px-2 py-1"
-                    />
+                    {readOnly ? (
+                      <div className="flex-1 px-2 py-1 text-sm whitespace-normal break-words leading-tight">{row.designacionEntrada || '-'}</div>
+                    ) : (
+                      <Input
+                        value={row.designacionEntrada}
+                        onChange={(e) => updateCell(ri, 'designacionEntrada', e.target.value)}
+                        className="h-auto text-sm border-0 bg-transparent rounded-none focus-visible:ring-0 px-2 py-1"
+                      />
+                    )}
                   </div>
                   <div className="flex items-center">
                     <span className="bg-gray-100 px-2 py-1 text-xs font-medium text-gray-500 border-r border-gray-200 shrink-0 w-[60px]">Salida</span>
-                    <Input
-                      value={row.designacionSalida}
-                      onChange={(e) => updateCell(ri, 'designacionSalida', e.target.value)}
-                      readOnly={readOnly}
-                      disabled={readOnly}
-                      className="h-auto text-sm border-0 bg-transparent rounded-none focus-visible:ring-0 px-2 py-1"
-                    />
+                    {readOnly ? (
+                      <div className="flex-1 px-2 py-1 text-sm whitespace-normal break-words leading-tight">{row.designacionSalida || '-'}</div>
+                    ) : (
+                      <Input
+                        value={row.designacionSalida}
+                        onChange={(e) => updateCell(ri, 'designacionSalida', e.target.value)}
+                        className="h-auto text-sm border-0 bg-transparent rounded-none focus-visible:ring-0 px-2 py-1"
+                      />
+                    )}
                   </div>
                 </td>
                 {/* Numero de serie: Entrada + Salida */}
                 <td className="border border-gray-200 p-0" colSpan={2}>
                   <div className="flex items-center border-b border-gray-100">
                     <span className="bg-gray-100 px-2 py-1 text-xs font-medium text-gray-500 border-r border-gray-200 shrink-0 w-[60px]">Entrada</span>
-                    <Input
-                      value={row.serieEntrada}
-                      onChange={(e) => updateCell(ri, 'serieEntrada', e.target.value)}
-                      readOnly={readOnly}
-                      disabled={readOnly}
-                      className="h-auto text-sm border-0 bg-transparent rounded-none focus-visible:ring-0 px-2 py-1"
-                    />
+                    {readOnly ? (
+                      <div className="flex-1 px-2 py-1 text-sm whitespace-normal break-words leading-tight">{row.serieEntrada || '-'}</div>
+                    ) : (
+                      <Input
+                        value={row.serieEntrada}
+                        onChange={(e) => updateCell(ri, 'serieEntrada', e.target.value)}
+                        className="h-auto text-sm border-0 bg-transparent rounded-none focus-visible:ring-0 px-2 py-1"
+                      />
+                    )}
                   </div>
                   <div className="flex items-center">
                     <span className="bg-gray-100 px-2 py-1 text-xs font-medium text-gray-500 border-r border-gray-200 shrink-0 w-[60px]">Salida</span>
-                    <Input
-                      value={row.serieSalida}
-                      onChange={(e) => updateCell(ri, 'serieSalida', e.target.value)}
-                      readOnly={readOnly}
-                      disabled={readOnly}
-                      className="h-auto text-sm border-0 bg-transparent rounded-none focus-visible:ring-0 px-2 py-1"
-                    />
+                    {readOnly ? (
+                      <div className="flex-1 px-2 py-1 text-sm whitespace-normal break-words leading-tight">{row.serieSalida || '-'}</div>
+                    ) : (
+                      <Input
+                        value={row.serieSalida}
+                        onChange={(e) => updateCell(ri, 'serieSalida', e.target.value)}
+                        className="h-auto text-sm border-0 bg-transparent rounded-none focus-visible:ring-0 px-2 py-1"
+                      />
+                    )}
                   </div>
                 </td>
                 {/* Intercambio */}

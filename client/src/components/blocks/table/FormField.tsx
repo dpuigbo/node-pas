@@ -159,7 +159,10 @@ function TopHeaderTable({
   // texto largo (p.ej. "Operación") envuelva dentro de su columna en vez de
   // ensanchar la columna y comerse el espacio de las demás. Las tablas de ancho
   // 'auto' (identidad, Información general...) mantienen el layout automático.
-  const fixed = columns.length > 0 && columns.every((c) => c.width && c.width !== 'auto');
+  // En readOnly (preview / PDF del cliente) SIEMPRE table-fixed: garantiza que la tabla
+  // quepa en el ancho de la pagina y que el texto largo (Observaciones...) haga multilinea
+  // dentro de su columna en vez de ensanchar y provocar scroll horizontal.
+  const fixed = readOnly || (columns.length > 0 && columns.every((c) => c.width && c.width !== 'auto'));
   return (
     <table className={`w-full text-sm ${fixed ? 'table-fixed' : ''}`}>
       <thead>
@@ -246,7 +249,7 @@ function LeftHeaderTable({
   const dataCount = Math.max(rows.length, 1);
 
   return (
-    <table className="w-full text-sm">
+    <table className={`w-full text-sm ${readOnly ? 'table-fixed' : ''}`}>
       <tbody>
         {columns.map((col, ci) => (
           <tr key={col.key} className={ci % 2 === 1 ? 'bg-gray-50' : 'bg-white'}>
