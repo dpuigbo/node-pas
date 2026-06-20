@@ -827,6 +827,47 @@ function DarkImage({ value, readOnly, onChange, label }: { value: unknown; readO
   );
 }
 
+// ===== Fotos dentro de una observacion (compacto: camara + galeria + miniaturas) =====
+function RowPhotos({ fotos, readOnly, onChange }: { fotos: { name: string; data: string }[]; readOnly: boolean; onChange: (f: { name: string; data: string }[]) => void }) {
+  const camRef = useRef<HTMLInputElement>(null);
+  const galRef = useRef<HTMLInputElement>(null);
+  const add = (files: FileList | null) => {
+    if (!files || readOnly) return;
+    for (const file of Array.from(files)) {
+      if (file.size > 8 * 1024 * 1024) { alert(`"${file.name}" supera 8 MB.`); continue; }
+      if (!file.type.startsWith('image/')) continue;
+      const reader = new FileReader();
+      reader.onload = () => onChange([...fotos, { name: file.name, data: reader.result as string }]);
+      reader.readAsDataURL(file);
+    }
+    if (camRef.current) camRef.current.value = '';
+    if (galRef.current) galRef.current.value = '';
+  };
+  const remove = (i: number) => { if (!readOnly) onChange(fotos.filter((_, idx) => idx !== i)); };
+  return (
+    <div className="mt-2 space-y-1.5">
+      {fotos.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {fotos.map((f, i) => (
+            <div key={i} className="relative overflow-hidden rounded-lg border border-neutral-700" style={{ width: 76, height: 58 }}>
+              <img src={f.data} alt={f.name} className="h-full w-full object-cover" />
+              {!readOnly && <button type="button" onClick={() => remove(i)} className="absolute right-0.5 top-0.5 rounded-full bg-black/70 p-0.5 text-white"><X className="h-2.5 w-2.5" /></button>}
+            </div>
+          ))}
+        </div>
+      )}
+      {!readOnly && (
+        <div className="flex gap-2">
+          <button type="button" onClick={() => camRef.current?.click()} className="flex items-center gap-1.5 rounded-lg border border-neutral-700 px-3 py-1.5 text-xs text-neutral-300 hover:bg-neutral-800"><Camera className="h-3.5 w-3.5" /> Foto</button>
+          <button type="button" onClick={() => galRef.current?.click()} className="flex items-center gap-1.5 rounded-lg border border-neutral-700 px-3 py-1.5 text-xs text-neutral-300 hover:bg-neutral-800"><ImageIcon className="h-3.5 w-3.5" /> Galería</button>
+        </div>
+      )}
+      <input ref={camRef} type="file" accept="image/*" capture="environment" onChange={(e) => add(e.target.files)} className="hidden" />
+      <input ref={galRef} type="file" accept="image/*" multiple onChange={(e) => add(e.target.files)} className="hidden" />
+    </div>
+  );
+}
+
 // ======================== Punto de control (fila con control segmentado) ========================
 function InspectionPointRow({
   label, row, readOnly, onChange,
@@ -859,6 +900,13 @@ function InspectionPointRow({
           onChange={(v) => onChange({ ...row, observaciones: v })}
           placeholder="Observaciones" readOnly={readOnly}
           className="mt-2 rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none" />
+      )}
+      {(!readOnly || (Array.isArray(row.fotos) && row.fotos.length > 0)) && (
+        <RowPhotos
+          fotos={(Array.isArray(row.fotos) ? row.fotos : []) as { name: string; data: string }[]}
+          readOnly={readOnly}
+          onChange={(f) => onChange({ ...row, fotos: f })}
+        />
       )}
     </div>
   );

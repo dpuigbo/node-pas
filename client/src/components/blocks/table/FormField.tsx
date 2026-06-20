@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -193,7 +194,8 @@ function TopHeaderTable({
           </tr>
         ) : (
           rows.map((row, ri) => (
-            <tr key={ri} className={ri % 2 === 1 ? 'bg-gray-50' : 'bg-white'}>
+            <Fragment key={ri}>
+            <tr className={ri % 2 === 1 ? 'bg-gray-50' : 'bg-white'}>
               {columns.map((col) => (
                 <td key={col.key} className={cellPad}>
                   <CellInput
@@ -218,6 +220,18 @@ function TopHeaderTable({
                 </td>
               )}
             </tr>
+            {Array.isArray(row.fotos) && (row.fotos as unknown[]).length > 0 && (
+              <tr className={ri % 2 === 1 ? 'bg-gray-50' : 'bg-white'}>
+                <td colSpan={columns.length + (!readOnly && allowAddRows ? 1 : 0)} className="px-2 pb-2 pt-0">
+                  <div className="flex flex-wrap gap-1.5">
+                    {(row.fotos as { name: string; data: string }[]).map((f, fi) => (
+                      <img key={fi} src={f.data} alt={f.name} className="rounded border border-gray-200 object-cover" style={{ width: 90, height: 68 }} />
+                    ))}
+                  </div>
+                </td>
+              </tr>
+            )}
+            </Fragment>
           ))
         )}
       </tbody>
