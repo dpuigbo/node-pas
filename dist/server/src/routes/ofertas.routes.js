@@ -424,6 +424,8 @@ router.post('/', (0, role_middleware_1.requireRole)('admin'), async (req, res, n
                 referencia: data.referencia ?? null,
                 tipo: data.tipo,
                 tipoOferta: data.tipoOferta,
+                alcance: data.alcance ?? 'nacional',
+                factorTraficoPct: data.factorTraficoPct ?? 0,
                 validezDias: data.validezDias,
                 notas: data.notas ?? null,
                 totalHoras: totalHoras || null,
@@ -489,6 +491,10 @@ router.put('/:id', (0, role_middleware_1.requireRole)('admin'), async (req, res,
             updateData.tipo = data.tipo;
         if (data.tipoOferta !== undefined)
             updateData.tipoOferta = data.tipoOferta;
+        if (data.alcance !== undefined)
+            updateData.alcance = data.alcance;
+        if (data.factorTraficoPct !== undefined)
+            updateData.factorTraficoPct = data.factorTraficoPct;
         if (data.validezDias !== undefined)
             updateData.validezDias = data.validezDias;
         if (data.notas !== undefined)
@@ -948,6 +954,117 @@ router.delete('/:id/componente/:cmpId', (0, role_middleware_1.requireRole)('admi
             where: { ofertaId, componenteSistemaId },
         });
         res.json({ message: 'Componente eliminado de la oferta' });
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// ===== OPERACIONES CORRECTIVAS (ofertas tipo correctiva) =====
+// GET /api/v1/ofertas/:id/operaciones-correctivas
+// Devuelve los sistemas de la oferta con sus operaciones correctivas (agrupadas).
+router.get('/:id/operaciones-correctivas', async (req, res, next) => {
+    try {
+        const ofertaId = Number(req.params.id);
+        const oferta = await database_1.prisma.oferta.findUnique({
+            where: { id: ofertaId },
+            select: {
+                id: true,
+                sistemas: { select: { sistema: { select: { id: true, nombre: true } } } },
+                operacionesCorrectivas: {
+                    orderBy: [{ sistemaId: 'asc' }, { orden: 'asc' }, { id: 'asc' }],
+                },
+            },
+        });
+        if (!oferta) {
+            res.status(404).json({ error: 'Oferta no encontrada' });
+            return;
+        }
+        const opsPorSistema = new Map();
+        for (const op of oferta.operacionesCorrectivas) {
+            if (!opsPorSistema.has(op.sistemaId))
+                opsPorSistema.set(op.sistemaId, []);
+            opsPorSistema.get(op.sistemaId).push({
+                id: op.id,
+                operacion: op.operacion,
+                horasEstimadas: dec(op.horasEstimadas),
+                orden: op.orden,
+            });
+        }
+        const sistemas = oferta.sistemas.map((s) => ({
+            sistemaId: s.sistema.id,
+            sistemaNombre: s.sistema.nombre,
+            operaciones: opsPorSistema.get(s.sistema.id) ?? [],
+        }));
+        res.json({ ofertaId, sistemas });
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// POST /api/v1/ofertas/:id/operaciones-correctivas (admin)
+router.post('/:id/operaciones-correctivas', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
+    try {
+        const ofertaId = Number(req.params.id);
+        const data = ofertas_validation_1.createOperacionCorrectivaSchema.parse(req.body);
+        const oferta = await database_1.prisma.oferta.findUnique({ where: { id: ofertaId }, select: { estado: true } });
+        if (!oferta) {
+            res.status(404).json({ error: 'Oferta no encontrada' });
+            return;
+        }
+        if (oferta.estado !== 'borrador') {
+            res.status(400).json({ error: 'Solo se pueden editar ofertas en estado borrador' });
+            return;
+        }
+        const op = await database_1.prisma.ofertaOperacionCorrectiva.create({
+            data: {
+                ofertaId,
+                sistemaId: data.sistemaId,
+                operacion: data.operacion,
+                horasEstimadas: data.horasEstimadas ?? null,
+                orden: data.orden ?? 0,
+            },
+        });
+        res.status(201).json({ ...op, horasEstimadas: dec(op.horasEstimadas) });
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// PUT /api/v1/ofertas/:id/operaciones-correctivas/:opId (admin)
+router.put('/:id/operaciones-correctivas/:opId', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
+    try {
+        const ofertaId = Number(req.params.id);
+        const opId = Number(req.params.opId);
+        const data = ofertas_validation_1.updateOperacionCorrectivaSchema.parse(req.body);
+        const updateData = {};
+        if (data.operacion !== undefined)
+            updateData.operacion = data.operacion;
+        if (data.horasEstimadas !== undefined)
+            updateData.horasEstimadas = data.horasEstimadas;
+        if (data.orden !== undefined)
+            updateData.orden = data.orden;
+        const result = await database_1.prisma.ofertaOperacionCorrectiva.updateMany({
+            where: { id: opId, ofertaId },
+            data: updateData,
+        });
+        if (result.count === 0) {
+            res.status(404).json({ error: 'Operacion no encontrada' });
+            return;
+        }
+        const op = await database_1.prisma.ofertaOperacionCorrectiva.findUnique({ where: { id: opId } });
+        res.json(op ? { ...op, horasEstimadas: dec(op.horasEstimadas) } : {});
+    }
+    catch (err) {
+        next(err);
+    }
+});
+// DELETE /api/v1/ofertas/:id/operaciones-correctivas/:opId (admin)
+router.delete('/:id/operaciones-correctivas/:opId', (0, role_middleware_1.requireRole)('admin'), async (req, res, next) => {
+    try {
+        const ofertaId = Number(req.params.id);
+        const opId = Number(req.params.opId);
+        await database_1.prisma.ofertaOperacionCorrectiva.deleteMany({ where: { id: opId, ofertaId } });
+        res.json({ message: 'Operacion eliminada' });
     }
     catch (err) {
         next(err);

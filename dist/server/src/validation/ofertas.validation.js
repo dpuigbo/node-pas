@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.bulkBloquesSchema = exports.updateBloqueSchema = exports.createBloqueSchema = exports.upsertOfertaComponenteSchema = exports.generarIntervencionSchema = exports.updateEstadoOfertaSchema = exports.updateOfertaSchema = exports.createOfertaSchema = void 0;
+exports.bulkBloquesSchema = exports.updateBloqueSchema = exports.createBloqueSchema = exports.updateOperacionCorrectivaSchema = exports.createOperacionCorrectivaSchema = exports.upsertOfertaComponenteSchema = exports.generarIntervencionSchema = exports.updateEstadoOfertaSchema = exports.updateOfertaSchema = exports.createOfertaSchema = void 0;
 const zod_1 = require("zod");
 // Codigo de nivel: canonico (N1, N2_INF, N2_SUP, N3, N_CTRL, N_DU, N0_EJE,
 // N1_EJE, N2_EJE) o legacy (1, 2_inferior, 2_superior, 3) — el backend
@@ -16,6 +16,8 @@ exports.createOfertaSchema = zod_1.z.object({
     referencia: zod_1.z.string().max(100).optional().nullable(),
     tipo: zod_1.z.enum(['preventiva', 'correctiva']),
     tipoOferta: zod_1.z.enum(['mantenimiento', 'solo_limpieza']).default('mantenimiento'),
+    alcance: zod_1.z.enum(['nacional', 'internacional']).default('nacional'),
+    factorTraficoPct: zod_1.z.number().min(0).max(500).optional().nullable(),
     validezDias: zod_1.z.number().int().min(1).default(30),
     notas: zod_1.z.string().optional().nullable(),
     sistemas: zod_1.z.array(ofertaSistemaSchema).min(0),
@@ -31,6 +33,8 @@ exports.updateOfertaSchema = zod_1.z.object({
     referencia: zod_1.z.string().max(100).optional().nullable(),
     tipo: zod_1.z.enum(['preventiva', 'correctiva']).optional(),
     tipoOferta: zod_1.z.enum(['mantenimiento', 'solo_limpieza']).optional(),
+    alcance: zod_1.z.enum(['nacional', 'internacional']).optional(),
+    factorTraficoPct: zod_1.z.number().min(0).max(500).optional().nullable(),
     validezDias: zod_1.z.number().int().min(1).optional(),
     notas: zod_1.z.string().optional().nullable(),
     sistemas: zod_1.z.array(ofertaSistemaSchema).optional(),
@@ -54,6 +58,19 @@ exports.upsertOfertaComponenteSchema = zod_1.z.object({
     conBaterias: zod_1.z.boolean().optional(),
     conAceite: zod_1.z.boolean().optional(),
     notas: zod_1.z.string().max(500).optional().nullable(),
+});
+// Operaciones correctivas (ofertas tipo correctiva): el tecnico anade
+// operaciones de reparacion por sistema con horas estimadas.
+exports.createOperacionCorrectivaSchema = zod_1.z.object({
+    sistemaId: zod_1.z.number().int().positive(),
+    operacion: zod_1.z.string().min(1, 'La operacion es obligatoria').max(500),
+    horasEstimadas: zod_1.z.number().min(0).optional().nullable(),
+    orden: zod_1.z.number().int().min(0).optional(),
+});
+exports.updateOperacionCorrectivaSchema = zod_1.z.object({
+    operacion: zod_1.z.string().min(1).max(500).optional(),
+    horasEstimadas: zod_1.z.number().min(0).optional().nullable(),
+    orden: zod_1.z.number().int().min(0).optional(),
 });
 // Bloques de calendario para planificacion
 exports.createBloqueSchema = zod_1.z.object({

@@ -142,6 +142,8 @@ async function calcularPlanificacion(ofertaId) {
         where: { id: ofertaId },
         select: {
             clienteId: true,
+            alcance: true,
+            factorTraficoPct: true,
             bloques: {
                 select: { id: true, fecha: true, horaInicio: true, horaFin: true, tipo: true },
                 orderBy: [{ fecha: 'asc' }, { horaInicio: 'asc' }],
@@ -151,14 +153,18 @@ async function calcularPlanificacion(ofertaId) {
     const cliente = oferta
         ? await database_1.prisma.cliente.findUnique({
             where: { id: oferta.clienteId },
-            select: { tarifaHoraTrabajo: true, tarifaHoraViaje: true, dietas: true, precioHotel: true },
+            select: { tarifaHoraTrabajo: true, tarifaHoraViaje: true, dietas: true, dietaInternacional: true, precioHotel: true, km: true, precioKm: true, peajes: true },
         })
         : null;
     const tarifas = {
         tarifaHoraTrabajo: Number(cliente?.tarifaHoraTrabajo ?? 0),
         tarifaHoraViaje: Number(cliente?.tarifaHoraViaje ?? 0),
         dietas: Number(cliente?.dietas ?? 0),
+        dietaInternacional: Number(cliente?.dietaInternacional ?? 0),
         precioHotel: Number(cliente?.precioHotel ?? 0),
+        km: Number(cliente?.km ?? 0),
+        precioKm: Number(cliente?.precioKm ?? 0),
+        peajes: Number(cliente?.peajes ?? 0),
     };
     const config = await loadRecargosConfig();
     const bloques = (oferta?.bloques ?? []).map((b) => ({
@@ -209,11 +215,20 @@ async function calcularPlanificacion(ofertaId) {
     const precioTrabajo = +(horasTrabajo * tarifas.tarifaHoraTrabajo).toFixed(2);
     const precioDesplazamiento = +(horasDesplazamiento * tarifas.tarifaHoraViaje).toFixed(2);
     precioRecargos = +precioRecargos.toFixed(2);
+    const esInternacional = oferta?.alcance === 'internacional';
+    const dietaUsada = esInternacional
+        ? (tarifas.dietaInternacional || tarifas.dietas)
+        : tarifas.dietas;
     const diasOcupados = diasSet.size;
     const nochesFuera = Math.max(0, diasOcupados - 1);
-    const precioDietas = +(diasOcupados * tarifas.dietas).toFixed(2);
+    const precioDietas = +(diasOcupados * dietaUsada).toFixed(2);
     const precioHotel = +(nochesFuera * tarifas.precioHotel).toFixed(2);
-    const totalPlanificacion = +(precioTrabajo + precioDesplazamiento + precioRecargos + precioDietas + precioHotel).toFixed(2);
+    const precioKilometraje = +(tarifas.km * tarifas.precioKm).toFixed(2);
+    const precioPeajes = +tarifas.peajes.toFixed(2);
+    const factorTraficoPct = Number(oferta?.factorTraficoPct ?? 0);
+    const precioTrafico = +(precioDesplazamiento * factorTraficoPct / 100).toFixed(2);
+    const totalPlanificacion = +(precioTrabajo + precioDesplazamiento + precioRecargos + precioDietas + precioHotel
+        + precioKilometraje + precioPeajes + precioTrafico).toFixed(2);
     return {
         horasTrabajo: +horasTrabajo.toFixed(2),
         horasDesplazamiento: +horasDesplazamiento.toFixed(2),
@@ -227,7 +242,13 @@ async function calcularPlanificacion(ofertaId) {
         diasEspeciales: diasEspecialesSet.size,
         nochesFuera,
         precioDietas,
+        esInternacional,
         precioHotel,
+        kmTotal: tarifas.km,
+        precioKilometraje,
+        precioPeajes,
+        factorTraficoPct,
+        precioTrafico,
         bloquesDesglose,
         totalPlanificacion,
     };

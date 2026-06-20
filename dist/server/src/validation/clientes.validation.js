@@ -22,6 +22,7 @@ exports.createClienteSchema = zod_1.z.object({
     tarifaHoraTrabajo: zod_1.z.number().min(0).optional().nullable(),
     tarifaHoraViaje: zod_1.z.number().min(0).optional().nullable(),
     dietas: zod_1.z.number().min(0).optional().nullable(),
+    dietaInternacional: zod_1.z.number().min(0).optional().nullable(),
     gestionAccesos: zod_1.z.number().min(0).optional().nullable(),
     horasTrayecto: horasTrayectoTransformer.optional().nullable(),
     diasViaje: zod_1.z.number().min(0).optional().nullable(),
