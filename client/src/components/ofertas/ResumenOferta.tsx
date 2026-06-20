@@ -66,6 +66,8 @@ export function ResumenOferta({ ofertaId, oferta }: Props) {
             <Row label="Recargos por horario" value="" importe={t.precioRecargos} />
             <Row label={`Dietas (${t.diasOcupados} dias)`} value="" importe={t.precioDietas} />
             <Row label={`Hotel (${t.nochesFuera} noches)`} value="" importe={t.precioHotel} />
+            <Row label={`Kilometraje (${t.kmTotal ?? 0} km)`} value="" importe={t.precioKilometraje ?? 0} />
+            <Row label="Peajes" value="" importe={t.precioPeajes ?? 0} />
             <tr className="border-t bg-muted/30 font-medium">
               <td className="px-3 py-2">Subtotal planificacion</td>
               <td className="px-3 py-2"></td>

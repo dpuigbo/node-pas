@@ -124,6 +124,9 @@ export interface PlanificacionResultado {
   nochesFuera: number;        // max(0, diasOcupados - 1) salvo override
   precioDietas: number;        // diasOcupados × cliente.dietas
   precioHotel: number;         // nochesFuera × cliente.precioHotel
+  kmTotal: number;             // km de la ruta del cliente
+  precioKilometraje: number;   // km × precioKm (en vehiculo PAS incluye combustible+peajes)
+  precioPeajes: number;        // peajes de la ruta (si se facturan aparte)
 
   // Desglose detallado
   bloquesDesglose: BloqueRecargoDesglose[];
@@ -144,6 +147,9 @@ interface ClienteTarifas {
   tarifaHoraViaje: number;
   dietas: number;
   precioHotel: number;
+  km: number;
+  precioKm: number;
+  peajes: number;
 }
 
 function clasificarDia(
@@ -225,7 +231,7 @@ export async function calcularPlanificacion(ofertaId: number): Promise<Planifica
   const cliente = oferta
     ? await prisma.cliente.findUnique({
         where: { id: oferta.clienteId },
-        select: { tarifaHoraTrabajo: true, tarifaHoraViaje: true, dietas: true, precioHotel: true },
+        select: { tarifaHoraTrabajo: true, tarifaHoraViaje: true, dietas: true, precioHotel: true, km: true, precioKm: true, peajes: true },
       })
     : null;
 
@@ -234,6 +240,9 @@ export async function calcularPlanificacion(ofertaId: number): Promise<Planifica
     tarifaHoraViaje: Number(cliente?.tarifaHoraViaje ?? 0),
     dietas: Number(cliente?.dietas ?? 0),
     precioHotel: Number(cliente?.precioHotel ?? 0),
+    km: Number(cliente?.km ?? 0),
+    precioKm: Number(cliente?.precioKm ?? 0),
+    peajes: Number(cliente?.peajes ?? 0),
   };
 
   const config = await loadRecargosConfig();
@@ -288,9 +297,12 @@ export async function calcularPlanificacion(ofertaId: number): Promise<Planifica
   const nochesFuera = Math.max(0, diasOcupados - 1);
   const precioDietas = +(diasOcupados * tarifas.dietas).toFixed(2);
   const precioHotel = +(nochesFuera * tarifas.precioHotel).toFixed(2);
+  const precioKilometraje = +(tarifas.km * tarifas.precioKm).toFixed(2);
+  const precioPeajes = +tarifas.peajes.toFixed(2);
 
   const totalPlanificacion = +(
     precioTrabajo + precioDesplazamiento + precioRecargos + precioDietas + precioHotel
+    + precioKilometraje + precioPeajes
   ).toFixed(2);
 
   return {
@@ -307,6 +319,9 @@ export async function calcularPlanificacion(ofertaId: number): Promise<Planifica
     nochesFuera,
     precioDietas,
     precioHotel,
+    kmTotal: tarifas.km,
+    precioKilometraje,
+    precioPeajes,
     bloquesDesglose,
     totalPlanificacion,
   };

@@ -320,6 +320,9 @@ export interface PlanificacionTotales {
   nochesFuera: number;
   precioDietas: number;
   precioHotel: number;
+  kmTotal?: number;
+  precioKilometraje?: number;
+  precioPeajes?: number;
   bloquesDesglose: BloqueRecargoDesglose[];
   totalPlanificacion: number;
 }
