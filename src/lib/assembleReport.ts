@@ -92,7 +92,9 @@ function resolvePlaceholders(
   context: Record<string, string | undefined>,
 ): string {
   return text.replace(PLACEHOLDER_REGEX, (_match, key: string) => {
-    return context[key] ?? `[${key}]`;
+    // Si falta el dato, dejar en blanco en vez de mostrar el placeholder en crudo
+    // (p.ej. un numero de serie sin rellenar no debe salir como [componente.numero_serie] en el PDF del cliente).
+    return context[key] ?? '';
   });
 }
 
