@@ -188,12 +188,13 @@ export function buildPlaceholderContext(informe: {
     fabricante: { nombre: string };
     maquina?: { nombre: string } | null;
   };
-}, usuario?: { nombre?: string | null; email?: string | null },
+}, usuario?: { nombre?: string | null; email?: string | null; telefono?: string | null },
    nivel?: { codigo: string; nombre: string } | null): Record<string, string | undefined> {
   const cli = informe.intervencion.cliente;
   return {
     'usuario.nombre': usuario?.nombre ?? undefined,
     'usuario.email': usuario?.email ?? undefined,
+    'usuario.telefono': usuario?.telefono ?? undefined,
     'sistema.nombre': informe.sistema.nombre,
     'sistema.descripcion': informe.sistema.descripcion ?? undefined,
     'sistema.linea': informe.sistema.linea ?? undefined,
@@ -410,7 +411,7 @@ export function assembleReport(input: AssemblyInput): AssemblyResult {
           horaFin: '',
           // Técnico = usuario logueado que realiza el informe.
           tecnicoPas: String(baseContext['usuario.nombre'] ?? ''),
-          telTecnico: '',
+          telTecnico: String(baseContext['usuario.telefono'] ?? ''),
           emailTecnico: String(baseContext['usuario.email'] ?? ''),
           // Contacto = persona de contacto del cliente.
           tecnicoCliente: String(baseContext['cliente.personaContacto'] ?? ''),

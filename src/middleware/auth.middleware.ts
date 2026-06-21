@@ -8,6 +8,7 @@ export interface AuthUser {
   email: string;
   nombre: string;
   rol: string;
+  telefono?: string | null;
 }
 
 export async function authMiddleware(req: Request, res: Response, next: NextFunction) {
@@ -22,7 +23,7 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
     const payload = jwt.verify(token, env.JWT_SECRET) as { userId: number };
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
-      select: { id: true, email: true, nombre: true, rol: true },
+      select: { id: true, email: true, nombre: true, rol: true, telefono: true },
     });
 
     if (!user || !user.rol) {

@@ -398,7 +398,7 @@ router.get(
       // Build placeholder context (el usuario logueado se usa como técnico de PAS)
       const authUser = getAuthUser(req);
       const usuario = authUser
-        ? await prisma.user.findUnique({ where: { id: authUser.id }, select: { nombre: true, email: true } })
+        ? await prisma.user.findUnique({ where: { id: authUser.id }, select: { nombre: true, email: true, telefono: true } })
         : null;
       const nivelInfo = informe.intervencion.sistemas.find((s) => s.sistemaId === informe.sistemaId)?.nivel ?? null;
       const baseContext = buildPlaceholderContext(informe, usuario ?? undefined, nivelInfo);

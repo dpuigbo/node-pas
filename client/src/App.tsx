@@ -13,6 +13,7 @@ import IntervencionesPage from './pages/IntervencionesPage';
 import CatalogosPage from './pages/CatalogosPage';
 import ConsumiblesNivelPage from './pages/ConsumiblesNivelPage';
 import ConfiguracionPage from './pages/ConfiguracionPage';
+import PerfilPage from './pages/PerfilPage';
 import OfertasPage from './pages/OfertasPage';
 import OfertaEditorPage from './pages/OfertaEditorPage';
 import PlantillasPage from './pages/PlantillasPage';
@@ -167,6 +168,7 @@ export default function App() {
           <Route path="/ofertas/:id" element={<OfertaEditorPage />} />
           <Route path="/catalogos" element={<CatalogosPage />} />
           <Route path="/consumibles-nivel" element={<ConsumiblesNivelPage />} />
+          <Route path="/perfil" element={<PerfilPage />} />
           <Route path="/configuracion" element={<ConfiguracionPage />} />
           <Route path="/configuracion/plantillas" element={<PlantillasPage />} />
         </Route>

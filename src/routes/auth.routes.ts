@@ -58,6 +58,28 @@ router.get('/me', authMiddleware, (req: Request, res: Response) => {
   res.json({ user: getAuthUser(req) });
 });
 
+// Update current user profile (nombre, telefono). Email/rol no editables (vienen del login).
+router.put('/me', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const authUser = getAuthUser(req);
+    const { nombre, telefono } = req.body ?? {};
+    const data: { nombre?: string; telefono?: string | null } = {};
+    if (typeof nombre === 'string' && nombre.trim()) data.nombre = nombre.trim();
+    if (telefono === null || typeof telefono === 'string') {
+      const t = typeof telefono === 'string' ? telefono.trim() : '';
+      data.telefono = t ? t : null;
+    }
+    const user = await prisma.user.update({
+      where: { id: authUser.id },
+      data,
+      select: { id: true, email: true, nombre: true, rol: true, telefono: true },
+    });
+    res.json({ user });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Logout
 router.post('/logout', (_req: Request, res: Response) => {
   res.clearCookie('token');

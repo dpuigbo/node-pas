@@ -6,6 +6,7 @@ interface AuthUser {
   email: string;
   nombre: string;
   rol: string;
+  telefono?: string | null;
 }
 
 export function useAuth() {

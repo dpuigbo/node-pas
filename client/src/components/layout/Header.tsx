@@ -1,4 +1,5 @@
 import { LogOut, Menu, Bell } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
 export function Header({ onOpenMobile }: { onOpenMobile: () => void }) {
@@ -36,7 +37,11 @@ export function Header({ onOpenMobile }: { onOpenMobile: () => void }) {
         </button>
         {!isLoading && user && (
           <>
-            <div className="flex items-center gap-2 rounded-full border border-border bg-card p-1 sm:pr-3">
+            <Link
+              to="/perfil"
+              title="Mi perfil"
+              className="flex items-center gap-2 rounded-full border border-border bg-card p-1 transition-colors hover:bg-accent sm:pr-3"
+            >
               <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                 {initials || 'U'}
               </div>
@@ -44,7 +49,7 @@ export function Header({ onOpenMobile }: { onOpenMobile: () => void }) {
                 <p className="text-xs font-medium">{user.nombre}</p>
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{user.rol}</p>
               </div>
-            </div>
+            </Link>
             <button
               onClick={() => logout()}
               className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
