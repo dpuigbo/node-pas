@@ -664,7 +664,19 @@ function DarkTable({ block, value, readOnly, onChange }: { block: AssembledBlock
   const rows = (value as Row[]) || [];
   const title = (block.config.title as string) || (block.config.label as string) || '';
   const rowPhotos = !!block.config.rowPhotos;
+  // Tabla dinámica (añadir/eliminar filas): flag explícito `dynamicRows`, o tabla doc-level
+  // sin `fixedRows` (p.ej. observaciones). Las de componente o con fixedRows son fijas.
+  const dynamic = block.config.dynamicRows === true || (!block._componenteInformeId && !((block.config.fixedRows as unknown[] | undefined)?.length));
+  const addLabel = (block.config.addLabel as string) || 'Añadir fila';
   const update = (ri: number, key: string, v: unknown) => onChange(rows.map((r, i) => (i === ri ? { ...r, [key]: v } : r)));
+  const emptyRow = (): Row => {
+    const r: Row = {};
+    for (const c of cols) r[c.key] = c.type === 'checkbox' ? false : '';
+    if (rowPhotos) r.fotos = [];
+    return r;
+  };
+  const addRow = () => onChange([...rows, emptyRow()]);
+  const removeRow = (ri: number) => onChange(rows.filter((_, i) => i !== ri));
   const isText = (c: Col) => !['label', 'checkbox', 'select', 'number', 'date'].includes(c.type);
   const compactCols = cols.filter((c) => !isText(c));
   const textCols = cols.filter(isText);
@@ -674,15 +686,24 @@ function DarkTable({ block, value, readOnly, onChange }: { block: AssembledBlock
       {/* Escritorio/tablet: tabla */}
       <div className="hidden overflow-x-auto sm:block">
         <table className="w-full table-fixed text-sm">
-          <colgroup>{cols.map((c) => <col key={c.key} style={c.width ? { width: c.width } : undefined} />)}</colgroup>
+          <colgroup>{cols.map((c) => <col key={c.key} style={c.width ? { width: c.width } : undefined} />)}{dynamic && !readOnly && <col style={{ width: '44px' }} />}</colgroup>
           <thead>
-            <tr className="text-left">{cols.map((c) => <th key={c.key} className="px-3 py-2 text-xs font-medium text-neutral-500">{c.label}</th>)}</tr>
+            <tr className="text-left">{cols.map((c) => <th key={c.key} className="px-3 py-2 text-xs font-medium text-neutral-500">{c.label}</th>)}{dynamic && !readOnly && <th className="px-2 py-2" />}</tr>
           </thead>
           <tbody className="divide-y divide-neutral-800">
             {rows.length === 0
-              ? <tr><td colSpan={Math.max(cols.length, 1)} className="px-3 py-4 text-center text-xs text-neutral-600">Sin filas</td></tr>
+              ? <tr><td colSpan={(cols.length + (dynamic && !readOnly ? 1 : 0)) || 1} className="px-3 py-4 text-center text-xs text-neutral-600">Sin filas</td></tr>
               : rows.map((row, ri) => (
-                <tr key={ri}>{cols.map((c) => <td key={c.key} className="px-3 py-2 align-top">{darkCell(c, row[c.key], (v) => update(ri, c.key, v), readOnly)}</td>)}</tr>
+                <tr key={ri}>
+                  {cols.map((c) => <td key={c.key} className="px-3 py-2 align-top">{darkCell(c, row[c.key], (v) => update(ri, c.key, v), readOnly)}</td>)}
+                  {dynamic && !readOnly && (
+                    <td className="px-2 py-2 align-top">
+                      <button type="button" onClick={() => removeRow(ri)} title="Eliminar fila" className="rounded-lg p-1.5 text-neutral-500 hover:bg-neutral-800 hover:text-red-400">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </td>
+                  )}
+                </tr>
               ))}
           </tbody>
         </table>
@@ -693,6 +714,14 @@ function DarkTable({ block, value, readOnly, onChange }: { block: AssembledBlock
           ? <div className="px-4 py-4 text-center text-xs text-neutral-600">Sin filas</div>
           : rows.map((row, ri) => (
             <div key={ri} className="space-y-2 p-3">
+              {dynamic && !readOnly && (
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-medium uppercase tracking-wide text-neutral-600">#{ri + 1}</span>
+                  <button type="button" onClick={() => removeRow(ri)} title="Eliminar" className="rounded-lg p-1 text-neutral-500 hover:bg-neutral-800 hover:text-red-400">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
               {compactCols.length > 0 && (
                 <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
                   {compactCols.map((c) => (
@@ -715,6 +744,13 @@ function DarkTable({ block, value, readOnly, onChange }: { block: AssembledBlock
             </div>
           ))}
       </div>
+      {dynamic && !readOnly && (
+        <div className="border-t border-neutral-800 p-2">
+          <button type="button" onClick={addRow} className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-neutral-700 px-3 py-2 text-sm text-neutral-300 hover:border-neutral-600 hover:bg-neutral-800/50">
+            <Plus className="h-4 w-4" /> {addLabel}
+          </button>
+        </div>
+      )}
     </section>
   );
 }
