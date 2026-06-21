@@ -1,9 +1,9 @@
-import { useState, useMemo, useCallback, useRef, useEffect, type ReactNode } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect, Fragment, type ReactNode } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft, Save, FileText, Loader2, Check, ChevronRight, ChevronLeft,
-  CheckCircle2, ClipboardCheck, Bot, Cpu, Move, BookOpen, RefreshCw, X, WifiOff, Camera, Image as ImageIcon, Plus, Trash2, FileUp,
+  CheckCircle2, ClipboardCheck, Bot, Cpu, Move, BookOpen, RefreshCw, X, WifiOff, Camera, Image as ImageIcon, Plus, Trash2, FileUp, Info, ChevronDown,
 } from 'lucide-react';
 import api from '@/lib/api';
 import { useAssembledReport, useUpdateEstadoInforme, useRegenerarInforme } from '@/hooks/useInformes';
@@ -548,7 +548,10 @@ function SectionView({
 
       <div className="space-y-4">
         {section.blocks.map((b) => (
-          <ControlBlock key={b.id} block={b} readOnly={readOnly} value={blockValue(b)} onChange={(v) => onBlockChange(b, v)} />
+          <div key={b.id} className="space-y-2">
+            <BlockTip block={b} />
+            <ControlBlock block={b} readOnly={readOnly} value={blockValue(b)} onChange={(v) => onBlockChange(b, v)} />
+          </div>
         ))}
       </div>
 
@@ -561,6 +564,30 @@ function SectionView({
           ? <button onClick={() => onNavigate(next.key)} className="flex items-center gap-1 rounded-lg px-3.5 py-2 text-sm font-semibold text-neutral-900" style={{ backgroundColor: LIME }}>Siguiente <ChevronRight className="h-4 w-4" /></button>
           : <button onClick={() => onNavigate('overview')} className="flex items-center gap-1 rounded-lg border border-neutral-700 px-3 py-2 text-sm text-neutral-300 hover:bg-neutral-800">Terminar <Check className="h-4 w-4" /></button>}
       </div>
+    </div>
+  );
+}
+
+// Tips por punto comun del informe (clave de bloque -> ayuda). Cliente, sin regen; ampliar el mapa.
+const COMMON_TIPS: Record<string, { title: string; body: string }> = {
+  conmutacion_calibracion: {
+    title: 'Cómo ver la conmutación en el controlador',
+    body: 'Menú → Control panel → Configuration (modo manual) → Topics: Motion → Motor Calibration → Show all → seleccionar eje + Edit → Commutator Offset.',
+  },
+};
+
+function BlockTip({ block }: { block: AssembledBlock }) {
+  const [open, setOpen] = useState(false);
+  const tip = COMMON_TIPS[(block.config.key as string) || ''];
+  if (!tip) return null;
+  return (
+    <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.06]">
+      <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-amber-200/90">
+        <Info className="h-4 w-4 shrink-0" />
+        <span className="flex-1">{tip.title}</span>
+        <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && <div className="px-3 pb-2.5 pl-9 text-xs leading-relaxed text-amber-100/80">{tip.body}</div>}
     </div>
   );
 }
@@ -685,11 +712,14 @@ function CalibracionImport({ rows, readOnly, onChange }: { rows: Row[]; readOnly
   // El lookahead (?!-name) impide cruzar a otro registro (p.ej. ARM/ARM_CALIB no traen cal_offset).
   const parseMoc = (text: string): Record<number, string> => {
     const out: Record<number, string> = {};
-    const re = /-name\s+"rob\d+_(\d+)"(?:(?!-name)[\s\S])*?-cal_offset\s+(-?\d+(?:\.\d+)?)/g;
-    let m: RegExpExecArray | null;
-    while ((m = re.exec(text)) !== null) {
-      const axis = m[1], val = m[2];
-      if (axis && val) out[Number(axis)] = val;
+    // Troceamos por -name "..."; cada trozo es un registro. En los que tengan -cal_offset
+    // sacamos el numero de eje del nombre (rob1_3 -> 3). Robusto al orden y a otras secciones.
+    for (const ch of text.split(/-name\s+/)) {
+      const nm = ch.match(/^"([^"]*)"/);
+      const off = ch.match(/-cal_offset\s+(-?\d+(?:[.,]\d+)?)/);
+      const ax = nm?.[1]?.match(/(\d+)\s*$/);
+      const val = off?.[1];
+      if (ax?.[1] && val) out[Number(ax[1])] = val.replace(',', '.');
     }
     return out;
   };
@@ -701,7 +731,12 @@ function CalibracionImport({ rows, readOnly, onChange }: { rows: Row[]; readOnly
       const offsets = parseMoc(text);
       const n = Object.keys(offsets).length;
       if (n === 0) {
-        setMsg({ ok: false, text: 'No se han encontrado offsets de calibración (sección MOTOR_CALIB) en el archivo.' });
+        const hint = /cal_offset/i.test(text)
+          ? 'El archivo tiene cal_offset pero no en el formato esperado. Mándame este MOC.cfg y lo ajusto.'
+          : /MOTOR_CALIB/i.test(text)
+            ? 'Veo MOTOR_CALIB pero sin valores de cal_offset (¿robot sin calibrar?).'
+            : 'No parece un MOC.cfg de ABB IRC5 (sin MOTOR_CALIB). Si es OmniCore u otro formato, dímelo.';
+        setMsg({ ok: false, text: hint });
         return;
       }
       const next = rows.map((r) => {
@@ -889,16 +924,25 @@ function DarkTable({ block, value, readOnly, onChange }: { block: AssembledBlock
             {rows.length === 0
               ? <tr><td colSpan={(cols.length + (dynamic && !readOnly ? 1 : 0)) || 1} className="px-3 py-4 text-center text-xs text-neutral-600">Sin filas</td></tr>
               : rows.map((row, ri) => (
-                <tr key={ri}>
-                  {cols.map((c) => <td key={c.key} className="px-3 py-2 align-top">{darkCell(c, row[c.key], (v) => update(ri, c.key, v), readOnly)}</td>)}
-                  {dynamic && !readOnly && (
-                    <td className="px-2 py-2 align-top">
-                      <button type="button" onClick={() => removeRow(ri)} title="Eliminar fila" className="rounded-lg p-1.5 text-neutral-500 hover:bg-neutral-800 hover:text-red-400">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </td>
+                <Fragment key={ri}>
+                  <tr>
+                    {cols.map((c) => <td key={c.key} className="px-3 py-2 align-top">{darkCell(c, row[c.key], (v) => update(ri, c.key, v), readOnly)}</td>)}
+                    {dynamic && !readOnly && (
+                      <td className="px-2 py-2 align-top">
+                        <button type="button" onClick={() => removeRow(ri)} title="Eliminar fila" className="rounded-lg p-1.5 text-neutral-500 hover:bg-neutral-800 hover:text-red-400">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                  {rowPhotos && (
+                    <tr>
+                      <td colSpan={(cols.length + (dynamic && !readOnly ? 1 : 0)) || 1} className="px-3 pb-3">
+                        <RowPhotos fotos={(row.fotos as { name: string; data: string }[]) || []} readOnly={readOnly} onChange={(f) => update(ri, 'fotos', f)} />
+                      </td>
+                    </tr>
                   )}
-                </tr>
+                </Fragment>
               ))}
           </tbody>
         </table>

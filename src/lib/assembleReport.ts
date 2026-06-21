@@ -420,7 +420,9 @@ export function assembleReport(input: AssemblyInput): AssemblyResult {
         };
         const userEdits =
           (datosDocumento[key] as Record<string, unknown>) || {};
-        assembled._dataValue = { ...seeded, ...userEdits };
+        // "actividad" (= nivel de mantenimiento) es DERIVADO: siempre el valor calculado,
+        // aunque hubiera un valor viejo guardado (p.ej. el titulo de informes anteriores).
+        assembled._dataValue = { ...seeded, ...userEdits, actividad: seeded.actividad };
       }
 
       // Special handling: client_data → editable card seeded from context
