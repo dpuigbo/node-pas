@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft, Save, FileText, Loader2, Check, ChevronRight, ChevronLeft,
-  CheckCircle2, ClipboardCheck, Bot, Cpu, Move, BookOpen, RefreshCw, X, WifiOff, Camera, Image as ImageIcon, Plus, Trash2,
+  CheckCircle2, ClipboardCheck, Bot, Cpu, Move, BookOpen, RefreshCw, X, WifiOff, Camera, Image as ImageIcon, Plus, Trash2, FileUp,
 } from 'lucide-react';
 import api from '@/lib/api';
 import { useAssembledReport, useUpdateEstadoInforme, useRegenerarInforme } from '@/hooks/useInformes';
@@ -593,7 +593,18 @@ function ControlBlock({
   }
   // Resto de bloques en OSCURO (reductoras, baterías, calibración, identidad, montaje…)
   if (block.type === 'reducer_oils') return <DarkReducerOils value={value} readOnly={readOnly} onChange={onChange} title={(block.config.title as string) || 'Reductoras'} />;
-  if (block.type === 'table') return <DarkTable block={block} value={value} readOnly={readOnly} onChange={onChange} />;
+  if (block.type === 'table') {
+    // Tabla de calibración ABB: barra para importar la "Calibración sistema" desde el MOC.cfg.
+    if (block.config.key === 'conmutacion_calibracion') {
+      return (
+        <div className="space-y-3">
+          <CalibracionImport rows={(value as Row[]) || []} readOnly={readOnly} onChange={onChange} />
+          <DarkTable block={block} value={value} readOnly={readOnly} onChange={onChange} />
+        </div>
+      );
+    }
+    return <DarkTable block={block} value={value} readOnly={readOnly} onChange={onChange} />;
+  }
   if (['text_field', 'number_field', 'date_field', 'select_field', 'text_area'].includes(block.type)) return <DarkField block={block} value={value} readOnly={readOnly} onChange={onChange} />;
   if (block.type === 'image') return <DarkImage value={value} readOnly={readOnly} onChange={onChange} label={(block.config.label as string) || 'Fotos'} />;
   if (block.type === 'checklist') return <DarkChecklist block={block} value={value} readOnly={readOnly} onChange={onChange} />;
@@ -659,6 +670,71 @@ function darkCell(col: Col, value: unknown, onChange: (v: unknown) => void, read
 }
 
 // ===== Tabla genérica en oscuro =====
+// ===== Importar calibración ABB: arrastrar MOC.cfg → columna "Calibración sistema" =====
+function CalibracionImport({ rows, readOnly, onChange }: { rows: Row[]; readOnly: boolean; onChange: (v: unknown) => void }) {
+  const [drag, setDrag] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Sección MOTOR_CALIB del MOC.cfg: por eje  -name "rob1_N" ... -cal_offset <valor>.
+  // El lookahead (?!-name) impide cruzar a otro registro (p.ej. ARM/ARM_CALIB no traen cal_offset).
+  const parseMoc = (text: string): Record<number, string> => {
+    const out: Record<number, string> = {};
+    const re = /-name\s+"rob\d+_(\d+)"(?:(?!-name)[\s\S])*?-cal_offset\s+(-?\d+(?:\.\d+)?)/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(text)) !== null) {
+      const axis = m[1], val = m[2];
+      if (axis && val) out[Number(axis)] = val;
+    }
+    return out;
+  };
+
+  const handleFile = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const offsets = parseMoc(text);
+      const n = Object.keys(offsets).length;
+      if (n === 0) {
+        setMsg({ ok: false, text: 'No se han encontrado offsets de calibración (sección MOTOR_CALIB) en el archivo.' });
+        return;
+      }
+      const next = rows.map((r) => {
+        const axis = Number(r.eje);
+        return offsets[axis] != null ? { ...r, cal_sistema: offsets[axis] } : r;
+      });
+      onChange(next);
+      setMsg({ ok: true, text: `Rellenados ${n} eje(s) en "Calibración sistema" desde el MOC.cfg.` });
+    } catch {
+      setMsg({ ok: false, text: 'No se ha podido leer el archivo.' });
+    }
+  };
+
+  if (readOnly) return null;
+
+  return (
+    <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-3">
+      <div className="mb-2 text-xs font-medium text-neutral-400">
+        Importar la <span className="text-neutral-200">calibración del sistema</span> desde el backup (<span className="font-mono">MOC.cfg</span>)
+      </div>
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+        onDragLeave={() => setDrag(false)}
+        onDrop={(e) => { e.preventDefault(); setDrag(false); handleFile(e.dataTransfer.files?.[0]); }}
+        onClick={() => inputRef.current?.click()}
+        style={drag ? { borderColor: LIME, backgroundColor: 'rgba(197,248,42,0.10)' } : undefined}
+        className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-neutral-700 px-4 py-5 text-center transition-colors hover:border-neutral-600 hover:bg-neutral-800/50"
+      >
+        <FileUp className="h-6 w-6 text-neutral-500" />
+        <div className="text-sm text-neutral-300">Arrastra aquí el <span className="font-mono">MOC.cfg</span> o haz clic para elegirlo</div>
+        <div className="text-[11px] text-neutral-500">Rellena "Calibración sistema" por eje. La conmutación se introduce a mano (solo se ve en el controlador).</div>
+      </div>
+      <input ref={inputRef} type="file" accept=".cfg,text/plain" className="hidden" onChange={(e) => { handleFile(e.target.files?.[0]); e.target.value = ''; }} />
+      {msg && <div className="mt-2 text-xs" style={{ color: msg.ok ? LIME : '#f87171' }}>{msg.text}</div>}
+    </div>
+  );
+}
+
 function DarkTable({ block, value, readOnly, onChange }: { block: AssembledBlock; value: unknown; readOnly: boolean; onChange: (v: unknown) => void }) {
   const cols = (block.config.columns as Col[]) || [];
   const rows = (value as Row[]) || [];
