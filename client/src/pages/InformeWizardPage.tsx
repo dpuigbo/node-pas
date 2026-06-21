@@ -1183,14 +1183,14 @@ function filasAutoIntercambio(blocks: AssembledBlock[], getVal: (b: AssembledBlo
         if (r && r.cambio) {
           const nombre = String(r.tipoSuministro ?? '');
           const vol = r.volumen != null ? String(r.volumen) : '';
-          out.push({ _src: `oil:${b._componenteInformeId}:${String(r.eje ?? i)}`, designacionEntrada: nombre, designacionSalida: nombre, unidadesSalida: vol, unidadesUsadas: vol, serieEntrada: '', serieSalida: '', intercambio: true, usado: false });
+          out.push({ _src: `oil:${b._componenteInformeId}:${String(r.eje ?? i)}`, designacionEntrada: nombre, designacionSalida: nombre, unidadesSalida: vol, unidadesUsadas: vol, serieEntrada: '', serieSalida: '', intercambio: false, usado: true });
         }
       });
     } else if (b.type === 'table' && String(b.config.key ?? '').startsWith('baterias_')) {
       rows.forEach((r, i) => {
         if (r && r.reemplazado) {
           const nombre = String(r.bateria ?? '');
-          out.push({ _src: `bat:${b._componenteInformeId ?? 'doc'}:${String(b.config.key)}:${i}`, designacionEntrada: nombre, designacionSalida: nombre, unidadesSalida: '', unidadesUsadas: '', serieEntrada: '', serieSalida: '', intercambio: true, usado: false });
+          out.push({ _src: `bat:${b._componenteInformeId ?? 'doc'}:${String(b.config.key)}:${i}`, designacionEntrada: nombre, designacionSalida: nombre, unidadesSalida: '', unidadesUsadas: '', serieEntrada: '', serieSalida: '', intercambio: false, usado: true });
         }
       });
     }
