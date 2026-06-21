@@ -1173,36 +1173,46 @@ function esFuenteIntercambio(b: AssembledBlock): boolean {
   return b.type === 'reducer_oils' || (b.type === 'table' && String(b.config.key ?? '').startsWith('baterias_'));
 }
 function filasAutoIntercambio(blocks: AssembledBlock[], getVal: (b: AssembledBlock) => unknown): EqRow[] {
-  const out: EqRow[] = [];
+  // Aceites: UNA fila por consumible distinto, sumando las cantidades de todos los ejes que lo llevan.
+  const oilMap = new Map<string, { nombre: string; total: number; hasNum: boolean }>();
+  const batRows: EqRow[] = [];
   for (const b of blocks) {
     const rv = getVal(b);
     if (!Array.isArray(rv)) continue;
     const rows = rv as Record<string, unknown>[];
     if (b.type === 'reducer_oils') {
-      rows.forEach((r, i) => {
+      rows.forEach((r) => {
         if (r && r.cambio) {
           const nombre = String(r.tipoSuministro ?? '');
-          const vol = r.volumen != null ? String(r.volumen) : '';
-          out.push({ _src: `oil:${b._componenteInformeId}:${String(r.eje ?? i)}`, designacionEntrada: nombre, designacionSalida: nombre, unidadesSalida: vol, unidadesUsadas: vol, serieEntrada: '', serieSalida: '', intercambio: false, usado: true });
+          const clave = String(r.aceiteId ?? nombre); // agrupa por consumible
+          const n = Number(r.volumen);
+          const cur = oilMap.get(clave) ?? { nombre, total: 0, hasNum: false };
+          if (Number.isFinite(n)) { cur.total += n; cur.hasNum = true; }
+          if (!cur.nombre) cur.nombre = nombre;
+          oilMap.set(clave, cur);
         }
       });
     } else if (b.type === 'table' && String(b.config.key ?? '').startsWith('baterias_')) {
       rows.forEach((r, i) => {
         if (r && r.reemplazado) {
           const nombre = String(r.bateria ?? '');
-          out.push({ _src: `bat:${b._componenteInformeId ?? 'doc'}:${String(b.config.key)}:${i}`, designacionEntrada: nombre, designacionSalida: nombre, unidadesSalida: '', unidadesUsadas: '', serieEntrada: '', serieSalida: '', intercambio: false, usado: true });
+          batRows.push({ _src: `bat:${b._componenteInformeId ?? 'doc'}:${String(b.config.key)}:${i}`, designacionEntrada: nombre, designacionSalida: nombre, unidadesSalida: '', unidadesUsadas: '', serieEntrada: '', serieSalida: '', intercambio: false, usado: true });
         }
       });
     }
   }
-  return out;
+  const oilRows: EqRow[] = [];
+  for (const [clave, o] of oilMap) {
+    const vol = o.hasNum ? String(Number(o.total.toFixed(3))) : '';
+    oilRows.push({ _src: `oil:${clave}`, designacionEntrada: o.nombre, designacionSalida: o.nombre, unidadesSalida: vol, unidadesUsadas: vol, serieEntrada: '', serieSalida: '', intercambio: false, usado: true });
+  }
+  return [...oilRows, ...batRows];
 }
 function reconciliarIntercambio(current: EqRow[], desired: EqRow[]): EqRow[] {
+  // Las filas manuales (sin _src) se conservan; las automaticas se recalculan siempre
+  // para que el sumatorio por consumible quede correcto.
   const manual = current.filter((r) => !r._src);
-  const prevAuto = new Map(current.filter((r) => r._src).map((r) => [r._src as string, r]));
-  // Mantiene la fila auto existente (con ediciones del tecnico) si su origen sigue; si no, la nueva.
-  const auto = desired.map((d) => prevAuto.get(d._src as string) ?? d);
-  return [...auto, ...manual];
+  return [...desired, ...manual];
 }
 // ===== Tabla de baterías (SMB/EIB o controlador): desplegable del catálogo que autorrellena =====
 type BatOpt = { id: number; nombre: string; subtipo: string | null; codigoFabricante: string | null; activo: boolean };
