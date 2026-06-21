@@ -386,6 +386,8 @@ model Sistema {
   fabricanteId Int      @map("fabricante_id")
   nombre       String
   descripcion  String?
+  linea        String?
+  denominacion String?
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 

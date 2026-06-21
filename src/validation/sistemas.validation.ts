@@ -53,6 +53,8 @@ export const createSistemaCompletoSchema = z.object({
   fabricanteId: z.number().int().positive(),
   nombre: z.string().min(1, 'El nombre es obligatorio').max(200),
   descripcion: z.string().max(500).optional().nullable(),
+  linea: z.string().max(200).optional().nullable(),
+  denominacion: z.string().max(200).optional().nullable(),
   componentes: z.array(componenteWizardSchema).min(2, 'Mínimo controladora + robot'),
 });
 

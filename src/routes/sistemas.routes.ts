@@ -214,6 +214,8 @@ router.put('/:id/completo', requireRole('admin'), async (req: Request, res: Resp
         data: {
           nombre: sistemaData.nombre,
           descripcion: sistemaData.descripcion ?? null,
+          linea: sistemaData.linea ?? null,
+          denominacion: sistemaData.denominacion ?? null,
           fabricanteId: sistemaData.fabricanteId,
         },
       });

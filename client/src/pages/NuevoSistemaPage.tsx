@@ -77,6 +77,8 @@ export default function NuevoSistemaPage() {
   // Step 1: Sistema info + fabricante + controladora
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
+  const [linea, setLinea] = useState('');
+  const [denominacion, setDenominacion] = useState('');
   const [fabricanteId, setFabricanteId] = useState<number>(0);
   const [controllerFamilia, setControllerFamilia] = useState('');
   const [controllerId, setControllerId] = useState<number>(0);
@@ -168,6 +170,8 @@ export default function NuevoSistemaPage() {
 
     setNombre(existingSistema.nombre);
     setDescripcion(existingSistema.descripcion || '');
+    setLinea(existingSistema.linea || '');
+    setDenominacion(existingSistema.denominacion || '');
     setFabricanteId(existingSistema.fabricanteId);
 
     if (ctrl) {
@@ -445,6 +449,8 @@ export default function NuevoSistemaPage() {
       fabricanteId,
       nombre,
       descripcion: descripcion || null,
+      linea: linea || null,
+      denominacion: denominacion || null,
       componentes,
     };
 
@@ -545,6 +551,16 @@ export default function NuevoSistemaPage() {
                 placeholder="Notas sobre este sistema..."
                 rows={2}
               />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Linea <span className="text-muted-foreground font-normal">(del cliente, opcional)</span></Label>
+                <Input value={linea} onChange={(e) => setLinea(e.target.value)} placeholder="Ej: Linea 3 - Soldadura" />
+              </div>
+              <div>
+                <Label>Denominacion <span className="text-muted-foreground font-normal">(del cliente, opcional)</span></Label>
+                <Input value={denominacion} onChange={(e) => setDenominacion(e.target.value)} placeholder="Etiqueta interna del cliente" />
+              </div>
             </div>
 
             <div className="border-t pt-4">
