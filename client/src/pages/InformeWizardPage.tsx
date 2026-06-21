@@ -675,6 +675,11 @@ function CalibracionImport({ rows, readOnly, onChange }: { rows: Row[]; readOnly
   const [drag, setDrag] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const photoRef = useRef<HTMLInputElement>(null);
+  const [ocrBusy, setOcrBusy] = useState(false);
+  const [ocrProgress, setOcrProgress] = useState(0);
+  const [proposal, setProposal] = useState<Record<string, string> | null>(null);
+  const ejes = rows.map((r) => String(r.eje));
 
   // Sección MOTOR_CALIB del MOC.cfg: por eje  -name "rob1_N" ... -cal_offset <valor>.
   // El lookahead (?!-name) impide cruzar a otro registro (p.ej. ARM/ARM_CALIB no traen cal_offset).
@@ -710,6 +715,77 @@ function CalibracionImport({ rows, readOnly, onChange }: { rows: Row[]; readOnly
     }
   };
 
+  // --- Foto de la etiqueta → OCR (Tesseract.js, en el dispositivo) → "Calibración etiqueta" ---
+  const loadImage = (src: string) => new Promise<HTMLImageElement>((res, rej) => {
+    const im = new window.Image(); im.onload = () => res(im); im.onerror = rej; im.src = src;
+  });
+  const rotate180 = (img: HTMLImageElement): string => {
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth; c.height = img.naturalHeight;
+    const ctx = c.getContext('2d'); if (!ctx) return '';
+    ctx.translate(c.width, c.height); ctx.rotate(Math.PI); ctx.drawImage(img, 0, 0);
+    return c.toDataURL('image/png');
+  };
+  // Empareja "<eje 1-6> ... <valor 0-6 con 4 decimales>". Mapea por numero de eje (no posicional),
+  // asi un robot de 4 ejes con huecos no descuadra. Los seriales (sin decimales) no producen falsos.
+  const parseLabel = (text: string): Record<number, string> => {
+    const out: Record<number, string> = {};
+    const re = /(?:^|[^\d.])([1-6])[^\d]{1,4}([0-6][.,]\d{3,4})/g;
+    let mm: RegExpExecArray | null;
+    while ((mm = re.exec(text)) !== null) {
+      const a = Number(mm[1]); const v = mm[2];
+      if (a && v && out[a] == null) out[a] = v.replace(',', '.');
+    }
+    return out;
+  };
+  const runOcr = async (file: File) => {
+    setOcrBusy(true); setOcrProgress(0); setMsg(null); setProposal(null);
+    try {
+      const url = URL.createObjectURL(file);
+      const img = await loadImage(url);
+      const T: any = await import('tesseract.js');
+      const recognize = T.recognize ?? T.default?.recognize;
+      const rec = async (src: string | HTMLImageElement): Promise<string> => {
+        const { data } = await recognize(src, 'eng', {
+          logger: (lg: { status: string; progress: number }) => {
+            if (lg.status === 'recognizing text') setOcrProgress(Math.round(lg.progress * 100));
+          },
+        });
+        return (data?.text as string) ?? '';
+      };
+      // Prueba 0°; si salen pocos ejes, prueba 180° (etiquetas montadas del reves) y coge el mejor.
+      let best = parseLabel(await rec(img));
+      if (Object.keys(best).length < 4) {
+        const rotated = rotate180(img);
+        if (rotated) {
+          const alt = parseLabel(await rec(rotated));
+          if (Object.keys(alt).length > Object.keys(best).length) best = alt;
+        }
+      }
+      URL.revokeObjectURL(url);
+      const n = Object.keys(best).length;
+      if (n === 0) { setMsg({ ok: false, text: 'El OCR no ha leido valores. Repite la foto mas recta/enfocada o rellenalos a mano.' }); return; }
+      const init: Record<string, string> = {};
+      for (const e of ejes) init[e] = best[Number(e)] ?? '';
+      setProposal(init);
+      setMsg({ ok: true, text: `OCR: ${n} valor(es) detectado(s). Revisa, corrige y confirma.` });
+    } catch {
+      setMsg({ ok: false, text: 'Error en el OCR. Intentalo otra vez o rellena a mano.' });
+    } finally {
+      setOcrBusy(false);
+    }
+  };
+  const applyProposal = () => {
+    if (!proposal) return;
+    const next = rows.map((r) => {
+      const v = proposal[String(r.eje)];
+      return v != null && v !== '' ? { ...r, cal_etiqueta: v } : r;
+    });
+    onChange(next);
+    setProposal(null);
+    setMsg({ ok: true, text: 'Valores aplicados a "Calibración etiqueta".' });
+  };
+
   if (readOnly) return null;
 
   return (
@@ -730,6 +806,49 @@ function CalibracionImport({ rows, readOnly, onChange }: { rows: Row[]; readOnly
         <div className="text-[11px] text-neutral-500">Rellena "Calibración sistema" por eje. La conmutación se introduce a mano (solo se ve en el controlador).</div>
       </div>
       <input ref={inputRef} type="file" accept=".cfg,text/plain" className="hidden" onChange={(e) => { handleFile(e.target.files?.[0]); e.target.value = ''; }} />
+
+      {/* Foto de la etiqueta → OCR → "Calibración etiqueta" */}
+      <div className="mt-3 border-t border-neutral-800 pt-3">
+        <div className="mb-2 text-xs font-medium text-neutral-400">
+          Leer la <span className="text-neutral-200">calibración de la etiqueta</span> con una foto (OCR en el dispositivo)
+        </div>
+        <button
+          type="button"
+          onClick={() => photoRef.current?.click()}
+          disabled={ocrBusy}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-neutral-700 px-3 py-2.5 text-sm text-neutral-200 transition-colors hover:bg-neutral-800 disabled:opacity-50"
+        >
+          {ocrBusy ? <><Loader2 className="h-4 w-4 animate-spin" /> Leyendo… {ocrProgress}%</> : <><Camera className="h-4 w-4" /> Foto de la etiqueta</>}
+        </button>
+        <input ref={photoRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) runOcr(f); e.target.value = ''; }} />
+        {proposal && (
+          <div className="mt-2 rounded-xl border border-neutral-700 bg-neutral-800/40 p-2.5">
+            <div className="mb-1.5 text-xs text-neutral-400">Propuesta del OCR — revisa, corrige y confirma:</div>
+            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+              {ejes.map((e) => (
+                <label key={e} className="flex items-center gap-1.5 text-sm">
+                  <span className="w-9 shrink-0 text-neutral-500">Eje {e}</span>
+                  <input
+                    value={proposal[e] ?? ''}
+                    inputMode="decimal"
+                    onChange={(ev) => setProposal({ ...proposal, [e]: ev.target.value })}
+                    className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-2 py-1 text-neutral-100 outline-none focus:border-neutral-500"
+                  />
+                </label>
+              ))}
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button type="button" onClick={applyProposal} className="rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-900" style={{ backgroundColor: LIME }}>
+                Aplicar a "Calibración etiqueta"
+              </button>
+              <button type="button" onClick={() => setProposal(null)} className="rounded-lg border border-neutral-700 px-3 py-1.5 text-sm text-neutral-300 hover:bg-neutral-800">
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {msg && <div className="mt-2 text-xs" style={{ color: msg.ok ? LIME : '#f87171' }}>{msg.text}</div>}
     </div>
   );
