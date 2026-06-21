@@ -19,7 +19,7 @@ async function authMiddleware(req, res, next) {
         const payload = jsonwebtoken_1.default.verify(token, env_1.env.JWT_SECRET);
         const user = await database_1.prisma.user.findUnique({
             where: { id: payload.userId },
-            select: { id: true, email: true, nombre: true, rol: true },
+            select: { id: true, email: true, nombre: true, rol: true, telefono: true },
         });
         if (!user || !user.rol) {
             res.status(401).json({ error: 'Usuario no encontrado' });

@@ -320,6 +320,9 @@ router.get('/informes/:id/assembled', async (req, res, next) => {
                     select: {
                         id: true, titulo: true, tipo: true, estado: true,
                         referencia: true, fechaInicio: true, fechaFin: true,
+                        sistemas: {
+                            select: { sistemaId: true, nivel: { select: { codigo: true, nombre: true } } },
+                        },
                         cliente: {
                             select: {
                                 id: true, nombre: true, sede: true,
@@ -382,9 +385,10 @@ router.get('/informes/:id/assembled', async (req, res, next) => {
         // Build placeholder context (el usuario logueado se usa como técnico de PAS)
         const authUser = (0, auth_middleware_1.getAuthUser)(req);
         const usuario = authUser
-            ? await database_1.prisma.user.findUnique({ where: { id: authUser.id }, select: { nombre: true, email: true } })
+            ? await database_1.prisma.user.findUnique({ where: { id: authUser.id }, select: { nombre: true, email: true, telefono: true } })
             : null;
-        const baseContext = (0, assembleReport_1.buildPlaceholderContext)(informe, usuario ?? undefined);
+        const nivelInfo = informe.intervencion.sistemas.find((s) => s.sistemaId === informe.sistemaId)?.nivel ?? null;
+        const baseContext = (0, assembleReport_1.buildPlaceholderContext)(informe, usuario ?? undefined, nivelInfo);
         // Map component data for assembly
         const componentes = informe.componentes.map((c) => ({
             id: c.id,

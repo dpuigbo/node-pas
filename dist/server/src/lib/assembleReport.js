@@ -83,11 +83,12 @@ function extractSection(blocks, contentType) {
  * Build the base placeholder context from informe-level data.
  * This covers sistema, cliente, and intervencion placeholders.
  */
-function buildPlaceholderContext(informe, usuario) {
+function buildPlaceholderContext(informe, usuario, nivel) {
     const cli = informe.intervencion.cliente;
     return {
         'usuario.nombre': usuario?.nombre ?? undefined,
         'usuario.email': usuario?.email ?? undefined,
+        'usuario.telefono': usuario?.telefono ?? undefined,
         'sistema.nombre': informe.sistema.nombre,
         'sistema.descripcion': informe.sistema.descripcion ?? undefined,
         'sistema.linea': informe.sistema.linea ?? undefined,
@@ -103,7 +104,10 @@ function buildPlaceholderContext(informe, usuario) {
         'cliente.email': cli?.email ?? undefined,
         'cliente.personaContacto': cli?.personaContacto ?? undefined,
         'cliente.maquina': informe.sistema.maquina?.nombre ?? undefined,
-        'intervencion.actividad': informe.intervencion.titulo,
+        // "Actividad" = nivel de mantenimiento realizado (de IntervencionSistema); el titulo como fallback.
+        'intervencion.actividad': nivel?.nombre || informe.intervencion.titulo,
+        'intervencion.nivel': nivel?.nombre ?? undefined,
+        'intervencion.titulo': informe.intervencion.titulo,
         'intervencion.fecha': informe.intervencion.fechaInicio
             ? new Date(informe.intervencion.fechaInicio).toLocaleDateString('es-ES')
             : undefined,
@@ -278,7 +282,7 @@ function assembleReport(input) {
                     horaFin: '',
                     // Técnico = usuario logueado que realiza el informe.
                     tecnicoPas: String(baseContext['usuario.nombre'] ?? ''),
-                    telTecnico: '',
+                    telTecnico: String(baseContext['usuario.telefono'] ?? ''),
                     emailTecnico: String(baseContext['usuario.email'] ?? ''),
                     // Contacto = persona de contacto del cliente.
                     tecnicoCliente: String(baseContext['cliente.personaContacto'] ?? ''),
