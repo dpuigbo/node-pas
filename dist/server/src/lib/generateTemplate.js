@@ -17,6 +17,7 @@ exports.buildExternalAxisSchema = buildExternalAxisSchema;
 exports.generateTemplateForModel = generateTemplateForModel;
 const node_crypto_1 = require("node:crypto");
 const reportProfiles_1 = require("./reportProfiles");
+const planMantenimiento_1 = require("./planMantenimiento");
 // ===== Helpers =====
 const uuid = () => (0, node_crypto_1.randomUUID)();
 const block = (type, config) => ({ id: uuid(), type, config });
@@ -123,8 +124,12 @@ function bateriasTable(key, title, rows) {
             { key: 'reemplazado', label: 'Reemplazado', type: 'checkbox', width: '100px' },
             { key: 'fecha', label: 'Fecha de reemplazo', type: 'text', width: '130px' },
         ],
-        fixedRows: rows.map((b) => ({ bateria: b.nombre, referencia: b.referencia || '-', reemplazado: false, fecha: '' })),
-        allowAddRows: true, minRows: rows.length, maxRows: rows.length + 5,
+        fixedRows: rows.length === 1
+            ? rows.map((b) => ({ bateria: b.nombre, referencia: b.referencia || '', reemplazado: false, fecha: '', consumibleId: b.consumibleId }))
+            : [{ bateria: '', referencia: '', reemplazado: false, fecha: '', consumibleId: null }],
+        // Opciones para el desplegable (las que nombra el manual del modelo): 1 -> por defecto; varias -> elige.
+        opcionesBateria: rows.map((b) => ({ consumibleId: b.consumibleId, nombre: b.nombre, referencia: b.referencia })),
+        allowAddRows: true, minRows: 0, maxRows: (rows.length || 1) + 5,
     });
 }
 function reducerOilsBlock(key, title, reductoras) {
@@ -311,6 +316,39 @@ async function batteriesBySubtipo(prisma, subtipos) {
     });
     return rows.map((r) => ({ nombre: r.nombre, referencia: r.codigoFabricante ?? '', consumibleId: r.id }));
 }
+// Baterias que el manual del modelo nombra (via actividad preventiva -> consumible bateria).
+async function batteriesForModel(prisma, modeloId) {
+    const acts = await prisma.actividadPreventiva.findMany({
+        where: { consumibles: { some: { consumible: { tipo: 'bateria' } } } },
+        select: {
+            modelosAplicables: true,
+            consumibles: {
+                where: { consumible: { tipo: 'bateria' } },
+                select: { consumible: { select: { id: true, nombre: true, codigoFabricante: true } } },
+            },
+        },
+    });
+    const seen = new Map();
+    for (const a of acts) {
+        if (!(0, planMantenimiento_1.actividadAplicaAModelo)(a, modeloId))
+            continue;
+        for (const ac of a.consumibles) {
+            const c = ac.consumible;
+            if (c && !seen.has(c.id))
+                seen.set(c.id, { nombre: c.nombre, referencia: c.codigoFabricante ?? '', consumibleId: c.id });
+        }
+    }
+    return [...seen.values()];
+}
+// SMB del manipulador: por modelo si el manual lo nombra; si no, todas las SMB+EIB del catalogo.
+async function smbForModel(prisma, modeloId, bateriaMedida) {
+    if (bateriaMedida !== 'smb')
+        return [];
+    const perModel = await batteriesForModel(prisma, modeloId);
+    if (perModel.length > 0)
+        return perModel;
+    return batteriesBySubtipo(prisma, ['smb_2pole', 'smb_3pole', 'smb_litio', 'smb_nicd', 'eib']);
+}
 async function batteriesByCodigo(prisma, refs) {
     const codigos = refs.map((r) => r.codigoInterno).filter(Boolean);
     if (codigos.length === 0)
@@ -372,7 +410,7 @@ async function generateTemplateForModel(prisma, modeloId) {
         const profile = Object.keys(modelExtras).length
             ? { ...baseProfile, ejeExtras: mergeEjeExtras(baseProfile.ejeExtras, modelExtras) }
             : baseProfile;
-        const bateriasSMB = profile.bateriaMedida === 'smb' ? await batteriesBySubtipo(prisma, ['smb_2pole', 'smb_3pole']) : [];
+        const bateriasSMB = await smbForModel(prisma, modeloId, profile.bateriaMedida);
         return buildMechanicalSchema({ nEjes, reductoras, bateriasSMB, overhaulHoras: 40000, profile });
     }
     if (model.tipo === 'controller') {
@@ -384,7 +422,7 @@ async function generateTemplateForModel(prisma, modeloId) {
         const reductoras = await loadReductoras(prisma, modeloId);
         const nEjes = reductoras.length || 1;
         const profile = (0, reportProfiles_1.getExternalAxisProfile)(marca);
-        const bateriasSMB = profile.bateriaMedida === 'smb' ? await batteriesBySubtipo(prisma, ['smb_2pole', 'smb_3pole']) : [];
+        const bateriasSMB = await smbForModel(prisma, modeloId, profile.bateriaMedida);
         return buildExternalAxisSchema({ nEjes, reductoras, bateriasSMB, profile });
     }
     return {
