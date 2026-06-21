@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft, Save, FileText, Loader2, Check, ChevronRight, ChevronLeft,
-  CheckCircle2, ClipboardCheck, Bot, Cpu, Move, BookOpen, RefreshCw, X, WifiOff, Camera, Image as ImageIcon,
+  CheckCircle2, ClipboardCheck, Bot, Cpu, Move, BookOpen, RefreshCw, X, WifiOff, Camera, Image as ImageIcon, Plus, Trash2,
 } from 'lucide-react';
 import api from '@/lib/api';
 import { useAssembledReport, useUpdateEstadoInforme, useRegenerarInforme } from '@/hooks/useInformes';
@@ -581,6 +581,9 @@ function ControlBlock({
   if (block.type === 'table') return <DarkTable block={block} value={value} readOnly={readOnly} onChange={onChange} />;
   if (['text_field', 'number_field', 'date_field', 'select_field', 'text_area'].includes(block.type)) return <DarkField block={block} value={value} readOnly={readOnly} onChange={onChange} />;
   if (block.type === 'image') return <DarkImage value={value} readOnly={readOnly} onChange={onChange} label={(block.config.label as string) || 'Fotos'} />;
+  if (block.type === 'checklist') return <DarkChecklist block={block} value={value} readOnly={readOnly} onChange={onChange} />;
+  if (block.type === 'signature') return <DarkSignature block={block} value={value} readOnly={readOnly} onChange={onChange} />;
+  if (block.type === 'equipment_exchange') return <DarkEquipmentExchange block={block} value={value} readOnly={readOnly} onChange={onChange} />;
   // Fallback (raro): FormField clásico en tarjeta clara legible.
   const entry = getBlockEntry(block.type as BlockType);
   const FormFieldComp = entry?.FormField;
@@ -692,6 +695,176 @@ function DarkTable({ block, value, readOnly, onChange }: { block: AssembledBlock
             </div>
           ))}
       </div>
+    </section>
+  );
+}
+
+// ===== checklist en oscuro =====
+function DarkChecklist({ block, value, readOnly, onChange }: { block: AssembledBlock; value: unknown; readOnly: boolean; onChange: (v: unknown) => void }) {
+  const items = (block.config.items as { key: string; label: string }[]) || [];
+  const label = (block.config.label as string) || '';
+  const layout = (block.config.layout as string) || 'vertical';
+  const checked = (value as string[]) ?? [];
+  const toggle = (key: string) => {
+    if (readOnly) return;
+    onChange(checked.includes(key) ? checked.filter((k) => k !== key) : [...checked, key]);
+  };
+  return (
+    <section className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900">
+      {label && <div className="border-b border-neutral-800 px-4 py-2.5 text-sm font-semibold text-neutral-200">{label}</div>}
+      <div className={`p-4 ${layout === 'horizontal' ? 'flex flex-wrap gap-x-5 gap-y-2.5' : 'space-y-2.5'}`}>
+        {items.length === 0
+          ? <span className="text-xs italic text-neutral-600">Sin items</span>
+          : items.map((item) => (
+            <label key={item.key} className="flex cursor-pointer select-none items-center gap-2">
+              <input type="checkbox" checked={checked.includes(item.key)} disabled={readOnly}
+                onChange={() => toggle(item.key)}
+                className="h-5 w-5 rounded border-neutral-600 bg-neutral-800" style={{ accentColor: LIME }} />
+              <span className="text-sm text-neutral-200">{item.label}</span>
+            </label>
+          ))}
+      </div>
+    </section>
+  );
+}
+
+// ===== firma en oscuro (lienzo blanco para firmar, marco oscuro) =====
+function DarkSignature({ block, value, readOnly, onChange }: { block: AssembledBlock; value: unknown; readOnly: boolean; onChange: (v: unknown) => void }) {
+  const label = (block.config.label as string) || 'Firma';
+  const role = (block.config.role as string) || '';
+  const required = !!block.config.required;
+  const current = (value as string | null) ?? null;
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const drawing = useRef(false);
+  const [hasStrokes, setHasStrokes] = useState(false);
+  const W = 400, H = 180;
+
+  useEffect(() => {
+    const cv = canvasRef.current; if (!cv) return;
+    const ctx = cv.getContext('2d'); if (!ctx) return;
+    ctx.clearRect(0, 0, W, H);
+    if (current) {
+      const img = new window.Image();
+      img.onload = () => { ctx.drawImage(img, 0, 0, W, H); setHasStrokes(true); };
+      img.src = current;
+    } else setHasStrokes(false);
+  }, [current]);
+
+  const posOf = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const cv = canvasRef.current; if (!cv) return { x: 0, y: 0 };
+    const r = cv.getBoundingClientRect();
+    const sx = W / r.width, sy = H / r.height;
+    if ('touches' in e) { const t = e.touches[0] || e.changedTouches[0]; return { x: (t!.clientX - r.left) * sx, y: (t!.clientY - r.top) * sy }; }
+    return { x: (e.clientX - r.left) * sx, y: (e.clientY - r.top) * sy };
+  };
+  const start = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (readOnly) return; e.preventDefault(); drawing.current = true;
+    const ctx = canvasRef.current?.getContext('2d'); if (!ctx) return;
+    const p = posOf(e); ctx.beginPath(); ctx.moveTo(p.x, p.y);
+    ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#1a1a1a';
+  };
+  const move = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!drawing.current || readOnly) return; e.preventDefault();
+    const ctx = canvasRef.current?.getContext('2d'); if (!ctx) return;
+    const p = posOf(e); ctx.lineTo(p.x, p.y); ctx.stroke(); setHasStrokes(true);
+  };
+  const end = () => {
+    if (!drawing.current) return; drawing.current = false;
+    const cv = canvasRef.current; if (!cv) return;
+    onChange(cv.toDataURL('image/png'));
+  };
+  const clear = () => {
+    if (readOnly) return;
+    const ctx = canvasRef.current?.getContext('2d'); if (ctx) ctx.clearRect(0, 0, W, H);
+    setHasStrokes(false); onChange(null);
+  };
+
+  return (
+    <section className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900">
+      <div className="flex items-center justify-between gap-2 border-b border-neutral-800 px-4 py-2.5">
+        <h3 className="text-sm font-semibold text-neutral-200">
+          {label}{required && <span className="text-red-400">*</span>}
+          {role && <span className="ml-2 text-xs font-normal text-neutral-500">({role})</span>}
+        </h3>
+        {!readOnly && hasStrokes && (
+          <button type="button" onClick={clear} className="flex items-center gap-1 rounded-lg border border-neutral-700 px-2 py-1 text-xs text-neutral-300 hover:bg-neutral-800">
+            <X className="h-3.5 w-3.5" /> Borrar
+          </button>
+        )}
+      </div>
+      <div className="p-3">
+        <div className="overflow-hidden rounded-xl border border-neutral-700 bg-white">
+          <canvas ref={canvasRef} width={W} height={H}
+            className={`w-full touch-none ${readOnly ? 'cursor-not-allowed opacity-70' : 'cursor-crosshair'}`}
+            style={{ maxWidth: '100%', height: 'auto', aspectRatio: `${W}/${H}` }}
+            onMouseDown={start} onMouseMove={move} onMouseUp={end} onMouseLeave={end}
+            onTouchStart={start} onTouchMove={move} onTouchEnd={end} />
+        </div>
+        {!readOnly && !hasStrokes && <p className="mt-1.5 text-center text-[10px] text-neutral-500">Dibuja tu firma con el raton o el dedo</p>}
+      </div>
+    </section>
+  );
+}
+
+// ===== intercambio de equipos en oscuro (tarjeta por equipo) =====
+type EqRow = { unidadesSalida: string; designacionEntrada: string; designacionSalida: string; serieEntrada: string; serieSalida: string; intercambio: boolean; usado: boolean; unidadesUsadas: string };
+function DarkEquipmentExchange({ block, value, readOnly, onChange }: { block: AssembledBlock; value: unknown; readOnly: boolean; onChange: (v: unknown) => void }) {
+  const title = (block.config.title as string) || (block.config.label as string) || 'Intercambio de equipos';
+  const defaultRows = (block.config.defaultRows as number) || 0;
+  const empty = (): EqRow => ({ unidadesSalida: '', designacionEntrada: '', designacionSalida: '', serieEntrada: '', serieSalida: '', intercambio: false, usado: false, unidadesUsadas: '' });
+  const rows = ((value as EqRow[]) ?? (defaultRows ? Array.from({ length: defaultRows }, empty) : [])) as EqRow[];
+  const update = (ri: number, field: keyof EqRow, v: unknown) => { if (readOnly) return; onChange(rows.map((r, i) => (i === ri ? { ...r, [field]: v } : r))); };
+  const add = () => { if (readOnly) return; onChange([...rows, empty()]); };
+  const remove = (ri: number) => { if (readOnly) return; onChange(rows.filter((_, i) => i !== ri)); };
+  const inp = (ri: number, field: keyof EqRow, type = 'text') => (
+    <input type={type} value={String(rows[ri]?.[field] ?? '')} disabled={readOnly}
+      onChange={(e) => update(ri, field, e.target.value)}
+      className="w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none" />
+  );
+  return (
+    <section className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900">
+      <div className="border-b border-neutral-800 px-4 py-2.5 text-sm font-semibold text-neutral-200">{title}</div>
+      <div className="divide-y divide-neutral-800">
+        {rows.length === 0
+          ? <div className="px-4 py-4 text-center text-xs text-neutral-600">Sin equipos. Anade uno abajo.</div>
+          : rows.map((row, ri) => (
+            <div key={ri} className="space-y-2 p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-medium uppercase tracking-wide text-neutral-500">Equipo {ri + 1}</span>
+                {!readOnly && (
+                  <button type="button" onClick={() => remove(ri)} className="text-neutral-500 hover:text-red-400" title="Quitar">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div><div className="mb-0.5 text-[10px] text-neutral-500">Designacion entrada</div>{inp(ri, 'designacionEntrada')}</div>
+                <div><div className="mb-0.5 text-[10px] text-neutral-500">Designacion salida</div>{inp(ri, 'designacionSalida')}</div>
+                <div><div className="mb-0.5 text-[10px] text-neutral-500">S/N entrada</div>{inp(ri, 'serieEntrada')}</div>
+                <div><div className="mb-0.5 text-[10px] text-neutral-500">S/N salida</div>{inp(ri, 'serieSalida')}</div>
+                <div><div className="mb-0.5 text-[10px] text-neutral-500">Uds. salida</div>{inp(ri, 'unidadesSalida', 'number')}</div>
+                <div><div className="mb-0.5 text-[10px] text-neutral-500">Uds. usadas</div>{inp(ri, 'unidadesUsadas', 'number')}</div>
+              </div>
+              <div className="flex items-center gap-5 pt-1">
+                <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-200">
+                  <input type="checkbox" checked={!!row.intercambio} disabled={readOnly} onChange={(e) => update(ri, 'intercambio', e.target.checked)}
+                    className="h-5 w-5 rounded border-neutral-600 bg-neutral-800" style={{ accentColor: LIME }} /> Intercambio
+                </label>
+                <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-200">
+                  <input type="checkbox" checked={!!row.usado} disabled={readOnly} onChange={(e) => update(ri, 'usado', e.target.checked)}
+                    className="h-5 w-5 rounded border-neutral-600 bg-neutral-800" style={{ accentColor: LIME }} /> Usado
+                </label>
+              </div>
+            </div>
+          ))}
+      </div>
+      {!readOnly && (
+        <div className="border-t border-neutral-800 p-3">
+          <button type="button" onClick={add} className="flex items-center gap-1.5 rounded-lg border border-neutral-700 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800">
+            <Plus className="h-4 w-4" /> Anadir equipo
+          </button>
+        </div>
+      )}
     </section>
   );
 }
