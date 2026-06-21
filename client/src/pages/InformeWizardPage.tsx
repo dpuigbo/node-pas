@@ -238,13 +238,34 @@ export default function InformeWizardPage() {
 
   const onBlockChange = useCallback((b: AssembledBlock, v: unknown) => {
     if (readOnly || !b._dataKey) return;
-    if (b._componenteInformeId) {
-      const cid = b._componenteInformeId;
-      setLocalCompDatos((prev) => ({ ...prev, [cid]: { ...(prev[cid] ?? {}), [b._dataKey!]: v } }));
-    } else {
-      setLocalDocDatos((prev) => ({ ...prev, [b._dataKey!]: v }));
+    const key = b._dataKey;
+    const nextComp = b._componenteInformeId
+      ? { ...localCompDatos, [b._componenteInformeId]: { ...(localCompDatos[b._componenteInformeId] ?? {}), [key]: v } }
+      : localCompDatos;
+    let nextDoc = !b._componenteInformeId ? { ...localDocDatos, [key]: v } : localDocDatos;
+    // Intercambio AUTOMATICO: al marcar un cambio de aceite o una bateria reemplazada,
+    // se recalculan sus filas en la tabla de intercambio (las manuales se conservan).
+    if (esFuenteIntercambio(b)) {
+      const blocks = data?.assembled?.blocks ?? [];
+      const inter = blocks.find((x) => x.type === 'equipment_exchange' && !x._componenteInformeId);
+      if (inter?._dataKey) {
+        const getVal = (blk: AssembledBlock): unknown => {
+          if (!blk._dataKey) return null;
+          if (blk._componenteInformeId) {
+            const loc = nextComp[blk._componenteInformeId];
+            return loc && blk._dataKey in loc ? loc[blk._dataKey] : (blk._dataValue ?? null);
+          }
+          return blk._dataKey in nextDoc ? nextDoc[blk._dataKey] : (blk._dataValue ?? null);
+        };
+        const desired = filasAutoIntercambio(blocks, getVal);
+        const currentRv = getVal(inter);
+        const current = Array.isArray(currentRv) ? (currentRv as EqRow[]) : [];
+        nextDoc = { ...nextDoc, [inter._dataKey]: reconciliarIntercambio(current, desired) };
+      }
     }
-  }, [readOnly]);
+    setLocalCompDatos(nextComp);
+    setLocalDocDatos(nextDoc);
+  }, [readOnly, localCompDatos, localDocDatos, data]);
 
   const totals = useMemo(() => {
     let done = 0, total = 0;
@@ -1145,7 +1166,44 @@ function DarkSignature({ block, value, readOnly, onChange }: { block: AssembledB
 }
 
 // ===== intercambio de equipos en oscuro (tarjeta por equipo) =====
-type EqRow = { unidadesSalida: string; designacionEntrada: string; designacionSalida: string; serieEntrada: string; serieSalida: string; intercambio: boolean; usado: boolean; unidadesUsadas: string };
+type EqRow = { unidadesSalida: string; designacionEntrada: string; designacionSalida: string; serieEntrada: string; serieSalida: string; intercambio: boolean; usado: boolean; unidadesUsadas: string; _src?: string };
+
+// ===== Intercambio automatico: filas derivadas de aceites (cambio) y baterias (reemplazado) =====
+function esFuenteIntercambio(b: AssembledBlock): boolean {
+  return b.type === 'reducer_oils' || (b.type === 'table' && String(b.config.key ?? '').startsWith('baterias_'));
+}
+function filasAutoIntercambio(blocks: AssembledBlock[], getVal: (b: AssembledBlock) => unknown): EqRow[] {
+  const out: EqRow[] = [];
+  for (const b of blocks) {
+    const rv = getVal(b);
+    if (!Array.isArray(rv)) continue;
+    const rows = rv as Record<string, unknown>[];
+    if (b.type === 'reducer_oils') {
+      rows.forEach((r, i) => {
+        if (r && r.cambio) {
+          const nombre = String(r.tipoSuministro ?? '');
+          const vol = r.volumen != null ? String(r.volumen) : '';
+          out.push({ _src: `oil:${b._componenteInformeId}:${String(r.eje ?? i)}`, designacionEntrada: nombre, designacionSalida: nombre, unidadesSalida: vol, unidadesUsadas: vol, serieEntrada: '', serieSalida: '', intercambio: true, usado: false });
+        }
+      });
+    } else if (b.type === 'table' && String(b.config.key ?? '').startsWith('baterias_')) {
+      rows.forEach((r, i) => {
+        if (r && r.reemplazado) {
+          const nombre = String(r.bateria ?? '');
+          out.push({ _src: `bat:${b._componenteInformeId ?? 'doc'}:${String(b.config.key)}:${i}`, designacionEntrada: nombre, designacionSalida: nombre, unidadesSalida: '', unidadesUsadas: '', serieEntrada: '', serieSalida: '', intercambio: true, usado: false });
+        }
+      });
+    }
+  }
+  return out;
+}
+function reconciliarIntercambio(current: EqRow[], desired: EqRow[]): EqRow[] {
+  const manual = current.filter((r) => !r._src);
+  const prevAuto = new Map(current.filter((r) => r._src).map((r) => [r._src as string, r]));
+  // Mantiene la fila auto existente (con ediciones del tecnico) si su origen sigue; si no, la nueva.
+  const auto = desired.map((d) => prevAuto.get(d._src as string) ?? d);
+  return [...auto, ...manual];
+}
 // ===== Tabla de baterías (SMB/EIB o controlador): desplegable del catálogo que autorrellena =====
 type BatOpt = { id: number; nombre: string; subtipo: string | null; codigoFabricante: string | null; activo: boolean };
 type BatRow = { consumibleId?: number | null; bateria?: string; referencia?: string; reemplazado?: boolean; fecha?: string };
@@ -1201,8 +1259,11 @@ function DarkBatteryTable({ block, value, readOnly, onChange }: { block: Assembl
                 </div>
                 <div>
                   <div className="mb-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-500">Fecha de reemplazo</div>
-                  <input value={row.fecha ?? ''} disabled={readOnly} onChange={(e) => update(ri, { fecha: e.target.value })} placeholder="DD/MM/AAAA"
-                    className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-100 focus:border-neutral-500 focus:outline-none" />
+                  <div className="flex gap-1">
+                    <input value={row.fecha ?? ''} disabled={readOnly} onChange={(e) => update(ri, { fecha: e.target.value })} placeholder="DD/MM/AAAA"
+                      className="min-w-0 flex-1 rounded-lg border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-100 focus:border-neutral-500 focus:outline-none" />
+                    {!readOnly && <button type="button" onClick={() => update(ri, { fecha: new Date().toLocaleDateString('es-ES') })} title="Poner la fecha de hoy" className="shrink-0 rounded-lg border border-neutral-700 px-2 text-xs font-medium text-neutral-300 hover:bg-neutral-800">Hoy</button>}
+                  </div>
                 </div>
               </div>
               <label className="flex cursor-pointer items-center gap-2 pt-0.5 text-sm text-neutral-200">
