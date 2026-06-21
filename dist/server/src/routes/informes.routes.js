@@ -549,7 +549,7 @@ router.patch('/informes/:id/estado', (0, role_middleware_1.requireRole)('admin')
 // Campos de fila que vienen de la plantilla (fijos/identidad), NO editables por el técnico.
 // Al regenerar se RE-SIEMBRAN desde el schema nuevo (así un `eje` que quedó "NaN" en datos
 // viejos se corrige). El resto (control, cambio, na/bien/mal, observaciones…) se preserva.
-const FIXED_ROW_KEYS = ['eje', 'operacion', 'bateria', 'referencia', 'tipoSuministro', 'aceiteId', 'unidad', 'volumen', 'niveles', 'lifetime'];
+const FIXED_ROW_KEYS = ['eje', 'operacion', 'bateria', 'referencia', 'tipoSuministro', 'aceiteId', 'unidad', 'volumen', 'niveles', 'lifetime', '_valor'];
 /** Funde un array de filas: campos FIJOS desde la plantilla nueva (`fresh`), resto del dato viejo. */
 function mergeRowArray(fresh, old) {
     if (!Array.isArray(old))

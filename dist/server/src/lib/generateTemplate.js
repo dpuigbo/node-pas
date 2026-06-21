@@ -233,22 +233,31 @@ function buildControllerSchema(input) {
     // === system_control ===
     b.push(componentSection('system_control'));
     pushH1(b);
-    // "Versión del sistema" (y los valores de RAM en KUKA) son VALORES que anota el técnico →
-    // CAMPO DE TEXTO LIBRE (fieldsTable). El resto van como checks de inspección (Bien/Mal/N/A).
-    const sistemaValores = [
-        { key: 'version_sistema', label: 'Versión del sistema', type: 'text' },
-    ];
-    if (profile.sistemaConRam) {
-        sistemaValores.push({ key: 'ram_disponible', label: 'Disponibilidad de la RAM', type: 'text' }, { key: 'ram_ocupada', label: 'Ocupación de la RAM', type: 'text' });
-    }
-    b.push(fieldsTable('sistema_valores', 'Datos del sistema', sistemaValores));
-    const sistemaChecks = [];
+    // "Versión del sistema" (y la RAM en KUKA) van como FILAS DE VALOR (texto libre, _valor:true,
+    // SIN Bien/Mal/N/A) DENTRO de la tabla "Control general del sistema". El resto son checks.
+    const valorLabels = ['Versión del sistema'];
     if (profile.sistemaConRam)
-        sistemaChecks.push('Clonado de disco duro');
+        valorLabels.push('Disponibilidad de la RAM', 'Ocupación de la RAM');
+    const checkLabels = [];
+    if (profile.sistemaConRam)
+        checkLabels.push('Clonado de disco duro');
     for (const c of profile.sistemaCampos.filter((c) => !/versi/i.test(c)))
-        sistemaChecks.push(c);
-    if (sistemaChecks.length)
-        b.push(inspectionTable('sistema_checks', 'Control general del sistema', sistemaChecks));
+        checkLabels.push(c);
+    b.push(block('table', {
+        key: 'sistema_checks', label: '', title: 'Control general del sistema', ...TBL,
+        columns: [
+            { key: 'operacion', label: 'Operación', type: 'label', width: '38%' },
+            { key: 'na', label: 'N/A', type: 'checkbox', width: '8%' },
+            { key: 'bien', label: 'Bien', type: 'checkbox', width: '8%' },
+            { key: 'mal', label: 'Mal', type: 'checkbox', width: '8%' },
+            { key: 'observaciones', label: 'Observaciones', type: 'text', width: '38%' },
+        ],
+        fixedRows: [
+            ...valorLabels.map((l) => ({ operacion: l, _valor: true, na: false, bien: false, mal: false, observaciones: '' })),
+            ...checkLabels.map((l) => ({ operacion: l, na: false, bien: false, mal: false, observaciones: '' })),
+        ],
+        allowAddRows: true, minRows: valorLabels.length + checkLabels.length, maxRows: valorLabels.length + checkLabels.length + 10,
+    }));
     return { blocks: b, pageConfig: PAGE };
 }
 function buildExternalAxisSchema(input) {
