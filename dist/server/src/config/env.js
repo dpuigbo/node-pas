@@ -12,6 +12,8 @@ const envSchema = zod_1.z.object({
     MICROSOFT_TENANT_ID: zod_1.z.string().default('common'),
     MICROSOFT_CALLBACK_URL: zod_1.z.string().default('http://localhost:3000/api/auth/microsoft/callback'),
     APP_URL: zod_1.z.string().default('http://localhost:5173'),
+    ANTHROPIC_API_KEY: zod_1.z.string().default(''),
+    OCR_MODEL: zod_1.z.string().default('claude-sonnet-4-6'),
 });
 function loadEnv() {
     const parsed = envSchema.safeParse(process.env);
@@ -28,6 +30,8 @@ function loadEnv() {
             MICROSOFT_TENANT_ID: process.env.MICROSOFT_TENANT_ID || 'common',
             MICROSOFT_CALLBACK_URL: process.env.MICROSOFT_CALLBACK_URL || 'http://localhost:3000/api/auth/microsoft/callback',
             APP_URL: process.env.APP_URL || 'http://localhost:5173',
+            ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
+            OCR_MODEL: process.env.OCR_MODEL || 'claude-sonnet-4-6',
         };
     }
     return parsed.data;

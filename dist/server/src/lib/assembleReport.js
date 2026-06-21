@@ -290,7 +290,9 @@ function assembleReport(input) {
                     emailContacto: String(baseContext['cliente.email'] ?? ''),
                 };
                 const userEdits = datosDocumento[key] || {};
-                assembled._dataValue = { ...seeded, ...userEdits };
+                // "actividad" (= nivel de mantenimiento) es DERIVADO: siempre el valor calculado,
+                // aunque hubiera un valor viejo guardado (p.ej. el titulo de informes anteriores).
+                assembled._dataValue = { ...seeded, ...userEdits, actividad: seeded.actividad };
             }
             // Special handling: client_data → editable card seeded from context
             if (cloned.type === 'client_data') {

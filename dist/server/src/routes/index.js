@@ -19,6 +19,7 @@ const consumiblesNivel_routes_1 = __importDefault(require("./consumiblesNivel.ro
 const pedidoCompra_routes_1 = __importDefault(require("./pedidoCompra.routes"));
 const ofertas_routes_1 = __importDefault(require("./ofertas.routes"));
 const lookups_routes_1 = __importDefault(require("./lookups.routes"));
+const ocr_routes_1 = __importDefault(require("./ocr.routes"));
 const router = (0, express_1.Router)();
 // Auth routes (public - no auth required)
 router.use('/auth', auth_routes_1.default);
@@ -36,5 +37,6 @@ router.use('/v1/consumibles-nivel', auth_middleware_1.authMiddleware, consumible
 router.use('/v1/pedidos-compra', auth_middleware_1.authMiddleware, pedidoCompra_routes_1.default);
 router.use('/v1/ofertas', auth_middleware_1.authMiddleware, ofertas_routes_1.default);
 router.use('/v1/lookups', auth_middleware_1.authMiddleware, lookups_routes_1.default);
+router.use('/v1/ocr', auth_middleware_1.authMiddleware, ocr_routes_1.default);
 exports.default = router;
 //# sourceMappingURL=index.js.map
