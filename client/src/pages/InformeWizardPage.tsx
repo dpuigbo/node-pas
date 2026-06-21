@@ -25,6 +25,7 @@ const EDITABLE_TYPES = new Set<string>([
   'table', 'tristate', 'checklist', 'reducer_oils',
   'battery_manipulator', 'battery_controller', 'equipment_exchange',
   'text_field', 'number_field', 'date_field', 'select_field', 'signature', 'image', 'text_area',
+  'intervention_data',
 ]);
 
 // ======================== Tipos / helpers ========================
@@ -584,6 +585,7 @@ function ControlBlock({
   if (block.type === 'checklist') return <DarkChecklist block={block} value={value} readOnly={readOnly} onChange={onChange} />;
   if (block.type === 'signature') return <DarkSignature block={block} value={value} readOnly={readOnly} onChange={onChange} />;
   if (block.type === 'equipment_exchange') return <DarkEquipmentExchange block={block} value={value} readOnly={readOnly} onChange={onChange} />;
+  if (block.type === 'intervention_data') return <DarkInterventionData block={block} value={value} readOnly={readOnly} onChange={onChange} />;
   // Fallback (raro): FormField clásico en tarjeta clara legible.
   const entry = getBlockEntry(block.type as BlockType);
   const FormFieldComp = entry?.FormField;
@@ -869,6 +871,39 @@ function DarkEquipmentExchange({ block, value, readOnly, onChange }: { block: As
           </button>
         </div>
       )}
+    </section>
+  );
+}
+
+// ===== intervencion (datos doc-level) en oscuro =====
+const INTERV_SECTIONS: { title: string; fields: [string, string, string][] }[] = [
+  { title: 'Intervención', fields: [['Actividad', 'actividad', 'Nivel 1'], ['Horas', 'horas', '2:30'], ['N. trabajo', 'ordenTrabajo', 'OT26-XXXXX'], ['Fecha', 'fecha', 'DD/MM/YYYY'], ['Hora inicio', 'horaInicio', 'HH:MM'], ['Hora fin', 'horaFin', 'HH:MM']] },
+  { title: 'Personal', fields: [['Tecnico PAS', 'tecnicoPas', 'Nombre'], ['Tecnico cliente', 'tecnicoCliente', 'Nombre'], ['Tel. tecnico', 'telTecnico', '+34'], ['Tel. contacto', 'telContacto', '+34'], ['Email tecnico', 'emailTecnico', 'email@empresa.com'], ['Email contacto', 'emailContacto', 'email@cliente.com']] },
+];
+function DarkInterventionData({ block, value, readOnly, onChange }: { block: AssembledBlock; value: unknown; readOnly: boolean; onChange: (v: unknown) => void }) {
+  const data = (value as Record<string, string>) || {};
+  const title = (block.config.title as string) || 'Intervención';
+  const set = (k: string, v: string) => { if (readOnly) return; onChange({ ...data, [k]: v }); };
+  return (
+    <section className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900">
+      <div className="border-b border-neutral-800 px-4 py-2.5 text-sm font-semibold text-neutral-200">{title}</div>
+      <div className="space-y-3 p-3">
+        {INTERV_SECTIONS.map((sec) => (
+          <div key={sec.title}>
+            <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide" style={{ color: LIME }}>{sec.title}</div>
+            <div className="grid grid-cols-2 gap-2">
+              {sec.fields.map(([label, key, ph]) => (
+                <div key={key}>
+                  <div className="mb-0.5 text-[10px] text-neutral-500">{label}</div>
+                  <input type="text" value={data[key] || ''} placeholder={ph} disabled={readOnly}
+                    onChange={(e) => set(key, e.target.value)}
+                    className="w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }
