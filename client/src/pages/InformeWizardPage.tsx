@@ -1154,9 +1154,14 @@ function DarkBatteryTable({ block, value, readOnly, onChange }: { block: Assembl
   const key = (block.config.key as string) || '';
   const isSmb = key.includes('smb');
   const { data: allBat } = useConsumibles({ tipo: 'bateria' });
-  const opciones = ((allBat as BatOpt[]) || []).filter((b) => b.activo && (isSmb
+  // Opciones por modelo (las que nombra el manual) si vienen en la plantilla; si no, todo el catalogo.
+  const cfgOpts = ((block.config.opcionesBateria as { consumibleId: number | null; nombre: string; referencia: string }[]) || [])
+    .filter((o) => o.consumibleId != null)
+    .map((o) => ({ id: o.consumibleId as number, nombre: o.nombre, codigoFabricante: o.referencia, subtipo: null, activo: true } as BatOpt));
+  const opciones = cfgOpts.length > 0 ? cfgOpts : ((allBat as BatOpt[]) || []).filter((b) => b.activo && (isSmb
     ? (b.subtipo?.startsWith('smb_') || b.subtipo === 'eib')
     : (b.subtipo === 'cmos_rtc' || b.subtipo === 'memory_backup' || b.subtipo === null)));
+  const single = cfgOpts.length === 1; // el manual nombra 1 tipo -> por defecto, sin desplegable
   const rows = (value as BatRow[]) || [];
   const update = (ri: number, patch: Partial<BatRow>) => { if (readOnly) return; onChange(rows.map((r, i) => (i === ri ? { ...r, ...patch } : r))); };
   const pick = (ri: number, id: string) => {
@@ -1177,11 +1182,13 @@ function DarkBatteryTable({ block, value, readOnly, onChange }: { block: Assembl
               <div className="flex items-end gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="mb-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-500">Pila / Batería</div>
-                  <select value={selId(row)} disabled={readOnly} onChange={(e) => pick(ri, e.target.value)}
-                    className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-100 focus:border-neutral-500 focus:outline-none">
-                    <option value="">— Seleccionar batería —</option>
-                    {opciones.map((o) => <option key={o.id} value={o.id}>{o.nombre}</option>)}
-                  </select>
+                  {single
+                    ? <div className="rounded-lg border border-neutral-800 bg-neutral-800/40 px-2 py-1.5 text-sm text-neutral-100">{row.bateria || opciones[0]?.nombre || '—'}</div>
+                    : <select value={selId(row)} disabled={readOnly} onChange={(e) => pick(ri, e.target.value)}
+                        className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-100 focus:border-neutral-500 focus:outline-none">
+                        <option value="">— Seleccionar batería —</option>
+                        {opciones.map((o) => <option key={o.id} value={o.id}>{o.nombre}</option>)}
+                      </select>}
                 </div>
                 {!readOnly && (
                   <button type="button" onClick={() => remove(ri)} title="Quitar" className="mb-1.5 shrink-0 text-neutral-500 hover:text-red-400"><Trash2 className="h-4 w-4" /></button>

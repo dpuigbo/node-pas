@@ -22,6 +22,7 @@ import {
   type ControllerProfile,
   type ExternalAxisProfile,
 } from './reportProfiles';
+import { actividadAplicaAModelo } from './planMantenimiento';
 
 // ===== Tipos =====
 
@@ -162,8 +163,12 @@ function bateriasTable(key: string, title: string, rows: BateriaRow[]): Block {
       { key: 'reemplazado', label: 'Reemplazado', type: 'checkbox', width: '100px' },
       { key: 'fecha', label: 'Fecha de reemplazo', type: 'text', width: '130px' },
     ],
-    fixedRows: rows.map((b) => ({ bateria: b.nombre, referencia: b.referencia || '-', reemplazado: false, fecha: '' })),
-    allowAddRows: true, minRows: rows.length, maxRows: rows.length + 5,
+    fixedRows: rows.length === 1
+      ? rows.map((b) => ({ bateria: b.nombre, referencia: b.referencia || '', reemplazado: false, fecha: '', consumibleId: b.consumibleId }))
+      : [{ bateria: '', referencia: '', reemplazado: false, fecha: '', consumibleId: null }],
+    // Opciones para el desplegable (las que nombra el manual del modelo): 1 -> por defecto; varias -> elige.
+    opcionesBateria: rows.map((b) => ({ consumibleId: b.consumibleId, nombre: b.nombre, referencia: b.referencia })),
+    allowAddRows: true, minRows: 0, maxRows: (rows.length || 1) + 5,
   });
 }
 
@@ -390,6 +395,37 @@ async function batteriesBySubtipo(prisma: any, subtipos: string[]): Promise<Bate
   return rows.map((r: any) => ({ nombre: r.nombre, referencia: r.codigoFabricante ?? '', consumibleId: r.id }));
 }
 
+// Baterias que el manual del modelo nombra (via actividad preventiva -> consumible bateria).
+async function batteriesForModel(prisma: any, modeloId: number): Promise<BateriaRow[]> {
+  const acts = await prisma.actividadPreventiva.findMany({
+    where: { consumibles: { some: { consumible: { tipo: 'bateria' } } } },
+    select: {
+      modelosAplicables: true,
+      consumibles: {
+        where: { consumible: { tipo: 'bateria' } },
+        select: { consumible: { select: { id: true, nombre: true, codigoFabricante: true } } },
+      },
+    },
+  });
+  const seen = new Map<number, BateriaRow>();
+  for (const a of acts) {
+    if (!actividadAplicaAModelo(a, modeloId)) continue;
+    for (const ac of a.consumibles) {
+      const c = ac.consumible;
+      if (c && !seen.has(c.id)) seen.set(c.id, { nombre: c.nombre, referencia: c.codigoFabricante ?? '', consumibleId: c.id });
+    }
+  }
+  return [...seen.values()];
+}
+
+// SMB del manipulador: por modelo si el manual lo nombra; si no, todas las SMB+EIB del catalogo.
+async function smbForModel(prisma: any, modeloId: number, bateriaMedida: string | null | undefined): Promise<BateriaRow[]> {
+  if (bateriaMedida !== 'smb') return [];
+  const perModel = await batteriesForModel(prisma, modeloId);
+  if (perModel.length > 0) return perModel;
+  return batteriesBySubtipo(prisma, ['smb_2pole', 'smb_3pole', 'smb_litio', 'smb_nicd', 'eib']);
+}
+
 async function batteriesByCodigo(prisma: any, refs: { nombre: string; codigoInterno?: string }[]): Promise<BateriaRow[]> {
   const codigos = refs.map((r) => r.codigoInterno).filter(Boolean) as string[];
   if (codigos.length === 0) return refs.map((r) => ({ nombre: r.nombre, referencia: '', consumibleId: null }));
@@ -454,7 +490,7 @@ export async function generateTemplateForModel(prisma: any, modeloId: number): P
     const profile = Object.keys(modelExtras).length
       ? { ...baseProfile, ejeExtras: mergeEjeExtras(baseProfile.ejeExtras, modelExtras) }
       : baseProfile;
-    const bateriasSMB = profile.bateriaMedida === 'smb' ? await batteriesBySubtipo(prisma, ['smb_2pole', 'smb_3pole']) : [];
+    const bateriasSMB = await smbForModel(prisma, modeloId, profile.bateriaMedida);
     return buildMechanicalSchema({ nEjes, reductoras, bateriasSMB, overhaulHoras: 40000, profile });
   }
 
@@ -468,7 +504,7 @@ export async function generateTemplateForModel(prisma: any, modeloId: number): P
     const reductoras = await loadReductoras(prisma, modeloId);
     const nEjes = reductoras.length || 1;
     const profile = getExternalAxisProfile(marca);
-    const bateriasSMB = profile.bateriaMedida === 'smb' ? await batteriesBySubtipo(prisma, ['smb_2pole', 'smb_3pole']) : [];
+    const bateriasSMB = await smbForModel(prisma, modeloId, profile.bateriaMedida);
     return buildExternalAxisSchema({ nEjes, reductoras, bateriasSMB, profile });
   }
 
