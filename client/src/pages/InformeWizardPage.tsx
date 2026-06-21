@@ -825,7 +825,7 @@ function CalibracionImport({ rows, readOnly, onChange }: { rows: Row[]; readOnly
       let local = false;
       let cloudErr = '';
       try {
-        const { data } = await api.post('/ocr/calibracion-label', { image: dataUrl });
+        const { data } = await api.post('/v1/ocr/calibracion-label', { image: dataUrl });
         const axes = (data?.axes ?? {}) as Record<string, unknown>;
         for (const k of Object.keys(axes)) {
           const v = axes[k];
