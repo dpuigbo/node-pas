@@ -647,6 +647,7 @@ function DarkTable({ block, value, readOnly, onChange }: { block: AssembledBlock
   const cols = (block.config.columns as Col[]) || [];
   const rows = (value as Row[]) || [];
   const title = (block.config.title as string) || (block.config.label as string) || '';
+  const rowPhotos = !!block.config.rowPhotos;
   const update = (ri: number, key: string, v: unknown) => onChange(rows.map((r, i) => (i === ri ? { ...r, [key]: v } : r)));
   const isText = (c: Col) => !['label', 'checkbox', 'select', 'number', 'date'].includes(c.type);
   const compactCols = cols.filter((c) => !isText(c));
@@ -692,6 +693,9 @@ function DarkTable({ block, value, readOnly, onChange }: { block: AssembledBlock
                   {darkCell(c, row[c.key], (v) => update(ri, c.key, v), readOnly)}
                 </div>
               ))}
+              {rowPhotos && (
+                <RowPhotos fotos={(row.fotos as { name: string; data: string }[]) || []} readOnly={readOnly} onChange={(f) => update(ri, 'fotos', f)} />
+              )}
             </div>
           ))}
       </div>
