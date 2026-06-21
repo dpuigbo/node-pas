@@ -188,7 +188,8 @@ export function buildPlaceholderContext(informe: {
     fabricante: { nombre: string };
     maquina?: { nombre: string } | null;
   };
-}, usuario?: { nombre?: string | null; email?: string | null }): Record<string, string | undefined> {
+}, usuario?: { nombre?: string | null; email?: string | null },
+   nivel?: { codigo: string; nombre: string } | null): Record<string, string | undefined> {
   const cli = informe.intervencion.cliente;
   return {
     'usuario.nombre': usuario?.nombre ?? undefined,
@@ -208,7 +209,10 @@ export function buildPlaceholderContext(informe: {
     'cliente.email': cli?.email ?? undefined,
     'cliente.personaContacto': cli?.personaContacto ?? undefined,
     'cliente.maquina': informe.sistema.maquina?.nombre ?? undefined,
-    'intervencion.actividad': informe.intervencion.titulo,
+    // "Actividad" = nivel de mantenimiento realizado (de IntervencionSistema); el titulo como fallback.
+    'intervencion.actividad': nivel?.nombre || informe.intervencion.titulo,
+    'intervencion.nivel': nivel?.nombre ?? undefined,
+    'intervencion.titulo': informe.intervencion.titulo,
     'intervencion.fecha': informe.intervencion.fechaInicio
       ? new Date(informe.intervencion.fechaInicio).toLocaleDateString('es-ES')
       : undefined,

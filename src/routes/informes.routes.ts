@@ -324,6 +324,9 @@ router.get(
             select: {
               id: true, titulo: true, tipo: true, estado: true,
               referencia: true, fechaInicio: true, fechaFin: true,
+              sistemas: {
+                select: { sistemaId: true, nivel: { select: { codigo: true, nombre: true } } },
+              },
               cliente: {
                 select: {
                   id: true, nombre: true, sede: true,
@@ -397,7 +400,8 @@ router.get(
       const usuario = authUser
         ? await prisma.user.findUnique({ where: { id: authUser.id }, select: { nombre: true, email: true } })
         : null;
-      const baseContext = buildPlaceholderContext(informe, usuario ?? undefined);
+      const nivelInfo = informe.intervencion.sistemas.find((s) => s.sistemaId === informe.sistemaId)?.nivel ?? null;
+      const baseContext = buildPlaceholderContext(informe, usuario ?? undefined, nivelInfo);
 
       // Map component data for assembly
       const componentes: AssemblyComponente[] = informe.componentes.map((c) => ({
