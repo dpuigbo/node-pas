@@ -205,7 +205,8 @@ export default function InformeWizardPage() {
     }
     const result = order.map((cid) => map.get(cid)!);
     if (generalBlocks.length > 0) {
-      result.push({ key: 'general', label: 'General del informe', blocks: generalBlocks });
+      // La General va PRIMERO (cabecera del informe), antes que los componentes.
+      result.unshift({ key: 'general', label: 'General del informe', blocks: generalBlocks });
     }
     return result;
   }, [data]);
@@ -414,7 +415,7 @@ function OverviewView({
             <p className="text-sm text-neutral-400">{totals.done} de {totals.total} puntos de control completados</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               <Chip tone="lime">{totals.pct}% completado</Chip>
-              <Chip>{sections.length} componentes</Chip>
+              <Chip>{sections.filter((s) => s.componenteInformeId).length} componentes</Chip>
             </div>
           </div>
           {!finalizado && totals.total > 0 && totals.done === totals.total && (
@@ -422,10 +423,6 @@ function OverviewView({
               <CheckCircle2 className="h-4 w-4" /> Finalizar
             </button>
           )}
-        </div>
-        <div className="mt-4 flex items-start gap-2 rounded-xl border px-3 py-2 text-xs" style={{ borderColor: `${LIME}30`, backgroundColor: `${LIME}0d`, color: LIME }}>
-          <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          <span>La sección de <strong>Intervención</strong> (cliente, técnico, fechas y horas) se rellena automáticamente.</span>
         </div>
       </div>
 
@@ -436,7 +433,7 @@ function OverviewView({
           const complete = total > 0 && done === total;
           const Icon = compIcon(s.label);
           return (
-            <div key={s.key} className="flex flex-col gap-3 rounded-2xl border border-neutral-800 bg-neutral-900 p-4">
+            <div key={s.key} className={`flex flex-col gap-3 rounded-2xl border border-neutral-800 bg-neutral-900 p-4 ${s.key === 'general' ? 'sm:col-span-2 border-neutral-700' : ''}`}>
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl shrink-0" style={{ backgroundColor: complete ? `${LIME}1a` : '#1f1f1f' }}>
                   <Icon className="h-5 w-5" style={{ color: complete ? LIME : '#a3a3a3' }} />
