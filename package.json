@@ -24,6 +24,7 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.105.0",
     "@prisma/adapter-mariadb": "^6.7.0",
     "@prisma/client": "^6.4.1",
     "@types/cookie-parser": "^1.4.8",
@@ -38,6 +39,7 @@
     "concurrently": "^9.1.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
@@ -48,7 +50,6 @@
     "prisma": "^6.4.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
-    "dotenv": "^16.4.7",
     "zod": "^3.24.2"
   },
   "devDependencies": {

@@ -10,6 +10,8 @@ const envSchema = z.object({
   MICROSOFT_TENANT_ID: z.string().default('common'),
   MICROSOFT_CALLBACK_URL: z.string().default('http://localhost:3000/api/auth/microsoft/callback'),
   APP_URL: z.string().default('http://localhost:5173'),
+  ANTHROPIC_API_KEY: z.string().default(''),
+  OCR_MODEL: z.string().default('claude-sonnet-4-6'),
 });
 
 function loadEnv() {
@@ -27,6 +29,8 @@ function loadEnv() {
       MICROSOFT_TENANT_ID: process.env.MICROSOFT_TENANT_ID || 'common',
       MICROSOFT_CALLBACK_URL: process.env.MICROSOFT_CALLBACK_URL || 'http://localhost:3000/api/auth/microsoft/callback',
       APP_URL: process.env.APP_URL || 'http://localhost:5173',
+      ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
+      OCR_MODEL: process.env.OCR_MODEL || 'claude-sonnet-4-6',
     } as z.infer<typeof envSchema>;
   }
   return parsed.data;

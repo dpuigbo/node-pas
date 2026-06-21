@@ -14,6 +14,7 @@ import consumiblesNivelRoutes from './consumiblesNivel.routes';
 import pedidoCompraRoutes from './pedidoCompra.routes';
 import ofertasRoutes from './ofertas.routes';
 import lookupsRoutes from './lookups.routes';
+import ocrRoutes from './ocr.routes';
 
 const router = Router();
 
@@ -34,5 +35,6 @@ router.use('/v1/consumibles-nivel', authMiddleware, consumiblesNivelRoutes);
 router.use('/v1/pedidos-compra', authMiddleware, pedidoCompraRoutes);
 router.use('/v1/ofertas', authMiddleware, ofertasRoutes);
 router.use('/v1/lookups', authMiddleware, lookupsRoutes);
+router.use('/v1/ocr', authMiddleware, ocrRoutes);
 
 export default router;

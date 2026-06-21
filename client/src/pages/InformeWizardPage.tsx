@@ -773,39 +773,64 @@ function CalibracionImport({ rows, readOnly, onChange }: { rows: Row[]; readOnly
     }
     return out;
   };
+  // Reduce la imagen (max lado) a JPEG base64 para no enviar fotos enormes a la nube.
+  const downscale = (img: HTMLImageElement, max: number): string => {
+    let w = img.naturalWidth, h = img.naturalHeight;
+    if (Math.max(w, h) > max) { const s = max / Math.max(w, h); w = Math.round(w * s); h = Math.round(h * s); }
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const ctx = c.getContext('2d'); if (!ctx) return img.src;
+    ctx.drawImage(img, 0, 0, w, h);
+    return c.toDataURL('image/jpeg', 0.85);
+  };
+  // Fallback offline: Tesseract en el dispositivo (prueba 0° y, si pocos ejes, 180°).
+  const tesseractRead = async (img: HTMLImageElement): Promise<Record<number, string>> => {
+    const T: any = await import('tesseract.js');
+    const recognize = T.recognize ?? T.default?.recognize;
+    const rec = async (src: string | HTMLImageElement): Promise<string> => {
+      const { data } = await recognize(src, 'eng', {
+        logger: (lg: { status: string; progress: number }) => {
+          if (lg.status === 'recognizing text') setOcrProgress(Math.round(lg.progress * 100));
+        },
+      });
+      return (data?.text as string) ?? '';
+    };
+    let best = parseLabel(await rec(img));
+    if (Object.keys(best).length < 4) {
+      const rotated = rotate180(img);
+      if (rotated) {
+        const alt = parseLabel(await rec(rotated));
+        if (Object.keys(alt).length > Object.keys(best).length) best = alt;
+      }
+    }
+    return best;
+  };
   const runOcr = async (file: File) => {
     setOcrBusy(true); setOcrProgress(0); setMsg(null); setProposal(null);
     try {
       const url = URL.createObjectURL(file);
       const img = await loadImage(url);
-      const T: any = await import('tesseract.js');
-      const recognize = T.recognize ?? T.default?.recognize;
-      const rec = async (src: string | HTMLImageElement): Promise<string> => {
-        const { data } = await recognize(src, 'eng', {
-          logger: (lg: { status: string; progress: number }) => {
-            if (lg.status === 'recognizing text') setOcrProgress(Math.round(lg.progress * 100));
-          },
-        });
-        return (data?.text as string) ?? '';
-      };
-      // Prueba 0°; si salen pocos ejes, prueba 180° (etiquetas montadas del reves) y coge el mejor.
-      let best = parseLabel(await rec(img));
-      if (Object.keys(best).length < 4) {
-        const rotated = rotate180(img);
-        if (rotated) {
-          const alt = parseLabel(await rec(rotated));
-          if (Object.keys(alt).length > Object.keys(best).length) best = alt;
-        }
-      }
       URL.revokeObjectURL(url);
+      let best: Record<number, string> = {};
+      let local = false;
+      // 1) OCR en la nube (vision) — robusto en fotos dificiles (reflejos, escarcha, del reves).
+      try {
+        const { data } = await api.post('/ocr/calibracion-label', { image: downscale(img, 1568) });
+        const axes = (data?.axes ?? {}) as Record<string, unknown>;
+        for (const k of Object.keys(axes)) {
+          const v = axes[k];
+          if (v != null && String(v).trim()) best[Number(k)] = String(v).trim();
+        }
+      } catch { /* sin clave o sin conexion -> fallback local */ }
+      // 2) Fallback en el dispositivo si la nube no devolvio nada.
+      if (Object.keys(best).length === 0) { local = true; best = await tesseractRead(img); }
       const n = Object.keys(best).length;
-      if (n === 0) { setMsg({ ok: false, text: 'El OCR no ha leido valores. Repite la foto mas recta/enfocada o rellenalos a mano.' }); return; }
+      if (n === 0) { setMsg({ ok: false, text: 'No se han leido valores. Repite la foto mas recta/enfocada o rellenalos a mano.' }); return; }
       const init: Record<string, string> = {};
       for (const e of ejes) init[e] = best[Number(e)] ?? '';
       setProposal(init);
-      setMsg({ ok: true, text: `OCR: ${n} valor(es) detectado(s). Revisa, corrige y confirma.` });
+      setMsg({ ok: true, text: `${n} valor(es) detectado(s)${local ? ' (lectura local)' : ''}. Revisa, corrige y confirma.` });
     } catch {
-      setMsg({ ok: false, text: 'Error en el OCR. Intentalo otra vez o rellena a mano.' });
+      setMsg({ ok: false, text: 'Error leyendo la etiqueta. Intentalo otra vez o rellena a mano.' });
     } finally {
       setOcrBusy(false);
     }
@@ -853,7 +878,7 @@ function CalibracionImport({ rows, readOnly, onChange }: { rows: Row[]; readOnly
           disabled={ocrBusy}
           className="flex w-full items-center justify-center gap-2 rounded-xl border border-neutral-700 px-3 py-2.5 text-sm text-neutral-200 transition-colors hover:bg-neutral-800 disabled:opacity-50"
         >
-          {ocrBusy ? <><Loader2 className="h-4 w-4 animate-spin" /> Leyendo… {ocrProgress}%</> : <><Camera className="h-4 w-4" /> Foto de la etiqueta</>}
+          {ocrBusy ? <><Loader2 className="h-4 w-4 animate-spin" /> Leyendo…{ocrProgress > 0 ? ` ${ocrProgress}%` : ''}</> : <><Camera className="h-4 w-4" /> Foto de la etiqueta</>}
         </button>
         <input ref={photoRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) runOcr(f); e.target.value = ''; }} />
         {proposal && (
