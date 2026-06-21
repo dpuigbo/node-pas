@@ -823,6 +823,7 @@ function CalibracionImport({ rows, readOnly, onChange }: { rows: Row[]; readOnly
     try {
       let best: Record<number, string> = {};
       let local = false;
+      let cloudErr = '';
       try {
         const { data } = await api.post('/ocr/calibracion-label', { image: dataUrl });
         const axes = (data?.axes ?? {}) as Record<string, unknown>;
@@ -830,14 +831,17 @@ function CalibracionImport({ rows, readOnly, onChange }: { rows: Row[]; readOnly
           const v = axes[k];
           if (v != null && String(v).trim()) best[Number(k)] = String(v).trim();
         }
-      } catch { /* sin clave o sin conexion -> fallback local */ }
+      } catch (e) {
+        const ee = e as { response?: { data?: { error?: string; message?: string } }; message?: string };
+        cloudErr = ee?.response?.data?.error || ee?.response?.data?.message || ee?.message || 'sin respuesta';
+      }
       if (Object.keys(best).length === 0) { local = true; best = await tesseractRead(dataUrl); }
       const n = Object.keys(best).length;
-      if (n === 0) { setMsg({ ok: false, text: 'No se han leido valores. Repite la foto mas recta/enfocada o rellenalos a mano.' }); return; }
+      if (n === 0) { setMsg({ ok: false, text: `No se han leido valores${cloudErr ? ` (nube: ${cloudErr})` : ''}. Repite la foto mas recta/enfocada o rellenalos a mano.` }); return; }
       const init: Record<string, string> = {};
       for (const e of ejes) init[e] = best[Number(e)] ?? '';
       setProposal(init);
-      setMsg({ ok: true, text: `${n} valor(es) detectado(s)${local ? ' (lectura local)' : ''}. Revisa, corrige y confirma.` });
+      setMsg({ ok: true, text: `${n} valor(es) detectado(s)${local ? ` (lectura local${cloudErr ? `; nube fallo: ${cloudErr}` : ''})` : ''}. Revisa, corrige y confirma.` });
     } catch {
       setMsg({ ok: false, text: 'Error leyendo la etiqueta. Intentalo otra vez o rellena a mano.' });
     } finally {
