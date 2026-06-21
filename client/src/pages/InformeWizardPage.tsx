@@ -783,10 +783,10 @@ function CalibracionImport({ rows, readOnly, onChange }: { rows: Row[]; readOnly
     return c.toDataURL('image/jpeg', 0.85);
   };
   // Fallback offline: Tesseract en el dispositivo (prueba 0° y, si pocos ejes, 180°).
-  const tesseractRead = async (img: HTMLImageElement): Promise<Record<number, string>> => {
+  const tesseractRead = async (dataUrl: string): Promise<Record<number, string>> => {
     const T: any = await import('tesseract.js');
     const recognize = T.recognize ?? T.default?.recognize;
-    const rec = async (src: string | HTMLImageElement): Promise<string> => {
+    const rec = async (src: string): Promise<string> => {
       const { data } = await recognize(src, 'eng', {
         logger: (lg: { status: string; progress: number }) => {
           if (lg.status === 'recognizing text') setOcrProgress(Math.round(lg.progress * 100));
@@ -794,9 +794,9 @@ function CalibracionImport({ rows, readOnly, onChange }: { rows: Row[]; readOnly
       });
       return (data?.text as string) ?? '';
     };
-    let best = parseLabel(await rec(img));
+    let best = parseLabel(await rec(dataUrl));
     if (Object.keys(best).length < 4) {
-      const rotated = rotate180(img);
+      const rotated = rotate180(await loadImage(dataUrl));
       if (rotated) {
         const alt = parseLabel(await rec(rotated));
         if (Object.keys(alt).length > Object.keys(best).length) best = alt;
@@ -806,23 +806,32 @@ function CalibracionImport({ rows, readOnly, onChange }: { rows: Row[]; readOnly
   };
   const runOcr = async (file: File) => {
     setOcrBusy(true); setOcrProgress(0); setMsg(null); setProposal(null);
+    // 1) Cargar y reducir a un JPEG autocontenido (data URL), valido para nube y para Tesseract.
+    let dataUrl = '';
+    const url = URL.createObjectURL(file);
     try {
-      const url = URL.createObjectURL(file);
       const img = await loadImage(url);
+      dataUrl = downscale(img, 1568);
+    } catch {
+      setMsg({ ok: false, text: 'No se pudo abrir la imagen. Si es HEIC (iPhone), haz la foto en JPG o subela convertida.' });
+      setOcrBusy(false);
+      return;
+    } finally {
       URL.revokeObjectURL(url);
+    }
+    // 2) OCR: nube primero (vision), Tesseract local de fallback.
+    try {
       let best: Record<number, string> = {};
       let local = false;
-      // 1) OCR en la nube (vision) — robusto en fotos dificiles (reflejos, escarcha, del reves).
       try {
-        const { data } = await api.post('/ocr/calibracion-label', { image: downscale(img, 1568) });
+        const { data } = await api.post('/ocr/calibracion-label', { image: dataUrl });
         const axes = (data?.axes ?? {}) as Record<string, unknown>;
         for (const k of Object.keys(axes)) {
           const v = axes[k];
           if (v != null && String(v).trim()) best[Number(k)] = String(v).trim();
         }
       } catch { /* sin clave o sin conexion -> fallback local */ }
-      // 2) Fallback en el dispositivo si la nube no devolvio nada.
-      if (Object.keys(best).length === 0) { local = true; best = await tesseractRead(img); }
+      if (Object.keys(best).length === 0) { local = true; best = await tesseractRead(dataUrl); }
       const n = Object.keys(best).length;
       if (n === 0) { setMsg({ ok: false, text: 'No se han leido valores. Repite la foto mas recta/enfocada o rellenalos a mano.' }); return; }
       const init: Record<string, string> = {};
