@@ -206,8 +206,22 @@ export default function InformeWizardPage() {
     }
     const result = order.map((cid) => map.get(cid)!);
     if (generalBlocks.length > 0) {
+      // Orden de la General (modo tecnico): intervencion -> datos -> intercambio ->
+      // pruebas -> estado -> observaciones -> firmas. (El PDF mantiene el orden de plantilla.)
+      const prio = (b: AssembledBlock): number => {
+        const k = (b.config.key as string) || '';
+        const lab = ((b.config.label as string) || '').toLowerCase();
+        if (b.type === 'intervention_data') return 1;
+        if (k === 'table_1') return 2;
+        if (b.type === 'equipment_exchange') return 3;
+        if (b.type === 'checklist') return lab.includes('probado') ? 4 : 5;
+        if (k === 'observaciones_tabla' || b.type === 'text_area') return 6;
+        if (b.type === 'signature') return 7;
+        return 5.5;
+      };
+      const sorted = [...generalBlocks].sort((a, b) => prio(a) - prio(b));
       // La General va PRIMERO (cabecera del informe), antes que los componentes.
-      result.unshift({ key: 'general', label: 'General del informe', blocks: generalBlocks });
+      result.unshift({ key: 'general', label: 'General del informe', blocks: sorted });
     }
     return result;
   }, [data]);
@@ -1081,6 +1095,18 @@ function RowPhotos({ fotos, readOnly, onChange }: { fotos: { name: string; data:
 function InspectionPointRow({
   label, row, readOnly, onChange,
 }: { label: string; row: Row; readOnly: boolean; onChange: (next: Row) => void; }) {
+  if (row._valor) {
+    // Fila de VALOR (p.ej. Versión del sistema): solo texto libre, sin Bien/Mal/N/A.
+    return (
+      <div className="p-3">
+        <div className="mb-1.5 text-sm font-medium leading-snug text-neutral-100">{label}</div>
+        <AutoTextarea value={typeof row.observaciones === 'string' ? row.observaciones : ''}
+          onChange={(v) => onChange({ ...row, observaciones: v })}
+          placeholder="Escribe aquí..." readOnly={readOnly}
+          className="rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none" />
+      </div>
+    );
+  }
   const state: 'bien' | 'mal' | 'na' | null =
     row.bien === true ? 'bien' : row.mal === true ? 'mal' : row.na === true ? 'na' : null;
   const dot = state === 'bien' ? '#10b981' : state === 'mal' ? '#ef4444' : state === 'na' ? '#737373' : '#f59e0b';

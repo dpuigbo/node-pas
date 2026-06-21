@@ -198,12 +198,14 @@ function TopHeaderTable({
             <tr className={ri % 2 === 1 ? 'bg-gray-50' : 'bg-white'}>
               {columns.map((col) => (
                 <td key={col.key} className={cellPad}>
-                  <CellInput
-                    col={col}
-                    value={row[col.key]}
-                    onChange={(v) => updateCell(ri, col.key, v)}
-                    readOnly={!!readOnly}
-                  />
+                  {row._valor && (col.key === 'na' || col.key === 'bien' || col.key === 'mal') ? null : (
+                    <CellInput
+                      col={col}
+                      value={row[col.key]}
+                      onChange={(v) => updateCell(ri, col.key, v)}
+                      readOnly={!!readOnly}
+                    />
+                  )}
                 </td>
               ))}
               {!readOnly && allowAddRows && (
