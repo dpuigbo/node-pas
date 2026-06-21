@@ -183,6 +183,8 @@ export function buildPlaceholderContext(informe: {
   sistema: {
     nombre: string;
     descripcion?: string | null;
+    linea?: string | null;
+    denominacion?: string | null;
     fabricante: { nombre: string };
     maquina?: { nombre: string } | null;
   };
@@ -193,6 +195,8 @@ export function buildPlaceholderContext(informe: {
     'usuario.email': usuario?.email ?? undefined,
     'sistema.nombre': informe.sistema.nombre,
     'sistema.descripcion': informe.sistema.descripcion ?? undefined,
+    'sistema.linea': informe.sistema.linea ?? undefined,
+    'sistema.denominacion': informe.sistema.denominacion ?? undefined,
     'sistema.fabricante': informe.sistema.fabricante.nombre,
     'cliente.nombre': cli?.nombre ?? undefined,
     'cliente.sede': cli?.sede ?? undefined,
