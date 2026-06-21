@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import api from '@/lib/api';
 import { useAssembledReport, useUpdateEstadoInforme, useRegenerarInforme } from '@/hooks/useInformes';
+import { useConsumibles } from '@/hooks/useCatalogos';
 import { useAuth } from '@/hooks/useAuth';
 import { getBlockEntry } from '@/components/blocks/registry';
 import type { BlockType } from '@/types/editor';
@@ -630,6 +631,10 @@ function ControlBlock({
         </div>
       );
     }
+    // Tablas de baterías (SMB/EIB o controlador): desplegable del catálogo que autorrellena.
+    if (typeof block.config.key === 'string' && block.config.key.startsWith('baterias_')) {
+      return <DarkBatteryTable block={block} value={value} readOnly={readOnly} onChange={onChange} />;
+    }
     return <DarkTable block={block} value={value} readOnly={readOnly} onChange={onChange} />;
   }
   if (['text_field', 'number_field', 'date_field', 'select_field', 'text_area'].includes(block.type)) return <DarkField block={block} value={value} readOnly={readOnly} onChange={onChange} />;
@@ -1141,6 +1146,76 @@ function DarkSignature({ block, value, readOnly, onChange }: { block: AssembledB
 
 // ===== intercambio de equipos en oscuro (tarjeta por equipo) =====
 type EqRow = { unidadesSalida: string; designacionEntrada: string; designacionSalida: string; serieEntrada: string; serieSalida: string; intercambio: boolean; usado: boolean; unidadesUsadas: string };
+// ===== Tabla de baterías (SMB/EIB o controlador): desplegable del catálogo que autorrellena =====
+type BatOpt = { id: number; nombre: string; subtipo: string | null; codigoFabricante: string | null; activo: boolean };
+type BatRow = { consumibleId?: number | null; bateria?: string; referencia?: string; reemplazado?: boolean; fecha?: string };
+function DarkBatteryTable({ block, value, readOnly, onChange }: { block: AssembledBlock; value: unknown; readOnly: boolean; onChange: (v: unknown) => void }) {
+  const title = (block.config.title as string) || (block.config.label as string) || 'Baterías';
+  const key = (block.config.key as string) || '';
+  const isSmb = key.includes('smb');
+  const { data: allBat } = useConsumibles({ tipo: 'bateria' });
+  const opciones = ((allBat as BatOpt[]) || []).filter((b) => b.activo && (isSmb
+    ? (b.subtipo?.startsWith('smb_') || b.subtipo === 'eib')
+    : (b.subtipo === 'cmos_rtc' || b.subtipo === 'memory_backup' || b.subtipo === null)));
+  const rows = (value as BatRow[]) || [];
+  const update = (ri: number, patch: Partial<BatRow>) => { if (readOnly) return; onChange(rows.map((r, i) => (i === ri ? { ...r, ...patch } : r))); };
+  const pick = (ri: number, id: string) => {
+    const o = opciones.find((b) => b.id === Number(id));
+    update(ri, { consumibleId: o?.id ?? null, bateria: o?.nombre ?? '', referencia: o?.codigoFabricante ?? '' });
+  };
+  const selId = (r: BatRow): number | '' => r.consumibleId ?? (opciones.find((o) => o.nombre === r.bateria)?.id ?? '');
+  const add = () => { if (readOnly) return; onChange([...rows, { consumibleId: null, bateria: '', referencia: '', reemplazado: false, fecha: '' }]); };
+  const remove = (ri: number) => { if (readOnly) return; onChange(rows.filter((_, i) => i !== ri)); };
+  return (
+    <section className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900">
+      <div className="border-b border-neutral-800 px-4 py-2.5 text-sm font-semibold text-neutral-200">{title}</div>
+      <div className="divide-y divide-neutral-800">
+        {rows.length === 0
+          ? <div className="px-4 py-4 text-center text-xs text-neutral-600">Sin baterías. Añade una abajo.</div>
+          : rows.map((row, ri) => (
+            <div key={ri} className="space-y-2 p-3">
+              <div className="flex items-end gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-500">Pila / Batería</div>
+                  <select value={selId(row)} disabled={readOnly} onChange={(e) => pick(ri, e.target.value)}
+                    className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-100 focus:border-neutral-500 focus:outline-none">
+                    <option value="">— Seleccionar batería —</option>
+                    {opciones.map((o) => <option key={o.id} value={o.id}>{o.nombre}</option>)}
+                  </select>
+                </div>
+                {!readOnly && (
+                  <button type="button" onClick={() => remove(ri)} title="Quitar" className="mb-1.5 shrink-0 text-neutral-500 hover:text-red-400"><Trash2 className="h-4 w-4" /></button>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <div className="mb-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-500">Referencia</div>
+                  <div className="truncate rounded-lg border border-neutral-800 bg-neutral-800/40 px-2 py-1.5 text-sm text-neutral-300" title={row.referencia || ''}>{row.referencia || '—'}</div>
+                </div>
+                <div>
+                  <div className="mb-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-500">Fecha de reemplazo</div>
+                  <input value={row.fecha ?? ''} disabled={readOnly} onChange={(e) => update(ri, { fecha: e.target.value })} placeholder="DD/MM/AAAA"
+                    className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-100 focus:border-neutral-500 focus:outline-none" />
+                </div>
+              </div>
+              <label className="flex cursor-pointer items-center gap-2 pt-0.5 text-sm text-neutral-200">
+                <input type="checkbox" checked={!!row.reemplazado} disabled={readOnly} onChange={(e) => update(ri, { reemplazado: e.target.checked })}
+                  className="h-5 w-5 rounded border-neutral-600 bg-neutral-800" style={{ accentColor: LIME }} /> Reemplazado
+              </label>
+            </div>
+          ))}
+      </div>
+      {!readOnly && (
+        <div className="border-t border-neutral-800 p-3">
+          <button type="button" onClick={add} className="flex items-center gap-1.5 rounded-lg border border-neutral-700 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800">
+            <Plus className="h-4 w-4" /> Añadir batería
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function DarkEquipmentExchange({ block, value, readOnly, onChange }: { block: AssembledBlock; value: unknown; readOnly: boolean; onChange: (v: unknown) => void }) {
   const title = (block.config.title as string) || (block.config.label as string) || 'Intercambio de equipos';
   const defaultRows = (block.config.defaultRows as number) || 0;
