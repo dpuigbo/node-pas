@@ -49,6 +49,8 @@ exports.createSistemaCompletoSchema = zod_1.z.object({
     fabricanteId: zod_1.z.number().int().positive(),
     nombre: zod_1.z.string().min(1, 'El nombre es obligatorio').max(200),
     descripcion: zod_1.z.string().max(500).optional().nullable(),
+    linea: zod_1.z.string().max(200).optional().nullable(),
+    denominacion: zod_1.z.string().max(200).optional().nullable(),
     componentes: zod_1.z.array(componenteWizardSchema).min(2, 'Mínimo controladora + robot'),
 });
 //# sourceMappingURL=sistemas.validation.js.map

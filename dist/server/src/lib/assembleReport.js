@@ -90,6 +90,8 @@ function buildPlaceholderContext(informe, usuario) {
         'usuario.email': usuario?.email ?? undefined,
         'sistema.nombre': informe.sistema.nombre,
         'sistema.descripcion': informe.sistema.descripcion ?? undefined,
+        'sistema.linea': informe.sistema.linea ?? undefined,
+        'sistema.denominacion': informe.sistema.denominacion ?? undefined,
         'sistema.fabricante': informe.sistema.fabricante.nombre,
         'cliente.nombre': cli?.nombre ?? undefined,
         'cliente.sede': cli?.sede ?? undefined,

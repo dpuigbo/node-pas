@@ -213,6 +213,8 @@ router.put('/:id/completo', (0, role_middleware_1.requireRole)('admin'), async (
                 data: {
                     nombre: sistemaData.nombre,
                     descripcion: sistemaData.descripcion ?? null,
+                    linea: sistemaData.linea ?? null,
+                    denominacion: sistemaData.denominacion ?? null,
                     fabricanteId: sistemaData.fabricanteId,
                 },
             });
