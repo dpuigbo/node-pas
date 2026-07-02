@@ -47,4 +47,9 @@ body {
   #informe-print { padding: 0 !important; }
   .doc-page { box-shadow: none !important; border: none !important; margin: 0 auto !important; }
   .doc-page:not(:last-child) { break-after: page; page-break-after: always; }
+  /* Los fondos (barra de titulo #878787, cabecera #c9c9c9, banda del page_header)
+     desaparecen al imprimir sin esto: */
+  .doc-page, .doc-page * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  /* Sin separacion entre paginas impresas (el gap de pantalla desplaza el corte A4) */
+  .print-area .flex.flex-col.items-center { gap: 0 !important; }
 }

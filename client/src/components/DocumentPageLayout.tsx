@@ -229,7 +229,7 @@ function SeparatorLabel({
   const key = separator.config.section as string;
   return (
     <div
-      className="w-full flex items-center gap-2 py-1"
+      className="no-print w-full flex items-center gap-2 py-1"
       style={{ maxWidth: canvasWidth }}
     >
       <div className="flex-1 border-t-2 border-dashed border-gray-300" />
