@@ -75,6 +75,7 @@ function pushH1(b: Block[], _title?: string, _description?: string): void {
 
 function ejesDeCinematica(cinematica: string | null): number {
   if (!cinematica) return 6;
+  if (cinematica.includes('gantry')) return 4; // portico X/Y/Z (+C opcional), p.ej. IRB 840A
   if (cinematica.includes('5axis')) return 5;
   if (cinematica.includes('4axis')) return 4;
   return 6;
@@ -211,15 +212,18 @@ export function buildMechanicalSchema(input: MechanicalInput): TemplateSchema {
   const { nEjes, reductoras, bateriasSMB, overhaulHoras, profile } = input;
   const b: Block[] = [];
 
-  // === manipulator_info (identidad en tabla + instalacion) ===
+  // === manipulator_info (identidad en tabla) ===
   b.push(componentSection('manipulator_info'));
-  pushH1(b, 'Información del manipulador', 'Identificación e instalación del manipulador');
+  pushH1(b, 'Información del manipulador', 'Identificación del manipulador');
   b.push(infoTable('manipulador_identidad', 'Información del manipulador', [
     { key: 'numero_serie', label: 'Número de serie', value: '{{componente.numero_serie}}' },
     { key: 'tipo', label: 'Tipo de manipulador', value: '{{componente.modelo}}' },
     { key: 'fecha_fabricacion', label: 'Fecha de fabricación', value: '' },
   ]));
-  b.push(spaceSeparator());
+
+  // === manipulator_installation (seccion propia: el template global tiene su placeholder) ===
+  b.push(componentSection('manipulator_installation'));
+  pushH1(b, 'Instalación del manipulador', 'Datos de instalación');
   b.push(fieldsTable('manipulador_instalacion', 'Instalación del manipulador', [
     { key: 'presencia_cubierta', label: 'Presencia de cubierta y estado', type: 'select', options: ['Sí - Bien', 'Sí - Mal', 'No', 'N/A'] },
     { key: 'tipo_montaje', label: 'Tipo de montaje', type: 'select', options: ['Normal', 'Pared', 'Invertido'] },
@@ -243,20 +247,19 @@ export function buildMechanicalSchema(input: MechanicalInput): TemplateSchema {
   }
   b.push(spaceSeparator());
   b.push(ejesFrenosTable(nEjes, 'Funcionamiento de ejes y frenos'));
+  // La calibracion va DENTRO de la mecanica (como en los informes Word: cada robot
+  // completo termina con su tabla de conmutacion/calibracion), no en seccion aparte.
+  const cal = calibracionBlock(profile.calibracion, nEjes, 'Valores de conmutación y calibración');
+  if (cal) {
+    b.push(spaceSeparator());
+    b.push(cal);
+  }
 
   // === manipulator_battery (SMB) ===
   if (profile.bateriaMedida === 'smb' && bateriasSMB.length > 0) {
     b.push(componentSection('manipulator_battery'));
     pushH1(b, 'Baterías de medida (SMB)', 'Control de las baterías SMB del manipulador');
     b.push(bateriasTable('baterias_smb', 'Control de baterías SMB', bateriasSMB));
-  }
-
-  // === calibration ===
-  const cal = calibracionBlock(profile.calibracion, nEjes, 'Valores de conmutación y calibración');
-  if (cal) {
-    b.push(componentSection('calibration'));
-    pushH1(b, 'Valores de conmutación y calibración', 'Offsets de conmutación y valores de calibración');
-    b.push(cal);
   }
 
   return { blocks: b, pageConfig: PAGE };
@@ -361,20 +364,18 @@ export function buildExternalAxisSchema(input: ExternalAxisInput): TemplateSchem
     b.push(spaceSeparator());
     b.push(inspectionTable('eje_inspecciones_generales', 'Inspecciones generales del eje externo', profile.generalChecks));
   }
+  // Calibracion DENTRO de la seccion mecanica del eje (mismo criterio que el manipulador).
+  const cal = calibracionBlock(profile.calibracion, nEjes, 'Calibración del eje externo');
+  if (cal) {
+    b.push(spaceSeparator());
+    b.push(cal);
+  }
 
   // === manipulator_battery (SMB del eje externo) ===
   if (profile.bateriaMedida === 'smb' && bateriasSMB.length > 0) {
     b.push(componentSection('manipulator_battery'));
     pushH1(b, 'Batería de medida (SMB) del eje externo', 'Control de la batería SMB del eje');
     b.push(bateriasTable('baterias_smb_eje', 'Control de baterías SMB del eje', bateriasSMB));
-  }
-
-  // === calibration ===
-  const cal = calibracionBlock(profile.calibracion, nEjes, 'Calibración del eje externo');
-  if (cal) {
-    b.push(componentSection('calibration'));
-    pushH1(b, 'Calibración del eje externo', 'Offsets de conmutación y calibración');
-    b.push(cal);
   }
 
   return { blocks: b, pageConfig: PAGE };
@@ -461,6 +462,18 @@ async function loadReductoras(prisma: any, modeloId: number): Promise<ReductoraR
   });
 }
 
+/** Horas de overhaul SOLO si el plan del modelo lo trae (regla: sin overhaul si el PM no lo trae). */
+async function overhaulForModel(prisma: any, modeloId: number): Promise<number | null> {
+  const acts = await prisma.actividadPreventiva.findMany({
+    where: { tipoActividad: { codigo: 'overhaul' } },
+    select: { modelosAplicables: true, intervaloHoras: true },
+  });
+  for (const a of acts) {
+    if (actividadAplicaAModelo(a, modeloId) && a.intervaloHoras) return Number(a.intervaloHoras);
+  }
+  return null;
+}
+
 /** Fusiona los checks extra por eje del perfil con los específicos del modelo (se concatenan). */
 function mergeEjeExtras(base: Record<number, string[]>, extra: Record<number, string[]>): Record<number, string[]> {
   const out: Record<number, string[]> = { ...base };
@@ -491,7 +504,8 @@ export async function generateTemplateForModel(prisma: any, modeloId: number): P
       ? { ...baseProfile, ejeExtras: mergeEjeExtras(baseProfile.ejeExtras, modelExtras) }
       : baseProfile;
     const bateriasSMB = await smbForModel(prisma, modeloId, profile.bateriaMedida);
-    return buildMechanicalSchema({ nEjes, reductoras, bateriasSMB, overhaulHoras: 40000, profile });
+    const overhaulHoras = await overhaulForModel(prisma, modeloId);
+    return buildMechanicalSchema({ nEjes, reductoras, bateriasSMB, overhaulHoras, profile });
   }
 
   if (model.tipo === 'controller') {
