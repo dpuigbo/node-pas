@@ -81,6 +81,18 @@ function ejesDeCinematica(cinematica: string | null): number {
   return 6;
 }
 
+/** Agrupacion de ejes de los informes Word: base / brazo (2 y 3) / muneca (4 y 5) / brida.
+ *  6 ejes -> [1],[2,3],[4,5],[6] · 5 -> [1],[2,3],[4,5] · 4 -> [1],[2,3],[4] · resto individual. */
+function gruposDeEjes(nEjes: number): number[][] {
+  if (nEjes === 6) return [[1], [2, 3], [4, 5], [6]];
+  if (nEjes === 5) return [[1], [2, 3], [4, 5]];
+  if (nEjes === 4) return [[1], [2, 3], [4]];
+  return Array.from({ length: nEjes }, (_, i) => [i + 1]);
+}
+
+const tituloGrupoEjes = (g: number[]) =>
+  g.length === 1 ? `Control eje ${g[0]}` : `Control ejes ${g.slice(0, -1).join(', ')} y ${g[g.length - 1]}`;
+
 /** Tabla de identidad: titulo en barra + cabecera de etiquetas + una fila de valores. */
 function infoTable(key: string, title: string, cols: { key: string; label: string; value: string }[]): Block {
   return block('table', {
@@ -224,32 +236,41 @@ export function buildMechanicalSchema(input: MechanicalInput): TemplateSchema {
   // === manipulator_installation (seccion propia: el template global tiene su placeholder) ===
   b.push(componentSection('manipulator_installation'));
   pushH1(b, 'Instalación del manipulador', 'Datos de instalación');
-  b.push(fieldsTable('manipulador_instalacion', 'Instalación del manipulador', [
+  b.push(fieldsTable('manipulador_instalacion', 'Información de la instalación del manipulador', [
     { key: 'presencia_cubierta', label: 'Presencia de cubierta y estado', type: 'select', options: ['Sí - Bien', 'Sí - Mal', 'No', 'N/A'] },
     { key: 'tipo_montaje', label: 'Tipo de montaje', type: 'select', options: ['Normal', 'Pared', 'Invertido'] },
     { key: 'altura_base', label: 'Altura de la base (mm)', type: 'number' },
   ]));
 
   // === mechanical_unit_control ===
+  // Orden y titulos EXACTOS de los informes Word (KUKA y ABB identicos): reductoras ->
+  // control por GRUPO de ejes (1 / 2y3 / 4y5 / 6) -> funcionamiento de ejes y frenos ->
+  // control general de ejes -> calibracion (dentro de la mecanica, cerrando cada robot).
   b.push(componentSection('mechanical_unit_control'));
   pushH1(b, 'Control de la unidad mecánica', 'Reductoras, control por eje, frenos y calibración');
   if (reductoras.length > 0) b.push(reducerOilsBlock('reductoras', 'Reductoras del manipulador', reductoras));
-  for (let e = 1; e <= nEjes; e++) {
+  for (const grupo of gruposDeEjes(nEjes)) {
     b.push(spaceSeparator());
-    const checks = [...(profile.ejeExtras[e] || []), ...profile.ejeBase];
-    b.push(inspectionTable(`eje${e}_control`, `Control eje ${e}`, checks));
+    // Checks del grupo: extras de cada eje del grupo (en orden) + los comunes UNA vez.
+    const checks = [...grupo.flatMap((e) => profile.ejeExtras[e] || []), ...profile.ejeBase];
+    const key = grupo.length === 1 ? `eje${grupo[0]}_control` : `ejes${grupo.join('_')}_control`;
+    b.push(inspectionTable(key, tituloGrupoEjes(grupo), checks));
   }
+  b.push(spaceSeparator());
+  b.push(ejesFrenosTable(nEjes, 'Control de funcionamiento de ejes y frenos'));
   const generales = [...profile.generalChecks];
   if (overhaulHoras) generales.push(`Overhaul completo (cada ${overhaulHoras} h)`);
   if (generales.length > 0) {
     b.push(spaceSeparator());
-    b.push(inspectionTable('inspecciones_generales', 'Inspecciones generales del manipulador', generales));
+    b.push(inspectionTable('inspecciones_generales', 'Control general de ejes', generales));
   }
-  b.push(spaceSeparator());
-  b.push(ejesFrenosTable(nEjes, 'Funcionamiento de ejes y frenos'));
-  // La calibracion va DENTRO de la mecanica (como en los informes Word: cada robot
-  // completo termina con su tabla de conmutacion/calibracion), no en seccion aparte.
-  const cal = calibracionBlock(profile.calibracion, nEjes, 'Valores de conmutación y calibración');
+  const cal = calibracionBlock(
+    profile.calibracion,
+    nEjes,
+    profile.calibracion === 'kuka_angulo'
+      ? 'Verificación de posición de calibración del manipulador'
+      : 'Control valores de conmutación y de calibración',
+  );
   if (cal) {
     b.push(spaceSeparator());
     b.push(cal);
@@ -287,10 +308,10 @@ export function buildControllerSchema(input: ControllerInput): TemplateSchema {
   b.push(componentSection('cabinet_control'));
   pushH1(b, 'Control del armario', 'Revisión exterior, interior, cableado y baterías');
   if (profile.armarioExterior.length > 0) {
-    b.push(inspectionTable('armario_exterior', 'Control general exterior', profile.armarioExterior));
+    b.push(inspectionTable('armario_exterior', 'Control general exterior de la controladora', profile.armarioExterior));
     b.push(spaceSeparator());
   }
-  b.push(inspectionTable('armario_interior', 'Control general interior', profile.armarioInterior));
+  b.push(inspectionTable('armario_interior', 'Control general interior de la controladora', profile.armarioInterior));
   b.push(spaceSeparator());
   b.push(inspectionTable('cableado_robot', 'Control cableado a robot', profile.cableado));
   if (bateriasControlador.length > 0) {
@@ -301,7 +322,7 @@ export function buildControllerSchema(input: ControllerInput): TemplateSchema {
   // === programming_unit_control ===
   b.push(componentSection('programming_unit_control'));
   pushH1(b, 'Control de la unidad de programación', 'Revisión del teach pendant');
-  b.push(inspectionTable('teach_pendant', 'Control de la unidad de programación', profile.teachPendant));
+  b.push(inspectionTable('teach_pendant', 'Control general de la unidad de programación', profile.teachPendant));
 
   // === system_control ===
   b.push(componentSection('system_control'));
@@ -314,7 +335,7 @@ export function buildControllerSchema(input: ControllerInput): TemplateSchema {
   if (profile.sistemaConRam) checkLabels.push('Clonado de disco duro');
   for (const c of profile.sistemaCampos.filter((c) => !/versi/i.test(c))) checkLabels.push(c);
   b.push(block('table', {
-    key: 'sistema_checks', label: '', title: 'Control general del sistema', ...TBL,
+    key: 'sistema_checks', label: '', title: 'Control general de la controladora', ...TBL,
     columns: [
       { key: 'operacion', label: 'Operación', type: 'label', width: '38%' },
       { key: 'na', label: 'N/A', type: 'checkbox', width: '8%' },

@@ -84,10 +84,11 @@ const ABB_MECH_6AXIS: MechanicalProfile = {
     5: ['Estado del amortiguador del tope mecánico'],
     6: ['Estado del cable'],
   },
+  // Tabla "Control general de ejes" de los informes Word (va tras ejes y frenos).
   generalChecks: [
-    'Etiquetas de información del manipulador',
-    'Funcionamiento signal lamp (opción)',
-    'Limpieza del robot (exterior)',
+    'Juego anormal en los ejes',
+    'Estado valores de sincronización en el manipulador',
+    'Verificación posición de sincronización del manipulador',
   ],
   calibracion: 'abb_conmutacion',
   bateriaMedida: 'smb',
@@ -147,7 +148,12 @@ const ABB_S4_MECH_6AXIS: MechanicalProfile = {
     4: ['Estado conectores CP/CS', 'Estado del circuito neumático'],
     6: ['Estado del cable'],
   },
-  generalChecks: ['Limpieza del robot (exterior)'],
+  // Mismo "Control general de ejes" del esqueleto Word (comun a las generaciones ABB).
+  generalChecks: [
+    'Juego anormal en los ejes',
+    'Estado valores de sincronización en el manipulador',
+    'Verificación posición de sincronización del manipulador',
+  ],
   calibracion: 'abb_conmutacion',
   bateriaMedida: 'smb',
 };
@@ -170,6 +176,83 @@ const ABB_S4_CONTROLLER: ControllerProfile = {
   bateriasControlador: [
     { nombre: 'Batería de respaldo (DSQC508)', codigoInterno: 'BAT-035' },
     { nombre: 'Pila CMOS CR2032', codigoInterno: 'BAT-036' },
+  ],
+};
+
+// ============================================================
+// KUKA — KRC (articulado 6 ejes)  [del Word real KR16/KRC4, BMTC 2026]
+// ============================================================
+
+const KUKA_MECH_6AXIS: MechanicalProfile = {
+  // En KUKA solo el eje 1 lista el resolver; el comun a todos es el funcionamiento.
+  ejeBase: ['Funcionamiento general'],
+  ejeExtras: {
+    1: [
+      'Estado del circuito neumático',
+      'Estado conexiones del cableado de la base',
+      'Comprobación grasa para cableado en la base',
+      'Estado del tope mecánico',
+      'Estado del resolver',
+    ],
+    // Grupo "ejes 2 y 3" del Word (los extras del grupo cuelgan del eje 2).
+    2: [
+      'Estado arnés de cables',
+      'Estado rodamiento del codo',
+      'Estado de los amortiguadores del eje',
+      'Estado del tope mecánico',
+    ],
+    // Grupo "ejes 4 y 5" del Word.
+    4: [
+      'Control de tensión de la correa',
+      'Engrasado de los retenes',
+      'Estado del tope mecánico',
+    ],
+    6: ['Engrasado del retén del eje'],
+  },
+  generalChecks: [
+    'Juego anormal en los ejes',
+    'Verificación posición de sincronización del manipulador',
+  ],
+  calibracion: 'kuka_angulo',
+  bateriaMedida: null, // KUKA no lleva SMB; sus baterias van en la controladora.
+};
+
+const KUKA_KRC_CONTROLLER: ControllerProfile = {
+  armarioExterior: [], // KUKA no tiene tabla de exterior en los informes.
+  armarioInterior: [
+    'Orden cables internos',
+    'Limpieza',
+    'Estado de la junta de la puerta',
+    'Estado de la junta del canal de ventilación',
+    'Fijación de los elementos',
+    'Limpieza y funcionamiento del ventilador trasero',
+    'Limpieza del disipador lateral izquierdo',
+    'Cambio del tapón de compensación de presión',
+  ],
+  cableado: ['Estado de los cables', 'Conexión de tierra'],
+  // smartPAD: MoveSpace + palancas + contactor a llave + START/STOP fisicos.
+  teachPendant: [
+    'Funcionamiento del teclado',
+    'Funcionamiento de la pantalla',
+    'Funcionamiento del MoveSpace',
+    'Funcionamiento botón de emergencia',
+    'Estado de las palancas',
+    'Estado del cable',
+    'Estado de la carcasa',
+    'Prueba del contactor a llave',
+    'Estado de los botones START/STOP',
+  ],
+  sistemaCampos: [
+    'Versión del sistema',
+    'Aplicaciones instaladas',
+    'Copia de seguridad al día (incluye parámetros del sistema)',
+    'Valores de supervisión',
+    'Mensaje de error',
+  ],
+  sistemaConRam: true, // KRC4/5 es un PC: clonado de disco + disponibilidad/ocupacion RAM.
+  bateriasControlador: [
+    { nombre: 'Batería de la controladora (PGB-5.2-12)' },
+    { nombre: 'Pila CMOS CR2032', codigoInterno: 'BAT-032' },
   ],
 };
 
@@ -207,8 +290,8 @@ export function getMechanicalProfile(marca: Marca, generacion: string | null, ci
     if (esArticulado(cinematica)) return esS4 ? ABB_S4_MECH_6AXIS : ABB_MECH_6AXIS;
     return esS4 ? ABB_S4_MECH_6AXIS : ABB_MECH_6AXIS;
   }
-  // KUKA: pendiente de extracción. Estructura base provisional.
-  return ABB_MECH_6AXIS;
+  // KUKA: perfil del Word real KR16/KRC4 (BMTC 2026).
+  return KUKA_MECH_6AXIS;
 }
 
 // ============================================================
@@ -242,7 +325,7 @@ export function getControllerProfile(marca: Marca, generacion: string | null): C
     const esS4 = !!generacion && /S4/i.test(generacion);
     return esS4 ? ABB_S4_CONTROLLER : ABB_IRC5_CONTROLLER;
   }
-  return ABB_IRC5_CONTROLLER;
+  return KUKA_KRC_CONTROLLER;
 }
 
 export function getExternalAxisProfile(_marca: Marca): ExternalAxisProfile {
